@@ -12,6 +12,7 @@ import Profile from './components/profile.jsx';
 import SignIn from './components/signin.jsx';
 import SignUp from './components/signup.jsx';
 import Rule from './valorant/Rule.jsx';
+
 import './index.css'
 
 // Check if the root element exists
@@ -26,12 +27,12 @@ if (rootElement) {
           <BrowserRouter>
             <Navbar />
             <Routes>
-              <Route exact path='/valorant' element={<Home />} />
+              <Route exact path='/' element={<Home />} />
               <Route path='/signup' element={<SignUp />} />
               <Route path='/signin' element={<SignIn />} />
               <Route path='/valorant/me' element={<Rule />} />
               <Route element={<PrivateRoute />}>
-                <Route path='/valorant/profile' element={<Profile />} />
+                <Route path='/profile' element={<Profile />} />
               </Route>
             </Routes>
             <Footer />

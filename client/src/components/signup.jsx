@@ -65,7 +65,7 @@ export default function SignUp() {
         return;
       }
 
-      navigate('/valorant');
+      navigate('/');
     } catch (error) {
       setLoading(false);
       setError(true);
@@ -76,7 +76,7 @@ export default function SignUp() {
     <>
       <div className='max-w-7xl mt-20 mx-auto'>
         <div className='max-w-md px-2 sm:px-6 mx-auto mb-[7.9vh]'>
-          <h1 style={{ fontWeight: "700" }} className='text-3xl font-bold text-center mb-3'>Đăng kí</h1>
+          <h1 className='text-3xl font-bold text-center mb-3'>Đăng kí</h1>
           <form onSubmit={handleSubmit} className='flex flex-col'>
             <input
               type='text'

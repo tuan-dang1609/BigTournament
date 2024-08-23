@@ -9,12 +9,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 // Ensure this import is correct
 import {
-    updateUserStart,
-    updateUserSuccess,
-    updateUserFailure,
-    deleteUserStart,
-    deleteUserSuccess,
-    deleteUserFailure,
     signOut,
 } from '../../redux/user/userSlice.js';
 const images = import.meta.glob('../image/*.{png,jpg,jpeg,gif}');
@@ -32,7 +26,7 @@ export default function Example() {
             await fetch('https://valosplit2-backend.vercel.app/api/auth/signout');
             dispatch(signOut());
             
-            navigate("/valorant");
+            navigate("/");
         } catch (error) {
             console.log(error);
         }
@@ -44,8 +38,8 @@ export default function Example() {
     const location = useLocation();
 
     const navigation = [
-        { name: 'Dashboard', href: '/valorant', current: location.pathname === '/valorant' },
-        { name: 'Me', href: '/valorant/me', current: location.pathname === '/valorant/me' },
+        { name: 'Dashboard', href: '/', current: location.pathname === '/' },
+        { name: 'Luật', href: '/valorant/me', current: location.pathname === '/valorant/me' },
     ];
 
     const handleToggle = (event) => setTheme(event.target.value);
@@ -147,10 +141,10 @@ export default function Example() {
                          </MenuButton>
                             <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg">
                              <MenuItem>
-                                    <Link to="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</Link>
+                                    <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Thông tin của tôi</Link>
                              </MenuItem>
                              <MenuItem>
-                                    <Link onClick={handleSignOut} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</Link>
+                                    <Link onClick={handleSignOut} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Đăng xuât</Link>
                              </MenuItem>
                          </MenuItems>
                      </Menu>

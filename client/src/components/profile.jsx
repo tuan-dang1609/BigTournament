@@ -13,8 +13,8 @@ import {
 
 export default function Profile() {
     const [loading1, setLoading] = useState(true);
+    const [showDeleteAlert, setShowDeleteAlert] = useState(false);
     const navigate = useNavigate();
-    const location = useLocation();
     const [formData, setFormData] = useState({});
     const { currentUser, loading, error } = useSelector((state) => state.user);
     const dispatch = useDispatch();
@@ -49,7 +49,8 @@ export default function Profile() {
                 return;
             }
             dispatch(updateUserSuccess(data));
-            navigate('/valorant')
+            // Pass success message to the homepage
+            navigate('/', { state: { success: true } });
         } catch (error) {
             dispatch(updateUserFailure(error));
         }
@@ -67,7 +68,7 @@ export default function Profile() {
                 return;
             }
             dispatch(deleteUserSuccess(data));
-            navigate('/valorant')
+            navigate('/valorant');
         } catch (error) {
             dispatch(deleteUserFailure(error));
         }
@@ -77,7 +78,6 @@ export default function Profile() {
         try {
             await fetch('https://valosplit2-backend.vercel.app/api/auth/signout');
             dispatch(signOut());
-            
             navigate("/valorant");
         } catch (error) {
             console.log(error);
@@ -85,20 +85,41 @@ export default function Profile() {
     };
 
     return (
-        <div className="profile">
-            <h1>Profile</h1>
-            <form className="profile-user" onSubmit={handleSubmit}>
-                <img src={`https://drive.google.com/thumbnail?id=${currentUser.profilePicture}`} className="prof-img" alt="Profile" />
-                <input type="text" onChange={handleChange} defaultValue={currentUser.profilePicture} id='profilePicture' placeholder="URL Avatar" className="input-info" />
-                <input type="text" onChange={handleChange} defaultValue={currentUser.riotID} id='riotID' placeholder="Riot ID" className="input-info" />
-                <input type="text" onChange={handleChange} defaultValue={currentUser.username} id='username' placeholder="Username" className="input-info" />
-                <input type="text" onChange={handleChange} defaultValue={currentUser.email} id='email' placeholder="Email" className="input-info" />
-                <input type="password" onChange={handleChange} id='password' placeholder="Password" className="input-info" />
-                <button className="update-btn"> {loading ? 'Loading...' : 'Update'}</button>
-            </form>
-            <div className="del-upd">
-                <span onClick={handleDeleteAccount} className="delete-acc">Xóa tài khoản</span>
-                <span onClick={handleSignOut} className="sign-out">Đăng xuất</span>
+        <div className="max-w-7xl mt-16 mx-auto">
+            <div className="max-w-md px-2 sm:px-6 mx-auto mb-5">
+                <p className="text-3xl font-bold text-center mb-3">Profile</p>
+                <form className="flex flex-col" onSubmit={handleSubmit}>
+                    <img src={`https://drive.google.com/thumbnail?id=${currentUser.profilePicture}`} className="h-28 w-28 rounded-full mx-auto mb-2" alt="Profile" />
+                    <input type="text" onChange={handleChange} defaultValue={currentUser.profilePicture} id='profilePicture' placeholder="URL Avatar" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
+                    <input type="text" onChange={handleChange} defaultValue={currentUser.riotID} id='riotID' placeholder="Riot ID" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
+                    <input type="text" onChange={handleChange} defaultValue={currentUser.username} id='username' placeholder="Username" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
+                    <input type="text" onChange={handleChange} defaultValue={currentUser.email} id='email' placeholder="Email" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
+                    <input type="password" onChange={handleChange} id='password' placeholder="Password" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
+                    <button className="btn mt-3 bg-primary hover:bg-neutral text-white"> {loading ? 'Loading...' : 'Update'}</button>
+                </form>
+                <div className="del-upd">
+                    <span onClick={() => setShowDeleteAlert(true)} className="btn w-full mt-3 bg-secondary hover:bg-neutral text-white">Xóa tài khoản</span>
+                </div>
+                {showDeleteAlert && (
+                <div role="alert" className="alert">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        className="stroke-info h-6 w-6 shrink-0">
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Xóa tài khoản?</span>
+                    <div>
+                        <button onClick={() => setShowDeleteAlert(false)} className="btn btn-sm">Không</button>
+                        <button onClick={handleDeleteAccount} className="btn btn-sm btn-primary">Ok</button>
+                    </div>
+                </div>
+            )}
             </div>
         </div>
     );
