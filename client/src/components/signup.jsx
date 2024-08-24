@@ -47,7 +47,7 @@ export default function SignUp() {
       setLoading(true);
       setError(false);
 
-      const res = await fetch('https://valosplit2-backend.vercel.app/api/auth/signup', {
+      const res = await fetch('https://big-tournament-backend.vercel.app/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
