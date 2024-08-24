@@ -62,7 +62,7 @@ export default function AllGame() {
     useEffect(() => {
         const fetchGames = async () => {
             try {
-                const response = await fetch('/api/auth/findallgame', {
+                const response = await fetch('https://big-tournament-backend.vercel.app/api/auth/findallgame', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
