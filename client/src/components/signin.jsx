@@ -41,8 +41,8 @@ export default function SignIn() {
   };
   return (
     <>
-      <div className='max-w-7xl mt-40 mx-auto '>
-        <div className='max-w-md px-2 sm:px-6 mx-auto mb-[28.85vh]'>
+      <div className='max-w-7xl mt-40 mx-auto w-full'>
+        <div className='max-w-md px-2 sm:px-6 mx-auto'>
           <h1 className='text-3xl font-bold text-center mb-3'>Đăng Nhập</h1>
           <form onSubmit={handleSubmit} className='flex flex-col'>
             <input

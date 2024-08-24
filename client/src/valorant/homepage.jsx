@@ -34,7 +34,7 @@ export default function Home() {
         if (location.state?.success) {
             const timer = setTimeout(() => {
                 navigate("/", { state: { success: false } }); // Reset the success state
-            }, 5000);
+            }, 2000);
 
             // Clear the timeout if the component unmounts before the timeout
             return () => clearTimeout(timer);

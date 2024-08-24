@@ -12,7 +12,7 @@ import Profile from './components/profile.jsx';
 import SignIn from './components/signin.jsx';
 import SignUp from './components/signup.jsx';
 import Rule from './valorant/Rule.jsx';
-
+import AllGame from './components/allgame.jsx';
 import './index.css'
 
 // Check if the root element exists
@@ -31,6 +31,7 @@ if (rootElement) {
               <Route path='/signup' element={<SignUp />} />
               <Route path='/signin' element={<SignIn />} />
               <Route path='/valorant/me' element={<Rule />} />
+              <Route path='/allgame' element={<AllGame />} />
               <Route element={<PrivateRoute />}>
                 <Route path='/profile' element={<Profile />} />
               </Route>

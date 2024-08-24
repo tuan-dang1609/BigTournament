@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import Team from '../models/team.model.js';
 import Match from '../models/match.model.js';
 import BanPick from '../models/veto.model.js';
-import mongoose from 'mongoose';
+import AllGame from '../models/allgame.model.js';
 export const signup = async (req, res, next) => {
   const { riotID, username, email, password } = req.body;
   const hashedPassword = bcryptjs.hashSync(password, 10);
@@ -123,10 +123,45 @@ export const addMatch = async (req, res, next) => {
       res.status(201).json({ message: 'Match added successfully' });
     }
   } catch (error) {
+    res.status(400).json({ error: err.message });
+  }
+};
+export const addAllGame = async (req,res,next) => {
+  const { url,game,image,description,badges } = req.body;
+  try{
+    const existingGame = await AllGame.findOne({game})
+    if (existingGame){
+      existingGame.url = url;
+      existingGame.game = game;
+      existingGame.image = image;
+      existingGame.description = description;
+      existingGame.badges = badges;
+      await existingGame.save();
+      res.status(200).json({ message: 'Game updated successfully' });
+    }else{
+      const newGame = new AllGame({
+        url,game,image,description,badges
+      });
+      await newGame.save()
+      res.status(201).json({message:"Game added succesfully"})
+    }
+  }catch(error){
+    next(error)
+  }
+}
+export const findAllGame = async (req, res, next) => {
+  try {
+    const allGame = await AllGame.find();
+
+    if (allGame.length === 0) {
+      return next(errorHandler(404, 'No Game found'));
+    }
+
+    res.status(200).json(allGame);
+  } catch (error) {
     next(error);
   }
 };
-
 export const addBanPickVeto = async (req, res) => {
   try {
 

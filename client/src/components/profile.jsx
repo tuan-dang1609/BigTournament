@@ -85,7 +85,7 @@ export default function Profile() {
     };
 
     return (
-        <div className="max-w-7xl mt-16 mx-auto">
+        <div className="max-w-7xl mt-16 mx-auto w-full">
             <div className="max-w-md px-2 sm:px-6 mx-auto mb-5">
                 <p className="text-3xl font-bold text-center mb-3">Profile</p>
                 <form className="flex flex-col" onSubmit={handleSubmit}>

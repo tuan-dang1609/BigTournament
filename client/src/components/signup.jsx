@@ -74,8 +74,8 @@ export default function SignUp() {
 
   return (
     <>
-      <div className='max-w-7xl mt-20 mx-auto'>
-        <div className='max-w-md px-2 sm:px-6 mx-auto mb-[7.9vh]'>
+      <div className='max-w-7xl max-lg:mt-[68px] mt-20  mx-auto'>
+        <div className='max-w-md px-2 sm:px-6 mx-auto'>
           <h1 className='text-3xl font-bold text-center mb-3'>Đăng kí</h1>
           <form onSubmit={handleSubmit} className='flex flex-col'>
             <input
