@@ -57,7 +57,8 @@ const Card = ({ url, game, image, description, badges }) => {
 };
 
 export default function AllGame() {
-    const [items, setItems] = useState([]);
+    const [items, setItems] = useState(null);  // Initialize items as null
+    const [loading, setLoading] = useState(true);  // Add loading state
 
     useEffect(() => {
         const fetchGames = async () => {
@@ -77,11 +78,17 @@ export default function AllGame() {
                 setItems(data);
             } catch (error) {
                 console.error("Failed to fetch games:", error);
+            } finally {
+                setLoading(false);  // Set loading to false once fetch is complete
             }
         };
 
         fetchGames();
     }, []);
+
+    if (loading) {
+        return <div className="h-full w-full flex items-center justify-center"><span className="loading loading-dots loading-lg text-primary mt-70"></span></div>;  // Show loading spinner while loading
+    }
 
     return (
         <>
