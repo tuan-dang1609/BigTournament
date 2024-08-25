@@ -87,7 +87,7 @@ export default function AllGame() {
     }, []);
 
     if (loading) {
-        return <div className="h-full w-full flex items-center justify-center"><span className="loading loading-dots loading-lg text-primary mt-70"></span></div>;  // Show loading spinner while loading
+        return <div className="h-full w-full flex"><span className="loading loading-dots loading-lg text-primary items-center justify-center"></span></div>;  // Show loading spinner while loading
     }
 
     return (
