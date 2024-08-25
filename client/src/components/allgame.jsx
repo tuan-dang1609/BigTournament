@@ -69,7 +69,7 @@ export default function AllGame() {
                         'Content-Type': 'application/json',
                     }
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -87,18 +87,16 @@ export default function AllGame() {
     }, []);
 
     if (loading) {
-        return <div className="h-full w-full flex"><span className="loading loading-dots loading-lg text-primary items-center justify-center"></span></div>;  // Show loading spinner while loading
+        <div className="flex items-center justify-center min-h-screen">
+            <span className="loading loading-dots loading-lg text-primary"></span>
+        </div>
     }
 
     return (
         <>
-        <p className="mx-auto max-w-7xl px-2 sm:px-6 mt-20 max-lg:mt-24 text-center font-bold text-4xl uppercase">Game và các giải đấu</p>
-        <div className="mx-auto max-w-7xl px-2 sm:px-6 relative z-0 mt-10 mb-10 grid gap-x-20 gap-y-5 max-lg:gap-y-4 grid-cols-2 max-lg:grid-cols-1">
-            
-            {items.map((item, index) => (
-                <Card key={index} {...item} />
-            ))}
-        </div>
+            <p className="mx-auto max-w-7xl px-2 sm:px-6 mt-20 max-lg:mt-24 text-center font-bold text-4xl uppercase">Game và các giải đấu</p>
+            <div className="mx-auto max-w-7xl px-2 sm:px-6 relative z-0 mt-10 mb-10 grid gap-x-20 gap-y-5 max-lg:gap-y-4 grid-cols-2 max-lg:grid-cols-1"> \
+                {items.map((item, index) => (<Card key={index} {...item} />))} </div>
         </>
     );
 }
