@@ -6,6 +6,20 @@ const images = import.meta.glob('../image/*.{png,jpg,jpeg,gif}');
 
 const Card = ({ url, game, image, description, badges }) => {
     const [imageUrls, setImageUrls] = useState({});
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        const scrollToTop = () => {
+            document.documentElement.scrollTop = 0;
+            setLoading(false);
+        };
+        setTimeout(scrollToTop, 0);
+        document.title = "Game & Giải Đấu | DCN Tournament";
+
+
+
+        // Auto-hide the success alert after 5 seconds
+       
+    }, []);
 
     useEffect(() => {
         const loadImageUrls = async () => {
