@@ -7,6 +7,8 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+import axios from 'axios';  // Import axios to make HTTP requests
+
 dotenv.config();
 
 mongoose
@@ -31,6 +33,32 @@ app.use(cookieParser());
 // Serve static files from the 'client' directory
 app.use(express.static(path.join(__dirname, '..', 'client')));
 
+// Proxy route to handle the external API request
+app.get('/api/match/:region/:matchid', async (req, res) => {
+  const { region, matchid } = req.params;
+  const apiKey = process.env.API_KEY_VALORANT;
+
+  try {
+    // Make the request to the external API using axios
+    const response = await axios.get(`https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`, {
+      headers: {
+        'Authorization': apiKey
+      }
+    });
+
+    // Send the data back to the frontend
+    res.json(response.data);
+  } catch (err) {
+    // Handle any errors from the API request
+    res.status(err.response?.status || 500).json({
+      success: false,
+      message: err.message,
+      statusCode: err.response?.status || 500,
+    });
+  }
+});
+
+// Fallback route to serve the frontend application
 app.get('*', (req, res) => {
   const filePath = path.join(__dirname, '..', 'client', 'index.html');
   res.sendFile(filePath, (err) => {
@@ -44,9 +72,11 @@ app.get('*', (req, res) => {
   });
 });
 
+// Routes for user and auth APIs
 app.use('/api/user', userRoutes);
 app.use('/api/auth', authRoutes);
 
+// Error handling middleware
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
@@ -57,6 +87,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);

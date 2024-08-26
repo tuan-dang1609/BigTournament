@@ -2,25 +2,23 @@ import { useState, useEffect } from 'react';
 
 export default function MatchResult() {
     const [matchInfo, setMatchInfo] = useState(null);
-
     const [error, setError] = useState(null);
+
+    // Parameters for the match request
     const matchid = '6699cbf5-ff64-4d4d-b619-0f055fb3079a';
-    const apiKey = 'HDEV-c25fa07b-2794-4096-8e4b-e452d228302c';
     const region = 'na';
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
 
     useEffect(() => {
-        fetch(`https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`, {
-            headers: { 'Authorization': apiKey }
-        })
-        .then(res => {
-            if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
-            return res.json();
-        })
-        .then(data => setMatchInfo(data.data.players))
-        .catch(err => setError(err.message)); // Extract the error message as a string
+        // Fetch the match data from the backend proxy route
+        fetch(`https://big-tournament-backend.vercel.app/api/match/${region}/${matchid}`)
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(data => setMatchInfo(data.data.players))
+            .catch(err => setError(err.message)); // Extract the error message as a string
     }, []);
 
     if (error) return <div>Error: {error}</div>;
