@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Home from './valorant/homepage.jsx';
+import Home from './components/homepage.jsx';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import { persistor, store } from '../redux/store.js';
@@ -14,6 +14,7 @@ import SignUp from './components/signup.jsx';
 import Rule from './valorant/Rule.jsx';
 import AllGame from './components/allgame.jsx';
 import './index.css'
+import MatchResult from './valorant/match.jsx';
 
 // Check if the root element exists
 const rootElement = document.getElementById('root');
@@ -32,6 +33,7 @@ if (rootElement) {
               <Route path='/signin' element={<SignIn />} />
               <Route path='/valorant/me' element={<Rule />} />
               <Route path='/allgame' element={<AllGame />} />
+              <Route path="/valorant/test" element={<MatchResult />} />
               <Route element={<PrivateRoute />}>
                 <Route path='/profile' element={<Profile />} />
               </Route>

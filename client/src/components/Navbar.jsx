@@ -47,7 +47,8 @@ export default function Example() {
       { name: "VALORANT", href: "/valorant", current: location.pathname === "/valorant", logo: "val_icon" },
       { name: "Trận đấu", href: "/valorant/match", current: location.pathname === "/valorant/match" },
       { name: "Các đội tham dự", href: "/valorant/allteam", current: location.pathname === "/valorant/allteam" },
-      { name: "Luật lệ", href: "/valorant/rule", current: location.pathname === "/valorant/rule" }
+      { name: "Luật lệ", href: "/valorant/rule", current: location.pathname === "/valorant/rule" },
+      { name: "Test", href: "/valorant/test", current: location.pathname === "/valorant/test" }
     ],
     aov: [
       { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },
