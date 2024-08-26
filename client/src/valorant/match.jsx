@@ -10,7 +10,7 @@ export default function MatchResult() {
     const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
 
     useEffect(() => {
-        fetch(`${proxyUrl}https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`, {
+        fetch(`https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`, {
             headers: { 'Authorization': apiKey }
         })
         .then(res => {

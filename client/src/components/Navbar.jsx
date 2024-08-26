@@ -41,7 +41,8 @@ export default function Example() {
       { name: "Trang chủ", href: "/", current: location.pathname === "/" },
       { name: "Game", href: "/allgame", current: location.pathname === "/allgame" },
       { name: "Pick'em", href: "/pickem", current: location.pathname === "/pickem" },
-      { name: "BXH", href: "/bxh", current: location.pathname === "/bxh" }
+      { name: "BXH", href: "/bxh", current: location.pathname === "/bxh" },
+      { name: "Test", href: "/valorant/test", current: location.pathname === "/valorant/test" }
     ],
     valorant: [
       { name: "VALORANT", href: "/valorant", current: location.pathname === "/valorant", logo: "val_icon" },
@@ -54,7 +55,8 @@ export default function Example() {
       { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },
       { name: "Trận đấu", href: "/arenaofvalor/match", current: location.pathname === "/arenaofvalor/match" },
       { name: "Các đội tham dự", href: "/arenaofvalor/allteam", current: location.pathname === "/arenaofvalor/allteam" },
-      { name: "Luật lệ", href: "/arenaofvalor/rule", current: location.pathname === "/arenaofvalor/rule" }
+      { name: "Luật lệ", href: "/arenaofvalor/rule", current: location.pathname === "/arenaofvalor/rule" },
+      { name: "Test", href: "/valorant/test", current: location.pathname === "/valorant/test" }
     ],
     tft: [
       { name: "Teamfight Tactics", href: "/tft", current: location.pathname === "/tft", logo: "tft_icon" },
