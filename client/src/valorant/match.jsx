@@ -10,7 +10,7 @@ export default function MatchResult() {
 
     useEffect(() => {
         // Fetch the match data from the backend proxy route
-        fetch(`/api/match/${region}/${matchid}`)
+        fetch(`https://dongchuyennghiep-backend.vercel.app/api/match/${region}/${matchid}`)
             .then(res => {
                 if (!res.ok) {
                     throw new Error(`HTTP error! status: ${res.status}`);
