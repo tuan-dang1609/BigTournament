@@ -22,8 +22,7 @@ export default function MatchStat() {
                 setMatchInfo(data.data.players);
                 setNumRound(data.data.rounds.length);
                 setAllKill(data.data.kills);
-                setScore(data.data.teams)
-
+                setScore(data.data.teams);
             })
             .catch(err => setError(err.message));
     }, [region, matchid]);
@@ -64,7 +63,6 @@ export default function MatchStat() {
                 mk: mkMap[player.puuid] || 0,
             }));
 
-            // Only update matchInfo if it has actually changed
             const isSame = JSON.stringify(matchInfo) === JSON.stringify(updatedMatchInfo);
             if (!isSame) {
                 setMatchInfo(updatedMatchInfo);
@@ -87,16 +85,26 @@ export default function MatchStat() {
                         </div>
                         <div className="score-and-time">
                             <div className="score bg-[#362431]">
-                                <span className={`scoreA ${score[0].rounds.won> score[1].rounds.won ? 'green-win' : 'red-lose'}`} id='score-left'>
-                                {score[0].rounds.won}</span>
+                                {score && score.length > 0 && (
+                                    <>
+                                        <span className={`scoreA ${score[0].rounds.won > score[1].rounds.won ? 'green-win' : 'red-lose'}`} id='score-left'>
+                                            {score[0].rounds.won}
+                                        </span>
+                                    </>
+                                )}
                             </div>
                             <div className="time text-sm uppercase bg-[#362431] text-white">
                                 <span>Fin</span>
                                 <span>19:00 - 25th Aug</span>
                             </div>
                             <div className="score bg-[#362431]">
-                                <span className={`scoreA ${score[0].rounds.won< score[1].rounds.won ? 'green-win' : 'red-lose'}`} id='score-left'>
-                                {score[1].rounds.won}</span>
+                                {score && score.length > 1 && (
+                                    <>
+                                        <span className={`scoreA ${score[0].rounds.won < score[1].rounds.won ? 'green-win' : 'red-lose'}`} id='score-left'>
+                                            {score[1].rounds.won}
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         </div>
                         <div className="team teamright w-full flex items-center">
