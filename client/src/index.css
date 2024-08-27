@@ -1,7 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+.matchstat{
+    font-family: "Quicksand", sans-serif !important;
+}
 .tag {
     opacity: 0;
     transform: translate(0, 12vh);
@@ -14,3 +17,451 @@
   }
 
 
+  .matchstat{
+    margin: 100px auto 40px ;
+    width: 95%;
+}
+.scoreboard-title{
+    margin: 1.25rem 0;
+}                                       
+div.scoreboard{
+    display: flex;
+    flex-direction: row;
+    gap: .25rem;
+    margin-bottom: .25rem;
+}
+div.scoreboard div.team,div.score-and-time{
+    display: flex;
+    border-radius: 4px;
+    --tw-bg-opacity: 1;
+
+}
+div.teamleft{
+    flex-direction: row-reverse;
+    justify-content: end;
+    background-color: rgba(254, 80, 0, 0.2);
+
+}
+div.scoreboard div.teamright{
+    justify-content: start;
+    background-color: rgba(255, 255, 0, 0.2);
+}
+
+div.scoreboard div.team{
+    font-size: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 0 0.75rem;
+    
+}
+div.score-and-time{
+    display: flex;
+    gap: .25rem;
+    --tw-bg-opacity: 1;
+    justify-content: center;
+    align-items: center !important;
+    max-width: 258.16px;
+}
+.winner-image {
+    width: 10px !important;
+    height: 30px !important;
+    margin: 0 15px !important;
+  }
+div.scoreboard div.time, div.scoreboard div.score{
+    height: 68px;
+}
+span.ban,span.pick,span.decider{
+    letter-spacing: .8px;
+
+}
+div.score-and-time div.score{
+    width:65.95px;
+    text-align: center;
+
+    padding: .75rem 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+div.score-and-time div.score span{
+    font-size: 26px;
+    font-weight: 500;
+    
+}
+div.teamleft div.teamname,div.teamright div.teamname{
+    font-size: 14px;
+    letter-spacing: .2px;
+}
+div.time{
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    width: 140px;
+    border-radius: 4px;
+}
+span.status{
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+span.time{
+    font-size: 10px;
+    --tw-text-opacity: 1;
+    color:rgb(141 133 140/ 1);
+    font-weight: 700;
+}
+
+.green-win,.banpickmap span.pick,.banpickmap span.decider{
+    color: rgb(12 199 110 / 1) !important;
+}
+.red-lose,.banpickmap span.ban{
+    color: rgb(242 63 55 / 1) !important;
+}
+.score-map{
+    width: 50%;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px 0;
+}
+.map-details{
+    display: flex;
+    background-position: center !important;
+    height: 50px;
+    justify-content: center;
+    border-radius: 4px;
+    width: 100%;
+}
+.map-details .teamleft {
+    display: flex;
+    background-color: transparent !important;
+    justify-content: flex-start;
+    flex-direction: row;
+    width: 33%;
+    align-items: center;
+
+}
+.map-buttons{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    --tw-bg-opacity: 1;
+    background-color: rgb(54 36 49 / var(--tw-bg-opacity));
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+}
+.button-map{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: .35rem;
+}
+.map-details .teamright {
+    display: flex;
+    background-color: transparent !important;
+    flex-direction: row-reverse;
+    width: 33%;
+    align-items: center;
+}
+.button-map button{
+    font-style: normal;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 10px;
+    line-height: 14px;
+    cursor: pointer;
+    --tw-text-opacity: 1;
+    color: rgb(141 133 140 / var(--tw-text-opacity));
+    padding: .25rem .5rem;
+    --tw-bg-opacity: 1;
+    background-color: rgb(42 24 37 / var(--tw-bg-opacity));
+    border-radius: 4px;
+    border-color: transparent;
+}
+.button-map button.active{
+    --tw-text-opacity: 1;
+    color: rgb(31 12 25 / var(--tw-text-opacity));
+    --tw-bg-opacity: 1;
+    background-color: rgb(233 231 232 / var(--tw-bg-opacity));
+}
+div.mapname{
+    width:33%;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase ;
+    font-weight: 1000;
+    font-size: 15px;
+
+}
+span.pick{
+    font-size: 12px;
+    margin:0 .5rem;
+    padding: 3px 5px;
+    background-color: white;
+    color: black;
+    font-weight: 900;
+    border-radius: 4px;
+    text-transform: uppercase ;
+
+}
+.banpickmap span.pick,.banpickmap span.ban,.banpickmap span.decider{
+    --tw-bg-opacity: 1;
+    background-color: rgb(31 12 25 / 1);
+    font-size: 10px;
+    margin:0 15px;
+    padding: .5rem;
+    font-weight: 900;
+    border-radius: 4px;
+    text-transform: uppercase ;
+
+    line-height: 14px;
+}
+
+.map-details .teamleft img,.map-details .teamright img{
+    width: 40px !important;
+    aspect-ratio: 1/1;
+    margin:0 .5rem !important;
+    
+}
+.map-details .teamleft img{
+    margin-right: 20px;
+}
+.map-details .teamright img{
+    margin-left: 20px;
+}
+.score-and-map{
+    display: flex;
+    gap: 0 1%;
+    margin-bottom: 1.25rem;
+}
+.ban-pick-history{
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto auto;
+    width: 50%;
+    gap: 0 5px;
+}
+.banpickmap{
+    display: flex;
+    flex-direction: column;
+    box-shadow: rgba(31, 12, 25, 0.5) 0px 0px 0px 1000px inset;
+    justify-content: center;
+    align-items: center;
+    min-height: 50px;
+    border-radius: 4px ;
+    padding: .75rem 0;
+}
+.banpickmap img{
+   width: 50px;
+   margin-bottom: 20px;
+   aspect-ratio: 1/1;
+}
+ .all-title{
+    font-style: normal;
+    font-weight: 700;
+
+    font-size: 12px;
+    line-height: 14px;
+
+}
+td.all-title{
+    width:10%;
+}
+td.all-title:first-child{
+    width: 195px !important;
+}
+@media screen and (max-width:1280px){
+    table.player-stats-table td:first-child{
+        width: 220px !important;
+    }
+    table.player-stats-table td:first-child::after{
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 10px; /* Adjust the shadow width as needed */
+        background: linear-gradient(to right, rgba(0, 0, 0, 0.2), transparent);
+    }
+}
+@media screen and (max-width:768px){
+    table.player-stats-table{
+        width: 200%;
+    }
+    table.player-stats-table td:first-child{
+        width: 198px !important;
+    }
+
+}
+.banpickmap span.mapname{
+    margin-bottom: 20px;
+}
+table.player-stats-table td:first-child span {
+    font-style: normal;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 14px;
+
+}
+.scoreboard-title div.title{
+    display: flex;
+    flex-direction: column;
+    padding: .75rem 0;
+    justify-content: center;
+    align-items: center;
+    gap: .35rem 0;
+
+    border-radius: 4px;
+}
+div.title span.league{
+    color:rgb(213, 213, 45);
+    font-size: 14px;
+
+    line-height: 16px;
+}
+div.title span.group{
+    font-size: 12px;
+    line-height: 16px;
+}
+.player-stats-container .wrapper{
+    width: 100%;
+}
+@media screen and (max-width: 1200px) {
+    .ban-pick-history{
+        display: grid;
+        grid-template-columns: auto auto;
+        width: 50%;
+        gap: 5px;
+    }
+    .map-buttons{
+        padding: 1rem 1.25rem;
+    }
+    .banpickmap{
+        height: 60px;
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+        padding: .75rem;
+    }
+    
+    span.mapname, .banpickmap img{
+        margin-bottom: 0 !important;
+        width: 35px;
+    }
+    .banpickmap img{
+        width: 40px;
+        vertical-align: middle;
+    }
+    span.ban, span.pick, span.decider{
+        margin: 0 !important;
+        letter-spacing: .8px;
+    }
+    .teamright, .teamleft{
+        gap: 0 .5rem;
+    }
+    .ban-pick-history > div:nth-child(7) {
+        grid-column: span 2; /* This makes the 7th item span both columns */
+    }
+}
+
+@media screen and (max-width: 1024px) {
+    div.time{
+        display: none;
+    }
+    span.mapname{
+        font-size: 10px;
+    }
+    .ban-pick-history{
+        display: grid;
+        grid-template-columns: auto auto;
+        width: 100%;
+        gap: 5px;
+    }
+    .ban-pick-history > div:nth-child(7) {
+        grid-column: span 2; /* This makes the 7th item span both columns */
+    }
+    .score-and-map{
+        flex-direction: column;
+        margin-bottom: 10px;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+    .score-map{
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    div.team.teamleft, div.team.teamright{
+        flex-direction: column;
+        align-items: center;
+        justify-content: center !important;  
+        gap: .25rem 0;
+    }
+
+    div.teamleft div.teamname, div.teamright div.teamname{
+        font-size: 10px;
+    }
+}
+.player-stats-container{
+  display: flex;
+  flex-direction: row;
+  gap: 1.25rem;
+  justify-content: center;
+}
+.player-stats-container img{
+  height: 30px;
+  aspect-ratio: 1/1;
+}
+.player-stats-container .teamname{
+  display: flex;
+  gap:0 0.5rem;
+  align-items: center;
+}
+table.player-stats-table{
+
+  border-collapse: collapse;
+}
+table.player-stats-table thead{
+   background-color: rgb(54 36 49/1);
+  border: none;
+}
+
+@media screen and (max-width: 1400px ){
+  .hidden{
+      display: none;
+  }
+  .player-stats-container{
+      flex-direction: column;
+  }
+  table.player-stats-table th:first-child,table.player-stats-table td:first-child{
+      position: sticky;
+      left: 0;
+      width: 200px;
+  }
+  table.player-stats-table th:first-child{
+      --tw-bg-opacity: 1;
+      background-color: rgb(42 24 37 / var(--tw-bg-opacity));
+  }
+
+  table.player-stats-table td:first-child span{
+  font-style: normal;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 14px;
+
+  }
+}
+.wrapper {
+    position: relative;
+    overflow: auto;
+    white-space: nowrap;
+
+}

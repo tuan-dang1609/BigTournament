@@ -15,7 +15,7 @@ import Rule from './valorant/Rule.jsx';
 import AllGame from './components/allgame.jsx';
 import './index.css'
 import MatchResult from './valorant/match.jsx';
-
+import MatchStat from './valorant/statmatch.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -34,6 +34,7 @@ if (rootElement) {
               <Route path='/valorant/me' element={<Rule />} />
               <Route path='/allgame' element={<AllGame />} />
               <Route path="/valorant/test" element={<MatchResult />} />
+              <Route path="/valorant/match" element={<MatchStat />} />
               <Route element={<PrivateRoute />}>
                 <Route path='/profile' element={<Profile />} />
               </Route>

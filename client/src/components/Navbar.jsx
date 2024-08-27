@@ -42,21 +42,19 @@ export default function Example() {
       { name: "Game", href: "/allgame", current: location.pathname === "/allgame" },
       { name: "Pick'em", href: "/pickem", current: location.pathname === "/pickem" },
       { name: "BXH", href: "/bxh", current: location.pathname === "/bxh" },
-      { name: "Test", href: "/valorant/test", current: location.pathname === "/valorant/test" }
     ],
     valorant: [
       { name: "VALORANT", href: "/valorant", current: location.pathname === "/valorant", logo: "val_icon" },
       { name: "Trận đấu", href: "/valorant/match", current: location.pathname === "/valorant/match" },
       { name: "Các đội tham dự", href: "/valorant/allteam", current: location.pathname === "/valorant/allteam" },
       { name: "Luật lệ", href: "/valorant/rule", current: location.pathname === "/valorant/rule" },
-      { name: "Test", href: "/valorant/test", current: location.pathname === "/valorant/test" }
     ],
     aov: [
       { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },
       { name: "Trận đấu", href: "/arenaofvalor/match", current: location.pathname === "/arenaofvalor/match" },
       { name: "Các đội tham dự", href: "/arenaofvalor/allteam", current: location.pathname === "/arenaofvalor/allteam" },
       { name: "Luật lệ", href: "/arenaofvalor/rule", current: location.pathname === "/arenaofvalor/rule" },
-      { name: "Test", href: "/valorant/test", current: location.pathname === "/valorant/test" }
+
     ],
     tft: [
       { name: "Teamfight Tactics", href: "/tft", current: location.pathname === "/tft", logo: "tft_icon" },
@@ -112,7 +110,7 @@ export default function Example() {
       {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 flex h-16 items-center justify-between relative">
-            <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
+            <div className="absolute inset-y-0 left-0 flex items-center min-[1024px]:hidden">
               <DisclosureButton
                 className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -125,7 +123,7 @@ export default function Example() {
                 )}
               </DisclosureButton>
             </div>
-            <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+            <div className="flex flex-1 items-center justify-center min-[1024px]:items-stretch min-[1024px]:justify-start">
               <Link to="/">
                 <img
                   alt="Your Company"
@@ -133,7 +131,7 @@ export default function Example() {
                   className="h-12.5 w-12.5"
                 />
               </Link>
-              <div className="hidden sm:ml-6 sm:block">
+              <div className="hidden sm:ml-6 min-[1024px]:block">
                 <div className="flex space-x-4">
                   {navigation.map((item) => (
                     <Link
