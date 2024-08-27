@@ -7,6 +7,7 @@ export default function MatchStat() {
     const [numRound, setNumRound] = useState(null);
     const [kill, setAllKill] = useState(null);
     const [score, setScore] = useState(null);
+    const [isLoading, setIsLoading] = useState(true); // New state for loading
     const matchid = 'b87161a7-0dea-4c7a-bf7a-6d1df1ea52db';
     const region = 'ap';
 
@@ -23,8 +24,12 @@ export default function MatchStat() {
                 setNumRound(data.data.rounds.length);
                 setAllKill(data.data.kills);
                 setScore(data.data.teams);
+                setIsLoading(false); // Data fetching is complete, set isLoading to false
             })
-            .catch(err => setError(err.message));
+            .catch(err => {
+                setError(err.message);
+                setIsLoading(false); // Even in case of an error, stop the loading
+            });
     }, [region, matchid]);
 
     useEffect(() => {
@@ -69,6 +74,12 @@ export default function MatchStat() {
             }
         }
     }, [kill, matchInfo, numRound]);
+
+    if (isLoading) {
+        return <div className="flex items-center justify-center min-h-screen">
+        <span className="loading loading-dots loading-lg text-primary"></span>
+      </div>; // Display while loading
+    }
 
     return (
         <>

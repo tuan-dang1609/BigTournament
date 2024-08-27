@@ -271,7 +271,7 @@ export default function Example() {
               )}
             </div>
           </div>
-          <DisclosurePanel className="sm:hidden">
+          <DisclosurePanel className="min-[1024px]:hidden">
             <div className="space-y-1 px-2 pt-2 pb-3">
               {navigation.map((item) => (
                 <DisclosureButton
