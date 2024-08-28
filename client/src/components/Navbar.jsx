@@ -45,7 +45,7 @@ export default function Example() {
     ],
     valorant: [
       { name: "VALORANT", href: "/valorant", current: location.pathname === "/valorant", logo: "val_icon" },
-      { name: "Trận đấu", href: "/valorant/match", current: location.pathname === "/valorant/match" },
+      { name: "Trận đấu", href: "/valorant/swissstage", current: location.pathname === "/valorant/swissstage" },
       { name: "Các đội tham dự", href: "/valorant/allteam", current: location.pathname === "/valorant/allteam" },
       { name: "Luật lệ", href: "/valorant/rule", current: location.pathname === "/valorant/rule" },
     ],
