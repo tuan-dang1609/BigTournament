@@ -215,7 +215,7 @@ export default function SwissStage() {
 
         const fetchGames = async () => {
             try {
-                const response = await fetch('/api/auth/findallmatchid', {
+                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
