@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom'; // Import useParams
 import MatchResult from "./match";
 
 export default function MatchStat() {
+    const { round, matchid, team } = useParams(); // Destructure the parameters from useParams
     const [matchInfo, setMatchInfo] = useState(null);
     const [error, setError] = useState(null);
     const [numRound, setNumRound] = useState(null);
     const [kill, setAllKill] = useState(null);
     const [score, setScore] = useState(null);
     const [isLoading, setIsLoading] = useState(true); // New state for loading
-    const matchid = 'b87161a7-0dea-4c7a-bf7a-6d1df1ea52db';
-    const region = 'ap';
+    const region = 'ap'; // You might need to dynamically set this based on your needs
 
     useEffect(() => {
+        // Construct the URL dynamically using the parameters
         fetch(`https://dongchuyennghiep-backend.vercel.app/api/match/${region}/${matchid}`)
             .then(res => {
                 if (!res.ok) {
@@ -76,9 +78,11 @@ export default function MatchStat() {
     }, [kill, matchInfo, numRound]);
 
     if (isLoading) {
-        return <div className="flex items-center justify-center min-h-screen">
-        <span className="loading loading-dots loading-lg text-primary"></span>
-      </div>; // Display while loading
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <span className="loading loading-dots loading-lg text-primary"></span>
+            </div>
+        ); // Display while loading
     }
 
     return (
@@ -88,9 +92,11 @@ export default function MatchStat() {
                     <div className="scoreboard w-full">
                         <div className="team teamleft w-full flex items-center">
                             <div className="logo">
-                                <img className="w-12 h-12 ml-2 max-lg:ml-0 max-lg:w-9 max-lg:h-9" 
-                                     src="https://drive.google.com/thumbnail?id=1Y2tyRSmHv0GwkzdR5jXqNcgvI9pcYVWo" 
-                                     alt="Team Left Logo" />
+                                <img
+                                    className="w-12 h-12 ml-2 max-lg:ml-0 max-lg:w-9 max-lg:h-9"
+                                    src="https://drive.google.com/thumbnail?id=1Y2tyRSmHv0GwkzdR5jXqNcgvI9pcYVWo"
+                                    alt="Team Left Logo"
+                                />
                             </div>
                             <div className="teamname">Paper Shark</div>
                         </div>
@@ -98,7 +104,10 @@ export default function MatchStat() {
                             <div className="score bg-[#362431]">
                                 {score && score.length > 0 && (
                                     <>
-                                        <span className={`scoreA ${score[0].rounds.won > score[1].rounds.won ? 'green-win' : 'red-lose'}`} id='score-left'>
+                                        <span
+                                            className={`scoreA ${score[0].rounds.won > score[1].rounds.won ? 'green-win' : 'red-lose'}`}
+                                            id='score-left'
+                                        >
                                             {score[0].rounds.won}
                                         </span>
                                     </>
@@ -111,7 +120,10 @@ export default function MatchStat() {
                             <div className="score bg-[#362431]">
                                 {score && score.length > 1 && (
                                     <>
-                                        <span className={`scoreA ${score[0].rounds.won < score[1].rounds.won ? 'green-win' : 'red-lose'}`} id='score-left'>
+                                        <span
+                                            className={`scoreA ${score[0].rounds.won < score[1].rounds.won ? 'green-win' : 'red-lose'}`}
+                                            id='score-left'
+                                        >
                                             {score[1].rounds.won}
                                         </span>
                                     </>
@@ -120,9 +132,11 @@ export default function MatchStat() {
                         </div>
                         <div className="team teamright w-full flex items-center">
                             <div className="logo">
-                                <img className="w-12 h-12 mr-2 max-lg:mr-0 max-lg:w-9 max-lg:h-9" 
-                                     src="https://drive.google.com/thumbnail?id=1z1thZ57p3ZSxT2sY_RpoLT0wzBZoy_76" 
-                                     alt="Team Right Logo" />
+                                <img
+                                    className="w-12 h-12 mr-2 max-lg:mr-0 max-lg:w-9 max-lg:h-9"
+                                    src="https://drive.google.com/thumbnail?id=1z1thZ57p3ZSxT2sY_RpoLT0wzBZoy_76"
+                                    alt="Team Right Logo"
+                                />
                             </div>
                             <div className="teamname">Hysteric</div>
                         </div>
