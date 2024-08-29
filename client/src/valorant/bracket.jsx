@@ -1,57 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../App.css'
-const images = import.meta.glob('../image/*.{png,jpg,jpeg,gif}');
-const imagesagent = import.meta.glob('../agent/*.{png,jpg,jpeg,gif}');
 
 export default function SwissStage() {
     const [data, setData] = useState(null);
-
-    useEffect(() => {
-
-        document.title = 'Vòng Swiss Play'
-        // Close the modal when clicking outside of it
-        window.onclick = function (event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = "none";
-            }
-        }
-        const SHEET_ID = '1s2Lyk37v-hZcg7-_ag8S1Jq3uaeRR8u-oG0zviSc26E';
-        const sheets = [
-  
-            { title: 'Swiss Stage', range: 'A2:L53', processData: processSwissStageData },
-
-
-        ];
-
-        const fetchSheetData = async (title, range) => {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${title}&range=${range}`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch data from sheet: ${title}`);
-            }
-            const text = await response.text();
-            const jsonData = JSON.parse(text.substr(47).slice(0, -2));
-            return jsonData;
-        };
-
-        const fetchData = async () => {
-            try {
-                const fetchPromises = sheets.map(sheet => fetchSheetData(sheet.title, sheet.range));
-                const results = await Promise.all(fetchPromises);
-                results.forEach((data, index) => {
-                    sheets[index].processData(data);
-                });
-            } catch (error) {
-                console.error('Error occurred:', error);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const [idmatch, setMatchId] = useState(null);
 
     const processSwissStageData = (data) => {
-
         let valueA = [];
         let valueB = [];
         let valueC = [];
@@ -68,11 +23,9 @@ export default function SwissStage() {
             valueD.push(data.table.rows[i]?.c[3]?.v ?? null);
             valueE.push(data.table.rows[i]?.c[4]?.v ?? null);
             valueF.push(data.table.rows[i]?.c[5]?.v ?? null);
-
         }
         for (let i = 0; i < 4; i++) {
             valueK[data.table.rows[i]?.c[10]?.v ?? null] = data.table.rows[i]?.c[11]?.v ?? null;
-
         }
         for (let position in valueK) {
             valueL.push({ position: parseInt(position), logo: valueK[position] });
@@ -80,10 +33,7 @@ export default function SwissStage() {
         for (let i = 4; i < 8; i++) {
             valueM.push(data.table.rows[i]?.c[11]?.v ?? null);
         }
-        // Create matchups container
-        const matchupsContainer = document.createElement('div');
-        matchupsContainer.classList.add('matchups');
-        // Loop to create each matchup
+
         function createTeamDiv(logoSrc, score) {
             const teamDiv = document.createElement('div');
             teamDiv.classList.add('team');
@@ -106,62 +56,63 @@ export default function SwissStage() {
             return teamDiv;
         }
 
-
-        // Close the modal when clicking outside of it
-        window.onclick = function (event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = "none";
-            }
-        }
-
-        function createMatchup(i, valueA, valueB, containerClass,groupstage) {
+        function createMatchup(i, valueA, valueB, containerClass, groupstage, idmatch) {
             const container = document.querySelector(containerClass);
             const matchupsContainer = document.createElement('div');
             matchupsContainer.classList.add('matchups');
-        
-            // Append modal to matchupsContainer
-        
+
             const link_info_match = document.createElement('a');
-            // Update the href to use Math.floor(i / 2) + 1
             link_info_match.classList.add('link-match-info');
-            link_info_match.href = '/valorant/match/'+groupstage+"/match" + (Math.floor(i / 2) + 1);
-        
+
             const matchupDiv = document.createElement('div');
             matchupDiv.classList.add('matchup');
-        
+
             const regex = /\/d\/(.+?)\/view/;
-        
+
             let link_drive_image_A = valueA[i];
             const fileIdA = link_drive_image_A.match(regex)[1];
             const logoSrcA = `https://drive.google.com/thumbnail?id=${fileIdA}`;
             const team1Div = createTeamDiv(logoSrcA, valueB[i]);
             matchupDiv.appendChild(team1Div);
-        
+
             let link_drive_image_B = valueA[i + 1];
             const fileIdB = link_drive_image_B.match(regex)[1];
             const logoSrcB = `https://drive.google.com/thumbnail?id=${fileIdB}`;
             const team2Div = createTeamDiv(logoSrcB, valueB[i + 1]);
             matchupDiv.appendChild(team2Div);
-        
+
+            if (idmatch && Array.isArray(idmatch)) {
+                const matchIndex = Math.floor(i / 2) + 1;
+                const matchData = idmatch.find(match => match.round === groupstage && match.Match === `match${matchIndex}`);
+
+                if (matchData) {
+                    link_info_match.href = `/valorant/match/${groupstage}/${matchData.matchid}/${matchData.teamA}-${matchData.teamB}`;
+                }
+            } else {
+                console.error("idmatch is not available or is not an array");
+                link_info_match.href = `/valorant/match/${groupstage}/match${Math.floor(i / 2) + 1}`;
+            }
+
             link_info_match.appendChild(matchupDiv);
             matchupsContainer.appendChild(link_info_match);
             container.appendChild(matchupsContainer);
         }
-        
-        for (let i = 0; i < 8; i += 2) {
-            createMatchup(i, valueA, valueB, '.w0-l0',"round0-0");
+
+        // Only call createMatchup if idmatch is available
+        if (idmatch) {
+            for (let i = 0; i < 8; i += 2) {
+                createMatchup(i, valueA, valueB, '.w0-l0', "round0-0", idmatch);
+            }
+            for (let i = 0; i < 4; i += 2) {
+                createMatchup(i, valueC, valueD, '.w1-l0', "round1-0", idmatch);
+            }
+            for (let i = 4; i < 8; i += 2) {
+                createMatchup(i, valueC, valueD, '.w0-l1', "round0-1", idmatch);
+            }
+            for (let i = 0; i < 3; i += 2) {
+                createMatchup(i, valueE, valueF, '.w1-l1', "round1-1", idmatch);
+            }
         }
-        for (let i = 0; i < 4; i += 2) {
-            createMatchup(i, valueC, valueD, '.w1-l0',"round1-0");
-        }
-        for (let i = 4; i < 8; i += 2) {
-            createMatchup(i, valueC, valueD, '.w0-l1',"round0-1");
-        }
-        
-        for (let i = 0; i < 3; i += 2) {
-            createMatchup(i, valueE, valueF, '.w1-l1',"round1-1");
-        }
-        // Create eliminate-teams container
         const eli = document.querySelector('.eliminate');
         const eliminateTeamsContainer = document.createElement('div');
         eliminateTeamsContainer.classList.add('eliminate-teams');
@@ -258,6 +209,74 @@ export default function SwissStage() {
         adva.appendChild(advanceTeamsContainer);
         setData(data);
     };
+
+    useEffect(() => {
+        document.title = 'Vòng Swiss Play';
+
+        const fetchGames = async () => {
+            try {
+                const response = await fetch('/api/auth/findallmatchid', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setMatchId(data);
+            } catch (error) {
+                console.error("Failed to fetch games:", error);
+            }
+        };
+
+        fetchGames();
+
+        window.onclick = function (event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        };
+
+        const SHEET_ID = '1s2Lyk37v-hZcg7-_ag8S1Jq3uaeRR8u-oG0zviSc26E';
+        const sheets = [
+            { title: 'Swiss Stage', range: 'A2:L53', processData: processSwissStageData }
+        ];
+
+        const fetchSheetData = async (title, range) => {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${title}&range=${range}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch data from sheet: ${title}`);
+            }
+            const text = await response.text();
+            const jsonData = JSON.parse(text.substr(47).slice(0, -2));
+            return jsonData;
+        };
+
+        const fetchData = async () => {
+            try {
+                const fetchPromises = sheets.map(sheet => fetchSheetData(sheet.title, sheet.range));
+                const results = await Promise.all(fetchPromises);
+                results.forEach((data, index) => {
+                    sheets[index].processData(data);
+                });
+            } catch (error) {
+                console.error('Error occurred:', error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        if (idmatch && data) {
+            processSwissStageData(data);
+        }
+    }, [idmatch, data]);
 
     return (
         <>

@@ -6,6 +6,7 @@ import Team from '../models/team.model.js';
 import Match from '../models/match.model.js';
 import BanPick from '../models/veto.model.js';
 import AllGame from '../models/allgame.model.js';
+import MatchID from '../models/matchid.model.js';
 export const signup = async (req, res, next) => {
   const { riotID, username, email, password } = req.body;
   const hashedPassword = bcryptjs.hashSync(password, 10);
@@ -149,6 +150,54 @@ export const addAllGame = async (req,res,next) => {
     next(error)
   }
 }
+
+export const addMatchID = async (req, res, next) => {
+  try {
+    const { matchid, teamA, teamB, round,Match} = req.body;
+
+    // Check if the required fields are provided
+    if (!matchid || !teamA || !teamB || !round||!Match) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Find if the matchid already exists
+    let match = await MatchID.findOne({ matchid });
+
+    if (match) {
+      // Update the existing match details
+      match.teamA = teamA;
+      match.teamB = teamB;
+      match.round = round;
+      match.Match = Match;
+      await match.save();
+      return res.status(200).json({ message: "MatchID updated successfully" });
+    } else {
+      // Create a new match ID entry
+      const newMatchId = new MatchID({ matchid, teamA, teamB, round,Match});
+      await newMatchId.save();
+      return res.status(201).json({ message: "MatchID added successfully" });
+    }
+  } catch (error) {
+    // Handle errors properly
+    return next(error);
+  }
+};
+export const findAllMatchID = async (req, res, next) => {
+  try {
+    const allGame = await MatchID.find();
+
+    if (!allGame || allGame.length === 0) {
+      // Ensure errorHandler is a function and correctly imported
+      return next(errorHandler(404, 'No Game found'));
+    }
+
+    res.status(200).json(allGame);
+  } catch (error) {
+    // Ensure the error is passed to the next middleware correctly
+    next(error);
+  }
+};
+
 export const findAllGame = async (req, res, next) => {
   try {
     const allGame = await AllGame.find();
@@ -267,6 +316,7 @@ export const getAllMatches = async (req, res, next) => {
     next(error);
   }
 };
+
 export const signin = async (req, res, next) => {
   const { email, username, password } = req.body;
   try {
