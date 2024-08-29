@@ -250,15 +250,17 @@ div.connection {
 
 .vong1 .merger
  {
-    border-top: solid white;
-    border-bottom: solid white;
-    border-left: solid white;
+    --tw-border-opacity:1;
+    border-top: solid var(--fallback-p, oklch(var(--p) / var(--tw-border-opacity)));
+    border-bottom: solid  var(--fallback-p, oklch(var(--p) / var(--tw-border-opacity)));
+    border-left: solid  var(--fallback-p, oklch(var(--p) / var(--tw-border-opacity)));
 }
 
 .vong2 .merger {
-    border-top: solid white;
-    border-bottom: solid white;
-    border-right: solid white;
+    --tw-border-opacity:1;
+    border-top: solid var(--fallback-p, oklch(var(--p) / var(--tw-border-opacity)));
+    border-bottom: solid  var(--fallback-p, oklch(var(--p) / var(--tw-border-opacity)));
+    border-right: solid  var(--fallback-p, oklch(var(--p) / var(--tw-border-opacity)));
 }
 img.map_pick{
     width: 25%;
@@ -284,7 +286,7 @@ img.map_pick{
 }
 
 .line {
-    border-bottom: solid white;
+    border-bottom: solid var(--fallback-p, oklch(var(--p) / var(--tw-border-opacity)));
 }
 
 div.vong1 .connection-line .line {

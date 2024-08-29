@@ -270,7 +270,7 @@ export default function SwissStage() {
                     <div className="matchuppair">
                         <div className="w0-l0">
                             <div className="title">
-                                <p className="title-vong-1">0W - 0L</p>
+                                <p className="title-vong-1 text-white">0W - 0L</p>
                             </div>
                         </div>
                     </div>
@@ -284,12 +284,12 @@ export default function SwissStage() {
                     <div className="matchuppair">
                         <div className="w1-l0">
                             <div className="title">
-                                <p className="title-vong-2">1W - 0L</p>
+                                <p className="title-vong-2 text-white">1W - 0L</p>
                             </div>
                         </div>
                         <div className="w0-l1">
                             <div className="title">
-                                <p className="title-vong-2">0W - 1L</p>
+                                <p className="title-vong-2 text-white">0W - 1L</p>
                             </div>
                         </div>
                     </div>
@@ -297,9 +297,9 @@ export default function SwissStage() {
                         <div className="adv-line">
                             <div className="line"></div>
                         </div>
-                        <div className="connection1">
+                        <div className="connection1 border-primary">
                             <div className="merger"></div>
-                            <div className="line"></div>
+                            <div className="line "></div>
                         </div>
                         <div className="eli-line">
                             <div className="line"></div>
@@ -311,7 +311,7 @@ export default function SwissStage() {
                     <div className="matchuppair">
                         <div className="w1-l1">
                             <div className="title">
-                                <p className="title-vong-3">1W - 1L</p>
+                                <p className="title-vong-3 text-white">1W - 1L</p>
                             </div>
                         </div>
                     </div>
@@ -327,12 +327,12 @@ export default function SwissStage() {
                     <div className="teams">
                         <div className="advance">
                             <div className="title">
-                                <p className="title-advance">Advance to play-off</p>
+                                <p className="title-advance text-white">Advance to play-off</p>
                             </div>
                         </div>
                         <div className="eliminate">
                             <div className="title">
-                                <p className="title-eliminate">Eliminate</p>
+                                <p className="title-eliminate text-white">Eliminate</p>
                             </div>
                             <div className="eliminate-teams"></div>
                         </div>
