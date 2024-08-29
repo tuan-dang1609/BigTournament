@@ -6,6 +6,7 @@ export default function SwissStage() {
     const [data, setData] = useState(null);
     const [idmatch, setMatchId] = useState(null);
     const [loading, setLoading] = useState(true);
+
     const processSwissStageData = (data) => {
         let valueA = [];
         let valueB = [];
@@ -16,6 +17,7 @@ export default function SwissStage() {
         let valueK = {};
         let valueL = [];
         let valueM = [];
+
         for (let i = 0; i < 8; i++) {
             valueA.push(data.table.rows[i]?.c[0]?.v ?? null);
             valueB.push(data.table.rows[i]?.c[1]?.v ?? null);
@@ -24,12 +26,15 @@ export default function SwissStage() {
             valueE.push(data.table.rows[i]?.c[4]?.v ?? null);
             valueF.push(data.table.rows[i]?.c[5]?.v ?? null);
         }
+
         for (let i = 0; i < 4; i++) {
             valueK[data.table.rows[i]?.c[10]?.v ?? null] = data.table.rows[i]?.c[11]?.v ?? null;
         }
+
         for (let position in valueK) {
             valueL.push({ position: parseInt(position), logo: valueK[position] });
         }
+
         for (let i = 4; i < 8; i++) {
             valueM.push(data.table.rows[i]?.c[11]?.v ?? null);
         }
@@ -58,6 +63,13 @@ export default function SwissStage() {
 
         function createMatchup(i, valueA, valueB, containerClass, groupstage, idmatch) {
             const container = document.querySelector(containerClass);
+
+            // Check if the container exists
+            if (!container) {
+                console.error(`Container with class ${containerClass} not found.`);
+                return;
+            }
+
             const matchupsContainer = document.createElement('div');
             matchupsContainer.classList.add('matchups');
 
@@ -113,100 +125,84 @@ export default function SwissStage() {
                 createMatchup(i, valueE, valueF, '.w1-l1', "round1-1", idmatch);
             }
         }
+
         const eli = document.querySelector('.eliminate');
-        const eliminateTeamsContainer = document.createElement('div');
-        eliminateTeamsContainer.classList.add('eliminate-teams');
 
-        // Create all-teams containeradvanceTeamsContainer
-        const allTeamsContainerEli = document.createElement('div');
-        allTeamsContainerEli.classList.add('all-teams-eli');
+        // Check if the 'eli' element exists
+        if (eli) {
+            const eliminateTeamsContainer = document.createElement('div');
+            eliminateTeamsContainer.classList.add('eliminate-teams');
 
-        // Loop through teams and create team elements
-        valueM.forEach(teamName => {
-            // Create team div
-            const teamDiv = document.createElement('div');
-            teamDiv.classList.add('team');
+            // Create all-teams container
+            const allTeamsContainerEli = document.createElement('div');
+            allTeamsContainerEli.classList.add('all-teams-eli');
 
-            // Create logo-team div
-            const logoTeamDiv = document.createElement('div');
-            logoTeamDiv.classList.add('logo-team');
+            // Loop through teams and create team elements
+            valueM.forEach(teamName => {
+                const teamDiv = document.createElement('div');
+                teamDiv.classList.add('team');
 
-            // Create team image
-            const teamImg = document.createElement('img');
-            const regex = /\/d\/(.+?)\/view/;
-            let link_drive_image = teamName; // Use even value cell
-            const logoteamA = link_drive_image.match(regex);
-            const fileIdA = logoteamA[1];
-            teamImg.src = `https://drive.google.com/thumbnail?id=${fileIdA}`;
-            teamImg.alt = '';
+                const logoTeamDiv = document.createElement('div');
+                logoTeamDiv.classList.add('logo-team');
 
-            // Append team image to logo-team div
-            logoTeamDiv.appendChild(teamImg);
+                const teamImg = document.createElement('img');
+                const regex = /\/d\/(.+?)\/view/;
+                let link_drive_image = teamName;
+                const logoteamA = link_drive_image.match(regex);
+                const fileIdA = logoteamA[1];
+                teamImg.src = `https://drive.google.com/thumbnail?id=${fileIdA}`;
+                teamImg.alt = '';
 
-            // Append logo-team div to team div
-            teamDiv.appendChild(logoTeamDiv);
+                logoTeamDiv.appendChild(teamImg);
+                teamDiv.appendChild(logoTeamDiv);
+                allTeamsContainerEli.appendChild(teamDiv);
+            });
 
-            // Append team div to all-teams container
-            allTeamsContainerEli.appendChild(teamDiv);
-        });
-
-        // Append all-teams container to eliminate-teams container
-        eliminateTeamsContainer.appendChild(allTeamsContainerEli);
-
-        // Append eliminate-teams container to the document body or any other desired parent element
-        eli.appendChild(eliminateTeamsContainer);
-
+            eliminateTeamsContainer.appendChild(allTeamsContainerEli);
+            eli.appendChild(eliminateTeamsContainer);
+        } 
 
         const adva = document.querySelector('.advance');
-        const advanceTeamsContainer = document.createElement('div');
-        advanceTeamsContainer.classList.add('advance-teams');
 
-        // Create all-teams-win container
-        const allTeamsWinContainer = document.createElement('div');
-        allTeamsWinContainer.classList.add('all-teams-win');
+        // Check if the 'adva' element exists
+        if (adva) {
+            const advanceTeamsContainer = document.createElement('div');
+            advanceTeamsContainer.classList.add('advance-teams');
 
+            const allTeamsWinContainer = document.createElement('div');
+            allTeamsWinContainer.classList.add('all-teams-win');
 
-        // Loop through teamsData and create team elements
-        valueL.forEach(team => {
-            // Create team div
-            const teamDiv = document.createElement('div');
-            teamDiv.classList.add('team');
+            valueL.forEach(team => {
+                const teamDiv = document.createElement('div');
+                teamDiv.classList.add('team');
 
-            // Create position div
-            const posDiv = document.createElement('div');
-            posDiv.classList.add('pos');
-            const posP = document.createElement('p');
-            posP.textContent = team.position;
-            posDiv.appendChild(posP);
+                const posDiv = document.createElement('div');
+                posDiv.classList.add('pos');
+                const posP = document.createElement('p');
+                posP.textContent = team.position;
+                posDiv.appendChild(posP);
 
-            // Create logo-team div
-            const logoTeamDiv = document.createElement('div');
-            logoTeamDiv.classList.add('logo-team');
+                const logoTeamDiv = document.createElement('div');
+                logoTeamDiv.classList.add('logo-team');
 
-            // Create team image
-            const teamImg = document.createElement('img');
-            const regex = /\/d\/(.+?)\/view/;
-            let link_drive_image = team.logo; // Use even value cell
-            const logoteamA = link_drive_image.match(regex);
-            const fileIdA = logoteamA[1];
-            teamImg.src = `https://drive.google.com/thumbnail?id=${fileIdA}`;
-            teamImg.alt = '';
+                const teamImg = document.createElement('img');
+                const regex = /\/d\/(.+?)\/view/;
+                let link_drive_image = team.logo;
+                const logoteamA = link_drive_image.match(regex);
+                const fileIdA = logoteamA[1];
+                teamImg.src = `https://drive.google.com/thumbnail?id=${fileIdA}`;
+                teamImg.alt = '';
 
+                teamDiv.appendChild(posDiv);
+                logoTeamDiv.appendChild(teamImg);
+                teamDiv.appendChild(logoTeamDiv);
+                allTeamsWinContainer.appendChild(teamDiv);
+            });
 
-            // Append elements to team div
-            teamDiv.appendChild(posDiv);
-            logoTeamDiv.appendChild(teamImg);
-            teamDiv.appendChild(logoTeamDiv);
+            advanceTeamsContainer.appendChild(allTeamsWinContainer);
+            adva.appendChild(advanceTeamsContainer);
+        }
 
-            // Append team div to all-teams-win container
-            allTeamsWinContainer.appendChild(teamDiv);
-        });
-
-        // Append all-teams-win container to advance-teams container
-        advanceTeamsContainer.appendChild(allTeamsWinContainer);
-
-        // Append advance-teams container to the document body or any other desired parent element
-        adva.appendChild(advanceTeamsContainer);
         setData(data);
     };
 
@@ -279,7 +275,6 @@ export default function SwissStage() {
         }
     }, [idmatch, data]);
 
-    // Return the JSX only once, at the end of the function
     return (
         <div>
             {loading ? (
@@ -298,7 +293,7 @@ export default function SwissStage() {
                                 <div className="w0-l0">
                                     <div className="title">
                                         <p className="title-vong-1 text-white">0W - 0L</p>
-                                    </div>
+                    </div>
                                 </div>
                             </div>
                             <div className="connection-line">
@@ -364,7 +359,7 @@ export default function SwissStage() {
                                     <div className="eliminate-teams"></div>
                                 </div>
                             </div>
-                        </div>
+                </div>
                     </section>
                 </React.Fragment>
             )}
