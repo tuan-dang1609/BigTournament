@@ -5,7 +5,7 @@ import '../App.css'
 export default function SwissStage() {
     const [data, setData] = useState(null);
     const [idmatch, setMatchId] = useState(null);
-
+    const [loading, setLoading] = useState(true);
     const processSwissStageData = (data) => {
         let valueA = [];
         let valueB = [];
@@ -215,7 +215,7 @@ export default function SwissStage() {
 
         const fetchGames = async () => {
             try {
-                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
+                const response = await fetch('/api/auth/findallmatchid', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -235,49 +235,39 @@ export default function SwissStage() {
 
         fetchGames();
 
-        window.onclick = function (event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = "none";
-            }
-        };
-
         const SHEET_ID = '1s2Lyk37v-hZcg7-_ag8S1Jq3uaeRR8u-oG0zviSc26E';
         const sheets = [
             { title: 'Swiss Stage', range: 'A2:L53', processData: processSwissStageData }
         ];
 
-        const fetchSheetData = async (title, range) => {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${title}&range=${range}`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch data from sheet: ${title}`);
-            }
-            const text = await response.text();
-            const jsonData = JSON.parse(text.substr(47).slice(0, -2));
-            return jsonData;
-        };
-
-        const fetchData = async () => {
+        const fetchAllSheetData = async () => {
             try {
-                const fetchPromises = sheets.map(sheet => fetchSheetData(sheet.title, sheet.range));
-                const results = await Promise.all(fetchPromises);
-                results.forEach((data, index) => {
-                    sheets[index].processData(data);
-                });
+                setLoading(true); // Set loading to true before fetching data
+                for (const sheet of sheets) {
+                    const sheetData = await fetchSheetData(sheet.title, sheet.range);
+                    sheet.processData(sheetData);
+                }
             } catch (error) {
-                console.error('Error occurred:', error);
+                console.error("Failed to fetch sheet data:", error);
+                setLoading(false); // Set loading to false in case of an error
             }
         };
 
-        fetchData();
+        fetchAllSheetData();
     }, []);
 
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-screen">
+        <span className="loading loading-dots loading-lg text-primary"></span>
+      </div>; // Show loading while data is being fetched
+    }
+    
     useEffect(() => {
         if (idmatch && data) {
             processSwissStageData(data);
         }
     }, [idmatch, data]);
-
+    
     return (
         <>
             <div className="next">
