@@ -215,7 +215,7 @@ export default function SwissStage() {
 
         const fetchGames = async () => {
             try {
-                const response = await fetch('/api/auth/findallmatchid', {
+                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -233,121 +233,141 @@ export default function SwissStage() {
             }
         };
 
-        fetchGames();
-
         const SHEET_ID = '1s2Lyk37v-hZcg7-_ag8S1Jq3uaeRR8u-oG0zviSc26E';
         const sheets = [
             { title: 'Swiss Stage', range: 'A2:L53', processData: processSwissStageData }
         ];
 
-        const fetchAllSheetData = async () => {
+        const fetchSheetData = async (title, range) => {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${title}&range=${range}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch data from sheet: ${title}`);
+            }
+            const text = await response.text();
+            const jsonData = JSON.parse(text.substr(47).slice(0, -2));
+            return jsonData;
+        };
+
+        const fetchData = async () => {
             try {
-                setLoading(true); // Set loading to true before fetching data
-                for (const sheet of sheets) {
-                    const sheetData = await fetchSheetData(sheet.title, sheet.range);
-                    sheet.processData(sheetData);
-                }
+                const fetchPromises = sheets.map(sheet => fetchSheetData(sheet.title, sheet.range));
+                const results = await Promise.all(fetchPromises);
+                results.forEach((data, index) => {
+                    sheets[index].processData(data);
+                });
             } catch (error) {
-                console.error("Failed to fetch sheet data:", error);
-                setLoading(false); // Set loading to false in case of an error
+                console.error('Error occurred:', error);
+            } finally {
+                setLoading(false); // Set loading to false after data is fetched
             }
         };
 
-        fetchAllSheetData();
+        fetchGames();
+        fetchData();
+
+        window.onclick = function (event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        };
     }, []);
 
-    if (loading) {
-        return <div className="flex items-center justify-center min-h-screen">
-        <span className="loading loading-dots loading-lg text-primary"></span>
-      </div>; // Show loading while data is being fetched
-    }
-    
     useEffect(() => {
         if (idmatch && data) {
             processSwissStageData(data);
         }
     }, [idmatch, data]);
-    
+
+    // Return the JSX only once, at the end of the function
     return (
-        <>
-            <div className="next">
-                <Link to="/valorant/playoff">Play-off &gt;</Link>
-            </div>
-            <h2 style={{ textAlign: 'center', fontWeight: 900 }}>SWISS STAGE</h2>
-            <section className="swissbracket">
-                <div className="vong1">
-                    <div className="matchuppair">
-                        <div className="w0-l0">
-                            <div className="title">
-                                <p className="title-vong-1 text-white">0W - 0L</p>
+        <div>
+            {loading ? (
+                <div className="flex items-center justify-center min-h-screen">
+                <span className="loading loading-dots loading-lg text-primary"></span>
+              </div>
+            ) : (
+                <React.Fragment>
+                    <div className="next">
+                        <Link to="/valorant/playoff">Play-off &gt;</Link>
+                    </div>
+                    <h2 style={{ textAlign: 'center', fontWeight: 900 }}>SWISS STAGE</h2>
+                    <section className="swissbracket">
+                        <div className="vong1">
+                            <div className="matchuppair">
+                                <div className="w0-l0">
+                                    <div className="title">
+                                        <p className="title-vong-1 text-white">0W - 0L</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="connection-line">
+                                <div className="line"></div>
+                                <div className="merger"></div>
                             </div>
                         </div>
-                    </div>
-                    <div className="connection-line">
-                        <div className="line"></div>
-                        <div className="merger"></div>
-                    </div>
-                </div>
-
-                <div className="vong2">
-                    <div className="matchuppair">
-                        <div className="w1-l0">
-                            <div className="title">
-                                <p className="title-vong-2 text-white">1W - 0L</p>
+    
+                        <div className="vong2">
+                            <div className="matchuppair">
+                                <div className="w1-l0">
+                                    <div className="title">
+                                        <p className="title-vong-2 text-white">1W - 0L</p>
+                                    </div>
+                                </div>
+                                <div className="w0-l1">
+                                    <div className="title">
+                                        <p className="title-vong-2 text-white">0W - 1L</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="connection-line">
+                                <div className="adv-line">
+                                    <div className="line"></div>
+                                </div>
+                                <div className="connection1 border-primary">
+                                    <div className="merger"></div>
+                                    <div className="line"></div>
+                                </div>
+                                <div className="eli-line">
+                                    <div className="line"></div>
+                                </div>
                             </div>
                         </div>
-                        <div className="w0-l1">
-                            <div className="title">
-                                <p className="title-vong-2 text-white">0W - 1L</p>
+    
+                        <div className="vong3">
+                            <div className="matchuppair">
+                                <div className="w1-l1">
+                                    <div className="title">
+                                        <p className="title-vong-3 text-white">1W - 1L</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="connection1">
+                                <div className="line"></div>
+                            </div>
+                            <div className="eli-line">
+                                <div className="line"></div>
                             </div>
                         </div>
-                    </div>
-                    <div className="connection-line">
-                        <div className="adv-line">
-                            <div className="line"></div>
-                        </div>
-                        <div className="connection1 border-primary">
-                            <div className="merger"></div>
-                            <div className="line "></div>
-                        </div>
-                        <div className="eli-line">
-                            <div className="line"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="vong3">
-                    <div className="matchuppair">
-                        <div className="w1-l1">
-                            <div className="title">
-                                <p className="title-vong-3 text-white">1W - 1L</p>
+    
+                        <div className="adva-eli">
+                            <div className="teams">
+                                <div className="advance">
+                                    <div className="title">
+                                        <p className="title-advance text-white">Advance to play-off</p>
+                                    </div>
+                                </div>
+                                <div className="eliminate">
+                                    <div className="title">
+                                        <p className="title-eliminate text-white">Eliminate</p>
+                                    </div>
+                                    <div className="eliminate-teams"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="connection1">
-                        <div className="line"></div>
-                    </div>
-                    <div className="eli-line">
-                        <div className="line"></div>
-                    </div>
-                </div>
-
-                <div className="adva-eli">
-                    <div className="teams">
-                        <div className="advance">
-                            <div className="title">
-                                <p className="title-advance text-white">Advance to play-off</p>
-                            </div>
-                        </div>
-                        <div className="eliminate">
-                            <div className="title">
-                                <p className="title-eliminate text-white">Eliminate</p>
-                            </div>
-                            <div className="eliminate-teams"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </>
+                    </section>
+                </React.Fragment>
+            )}
+        </div>
     );
 }
