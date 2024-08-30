@@ -286,6 +286,7 @@ img.map_pick{
 }
 
 .line {
+    --tw-border-opacity:1;
     border-bottom: solid var(--fallback-p, oklch(var(--p) / var(--tw-border-opacity)));
 }
 

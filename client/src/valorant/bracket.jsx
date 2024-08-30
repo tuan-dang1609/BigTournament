@@ -160,7 +160,7 @@ export default function SwissStage() {
 
             eliminateTeamsContainer.appendChild(allTeamsContainerEli);
             eli.appendChild(eliminateTeamsContainer);
-        } 
+        }
 
         const adva = document.querySelector('.advance');
 
@@ -279,21 +279,21 @@ export default function SwissStage() {
         <div>
             {loading ? (
                 <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-dots loading-lg text-primary"></span>
-              </div>
+                    <span className="loading loading-dots loading-lg text-primary"></span>
+                </div>
             ) : (
                 <React.Fragment>
                     <div className="next">
                         <Link to="/valorant/playoff">Play-off &gt;</Link>
                     </div>
                     <h2 style={{ textAlign: 'center', fontWeight: 900 }}>SWISS STAGE</h2>
-                    <section className="swissbracket">
+                    <section className="swissbracket wrapper max-lg:w-[500%]">
                         <div className="vong1">
                             <div className="matchuppair">
                                 <div className="w0-l0">
                                     <div className="title">
                                         <p className="title-vong-1 text-white">0W - 0L</p>
-                    </div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="connection-line">
@@ -301,7 +301,7 @@ export default function SwissStage() {
                                 <div className="merger"></div>
                             </div>
                         </div>
-    
+
                         <div className="vong2">
                             <div className="matchuppair">
                                 <div className="w1-l0">
@@ -328,7 +328,7 @@ export default function SwissStage() {
                                 </div>
                             </div>
                         </div>
-    
+
                         <div className="vong3">
                             <div className="matchuppair">
                                 <div className="w1-l1">
@@ -344,7 +344,7 @@ export default function SwissStage() {
                                 <div className="line"></div>
                             </div>
                         </div>
-    
+
                         <div className="adva-eli">
                             <div className="teams">
                                 <div className="advance">
@@ -359,7 +359,7 @@ export default function SwissStage() {
                                     <div className="eliminate-teams"></div>
                                 </div>
                             </div>
-                </div>
+                        </div>
                     </section>
                 </React.Fragment>
             )}
