@@ -46,7 +46,7 @@ export default function MatchResult({ matchInfo, numRound, kill, error }) {
                     <tbody>
                         {sortedTeam.map((player, index) => (
                             <tr key={index} className="text-center">
-                                <td className='all-title flex flex-row gap-x-2 bg-base-100 max-[1024px]:sticky max-[1024px]:left-0'>
+                                <td className='all-title flex flex-row gap-x-2 bg-base-100 sticky left-0'>
                                     <img className='h-9 w-9 max-[768px]:h-8 max-[768px]:w-8' src={imageUrls[player.agent.name]} alt="Agent Icon" />
                                     <p className='flex items-center'>{player.name}#{player.tag}</p>
                                 </td>
