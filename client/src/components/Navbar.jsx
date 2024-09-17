@@ -40,33 +40,30 @@ export default function Example() {
     general: [
       { name: "Trang chủ", href: "/", current: location.pathname === "/" },
       { name: "Game", href: "/allgame", current: location.pathname === "/allgame" },
-      { name: "Pick'em", href: "/pickem", current: location.pathname === "/pickem" },
-      { name: "BXH", href: "/bxh", current: location.pathname === "/bxh" },
+
     ],
     valorant: [
       { name: "VALORANT", href: "/valorant", current: location.pathname === "/valorant", logo: "val_icon" },
-      { name: "Trận đấu", href: "/valorant/swissstage", current: location.pathname === "/valorant/swissstage" },
-      { name: "Các đội tham dự", href: "/valorant/allteam", current: location.pathname === "/valorant/allteam" },
-      { name: "Luật lệ", href: "/valorant/rule", current: location.pathname === "/valorant/rule" },
+
+
     ],
     aov: [
       { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },
-      { name: "Trận đấu", href: "/arenaofvalor/match", current: location.pathname === "/arenaofvalor/match" },
-      { name: "Các đội tham dự", href: "/arenaofvalor/allteam", current: location.pathname === "/arenaofvalor/allteam" },
-      { name: "Luật lệ", href: "/arenaofvalor/rule", current: location.pathname === "/arenaofvalor/rule" },
+
 
     ],
     tft: [
       { name: "Teamfight Tactics", href: "/tft", current: location.pathname === "/tft", logo: "tft_icon" },
-      { name: "Trận đấu", href: "/tft/match", current: location.pathname === "/tft/match" },
-      { name: "Các đội tham dự", href: "/tft/allteam", current: location.pathname === "/tft/allteam" },
-      { name: "Luật lệ", href: "/tft/rule", current: location.pathname === "/tft/rule" }
+
+
     ],
     lol: [
       { name: "League Of Legends", href: "/leagueoflegend", current: location.pathname === "/leagueoflegend", logo: "lol_icon" },
-      { name: "Trận đấu", href: "/leagueoflegend/match", current: location.pathname === "/leagueoflegend/match" },
-      { name: "Các đội tham dự", href: "/leagueoflegend/allteam", current: location.pathname === "/leagueoflegend/allteam" },
-      { name: "Luật lệ", href: "/leagueoflegend/rule", current: location.pathname === "/leagueoflegend/rule" }
+
+    ],
+    chess: [
+      { name: "", href: "https://www.chess.com/", current: location.pathname === "https://www.chess.com/", logo: "lol_icon" },
+
     ],
   };
 
@@ -75,6 +72,7 @@ export default function Example() {
     if (location.pathname.includes("arenaofvalor")) return navigationAll.aov;
     if (location.pathname.includes("tft")) return navigationAll.tft;
     if (location.pathname.includes("leagueoflegend")) return navigationAll.lol;
+    if (location.pathname.includes("https://www.chess.com/")) return navigationAll.chess;
     return navigationAll.general;
   };
 
