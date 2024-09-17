@@ -163,6 +163,7 @@ span.time{
     justify-content: flex-end;
     gap: .35rem;
 }
+
 .map-details .teamright {
     display: flex;
     background-color: transparent !important;
@@ -282,15 +283,7 @@ td.all-title:first-child{
         width: 220px !important;
 
     }
-    table.player-stats-table td:first-child::after{
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 10px; /* Adjust the shadow width as needed */
-        background: linear-gradient(to right, rgba(0, 0, 0, 0.2), transparent);
-    }
+
 }
 @media screen and (max-width:768px){
     table.player-stats-table{
