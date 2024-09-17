@@ -280,8 +280,7 @@ td.all-title:first-child{
 @media screen and (max-width:1280px){
     table.player-stats-table td:first-child{
         width: 220px !important;
-        position: sticky;
-        left: 0;
+
     }
     table.player-stats-table td:first-child::after{
         content: '';
@@ -299,8 +298,6 @@ td.all-title:first-child{
     }
     table.player-stats-table td:first-child{
         width: 198px !important;
-        position: sticky;
-        left: 0;
     }
 
 }
