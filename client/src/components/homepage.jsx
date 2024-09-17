@@ -66,7 +66,7 @@ export default function Home() {
                     <div className={`mx-auto max-w-7xl px-2 sm:px-6 relative z-0 ${marginTopClass}`}>
                         <div className="welcome animate__animated animate__fadeIn flex lg:flex-row max-[1024px]:flex-col gap-8 mb-14 lg:px-8">
                             <section className="lg:w-6.5/10 max-[1024px]:w-full">
-                                <p className='lg:text-[40px] font-bold font-sans leading-tight max-[1024px]:text-4xl mb-7'>CHÀO MỪNG TỚI GIẢI <span className='text-primary'>VALORANT</span> DCN SPLIT 3</p>
+                                <p className='lg:text-[40px] font-bold font-sans leading-tight max-[1024px]:text-4xl mb-7'>CHÀO MỪNG TỚI GIẢI <span className='text-primary'>DCN Esport</span></p>
                                 <p className='text-lg mb-4 '>Mục đích tụi mình tạo ra giải này để giúp các bạn có thể giải trí sau giờ học căng thẳng. Các thông tin
                                     trận đấu sẽ được cập nhật trên này và trên kênh <a className='font-bold text-primary hover:text-neutral' href="https://discord.gg/QbtBzVDq3Z">Discord của
                                         DCN</a>.</p>
