@@ -94,11 +94,11 @@ export default function MatchStat() {
                             <div className="logo">
                                 <img
                                     className="w-12 h-12 ml-2 max-lg:ml-0 max-lg:w-9 max-lg:h-9"
-                                    src="https://drive.google.com/thumbnail?id=1Y2tyRSmHv0GwkzdR5jXqNcgvI9pcYVWo"
+                                    src="https://drive.google.com/thumbnail?id=1z1thZ57p3ZSxT2sY_RpoLT0wzBZoy_76"
                                     alt="Team Left Logo"
                                 />
                             </div>
-                            <div className="teamname">Paper Shark</div>
+                            <div className="teamname">Hysteric</div>
                         </div>
                         <div className="score-and-time">
                             <div className="score bg-[#362431]">
@@ -115,7 +115,7 @@ export default function MatchStat() {
                             </div>
                             <div className="time text-sm uppercase bg-[#362431] text-white">
                                 <span>Fin</span>
-                                <span>19:00 - 25th Aug</span>
+                                <span>19:00 - 24th JUL</span>
                             </div>
                             <div className="score bg-[#362431]">
                                 {score && score.length > 1 && (
@@ -134,11 +134,11 @@ export default function MatchStat() {
                             <div className="logo">
                                 <img
                                     className="w-12 h-12 mr-2 max-lg:mr-0 max-lg:w-9 max-lg:h-9"
-                                    src="https://drive.google.com/thumbnail?id=1z1thZ57p3ZSxT2sY_RpoLT0wzBZoy_76"
+                                    src="https://drive.google.com/thumbnail?id=1Y2tyRSmHv0GwkzdR5jXqNcgvI9pcYVWo"
                                     alt="Team Right Logo"
                                 />
                             </div>
-                            <div className="teamname">Hysteric</div>
+                            <div className="teamname">Paper Shark</div>
                         </div>
                     </div>
                     <div className='title bg-[#362431]'>
