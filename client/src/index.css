@@ -163,7 +163,6 @@ span.time{
     justify-content: flex-end;
     gap: .35rem;
 }
-
 .map-details .teamright {
     display: flex;
     background-color: transparent !important;
@@ -281,9 +280,18 @@ td.all-title:first-child{
 @media screen and (max-width:1280px){
     table.player-stats-table td:first-child{
         width: 220px !important;
-
+        position: sticky;
+        left: 0;
     }
-
+    table.player-stats-table td:first-child::after{
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 10px; /* Adjust the shadow width as needed */
+        background: linear-gradient(to right, rgba(0, 0, 0, 0.2), transparent);
+    }
 }
 @media screen and (max-width:768px){
     table.player-stats-table{
@@ -291,6 +299,8 @@ td.all-title:first-child{
     }
     table.player-stats-table td:first-child{
         width: 198px !important;
+        position: sticky;
+        left: 0;
     }
 
 }
@@ -429,9 +439,6 @@ table.player-stats-table thead{
 }
 
 @media screen and (max-width: 1400px ){
-    table.player-stats-table {
-        table-layout: fixed;
-    }
   .hidden{
       display: none;
   }
@@ -457,8 +464,29 @@ table.player-stats-table thead{
   }
 }
 .wrapper {
-    position: relative;
-    overflow: auto;
+
+    overflow-x: auto; /* Enable horizontal scrolling */
     white-space: nowrap;
 
+/* Add this CSS to handle overflow for mobile devices */
+.wrapper {
+    position: relative;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    white-space: nowrap; /* Prevent content wrapping */
+}
+
+/* Ensure table width does not exceed parent container */
+table.player-stats-table {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Adjust player name column width */
+table.player-stats-table td:first-child {
+    width: auto;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Show ellipsis if text is too long */
+    white-space: nowrap; /* Prevent text wrapping */
+}
 }
