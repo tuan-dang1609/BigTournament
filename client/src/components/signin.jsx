@@ -1,25 +1,33 @@
-import React, { useState } from 'react';
-
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { useDispatch, useSelector } from "react-redux";
 import { signInStart, signInFailure, signInSuccess } from '../../redux/user/userSlice';
-import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate,Link } from 'react-router-dom';
 
-export default function SignIn() {
-  const [loading1, setLoading] = useState(true);
+function LoginForm () {
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
 
-  document.title = "Đăng nhập"
-  const [formData, setFormData] = useState({});
   const { loading, error } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const dispatch = useDispatch()
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    dispatch(signInStart());
     try {
-      dispatch(signInStart());
       const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/signin', {
         method: 'POST',
         headers: {
@@ -27,52 +35,102 @@ export default function SignIn() {
         },
         body: JSON.stringify(formData),
       });
+
       const data = await res.json();
 
       if (data.success === false) {
         dispatch(signInFailure(data));
         return;
       }
+
       dispatch(signInSuccess(data));
-      navigate('/')
+      navigate('/');
     } catch (error) {
-      dispatch(signInFailure(error))
+      dispatch(signInFailure(error));
     }
   };
-  return (
-    <>
-      <div className='max-w-7xl mt-40 mx-auto w-full'>
-        <div className='max-w-md px-2 sm:px-6 mx-auto'>
-          <h1 className='text-3xl font-bold text-center mb-3'>Đăng Nhập</h1>
-          <form onSubmit={handleSubmit} className='flex flex-col'>
-            <input
-              type='text'
-              placeholder='Username'
-              id='username'
-              className='p-3 my-[6px] rounded-lg border-primary border-[1.5px] '
-              onChange={handleChange}
-            />
-            <input
-              type='password'
-              placeholder='Password'
-              id='password'
-              className='p-3 my-[6px] rounded-lg border-primary border-[1.5px] '
-              onChange={handleChange}
-            />
-            <button disabled={loading} className="btn rounded-btn mt-3 bg-primary hover:bg-neutral text-white">
-              {loading ? 'Loading...' : 'Đăng nhập'}
-            </button>
-          </form>
-          <div className='flex items-center my-1'>
-            <div className='border-b-2 border-secondary flex-grow'></div>
-            <div className='mx-4'>Hoặc</div>
-            <div className='border-b-2 border-secondary flex-grow'></div>
-          </div>
-          <Link className='btn rounded-btn w-full bg-accent hover:bg-neutral text-white' to='/signup'><span>Đăng kí</span></Link>
-          <p style={{ color: 'red' }}>{error ? error.message || 'Something went wrong!' : ''}</p>
-        </div>
 
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-800">Login</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500
+                disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 disabled:shadow-none"
+              placeholder="Enter your username"
+              required
+              aria-label="Username"
+            />
+          </div>
+          <div className="relative">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className="block w-full pr-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none bg-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Enter your password"
+                required
+                aria-label="Password"
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  type="button"
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500 transition ease-in-out duration-150"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <FaEyeSlash className="h-5 w-5" />
+                  ) : (
+                    <FaEye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+            >
+              {loading ? (
+                <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 mr-3" />
+              ) : null}
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </div>
+        </form>
+        {error && (
+          <p className="mt-4 text-center text-sm text-red-600">
+            {error.message || 'Something went wrong!'}
+          </p>
+        )}
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500" >
+            Sign up
+          </Link>
+        </p>
       </div>
-    </>
-  )
-}
+    </div>
+  );
+};
+
+export default LoginForm;

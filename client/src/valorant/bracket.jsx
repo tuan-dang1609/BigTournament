@@ -1,368 +1,162 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import '../App.css'
+import React, { useEffect, useState } from "react";
 
-export default function SwissStage() {
-    const [data, setData] = useState(null);
-    const [idmatch, setMatchId] = useState(null);
-    const [loading, setLoading] = useState(true);
+const TournamentBracket = () => {
+  const [teams, setTeams] = useState([[], [], [], []]);
+  const [loading, setLoading] = useState(true);
 
-    const processSwissStageData = (data) => {
-        let valueA = [];
-        let valueB = [];
-        let valueC = [];
-        let valueD = [];
-        let valueE = [];
-        let valueF = [];
-        let valueK = {};
-        let valueL = [];
-        let valueM = [];
+  const fetchTeams = async () => {
+    try {
+      const response = await fetch(
+        'https://docs.google.com/spreadsheets/d/1s2Lyk37v-hZcg7-_ag8S1Jq3uaeRR8u-oG0zviSc26E/gviz/tq?sheet=Swiss Stage&range=A1:M11'
+      );
 
-        for (let i = 0; i < 8; i++) {
-            valueA.push(data.table.rows[i]?.c[0]?.v ?? null);
-            valueB.push(data.table.rows[i]?.c[1]?.v ?? null);
-            valueC.push(data.table.rows[i]?.c[2]?.v ?? null);
-            valueD.push(data.table.rows[i]?.c[3]?.v ?? null);
-            valueE.push(data.table.rows[i]?.c[4]?.v ?? null);
-            valueF.push(data.table.rows[i]?.c[5]?.v ?? null);
-        }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const text = await response.text();
+      const json = JSON.parse(text.substring(47, text.length - 2));
 
-        for (let i = 0; i < 4; i++) {
-            valueK[data.table.rows[i]?.c[10]?.v ?? null] = data.table.rows[i]?.c[11]?.v ?? null;
-        }
+      const columns = [0, 3, 6, 9];
+      const updatedTeams = columns.map((col) =>
+        json.table.rows.map(row => ({
+          name: row.c[col + 1]?.v || "Unknown",
+          icon: `https://drive.google.com/thumbnail?id=${row.c[col]?.v}` || "🏅",
+          score: row.c[col + 2]?.v || 0
+        }))
+      );
+      setTeams(updatedTeams);
+    } catch (error) {
+      console.error("Failed to fetch teams:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        for (let position in valueK) {
-            valueL.push({ position: parseInt(position), logo: valueK[position] });
-        }
+  useEffect(() => {
+    fetchTeams();
+  }, []);
 
-        for (let i = 4; i < 8; i++) {
-            valueM.push(data.table.rows[i]?.c[11]?.v ?? null);
-        }
+  const roundStyles = {
+    "0W-0L": { border: "border-blue-300", titleBg: "bg-blue-100" },
+    "1W-0L": { border: "border-green-300", titleBg: "bg-green-100" },
+    "1W-1L": { border: "border-yellow-300", titleBg: "bg-yellow-100" },
+    "0W-1L": { border: "border-red-300", titleBg: "bg-red-100" },
+  };
 
-        function createTeamDiv(logoSrc, score) {
-            const teamDiv = document.createElement('div');
-            teamDiv.classList.add('team');
+  const renderMatchup = (team1, team2) => (
+    <div className="relative flex flex-col border-2 border-gray-300 rounded-lg overflow-hidden mb-4">
+      {[team1, team2].map((team, index) => (
+        <div key={index} className={`flex items-center justify-between p-2 ${index === 0 ? 'border-b border-gray-300' : ''}`}>
+          <div className="flex items-center">
+            <img src={team?.icon} alt={team?.name || "Team Logo"} className="w-8 h-8 mr-2" />
+            <span>{team?.name || "Unknown"}</span>
+          </div>
+          <span className={`font-bold ${team?.score === Math.max(team1?.score || 0, team2?.score || 0) ? 'text-green-600' : ''}`}>
+            {team?.score || 0}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 
-            const logoTeamDiv = document.createElement('div');
-            logoTeamDiv.classList.add('logo-team');
-            const logoImg = document.createElement('img');
-            logoImg.src = logoSrc;
-            logoImg.alt = '';
-            logoTeamDiv.appendChild(logoImg);
-            teamDiv.appendChild(logoTeamDiv);
-
-            const scoreDiv = document.createElement('div');
-            scoreDiv.classList.add('score');
-            const scoreP = document.createElement('p');
-            scoreP.textContent = score;
-            scoreDiv.appendChild(scoreP);
-            teamDiv.appendChild(scoreDiv);
-
-            return teamDiv;
-        }
-
-        function createMatchup(i, valueA, valueB, containerClass, groupstage, idmatch) {
-            const container = document.querySelector(containerClass);
-
-            // Check if the container exists
-            if (!container) {
-                console.error(`Container with class ${containerClass} not found.`);
-                return;
-            }
-
-            const matchupsContainer = document.createElement('div');
-            matchupsContainer.classList.add('matchups');
-
-            const link_info_match = document.createElement('a');
-            link_info_match.classList.add('link-match-info');
-
-            const matchupDiv = document.createElement('div');
-            matchupDiv.classList.add('matchup');
-
-            const regex = /\/d\/(.+?)\/view/;
-
-            let link_drive_image_A = valueA[i];
-            const fileIdA = link_drive_image_A.match(regex)[1];
-            const logoSrcA = `https://drive.google.com/thumbnail?id=${fileIdA}`;
-            const team1Div = createTeamDiv(logoSrcA, valueB[i]);
-            matchupDiv.appendChild(team1Div);
-
-            let link_drive_image_B = valueA[i + 1];
-            const fileIdB = link_drive_image_B.match(regex)[1];
-            const logoSrcB = `https://drive.google.com/thumbnail?id=${fileIdB}`;
-            const team2Div = createTeamDiv(logoSrcB, valueB[i + 1]);
-            matchupDiv.appendChild(team2Div);
-
-            if (idmatch && Array.isArray(idmatch)) {
-                const matchIndex = Math.floor(i / 2) + 1;
-                const matchData = idmatch.find(match => match.round === groupstage && match.Match === `match${matchIndex}`);
-
-                if (matchData) {
-                    link_info_match.href = `/valorant/match/${groupstage}/${matchData.matchid}/${matchData.teamA}-${matchData.teamB}`;
-                }
-            } else {
-                console.error("idmatch is not available or is not an array");
-                link_info_match.href = `/valorant/match/${groupstage}/match${Math.floor(i / 2) + 1}`;
-            }
-
-            link_info_match.appendChild(matchupDiv);
-            matchupsContainer.appendChild(link_info_match);
-            container.appendChild(matchupsContainer);
-        }
-
-        // Only call createMatchup if idmatch is available
-        if (idmatch) {
-            for (let i = 0; i < 8; i += 2) {
-                createMatchup(i, valueA, valueB, '.w0-l0', "round0-0", idmatch);
-            }
-            for (let i = 0; i < 4; i += 2) {
-                createMatchup(i, valueC, valueD, '.w1-l0', "round1-0", idmatch);
-            }
-            for (let i = 4; i < 8; i += 2) {
-                createMatchup(i, valueC, valueD, '.w0-l1', "round0-1", idmatch);
-            }
-            for (let i = 0; i < 3; i += 2) {
-                createMatchup(i, valueE, valueF, '.w1-l1', "round1-1", idmatch);
-            }
-        }
-
-        const eli = document.querySelector('.eliminate');
-
-        // Check if the 'eli' element exists
-        if (eli) {
-            const eliminateTeamsContainer = document.createElement('div');
-            eliminateTeamsContainer.classList.add('eliminate-teams');
-
-            // Create all-teams container
-            const allTeamsContainerEli = document.createElement('div');
-            allTeamsContainerEli.classList.add('all-teams-eli');
-
-            // Loop through teams and create team elements
-            valueM.forEach(teamName => {
-                const teamDiv = document.createElement('div');
-                teamDiv.classList.add('team');
-
-                const logoTeamDiv = document.createElement('div');
-                logoTeamDiv.classList.add('logo-team');
-
-                const teamImg = document.createElement('img');
-                const regex = /\/d\/(.+?)\/view/;
-                let link_drive_image = teamName;
-                const logoteamA = link_drive_image.match(regex);
-                const fileIdA = logoteamA[1];
-                teamImg.src = `https://drive.google.com/thumbnail?id=${fileIdA}`;
-                teamImg.alt = '';
-
-                logoTeamDiv.appendChild(teamImg);
-                teamDiv.appendChild(logoTeamDiv);
-                allTeamsContainerEli.appendChild(teamDiv);
-            });
-
-            eliminateTeamsContainer.appendChild(allTeamsContainerEli);
-            eli.appendChild(eliminateTeamsContainer);
-        }
-
-        const adva = document.querySelector('.advance');
-
-        // Check if the 'adva' element exists
-        if (adva) {
-            const advanceTeamsContainer = document.createElement('div');
-            advanceTeamsContainer.classList.add('advance-teams');
-
-            const allTeamsWinContainer = document.createElement('div');
-            allTeamsWinContainer.classList.add('all-teams-win');
-
-            valueL.forEach(team => {
-                const teamDiv = document.createElement('div');
-                teamDiv.classList.add('team');
-
-                const posDiv = document.createElement('div');
-                posDiv.classList.add('pos');
-                const posP = document.createElement('p');
-                posP.textContent = team.position;
-                posDiv.appendChild(posP);
-
-                const logoTeamDiv = document.createElement('div');
-                logoTeamDiv.classList.add('logo-team');
-
-                const teamImg = document.createElement('img');
-                const regex = /\/d\/(.+?)\/view/;
-                let link_drive_image = team.logo;
-                const logoteamA = link_drive_image.match(regex);
-                const fileIdA = logoteamA[1];
-                teamImg.src = `https://drive.google.com/thumbnail?id=${fileIdA}`;
-                teamImg.alt = '';
-
-                teamDiv.appendChild(posDiv);
-                logoTeamDiv.appendChild(teamImg);
-                teamDiv.appendChild(logoTeamDiv);
-                allTeamsWinContainer.appendChild(teamDiv);
-            });
-
-            advanceTeamsContainer.appendChild(allTeamsWinContainer);
-            adva.appendChild(advanceTeamsContainer);
-        }
-
-        setData(data);
-    };
-
-    useEffect(() => {
-        document.title = 'Vòng Swiss Play';
-
-        const fetchGames = async () => {
-            try {
-                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                setMatchId(data);
-            } catch (error) {
-                console.error("Failed to fetch games:", error);
-            }
-        };
-
-        const SHEET_ID = '1s2Lyk37v-hZcg7-_ag8S1Jq3uaeRR8u-oG0zviSc26E';
-        const sheets = [
-            { title: 'Swiss Stage', range: 'A2:L53', processData: processSwissStageData }
-        ];
-
-        const fetchSheetData = async (title, range) => {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${title}&range=${range}`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch data from sheet: ${title}`);
-            }
-            const text = await response.text();
-            const jsonData = JSON.parse(text.substr(47).slice(0, -2));
-            return jsonData;
-        };
-
-        const fetchData = async () => {
-            try {
-                const fetchPromises = sheets.map(sheet => fetchSheetData(sheet.title, sheet.range));
-                const results = await Promise.all(fetchPromises);
-                results.forEach((data, index) => {
-                    sheets[index].processData(data);
-                });
-            } catch (error) {
-                console.error('Error occurred:', error);
-            } finally {
-                setLoading(false); // Set loading to false after data is fetched
-            }
-        };
-
-        fetchGames();
-        fetchData();
-
-        window.onclick = function (event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = "none";
-            }
-        };
-    }, []);
-
-    useEffect(() => {
-        if (idmatch && data) {
-            processSwissStageData(data);
-        }
-    }, [idmatch, data]);
+  const renderSection = (title, matchups, className = "") => {
+    const styles = roundStyles[title] || { border: "border-gray-300", titleBg: "bg-gray-100" };
 
     return (
-        <div>
-            {loading ? (
-                <div className="flex items-center justify-center min-h-screen">
-                    <span className="loading loading-dots loading-lg text-primary"></span>
-                </div>
-            ) : (
-                <React.Fragment>
-                    <div className="next">
-                        <Link to="/valorant/playoff">Play-off &gt;</Link>
-                    </div>
-                    <h2 style={{ textAlign: 'center', fontWeight: 900 }}>SWISS STAGE</h2>
-                    <section className="swissbracket wrapper max-lg:w-[500%]">
-                        <div className="vong1">
-                            <div className="matchuppair">
-                                <div className="w0-l0">
-                                    <div className="title">
-                                        <p className="title-vong-1 text-white">0W - 0L</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="connection-line">
-                                <div className="line"></div>
-                                <div className="merger"></div>
-                            </div>
-                        </div>
-
-                        <div className="vong2">
-                            <div className="matchuppair">
-                                <div className="w1-l0">
-                                    <div className="title">
-                                        <p className="title-vong-2 text-white">1W - 0L</p>
-                                    </div>
-                                </div>
-                                <div className="w0-l1">
-                                    <div className="title">
-                                        <p className="title-vong-2 text-white">0W - 1L</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="connection-line">
-                                <div className="adv-line">
-                                    <div className="line"></div>
-                                </div>
-                                <div className="connection1 border-primary">
-                                    <div className="merger"></div>
-                                    <div className="line"></div>
-                                </div>
-                                <div className="eli-line">
-                                    <div className="line"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="vong3">
-                            <div className="matchuppair">
-                                <div className="w1-l1">
-                                    <div className="title">
-                                        <p className="title-vong-3 text-white">1W - 1L</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="connection1">
-                                <div className="line"></div>
-                            </div>
-                            <div className="eli-line">
-                                <div className="line"></div>
-                            </div>
-                        </div>
-
-                        <div className="adva-eli">
-                            <div className="teams">
-                                <div className="advance">
-                                    <div className="title">
-                                        <p className="title-advance text-white">Advance to play-off</p>
-                                    </div>
-                                </div>
-                                <div className="eliminate">
-                                    <div className="title">
-                                        <p className="title-eliminate text-white">Eliminate</p>
-                                    </div>
-                                    <div className="eliminate-teams"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </React.Fragment>
-            )}
+      <div className={`flex flex-col ${className} ${styles.border} rounded-lg border-2 overflow-hidden`}>
+        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border-b ${styles.border} text-black`}>{title}</h2>
+        <div className="p-2">
+          {matchups.map((matchup, index) => (
+            <div key={index} className="mb-4">
+              {renderMatchup(matchup[0] || {}, matchup[1] || {})}
+            </div>
+          ))}
         </div>
+      </div>
     );
-}
+  };
+
+  const renderAdvanceSection = () => (
+    <div className="flex flex-col border-2 border-green-300 rounded-lg overflow-hidden">
+      <h2 className="text-lg font-bold p-2 bg-green-100 border-b border-green-300 text-black">Advance to play-off</h2>
+      <div className="p-2">
+        {teams[3].slice(0, 4).map((team, index) => (
+          <div key={index} className="flex items-center justify-between p-2 border-b last:border-b-0">
+            <div className="flex items-center">
+              {team.icon !== "🏅" ? (
+                <img src={team.icon} alt={team.name || "Team Logo"} className="w-8 h-8 mr-2" />
+              ) : (
+                <span className="w-8 h-8 mr-2">{team.icon}</span>
+              )}
+              <span>{team.name || "Unknown"}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderEliminateSection = () => (
+    <div className="flex flex-col border-2 border-red-300 rounded-lg overflow-hidden">
+      <h2 className="text-lg font-bold p-2 bg-red-100 border-b border-red-300 text-black">Eliminate</h2>
+      <div className="p-2">
+        {teams[3].slice(5, 9).map((team, index) => (
+          <div key={index} className="flex items-center justify-between p-2 border-b border-red-200 last:border-b-0">
+            <div className="flex items-center">
+              <img src={team.icon} alt={team.name || "Team Logo"} className="w-8 h-8 mr-2" />
+              <span>{team.name || "Unknown"}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Swiss Stage Tournament Bracket</h1>
+      {loading ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <span className="loading loading-dots loading-lg text-primary"></span>
+        </div>
+      ) : (
+        <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-4">
+          <div className="w-full lg:w-1/4">
+            {renderSection("0W-0L", [
+              [teams[0][0], teams[0][1]],
+              [teams[0][2], teams[0][3]],
+              [teams[0][4], teams[0][5]],
+              [teams[0][6], teams[0][7]],
+            ])}
+          </div>
+          <div className="w-full lg:w-1/4 flex flex-col justify-between">
+            <div>
+              {renderSection("1W-0L", [
+                [teams[1][0], teams[1][1]],
+                [teams[1][2], teams[1][3]],
+              ])}
+            </div>
+            <div className="mt-8">
+              {renderSection("0W-1L", [
+                [teams[1][5], teams[1][6]],
+                [teams[1][7], teams[1][8]],
+              ])}
+            </div>
+          </div>
+          <div className="w-full lg:w-1/4">
+            {renderSection("1W-1L", [
+              [teams[2][0], teams[2][1]],
+              [teams[2][2], teams[2][3]],
+            ])}
+          </div>
+          <div className="w-full lg:w-1/4 flex flex-col justify-between">
+            {renderAdvanceSection()}
+            <div className="mt-8">
+              {renderEliminateSection()}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default TournamentBracket;

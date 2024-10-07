@@ -1,137 +1,362 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from "react";
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { SiRiotgames } from "react-icons/si";
 import { Link, useNavigate } from 'react-router-dom';
 
-export default function SignUp() {
-  document.title = "Đăng kí";
+const SignupPage = () => {
+  const [formData, setFormData] = useState({
+    riotID: "",
+    username: "",
+    email: "",
+    password: "",
+    retypePassword: "",
+  });
 
-  const [formData, setFormData] = useState({});
-  const [retypePassword, setRetypePassword] = useState('');
-  const [error, setError] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRetypePassword, setShowRetypePassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [Error, setError1] = useState('');
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [countdown, setCountdown] = useState(4); // Initialize countdown state
 
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    validateField(name, value);
   };
+
   const validatePassword = (password) => {
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{7,}$/;
     return passwordRegex.test(password);
   };
-  const validateEmail = (email) => {
-    return email.includes('@');
-  };
-  const handleRetypePasswordChange = (e) => {
-    setRetypePassword(e.target.value);
+
+  const validateField = (name, value) => {
+    let newErrors = { ...errors };
+
+    switch (name) {
+      case "riotID":
+        if (!value.trim()) {
+          newErrors.riotID = "Riot ID is required";
+        } else {
+          delete newErrors.riotID;
+        }
+        break;
+      case "username":
+        if (!value.trim()) {
+          newErrors.username = "Username is required";
+        } else {
+          delete newErrors.username;
+        }
+        break;
+      case "email":
+        if (!value.trim()) {
+          newErrors.email = "Email is required";
+        } else if (!/\S+@\S+\.\S+/.test(value)) {
+          newErrors.email = "Email is invalid";
+        } else {
+          delete newErrors.email;
+        }
+        break;
+      case "password":
+        if (!value) {
+          newErrors.password = "Password is required";
+        } else if (!validatePassword(value)) {
+          newErrors.password = "Password must be at least 7 characters, include an uppercase letter and a number";
+        } else {
+          delete newErrors.password;
+        }
+        if (formData.retypePassword && value !== formData.retypePassword) {
+          newErrors.retypePassword = "Passwords do not match";
+        } else {
+          delete newErrors.retypePassword;
+        }
+        break;
+      case "retypePassword":
+        if (!value) {
+          newErrors.retypePassword = "Please retype your password";
+        } else if (value !== formData.password) {
+          newErrors.retypePassword = "Passwords do not match";
+        } else {
+          delete newErrors.retypePassword;
+        }
+        break;
+      default:
+        break;
+    }
+
+    setErrors(newErrors);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const newErrors = {};
+    Object.keys(formData).forEach((key) => {
+      validateField(key, formData[key]);
+    });
 
-    if (formData.password !== retypePassword) {
-      setError1('Mật khẩu không khớp');
-      return;
-    }
-    if (!validateEmail(formData.email)) {
-      setError1('Email không hợp lệ. Vui lòng nhập lại');
-      return;
-    }
-    if (!validatePassword(formData.password)) {
-      setError1('Mật khẩu không đúng với yêu cầu');
-      return;
-    }
-    setError1('')
-    try {
-      setLoading(true);
-      setError(false);
+    if (Object.keys(newErrors).length === 0) {
+      try {
+        setLoading(true);
+        setErrorMessage("");
 
-      const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+        const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
 
-      const data = await res.json();
-      console.log(data);
+        const data = await res.json();
+        setLoading(false);
 
-      setLoading(false);
+        if (data.success === false) {
+          setErrorMessage(data.message || "Something went wrong!");
+          return;
+        }
 
-      if (data.success === false) {
-        setError(true);
-        return;
+        setSignupSuccess(true);
+      } catch (error) {
+        setLoading(false);
+        setErrorMessage("An error occurred. Please try again.");
       }
-
-      navigate('/');
-    } catch (error) {
-      setLoading(false);
-      setError(true);
+    } else {
+      setErrors(newErrors);
     }
   };
 
-  return (
-    <>
-      <div className='max-w-7xl max-lg:mt-[68px] mt-20  mx-auto'>
-        <div className='max-w-md px-2 sm:px-6 mx-auto'>
-          <h1 className='text-3xl font-bold text-center mb-3'>Đăng kí</h1>
-          <form onSubmit={handleSubmit} className='flex flex-col'>
-            <input
-              type='text'
-              placeholder='RiotID'
-              id='riotID'
-              className='p-3 my-[6px] rounded-lg border-primary border-[1.5px]'
-              onChange={handleChange}
-            />
-            <input
-              type='text'
-              placeholder='Username'
-              id='username'
-              className='p-3 my-[6px] rounded-lg border-primary border-[1.5px]'
-              onChange={handleChange}
+  const togglePasswordVisibility = (field) => {
+    if (field === "password") {
+      setShowPassword(!showPassword);
+    } else {
+      setShowRetypePassword(!showRetypePassword);
+    }
+  };
 
-            />
-            <input
-              type='text'
-              placeholder='Email'
-              id='email'
-              className='p-3 my-[6px] rounded-lg border-primary border-[1.5px]'
-              onChange={handleChange}
-              autoComplete="email"
-            />
-            <input
-              type='password'
-              placeholder='Mật khẩu'
-              id='password'
-              className='p-3 my-[6px] rounded-lg border-primary border-[1.5px]'
-              onChange={handleChange}
-              autoComplete="new-password"
-            />
-            <p className='text-base'>Lưu ý: Mật khẩu cần có ít nhất 7 kí tự, bao gồm cả chữ in hoa và số</p>
-            <input
-              type='password'
-              placeholder='Nhập lại Mật khẩu'
-              id='retypePassword'
-              className='p-3 my-[6px] rounded-lg border-primary border-[1.5px]'
-              onChange={handleRetypePasswordChange}
-              autoComplete="new-password"
-            />
-            <button disabled={loading} className="btn mt-3 bg-primary hover:bg-neutral text-white">
-              {loading ? 'Loading...' : 'Sign Up'}
-            </button>
-          </form>
-          <div className='flex items-center my-1'>
-            <div className='border-b-2 border-secondary flex-grow'></div>
-            <div className='mx-4'>Hoặc</div>
-            <div className='border-b-2 border-secondary flex-grow'></div>
-          </div>
-          <Link className='btn w-full rounded-btn bg-accent hover:bg-neutral text-white' to='/signin'><span>Đăng nhập</span></Link>
-          {Error && <p style={{ color: '#FF7F7F', marginBottom: "0" }}>{Error}</p>}
-          {error && <p style={{ color: '#FF7F7F', marginBottom: "0" }}>Something went wrong!</p>}
+  useEffect(() => {
+    if (signupSuccess) {
+      const timer = setInterval(() => {
+        setCountdown((prevCountdown) => prevCountdown - 1);
+      }, 1000);
+
+      if (countdown === 0) {
+        navigate('/');
+      }
+
+      // Cleanup the interval on component unmount
+      return () => clearInterval(timer);
+    }
+  }, [signupSuccess, countdown, navigate]);
+
+  if (signupSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+          <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Đăng kí thành công!</h2>
+          <p className="text-center text-gray-600">
+            Cảm ơn bạn đã tạo tài khoản. Bây giờ bạn có thể đăng nhập bằng thông tin đăng nhập của mình.
+          </p>
+          <p className="text-center text-gray-600 mt-4">
+            Tự động chuyển tới trang chủ trong {countdown} giây...
+          </p>
         </div>
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center mt-5">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Create an Account</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Riot ID Input */}
+          <div>
+            <label htmlFor="riotID" className="block text-sm font-medium text-gray-700">
+              Riot ID
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <SiRiotgames className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                type="text"
+                name="riotID"
+                id="riotID"
+                className={`bg-white block w-full pl-10 pr-3 py-2 border ${errors.riotID ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                placeholder="Enter your Riot ID"
+                value={formData.riotID}
+                onChange={handleChange}
+                aria-invalid={errors.riotID ? "true" : "false"}
+                aria-describedby="riotID-error"
+              />
+            </div>
+            {errors.riotID && (
+              <p className="mt-2 text-sm text-red-600" id="riotID-error">
+                {errors.riotID}
+              </p>
+            )}
+          </div>
+
+          {/* Username Input */}
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              Username
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaUser className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                type="text"
+                name="username"
+                id="username"
+                className={`bg-white block w-full pl-10 pr-3 py-2 border ${errors.username ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                placeholder="Choose a username"
+                value={formData.username}
+                onChange={handleChange}
+                aria-invalid={errors.username ? "true" : "false"}
+                aria-describedby="username-error"
+              />
+            </div>
+            {errors.username && (
+              <p className="mt-2 text-sm text-red-600" id="username-error">
+                {errors.username}
+              </p>
+            )}
+          </div>
+
+          {/* Email Input */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaEnvelope className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                className={`bg-white block w-full pl-10 pr-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                aria-invalid={errors.email ? "true" : "false"}
+                aria-describedby="email-error"
+              />
+            </div>
+            {errors.email && (
+              <p className="mt-2 text-sm text-red-600" id="email-error">
+                {errors.email}
+              </p>
+            )}
+          </div>
+
+          {/* Password Input */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaLock className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                id="password"
+                className={`bg-white block w-full pl-10 pr-10 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                aria-invalid={errors.password ? "true" : "false"}
+                aria-describedby="password-error"
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  type="button"
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500"
+                  onClick={() => togglePasswordVisibility("password")}
+                >
+                  {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+            {errors.password && (
+              <p className="mt-2 text-sm text-red-600" id="password-error">
+                {errors.password}
+              </p>
+            )}
+          </div>
+
+          {/* Retype Password Input */}
+          <div>
+            <label htmlFor="retypePassword" className="block text-sm font-medium text-gray-700">
+              Retype Password
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaLock className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                type={showRetypePassword ? "text" : "password"}
+                name="retypePassword"
+                id="retypePassword"
+                className={`bg-white block w-full pl-10 pr-10 py-2 border ${errors.retypePassword ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                placeholder="Retype your password"
+                value={formData.retypePassword}
+                onChange={handleChange}
+                aria-invalid={errors.retypePassword ? "true" : "false"}
+                aria-describedby="retypePassword-error"
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  type="button"
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500"
+                  onClick={() => togglePasswordVisibility("retypePassword")}
+                >
+                  {showRetypePassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+            {errors.retypePassword && (
+              <p className="mt-2 text-sm text-red-600" id="retypePassword-error">
+                {errors.retypePassword}
+              </p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+            >
+              {loading ? 'Loading...' : 'Sign Up'}
+            </button>
+          </div>
+
+          {errorMessage && (
+            <p className="mt-2 text-sm text-red-600 text-center">
+              {errorMessage}
+            </p>
+          )}
+        </form>
+
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link to="/signin" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </div>
   );
-}
+};
+
+export default SignupPage;
