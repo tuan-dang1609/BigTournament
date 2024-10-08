@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom"; // Import Link from react-router-dom for navigation
 
 const TournamentBracket = () => {
   const [teams, setTeams] = useState([[], [], [], []]);
   const [loading, setLoading] = useState(true);
+  const [idmatch, setMatchId] = useState([]);
 
   const fetchTeams = async () => {
     try {
@@ -30,19 +32,61 @@ const TournamentBracket = () => {
     }
   };
 
+  const fetchGames = async () => {
+    try {
+      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setMatchId(data);
+    } catch (error) {
+      console.error("Failed to fetch games:", error);
+    }
+  };
+
   useEffect(() => {
     fetchTeams();
+    fetchGames();
   }, []);
 
+  const getMatchLink = (team1, team2) => {
+    if (!team1.name || !team2.name) return "#"; // If team names are missing, return a placeholder link
+    
+    // Debugging: Log to ensure correct data mapping
+
+  
+    // Find the matching game by comparing team names
+    const match = idmatch.find(
+      (m) => 
+        (m.teamA.toLowerCase() === team1.name.toLowerCase() && m.teamB.toLowerCase() === team2.name.toLowerCase()) || 
+        (m.teamA.toLowerCase() === team2.name.toLowerCase() && m.teamB.toLowerCase() === team1.name.toLowerCase())
+    );
+  
+    if (match) {
+      console.log("Found match:", match); // Debugging: log matched game data
+      return `/valorant/match/${match.round}/${match.matchid}/${match.Match}`;
+    } else {
+      return "#"; // Fallback in case no match is found
+    }
+  };
   const roundStyles = {
     "0W-0L": { border: "border-blue-300", titleBg: "bg-blue-100" },
     "1W-0L": { border: "border-green-300", titleBg: "bg-green-100" },
     "1W-1L": { border: "border-yellow-300", titleBg: "bg-yellow-100" },
     "0W-1L": { border: "border-red-300", titleBg: "bg-red-100" },
+    "Eliminate": { border: "border-red-400", titleBg: "bg-red-200" }, // Add styles as needed
+    "Advance to play-off": { border: "border-green-400", titleBg: "bg-green-200" }, // Add styles as needed
   };
-
   const renderMatchup = (team1, team2) => (
-    <div className="relative flex flex-col border-2 border-gray-300 rounded-lg overflow-hidden mb-4">
+    <Link to={getMatchLink(team1, team2)} className="relative flex flex-col border-2 border-gray-300 rounded-lg overflow-hidden mb-4">
       {[team1, team2].map((team, index) => (
         <div key={index} className={`flex items-center justify-between p-2 ${index === 0 ? 'border-b border-gray-300' : ''}`}>
           <div className="flex items-center">
@@ -54,7 +98,7 @@ const TournamentBracket = () => {
           </span>
         </div>
       ))}
-    </div>
+    </Link>
   );
 
   const renderSection = (title, matchups, className = "") => {
