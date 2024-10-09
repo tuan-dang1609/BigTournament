@@ -196,6 +196,21 @@ export const findAllMatchID = async (req, res, next) => {
   }
 };
 
+export const findmatchID = async (req, res, next) => {
+  const { round, Match } = req.body
+  try {
+    const allGame = await MatchID.findOne({round, Match });
+
+    if (!allGame || allGame.length === 0) {
+      return next(errorHandler(404, 'No Game found'));
+    }
+
+    res.status(200).json(allGame);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const findAllGame = async (req, res, next) => {
   try {
     const allGame = await AllGame.find();

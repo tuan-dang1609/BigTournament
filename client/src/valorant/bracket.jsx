@@ -71,8 +71,7 @@ const TournamentBracket = () => {
     );
   
     if (match) {
-      console.log("Found match:", match); // Debugging: log matched game data
-      return `/valorant/match/${match.round}/${match.matchid}/${match.Match}`;
+      return `/valorant/match/${match.round}/${match.Match}`;
     } else {
       return "#"; // Fallback in case no match is found
     }

@@ -35,7 +35,7 @@ if (rootElement) {
               <Route path='/signin' element={<SignIn />} />
               <Route path='/valorant/me' element={<Rule />} />
               <Route path='/allgame' element={<AllGame />} />
-              <Route path="/valorant/match/:round/:matchid/:team" element={<MatchStat />} />
+              <Route path="/valorant/match/:round/:team" element={<MatchStat />} />
               <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
               <Route path="/valorant/swissstage" element={<SwissStage />} />
               <Route element={<PrivateRoute />}>

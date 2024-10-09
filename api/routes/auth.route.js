@@ -1,5 +1,5 @@
 import express from 'express';
-import { signin, signup, signout, addteam, findteam, addMatch, findMatch, getAllMatches, findMatchPlayoff, findPlayer, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID } from '../controllers/auth.controller.js';
+import { signin, signup, signout, addteam, findteam, addMatch, getAllMatches, findMatchPlayoff, findPlayer, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID,findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
 const router = express.Router();
@@ -10,7 +10,6 @@ router.post('/addteam', addteam)
 router.get('/signout', signout);
 router.post('/findteam', findteam)
 router.post('/addmatchid', addMatch);
-router.post('/findmatchid', findMatch);
 router.post('/findallmatch', getAllMatches);
 router.post('/findallmatchplayoff', findMatchPlayoff)
 router.post('/findallgame',findAllGame)
@@ -20,6 +19,7 @@ router.post('/findbanpick', findBanPickVeto)
 router.post('/allgame',addAllGame)
 router.post('/addmatch',addMatchID)
 router.post('/findallmatchid',findAllMatchID)
+router.post('/findmatchid',findmatchID)
 router.post('/addquestions', async (req, res, next) => {
   const { idquestionset, questionSet } = req.body;
   const newTeam = new QuestionPickem({idquestionset, questionSet });
