@@ -3,36 +3,87 @@ import { useParams } from 'react-router-dom';
 import MatchResult from "./match";
 
 export default function MatchStat() {
-    const { round, matchid, team } = useParams();
+    const { round, Match } = useParams();
+    const [matchid, setMatchid] = useState([]);
     const [matchInfo, setMatchInfo] = useState(null);
     const [error, setError] = useState(null);
     const [numRound, setNumRound] = useState(null);
     const [kill, setAllKill] = useState(null);
-    const [score, setScore] = useState(null);
+    const [score, setScore] = useState([]);
     const [time, setTime] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const region = 'ap';
 
+    const fetchGames = async () => {
+        try {
+            const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findmatchid', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    round: round,
+                    Match: Match
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setMatchid(data.matchid);
+        } catch (error) {
+            console.error("Failed to fetch games:", error);
+        }
+    };
+
     useEffect(() => {
-        fetch(`https://dongchuyennghiep-backend.vercel.app/api/match/${region}/${matchid}`)
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
+        fetchGames();
+    }, [round, Match]);
+
+    useEffect(() => {
+        if (matchid.length > 0) {
+            Promise.all(
+                matchid.map(id =>
+                    fetch(`https://dongchuyennghiep-backend.vercel.app/api/match/${region}/${id}`)
+                        .then(res => {
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+                            return res.json();
+                        })
+                        .then(data => ({
+                            id,
+                            data: data.data
+                        }))
+                        .catch(err => {
+                            console.error(`Failed to fetch match data for matchid ${id}:`, err);
+                            return null;
+                        })
+                )
+            ).then(results => {
+                const validResults = results.filter(result => result !== null);
+                if (validResults.length > 0) {
+                    const combinedData = validResults.map(result => result.data);
+                    const players = combinedData.flatMap(match => match.players);
+                    const rounds = combinedData.reduce((sum, match) => sum + match.rounds.length, 0);
+                    const kills = combinedData.flatMap(match => match.kills);
+                    const teams = combinedData.flatMap(match => match.teams);
+                    const time = formatTime(combinedData[0].metadata.started_at);
+
+                    setMatchInfo(players);
+                    setNumRound(rounds);
+                    setAllKill(kills);
+                    setScore(teams);
+                    setTime(time);
+                    setIsLoading(false);
                 }
-                return res.json();
-            })
-            .then(data => {
-                setMatchInfo(data.data.players);
-                setNumRound(data.data.rounds.length);
-                setAllKill(data.data.kills);
-                setScore(data.data.teams);
-                setTime(formatTime(data.data.metadata.started_at));
-                setIsLoading(false);
-            })
-            .catch(err => {
+            }).catch(err => {
                 setError(err.message);
                 setIsLoading(false);
             });
+        }
     }, [region, matchid]);
 
     const formatTime = (utcTime) => {
@@ -43,15 +94,15 @@ export default function MatchStat() {
             hour12: false
         };
         const time = new Intl.DateTimeFormat('en-US', options).format(date);
-    
+
         const day = date.getDate();
         const month = date.toLocaleString('en-US', { month: 'short' });
         const year = date.getFullYear();
         const daySuffix = getDaySuffix(day);
-    
+
         return `${time} - ${day}${daySuffix} ${month} ${year}`;
     };
-    
+
     const getDaySuffix = (day) => {
         if (day > 3 && day < 21) return 'th'; // Handle "11th" to "20th"
         switch (day % 10) {
@@ -147,7 +198,7 @@ export default function MatchStat() {
                                 {score && score.length > 1 && (
                                     <span
                                         className={`scoreA ${score[0].rounds.won < score[1].rounds.won ? 'green-win' : 'red-lose'}`}
-                                        id='score-left'
+                                        id='score-right'
                                     >
                                         {score[1].rounds.won}
                                     </span>

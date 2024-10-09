@@ -14,7 +14,6 @@ import SignUp from './components/signup.jsx';
 import Rule from './valorant/Rule.jsx';
 import AllGame from './components/allgame.jsx';
 import './index.css'
-import MatchResult from './valorant/match.jsx';
 import MatchStat from './valorant/statmatch.jsx';
 import Inputmatchid from './valorant/input.jsx';
 import SwissStage from './valorant/bracket.jsx';
@@ -35,7 +34,7 @@ if (rootElement) {
               <Route path='/signin' element={<SignIn />} />
               <Route path='/valorant/me' element={<Rule />} />
               <Route path='/allgame' element={<AllGame />} />
-              <Route path="/valorant/match/:round/:team" element={<MatchStat />} />
+              <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
               <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
               <Route path="/valorant/swissstage" element={<SwissStage />} />
               <Route element={<PrivateRoute />}>
