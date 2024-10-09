@@ -34,7 +34,7 @@ export default function MatchStat() {
             const data = await response.json();
             setMatchid(data.matchid);
         } catch (error) {
-            console.error("Failed to fetch games:", error);
+            console.error("Failed to fetch game:");
         }
     };
 
@@ -58,7 +58,7 @@ export default function MatchStat() {
                             data: data.data
                         }))
                         .catch(err => {
-                            console.error(`Failed to fetch match data for matchid ${id}:`, err);
+                            
                             return null;
                         })
                 )

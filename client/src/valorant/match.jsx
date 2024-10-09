@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 function FeatureRichTable({ matchInfo, numRound, kill, error }) {
   const [data, setData] = useState([]);
-  const [sortColumn, setSortColumn] = useState("performanceScore");
   const [sortDirection, setSortDirection] = useState("desc");
   const tableRef = useRef(null);
   const [imageUrls, setImageUrls] = useState({});
@@ -78,12 +76,10 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
   
 
   const columns = [
-    { key: "name", label: "Player" },
+    { key: "name", label: "Người chơi" },
     { key: "performanceScore", label: "Score" },
     { key: "acs", label: "ACS" },
-    { key: "stats.kills", label: "K" },
-    { key: "stats.deaths", label: "D" },
-    { key: "stats.assists", label: "A" },
+    { key: "kda", label: "K/D/A" },
     { key: "stats.kills/stats.deaths", label: "KD" },
     { key: "stats.headshots", label: "HS%" },
     { key: "adr", label: "ADR" },
@@ -99,9 +95,9 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
             {columns.map((column, index) => (
               <th
                 key={column.key}
-                className={`py-[6px] bg-[#362431] px-2 text-center text-[10.5px] text-white cursor-pointer hover:bg-${teamColor}-200 transition-colors ${index === 0 ? "sticky left-0 z-10 bg-${teamColor}-100" : ""}`}
+                className={`py-[6px] bg-[#362431] px-2 text-center text-[10.5px] xl:text-[10.75px] text-white hover:bg-${teamColor}-200 transition-colors ${index === 0 ? "sticky left-0 z-10 bg-${teamColor}-100" : ""}`}
                 onClick={() => handleSort(column.key)}
-                style={index === 0 ? { width: '190px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : { width: '10px' }}
+                style={index === 0 ? { width: '185px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : { width: '10px' }}
               >
                 <div className="flex items-center justify-center">
                   <span>{column.label}</span>
@@ -111,7 +107,7 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
             ))}
           </tr>
         </thead>
-        <tbody className={`text-[10.5px]`}>
+        <tbody className={`xl:text-[10.75px] text-[10.5px]`}>
           {teamData.map((row, rowIndex) => (
             <tr key={rowIndex} className={`border-${teamColor}-200 hover:bg-${teamColor}-100 transition-colors`}>
               {columns.map((column, columnIndex) => {
@@ -120,8 +116,11 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
                 if (column.key === "acs" || column.key === "performanceScore") {
                   cellData = row[column.key];
                 } else if (column.key === "adr") {
-                  cellData = (row.stats.damage.dealt / numRound).toFixed(0);
-                } 
+                  cellData = (row.stats.damage.dealt / numRound).toFixed(1);
+                }
+                else if (column.key === "kda") {
+                  cellData = `${row.stats.kills}/${row.stats.deaths}/${row.stats.assists}`;
+                }
                 else if (column.key === "stats.kills/stats.deaths") {
                   // Calculate the KD ratio
                   const kills = row.stats.kills;
@@ -169,6 +168,7 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
 
   return (
     <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-5">
+      
       <div className="w-full xl:w-[49%]">
         <h3 className="text-xl font-bold mb-2 text-red-600">Red Team</h3>
         {renderTable(redTeam, "red")}
@@ -177,6 +177,7 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
         <h3 className="text-xl font-bold mb-2 text-blue-600">Blue Team</h3>
         {renderTable(blueTeam, "blue")}
       </div>
+      
     </div>
   );
 }
