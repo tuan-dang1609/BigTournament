@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // Import useParams
+import { useParams } from 'react-router-dom';
 import MatchResult from "./match";
 
 export default function MatchStat() {
-    const { round, matchid, team } = useParams(); // Destructure the parameters from useParams
+    const { round, matchid, team } = useParams();
     const [matchInfo, setMatchInfo] = useState(null);
     const [error, setError] = useState(null);
     const [numRound, setNumRound] = useState(null);
     const [kill, setAllKill] = useState(null);
     const [score, setScore] = useState(null);
-    const [isLoading, setIsLoading] = useState(true); // New state for loading
-    const region = 'ap'; // You might need to dynamically set this based on your needs
+    const [time, setTime] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const region = 'ap';
 
     useEffect(() => {
-        // Construct the URL dynamically using the parameters
         fetch(`https://dongchuyennghiep-backend.vercel.app/api/match/${region}/${matchid}`)
             .then(res => {
                 if (!res.ok) {
@@ -26,13 +26,41 @@ export default function MatchStat() {
                 setNumRound(data.data.rounds.length);
                 setAllKill(data.data.kills);
                 setScore(data.data.teams);
-                setIsLoading(false); // Data fetching is complete, set isLoading to false
+                setTime(formatTime(data.data.metadata.started_at));
+                setIsLoading(false);
             })
             .catch(err => {
                 setError(err.message);
-                setIsLoading(false); // Even in case of an error, stop the loading
+                setIsLoading(false);
             });
     }, [region, matchid]);
+
+    const formatTime = (utcTime) => {
+        const date = new Date(utcTime);
+        const options = {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        };
+        const time = new Intl.DateTimeFormat('en-US', options).format(date);
+    
+        const day = date.getDate();
+        const month = date.toLocaleString('en-US', { month: 'short' });
+        const year = date.getFullYear();
+        const daySuffix = getDaySuffix(day);
+    
+        return `${time} - ${day}${daySuffix} ${month} ${year}`;
+    };
+    
+    const getDaySuffix = (day) => {
+        if (day > 3 && day < 21) return 'th'; // Handle "11th" to "20th"
+        switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    };
 
     useEffect(() => {
         if (kill && matchInfo && numRound) {
@@ -82,7 +110,7 @@ export default function MatchStat() {
             <div className="flex items-center justify-center min-h-screen">
                 <span className="loading loading-dots loading-lg text-primary"></span>
             </div>
-        ); // Display while loading
+        );
     }
 
     return (
@@ -103,30 +131,26 @@ export default function MatchStat() {
                         <div className="score-and-time">
                             <div className="score bg-[#362431]">
                                 {score && score.length > 0 && (
-                                    <>
-                                        <span
-                                            className={`scoreA ${score[0].rounds.won > score[1].rounds.won ? 'green-win' : 'red-lose'}`}
-                                            id='score-left'
-                                        >
-                                            {score[0].rounds.won}
-                                        </span>
-                                    </>
+                                    <span
+                                        className={`scoreA ${score[0].rounds.won > score[1].rounds.won ? 'green-win' : 'red-lose'}`}
+                                        id='score-left'
+                                    >
+                                        {score[0].rounds.won}
+                                    </span>
                                 )}
                             </div>
                             <div className="time text-sm uppercase bg-[#362431] text-white">
                                 <span>Fin</span>
-                                <span>19:00 - 24th JUL</span>
+                                <span>{time}</span>
                             </div>
                             <div className="score bg-[#362431]">
                                 {score && score.length > 1 && (
-                                    <>
-                                        <span
-                                            className={`scoreA ${score[0].rounds.won < score[1].rounds.won ? 'green-win' : 'red-lose'}`}
-                                            id='score-left'
-                                        >
-                                            {score[1].rounds.won}
-                                        </span>
-                                    </>
+                                    <span
+                                        className={`scoreA ${score[0].rounds.won < score[1].rounds.won ? 'green-win' : 'red-lose'}`}
+                                        id='score-left'
+                                    >
+                                        {score[1].rounds.won}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -146,7 +170,7 @@ export default function MatchStat() {
                         <span className='group all-title text-white'>Nhánh 0-0 ● BO1</span>
                     </div>
                 </div>
-                <div className="">
+                <div>
                     <MatchResult matchInfo={matchInfo} numRound={numRound} kill={kill} error={error} />
                 </div>
             </div>

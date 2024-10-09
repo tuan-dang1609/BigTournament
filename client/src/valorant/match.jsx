@@ -3,7 +3,7 @@ import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 function FeatureRichTable({ matchInfo, numRound, kill, error }) {
   const [data, setData] = useState([]);
-  const [sortColumn, setSortColumn] = useState("acs");
+  const [sortColumn, setSortColumn] = useState("performanceScore");
   const [sortDirection, setSortDirection] = useState("desc");
   const tableRef = useRef(null);
   const [imageUrls, setImageUrls] = useState({});
@@ -28,57 +28,64 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
 
   useEffect(() => {
     if (matchInfo) {
-      const sortedData = [...matchInfo].sort((a, b) => {
-        const aAcs = a.stats.score / numRound;
-        const bAcs = b.stats.score / numRound;
-        if (aAcs < bAcs) return 1;
-        if (aAcs > bAcs) return -1;
-        return 0;
-      });
-      setData(sortedData);
+      const maxScore = Math.max(...matchInfo.map(player => player.stats.score));
+      const maxKills = Math.max(...matchInfo.map(player => player.stats.kills));
+      const maxDamage = Math.max(...matchInfo.map(player => player.stats.damage.dealt));
+
+      // Normalize each player's score, kills, and damage dealt between 0 and 1
+      const normalizedData = matchInfo.map(player => {
+        const normalizedScore = player.stats.score / maxScore;
+        const normalizedKills = player.stats.kills / maxKills;
+        const normalizedDamage = player.stats.damage.dealt / maxDamage;
+
+        const acs = player.stats.score / numRound;
+        const performanceScore = (
+          (normalizedScore + normalizedKills + normalizedDamage) / 3
+        ) * 10; // Scale the average of normalized values to 0-10
+
+        return {
+          ...player,
+          acs: acs.toFixed(0),
+          performanceScore: performanceScore.toFixed(1),
+        };
+      }).sort((a, b) => b.acs - a.acs);
+
+      setData(normalizedData);
     }
-  }, [matchInfo, numRound]);
+  }, [matchInfo, numRound, kill]);
 
   const handleSort = (column) => {
-    if (column === sortColumn) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
+    if (column !== "acs") {
+      return; // Disable sorting for all columns except "acs"
     }
-
+  
+    // Toggle sort direction for the "acs" column
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  
     const sortedData = [...data].sort((a, b) => {
-      let aValue = a;
-      let bValue = b;
-
-      if (column === "acs") {
-        aValue = a.stats.score / numRound;
-        bValue = b.stats.score / numRound;
-      } else if (column === "adr") {
-        aValue = a.stats.damage.dealt / numRound;
-        bValue = b.stats.damage.dealt / numRound;
+      let aValue = a[column];
+      let bValue = b[column];
+  
+      if (sortDirection === "asc") {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
-        column.split('.').forEach(key => {
-          aValue = aValue ? aValue[key] : 'N/A';
-          bValue = bValue ? bValue[key] : 'N/A';
-        });
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
-
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-      return 0;
     });
-
+  
     setData(sortedData);
   };
+  
 
   const columns = [
     { key: "name", label: "Player" },
+    { key: "performanceScore", label: "Score" },
     { key: "acs", label: "ACS" },
     { key: "stats.kills", label: "K" },
     { key: "stats.deaths", label: "D" },
     { key: "stats.assists", label: "A" },
-    { key: "stats.headshots", label: "HS" },
+    { key: "stats.kills/stats.deaths", label: "KD" },
+    { key: "stats.headshots", label: "HS%" },
     { key: "adr", label: "ADR" },
     { key: "fk", label: "FK" },
     { key: "mk", label: "MK" },
@@ -86,7 +93,7 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
 
   const renderTable = (teamData, teamColor) => (
     <div ref={tableRef} className="w-full overflow-x-auto shadow-lg rounded-lg mb-8">
-      <table className="w-full min-w-max table-auto font-bold text-center ">
+      <table className="w-full min-w-max table-auto font-bold text-center">
         <thead>
           <tr className={`uppercase text-sm leading-normal sticky top-0`}>
             {columns.map((column, index) => (
@@ -94,21 +101,11 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
                 key={column.key}
                 className={`py-[6px] bg-[#362431] px-2 text-center text-[10.5px] text-white cursor-pointer hover:bg-${teamColor}-200 transition-colors ${index === 0 ? "sticky left-0 z-10 bg-${teamColor}-100" : ""}`}
                 onClick={() => handleSort(column.key)}
-                style={index === 0 ? { width: '190px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : { width: '10px' }} // Set width for non-first columns
+                style={index === 0 ? { width: '190px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : { width: '10px' }}
               >
                 <div className="flex items-center justify-center">
                   <span>{column.label}</span>
-                  <span className="ml-1">
-                    {sortColumn === column.key ? (
-                      sortDirection === "asc" ? (
-                        <FaSortUp className={`text-${teamColor}-500`} />
-                      ) : (
-                        <FaSortDown className={`text-${teamColor}-500`} />
-                      )
-                    ) : (
-                      <FaSort className={`text-${teamColor}-300`} />
-                    )}
-                  </span>
+                  
                 </div>
               </th>
             ))}
@@ -116,18 +113,22 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
         </thead>
         <tbody className={`text-[10.5px]`}>
           {teamData.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className={`border-${teamColor}-200 hover:bg-${teamColor}-100 transition-colors`}
-            >
+            <tr key={rowIndex} className={`border-${teamColor}-200 hover:bg-${teamColor}-100 transition-colors`}>
               {columns.map((column, columnIndex) => {
                 let cellData;
 
-                if (column.key === "acs") {
-                  cellData = (row.stats.score / numRound).toFixed(0);
+                if (column.key === "acs" || column.key === "performanceScore") {
+                  cellData = row[column.key];
                 } else if (column.key === "adr") {
                   cellData = (row.stats.damage.dealt / numRound).toFixed(0);
-                } else {
+                } 
+                else if (column.key === "stats.kills/stats.deaths") {
+                  // Calculate the KD ratio
+                  const kills = row.stats.kills;
+                  const deaths = row.stats.deaths;
+                  cellData = deaths === 0 ? kills : (kills / deaths).toFixed(1);
+                }
+                else {
                   const columnKeys = column.key.split('.');
                   cellData = row;
                   columnKeys.forEach(key => {
@@ -136,11 +137,7 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
                 }
 
                 return (
-                  <td
-                    key={`${rowIndex}-${column.key}`}
-                    className={`py-2 px-3 text-center ${columnIndex === 0 ? "sticky left-0 z-10 bg-base-100" : ""}`}
-                    style={columnIndex === 0 ? { width: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : { width: '50px' }} // Set width for non-first columns
-                  >
+                  <td key={`${rowIndex}-${column.key}`} className={`py-2 px-3 text-center ${columnIndex === 0 ? "sticky left-0 z-10 bg-base-100" : ""}`} style={columnIndex === 0 ? { width: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : { width: '50px' }}>
                     {column.key === "name" ? (
                       <div className="flex items-center">
                         <img
