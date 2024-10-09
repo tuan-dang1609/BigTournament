@@ -187,13 +187,11 @@ export const findAllMatchID = async (req, res, next) => {
     const allGame = await MatchID.find();
 
     if (!allGame || allGame.length === 0) {
-      // Ensure errorHandler is a function and correctly imported
       return next(errorHandler(404, 'No Game found'));
     }
 
     res.status(200).json(allGame);
   } catch (error) {
-    // Ensure the error is passed to the next middleware correctly
     next(error);
   }
 };
