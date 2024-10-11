@@ -126,7 +126,7 @@ const TournamentBracket = () => {
 
   return (
     <div className="container mx-auto p-4 relative">
-      <h1 className="text-3xl font-bold mb-10 mt-24 text-center">Solo Yasuo</h1>
+      <h1 className="text-3xl font-bold mb-10 mt-20 text-center">Solo Yasuo</h1>
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
@@ -173,7 +173,7 @@ const TournamentBracket = () => {
                 [teams[1][2], teams[1][3]],
                 [teams[1][4], teams[1][5]],
                 [teams[1][6], teams[1][7]],
-              ], 'lg:!mb-[148px] lg:first:!mt-[80px]')}
+              ], 'lg:!mb-[148px] lg:last:!mb-[0px] lg:first:!mt-[80px]')}
               <div className="hidden lg:block absolute top-[11.8rem] left-full h-[2px] 2xl:w-[8%] xl:w-[10%] lg:w-[13%] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[calc(11.8rem)] 2xl:left-[108%] xl:left-[110%] lg:left-[112%] h-[268px] w-[2.3px] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[28.4rem] left-full h-[2px] 2xl:w-[8%] xl:w-[10%] lg:w-[13%] bg-secondary"></div>
@@ -190,7 +190,7 @@ const TournamentBracket = () => {
             {renderSection("Bán kết", [
               [teams[2][0], teams[2][1]],
               [teams[2][2], teams[2][3]],
-            ],'lg:!mt-[212px] lg:!mb-[410px]')}
+            ],'lg:!mt-[212px] last:!mb-[0px] lg:!mb-[410px]')}
             <div className="hidden lg:block absolute top-[20.1rem] left-full h-[2px] 2xl:w-[8%] xl:w-[10%] lg:w-[13%] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[calc(20.1rem)] 2xl:left-[108%] xl:left-[110%] lg:left-[112%] h-[527px] w-[2.3px] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[52.9rem] left-full h-[2px] 2xl:w-[8%] xl:w-[10%] lg:w-[13%] bg-secondary"></div>
