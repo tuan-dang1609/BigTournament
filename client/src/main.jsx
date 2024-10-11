@@ -38,7 +38,7 @@ if (rootElement) {
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
               <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
               <Route path="/valorant/swissstage" element={<SwissStage />} />
-              <Route path="/leagueoflegend/swissstage" element={<SwissStageLOL />} />
+              <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
               <Route element={<PrivateRoute />}>
                 <Route path='/profile' element={<Profile />} />
               </Route>

@@ -5,7 +5,7 @@ const TournamentBracket = () => {
   const [teams, setTeams] = useState([[], [], [], []]);
   const [loading, setLoading] = useState(true);
   const [idmatch, setMatchId] = useState([]);
-
+  document.title = "Solo Yasuo cuối tuần"
   const fetchTeams = async () => {
     try {
       const response = await fetch(
@@ -107,11 +107,11 @@ const TournamentBracket = () => {
 
 
   const renderSection = (title, matchups, className = "") => {
-    const styles = roundStyles[title] || { border: "border-gray-300", titleBg: "bg-gray-100" };
+    const styles = roundStyles[title] || { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" };
 
     return (
       <div className={`flex flex-col  ${styles.border} overflow-hidden ${title === "1W-1L" ? "lg:mt-32" : ""}`}>
-        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border-b ${styles.border} `}>{title}</h2>
+        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>{title}</h2>
         <div className="py-2">
           {matchups.map((matchup, index) => (
             <div key={index} className={className}>
@@ -132,7 +132,7 @@ const TournamentBracket = () => {
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
       ) : (
-        <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative mb-6">
+        <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
           <div className="w-full lg:w-1/4 relative">
             {renderSection("Vòng 1/16", [
               [teams[0][0], teams[0][1]],
@@ -173,7 +173,7 @@ const TournamentBracket = () => {
                 [teams[1][2], teams[1][3]],
                 [teams[1][4], teams[1][5]],
                 [teams[1][6], teams[1][7]],
-              ], 'lg:!mb-[148px] first:!mt-[80px]')}
+              ], 'lg:!mb-[148px] lg:first:!mt-[80px]')}
               <div className="hidden lg:block absolute top-[11.8rem] left-full h-[2px] 2xl:w-[8%] xl:w-[10%] lg:w-[13%] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[calc(11.8rem)] 2xl:left-[108%] xl:left-[110%] lg:left-[112%] h-[268px] w-[2.3px] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[28.4rem] left-full h-[2px] 2xl:w-[8%] xl:w-[10%] lg:w-[13%] bg-secondary"></div>
