@@ -17,6 +17,7 @@ import './index.css'
 import MatchStat from './valorant/statmatch.jsx';
 import Inputmatchid from './valorant/input.jsx';
 import SwissStage from './valorant/bracket.jsx';
+import SwissStageLOL from './leagueoflegend/bracket.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -37,6 +38,7 @@ if (rootElement) {
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
               <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
               <Route path="/valorant/swissstage" element={<SwissStage />} />
+              <Route path="/leagueoflegend/swissstage" element={<SwissStageLOL />} />
               <Route element={<PrivateRoute />}>
                 <Route path='/profile' element={<Profile />} />
               </Route>

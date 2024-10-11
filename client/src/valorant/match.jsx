@@ -171,13 +171,10 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
 
   return (
     <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-x-7">
-      
       <div className="w-full xl:w-[49%]">
-
         {renderTable(redTeam, "red")}
       </div>
       <div className="w-full xl:w-[49%]">
-
         {renderTable(blueTeam, "blue")}
       </div>
       
