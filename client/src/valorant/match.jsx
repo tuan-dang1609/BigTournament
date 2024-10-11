@@ -170,7 +170,7 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
   const blueTeam = data.filter(player => player.team_id === "Blue");
 
   return (
-    <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-5">
+    <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-x-7">
       
       <div className="w-full xl:w-[49%]">
 

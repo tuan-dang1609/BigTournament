@@ -190,7 +190,7 @@ const TournamentBracket = () => {
               <div className="hidden lg:block absolute top-[5rem] left-full h-[2px] 2xl:w-[109%] xl:w-[110%] lg:w-[113%] bg-secondary"></div>
               <div className="hidden lg:block absolute top-[calc(25%+1rem)] left-full h-[2px] w-[8.25px] bg-secondary"></div>
               <div className="hidden lg:block absolute top-[calc(25%+1rem)] left-[calc(100%+0.4rem)] h-20 w-[1.2px] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(25%+6rem)] left-[calc(100%+0.4rem)] h-[3px] w-[8.5px] bg-secondary"></div>
+              <div className="hidden lg:block absolute top-[calc(25%+6rem)] left-[calc(100%+0.4rem)] h-[2px] w-[8.5px] bg-secondary"></div>
             </div>
             <div className="mt-8">
               {renderSection("0W-1L", [
@@ -211,8 +211,8 @@ const TournamentBracket = () => {
             ])}
             <div className="hidden lg:block absolute top-[calc(45%+1rem)] left-full h-[2.5px] w-[50%] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[calc(34%+1rem)] left-[calc(149.5%)] h-20 w-[2px] bg-secondary"></div>
-            <div className="hidden lg:block absolute bottom-[calc(35%+6rem)] left-full h-[2px] w-[50%] bg-secondary"></div>
-            <div className="hidden lg:block absolute bottom-[calc(35%+.7rem)] left-[149.5%] h-[87px] w-[2px] bg-secondary"></div>
+            <div className="hidden lg:block absolute bottom-[calc(35%+5.9rem)] left-full h-[2px] w-[50%] bg-secondary"></div>
+            <div className="hidden lg:block absolute bottom-[calc(35%+.5rem)] left-[149.5%] h-[87px] w-[2px] bg-secondary"></div>
             
           </div>
           <div className="w-full lg:w-1/4 flex flex-col justify-between relative">
