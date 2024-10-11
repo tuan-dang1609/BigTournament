@@ -35,19 +35,19 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
         const normalizedScore = player.stats.score / maxScore;
         const normalizedKills = player.stats.kills / maxKills;
         const normalizedDamage = player.stats.damage.dealt / maxDamage;
-
+  
         const acs = player.stats.score / numRound;
         const performanceScore = (
           (normalizedScore + normalizedKills + normalizedDamage) / 3
         ) * 10; // Scale the average of normalized values to 0-10
-
+  
         return {
           ...player,
           acs: acs.toFixed(0),
           performanceScore: performanceScore.toFixed(1),
         };
       }).sort((a, b) => b.acs - a.acs);
-
+  
       setData(normalizedData);
     }
   }, [matchInfo, numRound, kill]);
@@ -121,6 +121,9 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
                 else if (column.key === "kda") {
                   cellData = `${row.stats.kills}/${row.stats.deaths}/${row.stats.assists}`;
                 }
+                else if (column.key === "stats.headshots") {
+                  cellData = (row.stats.headshots*100 /(row.stats.headshots+row.stats.bodyshots+row.stats.legshots)).toFixed(0);
+                }
                 else if (column.key === "stats.kills/stats.deaths") {
                   // Calculate the KD ratio
                   const kills = row.stats.kills;
@@ -160,7 +163,7 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
   );
 
   if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
+    return <div className="text-red-500 text-center">Lỗi data hoặc do trận đấu chưa diễn ra. Các bạn quay lại sau nhé.</div>;
   }
 
   const redTeam = data.filter(player => player.team_id === "Red");
@@ -170,11 +173,11 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
     <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-5">
       
       <div className="w-full xl:w-[49%]">
-        <h3 className="text-xl font-bold mb-2 text-red-600">Red Team</h3>
+
         {renderTable(redTeam, "red")}
       </div>
       <div className="w-full xl:w-[49%]">
-        <h3 className="text-xl font-bold mb-2 text-blue-600">Blue Team</h3>
+
         {renderTable(blueTeam, "blue")}
       </div>
       

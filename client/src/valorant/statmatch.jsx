@@ -5,13 +5,15 @@ import MatchResult from "./match";
 export default function MatchStat() {
     const { round, Match } = useParams();
     const [matchid, setMatchid] = useState([]);
-    const [matchInfo, setMatchInfo] = useState(null);
+    const [mapData, setMapData] = useState({});
+    const [matchInfo, setMatchInfo] = useState([]);
     const [error, setError] = useState(null);
     const [numRound, setNumRound] = useState(null);
-    const [kill, setAllKill] = useState(null);
+    const [kill, setAllKill] = useState([]);
     const [score, setScore] = useState([]);
     const [time, setTime] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedMap, setSelectedMap] = useState(null);
     const region = 'ap';
 
     const fetchGames = async () => {
@@ -34,7 +36,7 @@ export default function MatchStat() {
             const data = await response.json();
             setMatchid(data.matchid);
         } catch (error) {
-            console.error("Failed to fetch game:");
+            console.error("Failed to fetch game:", error);
         }
     };
 
@@ -58,25 +60,23 @@ export default function MatchStat() {
                             data: data.data
                         }))
                         .catch(err => {
-                            
                             return null;
                         })
                 )
             ).then(results => {
                 const validResults = results.filter(result => result !== null);
                 if (validResults.length > 0) {
-                    const combinedData = validResults.map(result => result.data);
-                    const players = combinedData.flatMap(match => match.players);
-                    const rounds = combinedData.reduce((sum, match) => sum + match.rounds.length, 0);
-                    const kills = combinedData.flatMap(match => match.kills);
-                    const teams = combinedData.flatMap(match => match.teams);
-                    const time = formatTime(combinedData[0].metadata.started_at);
+                    const groupedData = validResults.reduce((acc, result) => {
+                        const mapName = result.data.metadata.map.name;
+                        if (!acc[mapName]) {
+                            acc[mapName] = [];
+                        }
+                        acc[mapName].push(result.data);
+                        return acc;
+                    }, {});
 
-                    setMatchInfo(players);
-                    setNumRound(rounds);
-                    setAllKill(kills);
-                    setScore(teams);
-                    setTime(time);
+                    setMapData(groupedData);
+                    setSelectedMap(Object.keys(groupedData)[0]); // Set the first map as the default
                     setIsLoading(false);
                 }
             }).catch(err => {
@@ -104,7 +104,7 @@ export default function MatchStat() {
     };
 
     const getDaySuffix = (day) => {
-        if (day > 3 && day < 21) return 'th'; // Handle "11th" to "20th"
+        if (day > 3 && day < 21) return 'th';
         switch (day % 10) {
             case 1: return 'st';
             case 2: return 'nd';
@@ -113,48 +113,81 @@ export default function MatchStat() {
         }
     };
 
+    const renderMapTabs = () => (
+        <div className="flex items-center justify-between bg-[#362431] p-2 mb-2">
+            <span className="text-white text-[11px] font-bold mr-4">MATCH STATS</span>
+            <div className="flex gap-2">
+                {Object.keys(mapData).map((mapName) => (
+                    <button
+                        key={mapName}
+                        onClick={() => setSelectedMap(mapName)}
+                        className={`px-4 py-2 text-[11px] font-bold rounded ${selectedMap === mapName ? 'bg-white text-black' : 'bg-[#4A374A] text-white'}`}
+                    >
+                        {mapName.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+
     useEffect(() => {
-        if (kill && matchInfo && numRound) {
-            const fkMap = {};
-            const mkMap = {};
+        if (selectedMap) {
+            const selectedMatchData = mapData[selectedMap] || [];
 
-            matchInfo.forEach(player => {
-                fkMap[player.puuid] = 0;
-                mkMap[player.puuid] = 0;
-            });
+            const players = selectedMatchData.flatMap(match => match.players) || [];
+            const kills = selectedMatchData.flatMap(match => match.kills) || [];
+            const rounds = selectedMatchData.reduce((sum, match) => sum + match.rounds.length, 0);
+            const teams = selectedMatchData.flatMap(match => match.teams);
+            const time = selectedMatchData.length > 0 ? formatTime(selectedMatchData[0].metadata.started_at) : null;
 
-            const roundKillCount = {};
-
-            kill.forEach(killEvent => {
-                const { killer, round } = killEvent;
-
-                if (!roundKillCount[round]) {
-                    roundKillCount[round] = {};
-                    fkMap[killer.puuid] += 1;
-                }
-
-                if (!roundKillCount[round][killer.puuid]) {
-                    roundKillCount[round][killer.puuid] = 0;
-                }
-                roundKillCount[round][killer.puuid] += 1;
-
-                if (roundKillCount[round][killer.puuid] === 3) {
-                    mkMap[killer.puuid] += 1;
-                }
-            });
-
-            const updatedMatchInfo = matchInfo.map(player => ({
-                ...player,
-                fk: fkMap[player.puuid] || 0,
-                mk: mkMap[player.puuid] || 0,
-            }));
-
-            const isSame = JSON.stringify(matchInfo) === JSON.stringify(updatedMatchInfo);
-            if (!isSame) {
-                setMatchInfo(updatedMatchInfo);
-            }
+            setNumRound(rounds);
+            setScore(teams);
+            setTime(time);
+            calculateFKAndMK(players, kills);
         }
-    }, [kill, matchInfo, numRound]);
+    }, [selectedMap, mapData]);
+
+    const calculateFKAndMK = (players, kills) => {
+        const fkMap = {};
+        const mkMap = {};
+
+        players.forEach(player => {
+            fkMap[player.puuid] = 0;
+            mkMap[player.puuid] = 0;
+        });
+
+        const roundKillCount = {};
+
+        kills.forEach(killEvent => {
+            const { killer, round } = killEvent;
+
+            if (!roundKillCount[round]) {
+                roundKillCount[round] = {};
+                fkMap[killer.puuid] += 1;
+            }
+
+            if (!roundKillCount[round][killer.puuid]) {
+                roundKillCount[round][killer.puuid] = 0;
+            }
+            roundKillCount[round][killer.puuid] += 1;
+
+            if (roundKillCount[round][killer.puuid] === 3) {
+                mkMap[killer.puuid] += 1;
+            }
+        });
+
+        const updatedMatchInfo = players.map(player => ({
+            ...player,
+            fk: fkMap[player.puuid] || 0,
+            mk: mkMap[player.puuid] || 0,
+        }));
+
+        setMatchInfo(updatedMatchInfo);
+    };
+
+    const selectedData = selectedMap ? matchInfo : [];
+    const selectedKills = selectedMap ? kill : [];
+    const selectedTeams = selectedMap ? score : [];
 
     if (isLoading) {
         return (
@@ -166,6 +199,7 @@ export default function MatchStat() {
 
     return (
         <>
+            
             <div className="matchstat">
                 <div className="scoreboard-title">
                     <div className="scoreboard w-full">
@@ -181,12 +215,12 @@ export default function MatchStat() {
                         </div>
                         <div className="score-and-time">
                             <div className="score bg-[#362431]">
-                                {score && score.length > 0 && (
+                                {selectedTeams && selectedTeams.length > 0 && (
                                     <span
-                                        className={`scoreA ${score[0].rounds.won > score[1].rounds.won ? 'green-win' : 'red-lose'}`}
+                                        className={`scoreA ${selectedTeams[0].rounds.won > selectedTeams[1].rounds.won ? 'green-win' : 'red-lose'}`}
                                         id='score-left'
                                     >
-                                        {score[0].rounds.won}
+                                        {selectedTeams[0].rounds.won}
                                     </span>
                                 )}
                             </div>
@@ -195,12 +229,12 @@ export default function MatchStat() {
                                 <span>{time}</span>
                             </div>
                             <div className="score bg-[#362431]">
-                                {score && score.length > 1 && (
+                                {selectedTeams && selectedTeams.length > 1 && (
                                     <span
-                                        className={`scoreA ${score[0].rounds.won < score[1].rounds.won ? 'green-win' : 'red-lose'}`}
+                                        className={`scoreA ${selectedTeams[0].rounds.won < selectedTeams[1].rounds.won ? 'green-win' : 'red-lose'}`}
                                         id='score-right'
                                     >
-                                        {score[1].rounds.won}
+                                        {selectedTeams[1].rounds.won}
                                     </span>
                                 )}
                             </div>
@@ -221,8 +255,9 @@ export default function MatchStat() {
                         <span className='group all-title text-white'>Nhánh 0-0 ● BO1</span>
                     </div>
                 </div>
+                {renderMapTabs()}
                 <div>
-                    <MatchResult matchInfo={matchInfo} numRound={numRound} kill={kill} error={error} />
+                    <MatchResult matchInfo={selectedData} numRound={numRound} kill={selectedKills} error={error} />
                 </div>
             </div>
         </>
