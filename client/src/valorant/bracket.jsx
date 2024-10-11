@@ -78,7 +78,7 @@ const TournamentBracket = () => {
   "1W-0L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
   "1W-1L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
   "0W-1L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
-    "Advance to play-off": { border: "border-green-400", titleBg: "bg-green-200" },
+    "Advance to play-off": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
   };
 
   const renderMatchup = (team1, team2, hasMargin = true) => (
@@ -126,8 +126,8 @@ const TournamentBracket = () => {
   };
 
   const renderAdvanceSection = () => (
-    <div className="flex flex-col border-2 border-green-300 rounded-lg overflow-hidden relative">
-      <h2 className="text-lg font-bold p-2 bg-green-100 border-b border-green-300 text-black">Advance to play-off</h2>
+    <div className="flex flex-col border-2 border-gray-300 rounded-lg overflow-hidden relative">
+      <h2 className="text-lg font-bold p-2 bg-[#D9D9D94D] border-b border-gray-300 ">Advance to play-off</h2>
       <div className="p-2">
         {teams[3].slice(0, 4).map((team, index) => (
           <div key={index} className="flex items-center justify-between p-2 border-b last:border-b-0">
@@ -146,11 +146,11 @@ const TournamentBracket = () => {
   );
 
   const renderEliminateSection = () => (
-    <div className="flex flex-col border-2 border-red-300 rounded-lg overflow-hidden relative">
-      <h2 className="text-lg font-bold p-2 bg-red-100 border-b border-red-300 text-black">Eliminate</h2>
+    <div className="flex flex-col border-2 border-gray-300 overflow-hidden relative rounded-lg">
+      <h2 className="text-lg font-bold p-2 bg-[#D9D9D94D] border-b border-gray-300 ">Eliminate</h2>
       <div className="p-2">
         {teams[3].slice(5, 9).map((team, index) => (
-          <div key={index} className="flex items-center justify-between p-2 border-b border-red-200 last:border-b-0">
+          <div key={index} className="flex items-center justify-between p-2 border-b  last:border-b-0">
             <div className="flex items-center">
               <img src={team.icon} alt={team.name || "Team Logo"} className="w-8 h-8 mr-2" />
               <span>{team.name || "Unknown"}</span>
