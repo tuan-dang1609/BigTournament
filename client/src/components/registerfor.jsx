@@ -106,12 +106,8 @@ const TeamRegistrationForm = () => {
                 }
                 break;
             case "logoUrl":
-                const urlPattern = /^(https?:\/\/)?(drive\.google\.com\/|docs\.google\.com\/|[a-zA-Z0-9_-]{25,})$/;
-                if (!urlPattern.test(value.trim())) {
-                    newErrors.logoUrl = "Please enter a valid Google Drive URL or file ID";
-                } else {
-                    delete newErrors.logoUrl;
-                }
+                delete newErrors.logoUrl;
+
                 break;
             case "games":
                 if (value.length === 0) {
