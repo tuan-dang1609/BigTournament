@@ -24,7 +24,7 @@ const teamSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        match: /^https?:\/\/.+/
+
     },
     games: {
         type: [String],

@@ -64,7 +64,7 @@ export default function Home() {
                         </div>
                     )}
                     <div className={`mx-auto max-w-7xl px-2 sm:px-6 relative z-0 ${marginTopClass}`}>
-                        <div className="welcome animate__animated animate__fadeIn flex lg:flex-row max-[1024px]:flex-col gap-8 mb-14 lg:px-8">
+                        <div className="welcome animate__animated animate__fadeIn flex lg:flex-row max-[1024px]:flex-col gap-8 mb-14">
                             <section className="lg:w-6.5/10 max-[1024px]:w-full">
                                 <p className='lg:text-[40px] font-bold font-sans leading-tight max-[1024px]:text-4xl mb-7'>CHÀO MỪNG TỚI GIẢI <span className='text-primary'>DCN ESPORT
                                     </span></p>
