@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
+    discordID:"",
     riotID: "",
     username: "",
     email: "",
