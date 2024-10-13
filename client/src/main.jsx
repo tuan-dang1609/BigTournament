@@ -43,8 +43,9 @@ if (rootElement) {
               <Route path="/valorant/swissstage" element={<SwissStage />} />
               <Route path="/valorant/playoff" element={<PlayoffValo />} />
               <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
-              <Route element={<PrivateRoute />}>
               <Route path='/register' element={<TeamRegistrationForm />} />
+              <Route element={<PrivateRoute />}>
+              
                 <Route path='/profile' element={<Profile />} />
               </Route>
             </Routes>
