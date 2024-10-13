@@ -35,7 +35,7 @@ if (rootElement) {
               <Route exact path='/' element={<Home />} />
               <Route path='/signup' element={<SignUp />} />
               <Route path='/signin' element={<SignIn />} />
-              <Route path='/register' element={<TeamRegistrationForm />} />
+              
               <Route path='/valorant/me' element={<Rule />} />
               <Route path='/allgame' element={<AllGame />} />
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
@@ -44,6 +44,7 @@ if (rootElement) {
               <Route path="/valorant/playoff" element={<PlayoffValo />} />
               <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
               <Route element={<PrivateRoute />}>
+              <Route path='/register' element={<TeamRegistrationForm />} />
                 <Route path='/profile' element={<Profile />} />
               </Route>
             </Routes>

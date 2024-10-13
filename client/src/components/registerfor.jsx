@@ -20,7 +20,7 @@ const TeamRegistrationForm = () => {
     const [countdown, setCountdown] = useState(5);
     const navigate = useNavigate();
 
-    const gameOptions = ["League Of Legends", "Valorant", "Teamfight Tactics", "FC Online"];
+    const gameOptions = ["League Of Legends", "Valorant", "Teamfight Tactics", "FC Online","Liên Quân Mobile"];
 
     useEffect(() => {
         if (signupSuccess) {
@@ -51,7 +51,7 @@ const TeamRegistrationForm = () => {
             delete updatedGameMembers[game];
         } else {
             updatedGames.push(game);
-            updatedGameMembers[game] = (game === "League Of Legends" || game === "Valorant") ? Array(5).fill("") : [""];
+            updatedGameMembers[game] = (game === "League Of Legends" || game === "Valorant"|| game === "Liên Quân Mobile") ? Array(5).fill("") : [""];
         }
 
         setFormData({ ...formData, games: updatedGames, gameMembers: updatedGameMembers });
@@ -176,7 +176,7 @@ const TeamRegistrationForm = () => {
                 <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
                     <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Đăng kí thành công!</h2>
                     <p className="text-center text-gray-600">
-                        Cảm ơn bạn đã tạo tài khoản. Bây giờ bạn có thể đăng nhập bằng thông tin đăng nhập của mình.
+                        Cảm ơn bạn đã đăng kí đội cho lớp. Bây giờ bạn có thể chờ đợi lịch thi đấu bằng cách theo dõi thông tin trong Discord trường mình nhé
                     </p>
                     <p className="text-center text-gray-600 mt-4">
                         Tự động chuyển tới trang chủ trong {countdown} giây...
@@ -298,7 +298,7 @@ const TeamRegistrationForm = () => {
                                                     placeholder={`${game} Member ${index + 1} username`}
                                                 />
 
-                                                {(game === "League Of Legends" || game === "Valorant") && formData.gameMembers[game].length > 5 && (
+                                                {(game === "League Of Legends" || game === "Valorant"|| game === "Liên Quân Mobile") && formData.gameMembers[game].length > 5 && (
                                                     <motion.button
                                                         type="button"
                                                         whileHover={{ scale: 1.1 }}
@@ -310,7 +310,7 @@ const TeamRegistrationForm = () => {
                                                     </motion.button>
                                                 )}
 
-                                                {!(game === "League Of Legends" || game === "Valorant") && formData.gameMembers[game].length > 1 && (
+                                                {!(game === "League Of Legends" || game === "Valorant"|| game === "Liên Quân Mobile") && formData.gameMembers[game].length > 1 && (
                                                     <motion.button
                                                         type="button"
                                                         whileHover={{ scale: 1.1 }}
