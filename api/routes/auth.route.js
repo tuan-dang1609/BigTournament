@@ -2,6 +2,7 @@ import express from 'express';
 import { signin, signup, signout, addteam, findteam, addMatch, getAllMatches, findMatchPlayoff, findPlayer, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID,findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
+import TeamRegister from '../models/registergame.model.js'
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -20,6 +21,36 @@ router.post('/allgame',addAllGame)
 router.post('/addmatch',addMatchID)
 router.post('/findallmatchid',findAllMatchID)
 router.post('/findmatchid',findmatchID)
+router.post('/register', async (req, res) => {
+  try {
+      const { teamName, shortName, classTeam, logoUrl, games, gameMembers } = req.body;
+
+      if (!teamName || !shortName || !classTeam || !logoUrl || !games || !gameMembers) {
+          return res.status(400).json({ message: 'All fields are required' });
+      }
+
+      const newTeam = new TeamRegister({
+          teamName,
+          shortName,
+          classTeam,
+          logoUrl,
+          games,
+          gameMembers
+      });
+
+      const savedTeam = await newTeam.save();
+      res.status(201).json(savedTeam);
+  } catch (error) {
+      console.error('Error registering team:', error);
+      if (error.name === 'ValidationError') {
+          const errors = Object.values(error.errors).map(err => err.message);
+          return res.status(400).json({ errors });
+      }
+      res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 router.post('/addquestions', async (req, res, next) => {
   const { idquestionset, questionSet } = req.body;
   const newTeam = new QuestionPickem({idquestionset, questionSet });

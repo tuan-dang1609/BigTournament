@@ -19,6 +19,7 @@ import Inputmatchid from './valorant/input.jsx';
 import SwissStage from './valorant/bracket.jsx';
 import PlayoffValo from './valorant/playoff.jsx';
 import SwissStageLOL from './leagueoflegend/bracket.jsx'
+import TeamRegistrationForm from './components/registerfor.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -34,6 +35,7 @@ if (rootElement) {
               <Route exact path='/' element={<Home />} />
               <Route path='/signup' element={<SignUp />} />
               <Route path='/signin' element={<SignIn />} />
+              <Route path='/register' element={<TeamRegistrationForm />} />
               <Route path='/valorant/me' element={<Rule />} />
               <Route path='/allgame' element={<AllGame />} />
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />

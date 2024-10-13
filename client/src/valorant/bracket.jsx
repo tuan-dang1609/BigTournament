@@ -92,7 +92,7 @@ const TournamentBracket = () => {
           className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white ${index === 0 ? '' : ''}`}
         >
           <div className="flex items-center ">
-            <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
+            <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-9 h-9 mr-4 ml-1" />
             <span className="text-black">{team?.name || 'Unknown'}</span>
           </div>
           <div className="flex items-center justify-center w-14 h-14 bg-[#d9d9d9e5]">
