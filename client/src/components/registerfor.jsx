@@ -248,7 +248,7 @@ const TeamRegistrationForm = () => {
                                 <div className="flex flex-col">
                                     <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">Google Drive Logo URL của bạn</label>
                                     <input
-                                        type="url"
+                                        type="text"
                                         id="logoUrl"
                                         name="logoUrl"
                                         value={formData.logoUrl}
