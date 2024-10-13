@@ -220,17 +220,17 @@ const SignupPage = () => {
                 type="text"
                 name="discordID"
                 id="discordID"
-                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.riotID ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.discordID ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Enter your Discord ID"
-                value={formData.discorID}
+                value={formData.discordID}
                 onChange={handleChange}
                 aria-invalid={errors.discordID ? "true" : "false"}
                 aria-describedby="discordID-error"
               />
             </div>
-            {errors.riotID && (
+            {errors.discordID && (
               <p className="mt-2 text-sm text-red-600" id="riotID-error">
-                {errors.riotID}
+                {errors.discordID}
               </p>
             )}
           </div>
