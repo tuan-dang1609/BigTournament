@@ -53,7 +53,7 @@ function LoginForm () {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-800">Login</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-800">Đăng Nhập</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700">
@@ -65,7 +65,7 @@ function LoginForm () {
               name="username"
               value={formData.username}
               onChange={handleInputChange}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+              className="mt-1 text-black block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
                 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500
                 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 disabled:shadow-none"
               placeholder="Enter your username"
@@ -84,7 +84,7 @@ function LoginForm () {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="block w-full pr-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none bg-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="block text-black w-full pr-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none bg-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Enter your password"
                 required
                 aria-label="Password"
@@ -113,7 +113,7 @@ function LoginForm () {
               {loading ? (
                 <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 mr-3" />
               ) : null}
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Đăng nhập vào..." : "Đăng nhập"}
             </button>
           </div>
         </form>
@@ -123,9 +123,9 @@ function LoginForm () {
           </p>
         )}
         <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          Chưa có tài khoản?{" "}
           <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500" >
-            Sign up
+            Đăng kí
           </Link>
         </p>
       </div>

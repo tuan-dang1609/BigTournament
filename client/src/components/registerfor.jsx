@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FaPlus, FaMinus, FaUserPlus } from "react-icons/fa";
 import { motion } from "framer-motion";
-import axios from 'axios'; // Import axios for making API calls
+import axios from 'axios';
 
 const TeamRegistrationForm = () => {
     const [formData, setFormData] = useState({
@@ -18,14 +18,12 @@ const TeamRegistrationForm = () => {
 
     const gameOptions = ["League Of Legends", "Valorant", "Teamfight Tactics", "FC Online"];
 
-    // Handle input change for regular fields (team name, short name, etc.)
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
         validateField(name, value);
     };
 
-    // Handle selecting and unselecting a game
     const handleGameToggle = (game) => {
         let updatedGames = [...formData.games];
         let updatedGameMembers = { ...formData.gameMembers };
@@ -35,14 +33,14 @@ const TeamRegistrationForm = () => {
             delete updatedGameMembers[game];
         } else {
             updatedGames.push(game);
-            updatedGameMembers[game] = game === "League Of Legends" || game === "Valorant" ? Array(5).fill("") : [""];
+            // Show 5 inputs for "League Of Legends" and "Valorant", 1 for others
+            updatedGameMembers[game] = (game === "League Of Legends" || game === "Valorant") ? Array(5).fill("") : [""];
         }
 
         setFormData({ ...formData, games: updatedGames, gameMembers: updatedGameMembers });
         validateField("games", updatedGames);
     };
 
-    // Handle member change for game participants
     const handleMemberChange = (game, index, value) => {
         const updatedGameMembers = { ...formData.gameMembers };
         updatedGameMembers[game][index] = value;
@@ -50,14 +48,12 @@ const TeamRegistrationForm = () => {
         validateField("gameMembers", updatedGameMembers);
     };
 
-    // Add more team members (applies only to "League Of Legends" and "Valorant")
     const addMember = (game) => {
         const updatedGameMembers = { ...formData.gameMembers };
         updatedGameMembers[game] = [...updatedGameMembers[game], ""];
         setFormData({ ...formData, gameMembers: updatedGameMembers });
     };
 
-    // Remove a team member from the list
     const removeMember = (game, index) => {
         const updatedGameMembers = { ...formData.gameMembers };
         updatedGameMembers[game] = updatedGameMembers[game].filter((_, i) => i !== index);
@@ -65,7 +61,6 @@ const TeamRegistrationForm = () => {
         validateField("gameMembers", updatedGameMembers);
     };
 
-    // Validate form fields
     const validateField = (name, value) => {
         let newErrors = { ...errors };
 
@@ -96,10 +91,6 @@ const TeamRegistrationForm = () => {
             case "logoUrl":
                 if (!value.trim()) {
                     newErrors.logoUrl = "Logo URL is required";
-                } else if (!/^https?:\/\/.+/.test(value)) {
-                    newErrors.logoUrl = "Invalid URL format";
-                } else {
-                    delete newErrors.logoUrl;
                 }
                 break;
             case "games":
@@ -123,13 +114,12 @@ const TeamRegistrationForm = () => {
         setErrors(newErrors);
     };
 
-    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         const formFields = ["teamName", "shortName", "classTeam", "logoUrl", "games", "gameMembers"];
         let valid = true;
 
-        // Validate all fields before submission
+        // Validate all fields
         formFields.forEach((field) => {
             validateField(field, formData[field]);
             if (errors[field]) {
@@ -137,14 +127,13 @@ const TeamRegistrationForm = () => {
             }
         });
 
-        // If no validation errors, send data to backend API
         if (valid && Object.keys(errors).length === 0) {
             try {
                 const response = await axios.post('https://dongchuyennghiep-backend.vercel.app/api/auth/register', formData);
                 console.log("Form submitted:", response.data);
                 setSubmitStatus({ success: true, message: "Team registered successfully!" });
 
-                // Reset form data after successful submission
+                // Reset form after successful submission
                 setFormData({
                     teamName: "",
                     shortName: "",
@@ -274,17 +263,33 @@ const TeamRegistrationForm = () => {
 
                                 {formData.games.map((game) => (
                                     <div key={game} className="flex flex-col mt-4">
-                                        <label className="leading-loose text-base-content font-bold">{game} Team Members</label>
+                                        <label className="leading-loose text-base-content font-bold">Thành viên của game {game}</label>
                                         {formData.gameMembers[game].map((member, index) => (
                                             <div key={index} className="flex items-center space-x-2 mb-2">
                                                 <input
                                                     type="text"
                                                     value={member}
                                                     onChange={(e) => handleMemberChange(game, index, e.target.value)}
-                                                    className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                                                    className="px-4 py-2 border focus:ring-gray-500 focus:border-primary w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-white"
                                                     placeholder={`${game} Member ${index + 1} username`}
                                                     aria-label={`${game} Team Member ${index + 1}`}
                                                 />
+
+                                                {/* For LOL and Valorant, show the remove button only if members exceed 5 */}
+                                                {(game === "League Of Legends" || game === "Valorant") && formData.gameMembers[game].length > 5 && (
+                                                    <motion.button
+                                                        type="button"
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                        onClick={() => removeMember(game, index)}
+                                                        className="bg-red-500 text-white p-2 rounded-full"
+                                                        aria-label={`Remove ${game} Member ${index + 1}`}
+                                                    >
+                                                        <FaMinus />
+                                                    </motion.button>
+                                                )}
+
+                                                {/* For TFT and FC Online, show the remove button only if members exceed 1 */}
                                                 {!(game === "League Of Legends" || game === "Valorant") && formData.gameMembers[game].length > 1 && (
                                                     <motion.button
                                                         type="button"
@@ -299,6 +304,7 @@ const TeamRegistrationForm = () => {
                                                 )}
                                             </div>
                                         ))}
+
                                         <motion.button
                                             type="button"
                                             whileHover={{ scale: 1.05 }}

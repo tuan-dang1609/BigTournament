@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema(
   {
+    discordID:{
+      type:String,
+      unique: true,
+      default:""
+    },
     riotID:{
       type:String,
       unique: true,
