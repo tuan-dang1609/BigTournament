@@ -8,9 +8,9 @@ import BanPick from '../models/veto.model.js';
 import AllGame from '../models/allgame.model.js';
 import MatchID from '../models/matchid.model.js';
 export const signup = async (req, res, next) => {
-  const { riotID, username, email, password ,discordID} = req.body;
+  const { riotID, username, password ,discordID} = req.body;
   const hashedPassword = bcryptjs.hashSync(password, 10);
-  const newUser = new User({ riotID, username,discordID, email, password: hashedPassword });
+  const newUser = new User({ riotID, username,discordID, password: hashedPassword });
   try {
     await newUser.save();
     res.status(201).json({ message: 'User created successfully' });
