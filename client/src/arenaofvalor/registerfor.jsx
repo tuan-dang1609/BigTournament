@@ -207,7 +207,7 @@ const TeamRegistrationForm = () => {
             if (error.response && error.response.data) {
                 setSubmitStatus({ success: false, message: error.response.data.message || "Submission failed." });
             } else {
-                setSubmitStatus({ success: false, message: "An unexpected error occurred." });
+                setSubmitStatus({ success: false, message: error.response?.data?.message || error.message || "An unexpected error occurred." });
             }
         }
     };
