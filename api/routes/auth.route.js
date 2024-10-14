@@ -49,7 +49,34 @@ router.post('/register', async (req, res) => {
       res.status(500).json({ message: 'Server error' });
   }
 });
+router.post('/registerAOV', async (req, res) => {
+  try {
+      const { teamName, shortName, classTeam, logoUrl, games, gameMembers } = req.body;
 
+      if (!teamName || !shortName || !classTeam || !logoUrl || !games || !gameMembers) {
+          return res.status(400).json({ message: 'All fields are required' });
+      }
+
+      const newTeam = new TeamRegister({
+          teamName,
+          shortName,
+          classTeam,
+          logoUrl,
+          games,
+          gameMembers
+      });
+
+      const savedTeam = await newTeam.save();
+      res.status(201).json(savedTeam);
+  } catch (error) {
+      console.error('Error registering team:', error);
+      if (error.name === 'ValidationError') {
+          const errors = Object.values(error.errors).map(err => err.message);
+          return res.status(400).json({ errors });
+      }
+      res.status(500).json({ message: 'Server error' });
+  }
+});
 
 router.post('/addquestions', async (req, res, next) => {
   const { idquestionset, questionSet } = req.body;
