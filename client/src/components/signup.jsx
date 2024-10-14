@@ -8,7 +8,6 @@ const SignupPage = () => {
     discordID:"",
     riotID: "",
     username: "",
-    email: "",
     password: "",
     retypePassword: "",
   });
@@ -57,15 +56,6 @@ const SignupPage = () => {
           newErrors.username = "Phải nhập tên người dùng";
         } else {
           delete newErrors.username;
-        }
-        break;
-      case "email":
-        if (!value.trim()) {
-          newErrors.email = "Phải nhập Email";
-        } else if (!/\S+@\S+\.\S+/.test(value)) {
-          newErrors.email = "Định dạng email không đúng";
-        } else {
-          delete newErrors.email;
         }
         break;
       case "password":
@@ -262,33 +252,7 @@ const SignupPage = () => {
             )}
           </div>
 
-          {/* Email Input */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaEnvelope className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </div>
-              <input
-                type="email"
-                name="email"
-                id="email"
-                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={handleChange}
-                aria-invalid={errors.email ? "true" : "false"}
-                aria-describedby="email-error"
-              />
-            </div>
-            {errors.email && (
-              <p className="mt-2 text-sm text-red-600" id="email-error">
-                {errors.email}
-              </p>
-            )}
-          </div>
+
 
           {/* Password Input */}
           <div>
