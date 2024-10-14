@@ -7,6 +7,7 @@ import Match from '../models/match.model.js';
 import BanPick from '../models/veto.model.js';
 import AllGame from '../models/allgame.model.js';
 import MatchID from '../models/matchid.model.js';
+import TeamRegister from '../models/registergame.model.js'
 export const signup = async (req, res, next) => {
   const { riotID, username, password ,discordID} = req.body;
   const hashedPassword = bcryptjs.hashSync(password, 10);
@@ -191,6 +192,19 @@ export const findAllMatchID = async (req, res, next) => {
     }
 
     res.status(200).json(allGame);
+  } catch (error) {
+    next(error);
+  }
+};
+export const findAllteam = async (req, res, next) => {
+  try {
+    const allTeam = await TeamRegister.find();
+
+    if (!allTeam || allTeam.length === 0) {
+      return next(errorHandler(404, 'No Game found'));
+    }
+
+    res.status(200).json(allTeam);
   } catch (error) {
     next(error);
   }
