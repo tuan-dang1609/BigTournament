@@ -166,21 +166,34 @@ const TeamRegistrationForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
     
+        // Temporary object to store errors
+        let tempErrors = { ...errors };
+    
         // Validate all fields
         const formFields = ["teamName", "shortName", "classTeam", "logoUrl", "games", "gameMembers"];
-        formFields.forEach((field) => validateField(field, formData[field]));
+        formFields.forEach((field) => {
+            validateField(field, formData[field]);
     
-        // Check if there are still errors
-        if (Object.keys(errors).length > 0) {
+            // Update tempErrors based on validation results
+            if (errors[field]) {
+                tempErrors[field] = errors[field];
+            }
+        });
+    
+        // Check if there are still errors (including for duplicate members)
+        if (Object.keys(tempErrors).length > 0) {
+            setErrors(tempErrors); // Update the actual errors state
             setSubmitStatus({ success: false, message: "Please fix the errors in the form." });
             return;
         }
     
+        // Proceed with form submission if no errors
         try {
             const response = await axios.post('https://dongchuyennghiep-backend.vercel.app/api/auth/registerAOV', formData);
             setSubmitStatus({ success: true, message: "Team registered successfully!" });
             setSignupSuccess(true);
     
+            // Reset the form and errors state after successful submission
             setFormData({
                 teamName: "",
                 shortName: "",
@@ -198,6 +211,7 @@ const TeamRegistrationForm = () => {
             }
         }
     };
+    
     
 
     if (signupSuccess) {
