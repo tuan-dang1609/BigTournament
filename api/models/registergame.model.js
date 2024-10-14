@@ -7,11 +7,13 @@ const teamSchema = new mongoose.Schema({
     teamName: {
         type: String,
         required: true,
+        unique:true,
         trim: true
     },
     shortName: {
         type: String,
         required: true,
+        unique:true,
         trim: true,
         maxlength: 5
     },
@@ -24,7 +26,7 @@ const teamSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-
+        unique:true
     },
     games: {
         type: [String],
@@ -34,6 +36,7 @@ const teamSchema = new mongoose.Schema({
     gameMembers: {
         type: Map,
         of: [String],
+        unique:true,
         required: true,
         validate: {
             validator: function(value) {

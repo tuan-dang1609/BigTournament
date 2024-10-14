@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaPlus, FaMinus, FaUserPlus } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const TeamRegistrationForm = () => {
     const [formData, setFormData] = useState({
@@ -13,7 +13,7 @@ const TeamRegistrationForm = () => {
         games: [],
         gameMembers: {}
     });
-
+    
     const [errors, setErrors] = useState({});
     const [submitStatus, setSubmitStatus] = useState(null);
     const [signupSuccess, setSignupSuccess] = useState(false);
@@ -21,7 +21,14 @@ const TeamRegistrationForm = () => {
     const navigate = useNavigate();
 
     const gameOptions = ["Liên Quân Mobile"];
+    useEffect(() => {
+        const scrollToTop = () => {
+            document.documentElement.scrollTop = 0;
+        };
+        setTimeout(scrollToTop, 0);
+        document.title = "Form đăng kí giải";
 
+    }, []);
     useEffect(() => {
         if (signupSuccess) {
             const timer = setInterval(() => {
@@ -29,7 +36,7 @@ const TeamRegistrationForm = () => {
             }, 1000);
 
             if (countdown === 0) {
-                navigate('/');
+                navigate('/arenaofvalor');
             }
 
             return () => clearInterval(timer);
@@ -51,7 +58,7 @@ const TeamRegistrationForm = () => {
             delete updatedGameMembers[game];
         } else {
             updatedGames.push(game);
-            updatedGameMembers[game] = (game === "League Of Legends" || game === "Valorant"|| game === "Liên Quân Mobile") ? Array(5).fill("") : [""];
+            updatedGameMembers[game] = (game === "League Of Legends" || game === "Valorant" || game === "Liên Quân Mobile") ? Array(5).fill("") : [""];
         }
 
         setFormData({ ...formData, games: updatedGames, gameMembers: updatedGameMembers });
@@ -61,14 +68,35 @@ const TeamRegistrationForm = () => {
     const handleMemberChange = (game, index, value) => {
         const updatedGameMembers = { ...formData.gameMembers };
         updatedGameMembers[game][index] = value;
+    
+        // Check if the value exists elsewhere in the same game members list
+        const isDuplicate = updatedGameMembers[game].filter((member) => member === value).length > 1;
+    
+        if (isDuplicate) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                gameMembers: `Thành viên "${value}" đã tồn tại.`
+            }));
+        } else {
+            // Remove the error when no longer a duplicate
+            const newErrors = { ...errors };
+            delete newErrors.gameMembers;
+            setErrors(newErrors);
+        }
+    
         setFormData({ ...formData, gameMembers: updatedGameMembers });
-        validateField("gameMembers", updatedGameMembers);
     };
+    
+    
 
     const addMember = (game) => {
         const updatedGameMembers = { ...formData.gameMembers };
-        updatedGameMembers[game] = [...updatedGameMembers[game], ""];
-        setFormData({ ...formData, gameMembers: updatedGameMembers });
+        
+        // Check if the game already has 8 members
+        if (updatedGameMembers[game].length < 8) {
+            updatedGameMembers[game] = [...updatedGameMembers[game], ""];
+            setFormData({ ...formData, gameMembers: updatedGameMembers });
+        }
     };
 
     const removeMember = (game, index) => {
@@ -84,43 +112,44 @@ const TeamRegistrationForm = () => {
         switch (name) {
             case "teamName":
                 if (!value.trim()) {
-                    newErrors.teamName = "Team name is required";
+                    newErrors.teamName = "Bạn phải nhập tên đội";
                 } else {
                     delete newErrors.teamName;
                 }
                 break;
             case "shortName":
                 if (!value.trim()) {
-                    newErrors.shortName = "Short name is required";
+                    newErrors.shortName = "Bạn phải nhập tên viết tắt của đội";
                 } else if (value.length > 5) {
-                    newErrors.shortName = "Short name should not exceed 5 characters";
+                    newErrors.shortName = "Tên viết tắt của đội không được quá 5 kí tự";
                 } else {
                     delete newErrors.shortName;
                 }
                 break;
             case "classTeam":
                 if (!value.trim()) {
-                    newErrors.classTeam = "Class is required";
+                    newErrors.classTeam = "Bạn phải nhập lớp";
                 } else {
                     delete newErrors.classTeam;
                 }
                 break;
             case "logoUrl":
                 if (!value.trim()) {
-                    newErrors.logoUrl = "Logo URL is required";
+                    newErrors.logoUrl = "Bạn phải nhập Logo ID";
                 } else {
                     delete newErrors.logoUrl;
                 }
+                break;
             case "games":
                 if (value.length === 0) {
-                    newErrors.games = "Select at least one game";
+                    newErrors.games = "Hãy chọn ít nhất 1 game";
                 } else {
                     delete newErrors.games;
                 }
                 break;
             case "gameMembers":
                 if (Object.values(value).some((members) => members.some((member) => !member.trim()))) {
-                    newErrors.gameMembers = "All member fields must be filled";
+                    newErrors.gameMembers = "Bạn phải nhập tên thành viên sẽ tham gia";
                 } else {
                     delete newErrors.gameMembers;
                 }
@@ -133,44 +162,43 @@ const TeamRegistrationForm = () => {
     };
     
 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+    
+        // Validate all fields
         const formFields = ["teamName", "shortName", "classTeam", "logoUrl", "games", "gameMembers"];
-        let valid = true;
-
-        formFields.forEach((field) => {
-            validateField(field, formData[field]);
-            if (errors[field]) {
-                valid = false;
-            }
-        });
-
-        if (valid && Object.keys(errors).length === 0) {
-            try {
-                const response = await axios.post('https://dongchuyennghiep-backend.vercel.app/api/auth/registerAOV', formData);
-                setSubmitStatus({ success: true, message: "Team registered successfully!" });
-                setSignupSuccess(true);
-
-                setFormData({
-                    teamName: "",
-                    shortName: "",
-                    classTeam: "",
-                    logoUrl: "",
-                    games: [],
-                    gameMembers: {}
-                });
-                setErrors({});
-            } catch (error) {
-                if (error.response && error.response.data) {
-                    setSubmitStatus({ success: false, message: error.response.data.message || "Submission failed." });
-                } else {
-                    setSubmitStatus({ success: false, message: "An unexpected error occurred." });
-                }
-            }
-        } else {
+        formFields.forEach((field) => validateField(field, formData[field]));
+    
+        // Check if there are still errors
+        if (Object.keys(errors).length > 0) {
             setSubmitStatus({ success: false, message: "Please fix the errors in the form." });
+            return;
+        }
+    
+        try {
+            const response = await axios.post('https://dongchuyennghiep-backend.vercel.app/api/auth/registerAOV', formData);
+            setSubmitStatus({ success: true, message: "Team registered successfully!" });
+            setSignupSuccess(true);
+    
+            setFormData({
+                teamName: "",
+                shortName: "",
+                classTeam: "",
+                logoUrl: "",
+                games: [],
+                gameMembers: {}
+            });
+            setErrors({});
+        } catch (error) {
+            if (error.response && error.response.data) {
+                setSubmitStatus({ success: false, message: error.response.data.message || "Submission failed." });
+            } else {
+                setSubmitStatus({ success: false, message: "An unexpected error occurred." });
+            }
         }
     };
+    
 
     if (signupSuccess) {
         return (
@@ -190,11 +218,11 @@ const TeamRegistrationForm = () => {
 
     return (
         <div className="min-h-screen py-6 flex flex-col justify-center sm:py-12">
-            <div className="relative py-3 sm:max-w-3xl sm:w-5/6 sm:mx-auto">
+            <div className="relative py-3 lg:max-w-7xl lg:w-5/12 sm:mx-auto">
                 <div className="relative px-4 py-8 sm:rounded-3xl sm:px-2 sm:py-12">
-                    <div className="max-w-md mx-auto">
+                    <div className="mx-auto">
                         <div>
-                            <h1 className="text-2xl font-bold text-center">Đơn đăng kí giải Esport DCN</h1>
+                            <h1 className="text-3xl font-bold text-center">Đơn đăng kí giải Arena Of Valor DCN: Season 2</h1>
                         </div>
                         <form onSubmit={handleSubmit} className="divide-y divide-gray-200">
                             <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
@@ -248,7 +276,9 @@ const TeamRegistrationForm = () => {
                                 </div>
 
                                 <div className="flex flex-col">
-                                    <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">Google Drive Logo URL của bạn</label>
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">
+                                    Logo ID của team bạn
+                                    </label>
                                     <input
                                         type="text"
                                         id="logoUrl"
@@ -256,15 +286,22 @@ const TeamRegistrationForm = () => {
                                         value={formData.logoUrl}
                                         onChange={handleInputChange}
                                         className="px-4 py-2 bg-white border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
-                                        placeholder="https://example.com/logo.png"
+                                        placeholder="Nhập ID của tệp Google Drive"
                                     />
+                                    <small className="text-base-content mt-1">
+                                        Xem hướng dẫn{" "}
+                                        <Link className="text-primary" to="https://docs.google.com/document/d/1zlei9yIWtSLfukegTeREZd8iwH2EUT1rTECH4F6Ph64/edit?tab=t.0" target="_blank" rel="noopener noreferrer">
+                                            <strong>Tại Đây</strong>
+                                        </Link>.
+                                    </small>
                                     {errors.logoUrl && (
                                         <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
                                     )}
                                 </div>
 
+
                                 <div className="flex flex-col">
-                                    <label className="leading-loose font-semibold text-base-content">Các game mà đội bạn sẽ tham gia</label>
+                                    <label className="leading-loose font-semibold text-base-content">Chọn game mà đội bạn sẽ tham gia</label>
                                     <div className="flex flex-wrap gap-2">
                                         {gameOptions.map((game) => (
                                             <motion.button
@@ -274,8 +311,8 @@ const TeamRegistrationForm = () => {
                                                 whileTap={{ scale: 0.95 }}
                                                 onClick={() => handleGameToggle(game)}
                                                 className={`px-4 py-2 rounded-full text-sm font-semibold ${formData.games.includes(game)
-                                                        ? "bg-primary text-black"
-                                                        : "bg-gray-200 text-gray-700"
+                                                    ? "bg-gradient-to-r from-secondary to-accent hover:from-secondary hover:to-accent text-white"
+                                                    : "bg-gray-300 text-gray-900"
                                                     }`}
                                             >
                                                 {game}
@@ -290,6 +327,12 @@ const TeamRegistrationForm = () => {
                                 {formData.games.map((game) => (
                                     <div key={game} className="flex flex-col mt-4">
                                         <label className="leading-loose text-base-content font-bold">Thành viên của game {game}</label>
+                                        <small className="text-base-content mt-1">
+                                        Mình khuyên phần này các bạn nên đọc{" "}
+                                        <Link className="text-primary" to="https://docs.google.com/document/d/1zlei9yIWtSLfukegTeREZd8iwH2EUT1rTECH4F6Ph64/edit?tab=t.6823b1wcmvmd" target="_blank" rel="noopener noreferrer">
+                                            <strong>lưu ý</strong>
+                                        </Link>.
+                                    </small>
                                         {formData.gameMembers[game].map((member, index) => (
                                             <div key={index} className="flex items-center space-x-2 mb-2">
                                                 <input
@@ -297,10 +340,10 @@ const TeamRegistrationForm = () => {
                                                     value={member}
                                                     onChange={(e) => handleMemberChange(game, index, e.target.value)}
                                                     className="px-4 py-2 !text-base-content border focus:ring-gray-500 focus:border-primary w-full sm:text-sm border-gray-300 rounded-md focus:outline-none "
-                                                    placeholder={`${game} Member ${index + 1} username`}
+                                                    placeholder={`Username của thành viên ${index + 1}`}
                                                 />
 
-                                                {(game === "League Of Legends" || game === "Valorant"|| game === "Liên Quân Mobile") && formData.gameMembers[game].length > 5 && (
+                                                {(game === "League Of Legends" || game === "Valorant" || game === "Liên Quân Mobile") && formData.gameMembers[game].length > 5 && (
                                                     <motion.button
                                                         type="button"
                                                         whileHover={{ scale: 1.1 }}
@@ -312,7 +355,7 @@ const TeamRegistrationForm = () => {
                                                     </motion.button>
                                                 )}
 
-                                                {!(game === "League Of Legends" || game === "Valorant"|| game === "Liên Quân Mobile") && formData.gameMembers[game].length > 1 && (
+                                                {!(game === "League Of Legends" || game === "Valorant" || game === "Liên Quân Mobile") && formData.gameMembers[game].length > 1 && (
                                                     <motion.button
                                                         type="button"
                                                         whileHover={{ scale: 1.1 }}
@@ -333,7 +376,7 @@ const TeamRegistrationForm = () => {
                                             onClick={() => addMember(game)}
                                             className="bg-green-500 text-white px-4 py-2 rounded-md flex items-center justify-center mt-2"
                                         >
-                                            <FaUserPlus className="mr-2" /> Add {game} Member
+                                            <FaUserPlus className="mr-2" /> Thêm thành viên cho đội
                                         </motion.button>
                                     </div>
                                 ))}
@@ -347,9 +390,9 @@ const TeamRegistrationForm = () => {
                                     type="submit"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="bg-blue-500 flex justify-center items-center w-full text-white px-4 py-3 rounded-md focus:outline-none"
+                                    className="bg-gradient-to-r from-secondary to-accent hover:from-secondary hover:to-accent text-white flex justify-center items-center w-full px-4 py-3 rounded-md focus:outline-none"
                                 >
-                                    Register Team
+                                    Đăng kí đội
                                 </motion.button>
                             </div>
                         </form>
