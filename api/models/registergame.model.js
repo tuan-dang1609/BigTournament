@@ -1,3 +1,4 @@
+// backend/models/Team.js
 import mongoose from 'mongoose';
 
 const gameMembersSchema = new mongoose.Schema({}, { strict: false });
@@ -6,13 +7,12 @@ const teamSchema = new mongoose.Schema({
     teamName: {
         type: String,
         required: true,
-        unique: true,
         trim: true
     },
     shortName: {
         type: String,
         required: true,
-        unique: true,
+        unique:true,
         trim: true,
         maxlength: 5
     },
@@ -25,7 +25,7 @@ const teamSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        unique: true
+        unique:true,
     },
     games: {
         type: [String],
@@ -50,43 +50,12 @@ const teamSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Custom validation to check if a member already exists in another team
-teamSchema.pre('save', async function (next) {
-    const team = this;
-    
-    // Flatten all gameMembers into one array
-    let allMembers = [];
-    for (let members of team.gameMembers.values()) {
-        allMembers = allMembers.concat(members);
-    }
-
-    // Check if any of the gameMembers already exist in another team
-    const existingTeams = await mongoose.model('TeamRegister').find({
-        'gameMembers': {
-            $in: allMembers
-        }
-    });
-
-    if (existingTeams.length > 0) {
-        const duplicateMembers = existingTeams.map(t => Array.from(t.gameMembers.values())).flat();
-        const foundDuplicates = allMembers.filter(member => duplicateMembers.includes(member));
-        
-        if (foundDuplicates.length > 0) {
-            const duplicateMessage = `The following members are already registered: ${foundDuplicates.join(', ')}`;
-            const error = new Error(duplicateMessage);
-            return next(error);
-        }
-    }
-
-    next();
-});
-
 function arrayLimit(val) {
     return val.length > 0;
 }
 
 // Define the variable for the model
-const TeamRegister = mongoose.model('TeamRegister', teamSchema, 'TeamRegister');
+const TeamRegister = mongoose.model('TeamRegister', teamSchema,'TeamRegister');
 
 // Export the variable
 export default TeamRegister;

@@ -89,7 +89,7 @@ const CompetitionPage = () => {
                     <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-primary">Các đội tham dự giải đấu</h2>
 
                     {loading ? (
-                        <div className="flex items-center justify-center pt-24">
+                        <div className="flex items-center justify-center pt-20">
                         <span className="loading loading-dots loading-lg text-primary"></span>
                       </div>
                     ) : (
