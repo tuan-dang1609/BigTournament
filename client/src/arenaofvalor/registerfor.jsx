@@ -190,7 +190,7 @@ const TeamRegistrationForm = () => {
 
     return (
         <div className="min-h-screen py-6 flex flex-col justify-center sm:py-12">
-            <div className="relative py-3 sm:max-w-7xl sm:mx-auto">
+            <div className="relative py-3 sm:max-w-3xl sm:w-5/6 sm:mx-auto">
                 <div className="relative px-4 py-8 sm:rounded-3xl sm:px-2 sm:py-12">
                     <div className="max-w-md mx-auto">
                         <div>

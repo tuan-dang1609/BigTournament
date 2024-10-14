@@ -14,6 +14,7 @@ import SignUp from './components/signup.jsx';
 import Rule from './valorant/Rule.jsx';
 import AllGame from './components/allgame.jsx';
 import './index.css'
+import HomepageAOV from './arenaofvalor/homepage.jsx'
 import MatchStat from './valorant/statmatch.jsx';
 import Inputmatchid from './valorant/input.jsx';
 import SwissStage from './valorant/bracket.jsx';
@@ -43,6 +44,7 @@ if (rootElement) {
               <Route path="/valorant/swissstage" element={<SwissStage />} />
               <Route path="/valorant/playoff" element={<PlayoffValo />} />
               <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
+              <Route path="/arenaofvalor" element={<HomepageAOV />} />
               <Route path='/register' element={<TeamRegistrationForm />} />
               <Route element={<PrivateRoute />}>
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
