@@ -23,6 +23,7 @@ const CompetitionPage = () => {
         document.title = "Giải Liên Quân Mobile DCN";
 
     }, []);
+
     useEffect(() => {
         const fetchTeams = async () => {
             try {
@@ -94,7 +95,7 @@ const CompetitionPage = () => {
                             <span className="loading loading-dots loading-lg text-primary"></span>
                         </div>
                     ) : (
-                        <> <p className="flex items-center space-x-2 gap-x-3 justify-end my-5 lg:text-[17px] text-[14px]">
+                        <> <p className="flex items-center text-base-content space-x-2 gap-x-3 justify-end my-5 lg:text-[17px] text-[14px]">
                             Hiện toàn bộ thành viên{" "}
                             <input
                                 type="checkbox"
@@ -165,7 +166,7 @@ const TeamCard = ({ team, showPlayers }) => {
                     ))}
                 </div>
             </div>
-            <h3 className="text-lg lg:pt-3 lg:pb-2 font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent lg:text-[18px] text-[13.25px]">{team.teamName}</h3>
+            <p className="text-lg lg:pt-3 lg:pb-2 font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent lg:text-[18px] text-[13.25px]">{team.teamName}</p>
         </div>
     );
 };
