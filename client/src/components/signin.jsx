@@ -3,9 +3,9 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { signInStart, signInFailure, signInSuccess } from '../../redux/user/userSlice';
-import { useNavigate,Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
-function LoginForm () {
+function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -44,7 +44,7 @@ function LoginForm () {
       }
 
       dispatch(signInSuccess(data));
-      navigate('/');
+      navigate('/arenaofvalor');
     } catch (error) {
       dispatch(signInFailure(error));
     }
@@ -71,6 +71,7 @@ function LoginForm () {
               placeholder="Enter your username"
               required
               aria-label="Username"
+              autoComplete="current-username"
             />
           </div>
           <div className="relative">
@@ -84,10 +85,11 @@ function LoginForm () {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="mt-1 text-black block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400   focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500   disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 disabled:shadow-none"
+                className="mt-1 text-black block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 disabled:shadow-none"
                 placeholder="Enter your password"
                 required
                 aria-label="Password"
+                autoComplete="current-password"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
