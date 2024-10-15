@@ -22,7 +22,31 @@ const TeamRegistrationForm = () => {
     const [signupSuccess, setSignupSuccess] = useState(false);
     const [countdown, setCountdown] = useState(5);
     const navigate = useNavigate();
+    useEffect(() => {
+        const fetchTeams = async () => {
+            try {
+                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregister',{usernameregister:currentUser}, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                SetuserRegister(data); // Save the fetched teams
+            } catch (error) {
+                console.error("Failed to fetch teams:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTeams();
+    }, []);
     const gameOptions = ["Liên Quân Mobile"];
     useEffect(() => {
         const scrollToTop = () => {
