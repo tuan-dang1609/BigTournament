@@ -22,6 +22,7 @@ import PlayoffValo from './valorant/playoff.jsx';
 import SwissStageLOL from './leagueoflegend/bracket.jsx'
 import TeamRegistrationForm from './components/registerfor.jsx'
 import TeamRegistrationFormAOV from './arenaofvalor/registerfor.jsx'
+import RuleAOV from './arenaofvalor/rule.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -46,6 +47,7 @@ if (rootElement) {
               <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
               <Route path="/arenaofvalor" element={<HomepageAOV />} />
               <Route path='/register' element={<TeamRegistrationForm />} />
+              <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
               <Route element={<PrivateRoute />}>
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
                 <Route path='/profile' element={<Profile />} />
