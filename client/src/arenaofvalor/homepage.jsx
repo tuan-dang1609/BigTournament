@@ -96,7 +96,7 @@ const CompetitionPage = () => {
                         Giải Liên Quân Mobile DCN: Season 2
                     </h1>
                     <p className="animate__animated animate__fadeIn text-xl md:text-xl mb-8 animate-fade-in-up">
-                        Bản lĩnh tạo nên nhà vô địch, tư duy làm nên huyền thoại!
+                       Thắng bại tại kĩ năng !!!
                     </p>
                     <Link to="/arenaofvalor/register">
                         <button className="animate__animated animate__fadeInUp bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent text-white font-bold py-4 px-10 rounded-full text-xl transform hover:scale-105 shadow-lg">
