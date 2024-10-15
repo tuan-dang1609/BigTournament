@@ -92,6 +92,7 @@ export default function Profile() {
                     <img src={`https://drive.google.com/thumbnail?id=${currentUser.profilePicture}`} className="h-28 w-28 rounded-full mx-auto mb-2" alt="Profile" />
                     <input type="text" onChange={handleChange} defaultValue={currentUser.profilePicture} id='profilePicture' placeholder="URL Avatar" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
                     <input type="text" onChange={handleChange} defaultValue={currentUser.riotID} id='riotID' placeholder="Riot ID" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
+                    <input type="text" onChange={handleChange} defaultValue={currentUser.discordID} id='discordID' placeholder="Discord ID" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
                     <input type="text" onChange={handleChange} defaultValue={currentUser.username} id='username' placeholder="Username" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
                     <input type="password" onChange={handleChange} id='password' placeholder="Password" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
                     <button className="btn mt-3 bg-primary hover:bg-neutral text-white"> {loading ? 'Loading...' : 'Update'}</button>
