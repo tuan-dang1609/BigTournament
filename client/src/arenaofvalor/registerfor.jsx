@@ -25,7 +25,7 @@ const TeamRegistrationForm = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregister',{usernameregister:currentUser}, {
+                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterAOV',{usernameregister:currentUser}, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

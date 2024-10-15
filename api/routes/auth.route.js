@@ -89,7 +89,7 @@ router.post('/registerAOV', async (req, res) => {
     }
   });
   
-router.post('/checkregister', async (req, res) => {
+router.post('/checkregisterAOV', async (req, res) => {
     try {
         const { teamName, shortName, classTeam, logoUrl, games, gameMembers,usernameregister } = req.body;
   
