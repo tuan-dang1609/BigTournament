@@ -119,7 +119,7 @@ const CompetitionPage = () => {
             {/* Content Section */}
             <section id="participant" className="py-12 lg:py-16 px-4 md:px-8 bg-gradient-to-b text-white">
                 <div className="mx-auto">
-                    <h2 className="animate__animated animate__fadeInUp text-3xl md:text-4xl font-bold mb-6 text-center text-primary">Các đội tham dự giải đấu</h2>
+                    <h2 className="animate__animated animate__fadeInUp text-4xl md:text-5xl font-bold mb-6 text-center text-primary">Các đội tham dự giải đấu</h2>
 
                     {loading ? (
                         <div className="flex items-center justify-center">
