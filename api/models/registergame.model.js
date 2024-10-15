@@ -4,10 +4,14 @@ import mongoose from 'mongoose';
 const gameMembersSchema = new mongoose.Schema({}, { strict: false });
 
 const teamSchema = new mongoose.Schema({
+    usernameregister:{
+        type:String
+    },
     teamName: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        unique:true,
     },
     shortName: {
         type: String,
@@ -19,7 +23,8 @@ const teamSchema = new mongoose.Schema({
     classTeam: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        unique:true,
     },
     logoUrl: {
         type: String,

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaMinus, FaUserPlus } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import {  FaMinus, FaUserPlus } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
 const TeamRegistrationForm = () => {
+    const { currentUser} = useSelector((state) => state.user);
     const [formData, setFormData] = useState({
+        usernameregister:currentUser,
         teamName: "",
         shortName: "",
         classTeam: "",
@@ -92,7 +95,7 @@ const TeamRegistrationForm = () => {
     const addMember = (game) => {
         const updatedGameMembers = { ...formData.gameMembers };
         
-        // Check if the game already has 8 members
+        // Check if the game already has 9 members
         if (updatedGameMembers[game].length < 8) {
             updatedGameMembers[game] = [...updatedGameMembers[game], ""];
             setFormData({ ...formData, gameMembers: updatedGameMembers });

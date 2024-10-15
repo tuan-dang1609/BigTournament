@@ -52,7 +52,7 @@ router.post('/register', async (req, res) => {
 });
 router.post('/registerAOV', async (req, res) => {
     try {
-        const { teamName, shortName, classTeam, logoUrl, games, gameMembers } = req.body;
+        const { teamName, shortName, classTeam, logoUrl, games, gameMembers,usernameregister } = req.body;
   
         if (!teamName || !shortName || !classTeam || !logoUrl || !games || !gameMembers) {
             return res.status(400).json({ message: 'All fields are required' });
@@ -68,12 +68,13 @@ router.post('/registerAOV', async (req, res) => {
         }
   
         const newTeam = new TeamRegister({
+            usernameregister,
             teamName,
             shortName,
             classTeam,
             logoUrl,
             games,
-            gameMembers
+            gameMembers,
         });
   
         const savedTeam = await newTeam.save();
@@ -88,7 +89,22 @@ router.post('/registerAOV', async (req, res) => {
     }
   });
   
-
+router.get('/checkregister', async (req, res) => {
+    try {
+        const { teamName, shortName, classTeam, logoUrl, games, gameMembers,usernameregister } = req.body;
+  
+        const existingTeam = await TeamRegister.findOne({usernameregister});
+  
+        if (existingTeam) {
+            // Find the conflicting member(s)
+            return res.status(200).json(existingTeam);
+        }
+  
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
 router.post('/addquestions', async (req, res, next) => {
   const { idquestionset, questionSet } = req.body;
   const newTeam = new QuestionPickem({idquestionset, questionSet });

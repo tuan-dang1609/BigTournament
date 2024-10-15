@@ -8,6 +8,7 @@ import 'animate.css';
 const CompetitionPage = () => {
     const [loading, setLoading] = useState(true);
     const [teams, setTeams] = useState([]);
+    const [showPlayers, setShowPlayers] = useState(false);
     const prizePool = [
         { place: "1st", prize: "TBD", color: "#FFD700" }, // Gold
         { place: "2nd", prize: "TBD", color: "#C0C0C0" },  // Silver
@@ -89,14 +90,22 @@ const CompetitionPage = () => {
                     <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-primary">Các đội tham dự giải đấu</h2>
 
                     {loading ? (
-                        <div className="flex items-center justify-center pt-20">
-                        <span className="loading loading-dots loading-lg text-primary"></span>
-                      </div>
+                        <div className="flex items-center justify-center">
+                            <span className="loading loading-dots loading-lg text-primary"></span>
+                        </div>
                     ) : (
-                        <>
-                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                        <> <p className="flex items-center space-x-2 gap-x-3 justify-end my-5 lg:text-[17px] text-[14px]">
+                            Hiện toàn bộ thành viên{" "}
+                            <input
+                                type="checkbox"
+                                className="toggle"
+                                checked={showPlayers}
+                                onChange={() => setShowPlayers(!showPlayers)} // Toggle the state
+                            />
+                        </p>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 lg:gap-8 gap-1">
                                 {teams.map((team, index) => (
-                                    <TeamCard key={index} team={team} />
+                                    <TeamCard key={index} team={team} showPlayers={showPlayers} />
                                 ))}
                             </div>
                         </>
@@ -105,24 +114,24 @@ const CompetitionPage = () => {
             </section>
 
             {/* Prize Pool Section */}
-            <div className="my-16 px-4">
-    <h2 className="max-w-xl mx-auto text-4xl md:text-5xl font-bold mb-10 text-center text-primary"> {/* Removed bg-clip-text */}
-        Giải thưởng
-    </h2>
-    <div className="mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {prizePool.map((prize, index) => (
-                <div key={index} className="text-center bg-gray-800 rounded-lg p-6 shadow-xl transform hover:scale-105 transition duration-300 ease-in-out">
-                    <div className="text-6xl mb-4 flex justify-center" style={{ color: prize.color }}>
-                        <FaMedal />
+            <div className="lg:my-16 px-4 my-10">
+                <h2 className="max-w-xl mx-auto text-4xl md:text-5xl font-bold mb-10 text-center text-primary"> {/* Removed bg-clip-text */}
+                    Giải thưởng
+                </h2>
+                <div className="mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {prizePool.map((prize, index) => (
+                            <div key={index} className="text-center bg-gray-800 rounded-lg p-6 shadow-xl transform hover:scale-105 transition duration-300 ease-in-out">
+                                <div className="text-6xl mb-4 flex justify-center" style={{ color: prize.color }}>
+                                    <FaMedal />
+                                </div>
+                                <h3 className="text-2xl font-bold mb-2">{prize.place}</h3>
+                                <p className="text-3xl font-semibold text-green-400">{prize.prize}</p>
+                            </div>
+                        ))}
                     </div>
-                    <h3 className="text-2xl font-bold mb-2">{prize.place}</h3>
-                    <p className="text-3xl font-semibold text-green-400">{prize.prize}</p>
                 </div>
-            ))}
-        </div>
-    </div>
-</div>
+            </div>
 
 
 
@@ -131,7 +140,7 @@ const CompetitionPage = () => {
     );
 };
 
-const TeamCard = ({ team }) => {
+const TeamCard = ({ team, showPlayers }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     // Build the Google Drive image URL
@@ -144,34 +153,19 @@ const TeamCard = ({ team }) => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div className="w-full h-48  overflow-hidden relative">
+            <div className="w-full lg:h-48 h-24 lg:p-0 p-2 overflow-hidden relative">
                 <img
                     src={logoUrl}
                     alt={`${team.teamName} logo`}
-                    className={`w-full h-full lg:block hidden object-contain transition-opacity duration-300 ${isHovered ? 'lg:opacity-[.17]' : 'opacity-100'}`}
+                    className={`h-full flex w-full justify-center items-center lg:block object-contain transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-[.19]' : 'opacity-100'}`}
                 />
-                <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isHovered ? 'lg:opacity-100' : 'opacity-0'} hidden lg:flex`}>
+                <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-100' : 'opacity-0'}`}>
                     {players.map((player, playerIndex) => (
-                        <div key={playerIndex} className="h-1/3 flex items-center font-semibold justify-center text-[14px]">{player}</div>
+                        <div key={playerIndex} className="h-1/3 flex items-center font-semibold justify-center text-[10px] lg:text-[14px]">{player}</div>
                     ))}
                 </div>
-                <div className="lg:hidden absolute inset-0 flex items-center border-b-2">
-                    <div className="w-5/12 px-1 flex justify-center items-center">
-                        <img
-                            src={logoUrl}
-                            alt={`${team.teamName} logo`}
-                            className="max-w-[65%]  max-h-[65%] object-contain" // Ensure the image scales properly without distortion
-                        />
-                    </div>
-                    <div className="w-7/12 h-full inset-0 flex flex-col justify-center items-center border-l-2">
-                        {players.map((player, playerIndex) => (
-                            <div key={playerIndex} className="h-1/3 flex items-center justify-center text-[15px] font-semibold">{player}</div>
-                        ))}
-                    </div>
-                </div>
-
             </div>
-            <h3 className="text-lg pt-3 pb-2 font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent">{team.teamName}</h3>
+            <h3 className="text-lg lg:pt-3 lg:pb-2 font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent lg:text-[18px] text-[13.25px]">{team.teamName}</h3>
         </div>
     );
 };
