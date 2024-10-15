@@ -299,6 +299,7 @@ const TeamRegistrationForm = () => {
                                         onChange={handleInputChange}
                                         className="px-4 py-2 border bg-white focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
                                         placeholder="Tên đội của bạn"
+                                        maxLength="15"
                                     />
                                     {errors.teamName && (
                                         <p className="text-red-500 text-xs italic">{errors.teamName}</p>
