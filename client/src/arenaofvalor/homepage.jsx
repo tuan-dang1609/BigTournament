@@ -205,7 +205,7 @@ const TeamCard = ({ team, showPlayers }) => {
                 />
                 <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-100' : 'opacity-0'}`}>
                     {playersToShow.map((player, playerIndex) => (
-                        <div key={playerIndex} className="h-1/3 flex items-center font-semibold justify-center !text-[10px] lg:text-[14px]">
+                        <div key={playerIndex} className="h-1/3 flex items-center font-semibold justify-center !text-[12px] lg:text-[14px]">
                             {player}
                         </div>
                     ))}
