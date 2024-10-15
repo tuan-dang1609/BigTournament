@@ -63,7 +63,7 @@ const CompetitionPage = () => {
                 const data = await response.json();
                 setTeams(data); // Save the fetched teams
             } catch (error) {
-                console.error("Failed to fetch teams:", error);
+
             } finally {
                 setLoading(false);
             }

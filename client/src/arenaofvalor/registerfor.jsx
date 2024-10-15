@@ -46,7 +46,7 @@ const TeamRegistrationForm = () => {
                 const data = await response.json();
                 setUserRegister(data); // Save the fetched user registration info
             } catch (error) {
-                console.log("Failed to fetch registration status:", error);
+
             } finally {
                 setLoading(false); // Set loading to false once the check is complete
                 setCheckingRegistration(false); // Checking registration is done
