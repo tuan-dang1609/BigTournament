@@ -241,8 +241,11 @@ const TeamRegistrationForm = () => {
 
     if (userRegister && userRegister.teamName) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-5 flex justify-center items-center flex-col">
+            <>
+            
+            <div className="min-h-screen flex flex-col sm:mx-96 mx-5 ">
+            <Link to='/arenaofvalor' className="!justify-start flex mt-28 font-bold hover:underline text-lg lg:mb-2 mb-1">&lt; Quay lại</Link>
+                <div className="bg-white p-8 rounded-lg shadow-md w-full flex justify-center items-center flex-col">
                     <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Bạn đã đăng kí đội</h2>
                     <img src={`https://drive.google.com/thumbnail?id=${userRegister.logoUrl}`} className="w-28 h-28 mb-5" />
                     <p className=" text-gray-600">Tên đội: {userRegister.teamName}</p>
@@ -260,6 +263,7 @@ const TeamRegistrationForm = () => {
                     </p>
                 </div>
             </div>
+            </>
         );
     }
 
