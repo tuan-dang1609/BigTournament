@@ -211,7 +211,7 @@ const TeamCard = ({ team, showPlayers }) => {
                     ))}
                 </div>
             </div>
-            <p className="text-lg lg:pt-3 lg:pb-2 font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent lg:text-[18px] text-[12px]">
+            <p className="text-lg lg:pt-3 lg:pb-2 font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent lg:text-[18px] text-[10.5px]">
                 {team.teamName}
             </p>
         </div>

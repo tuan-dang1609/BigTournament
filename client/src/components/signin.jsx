@@ -112,10 +112,11 @@ function LoginForm() {
               disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
             >
+              {loading ? "Đăng nhập vào..." : "Đăng nhập"}
               {loading ? (
                 <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 mr-3" />
               ) : null}
-              {loading ? "Đăng nhập vào..." : "Đăng nhập"}
+              
             </button>
           </div>
         </form>
