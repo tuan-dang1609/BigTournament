@@ -52,7 +52,7 @@ router.post('/register', async (req, res) => {
 });
 router.post('/registerAOV', async (req, res) => {
     try {
-        const { teamName, shortName, classTeam, logoUrl, games, gameMembers,usernameregister } = req.body;
+        const { teamName, shortName, classTeam, logoUrl, games, gameMembers,usernameregister,discordID } = req.body;
   
         if (!teamName || !shortName || !classTeam || !logoUrl || !games || !gameMembers) {
             return res.status(400).json({ message: 'All fields are required' });
@@ -68,6 +68,7 @@ router.post('/registerAOV', async (req, res) => {
         }
   
         const newTeam = new TeamRegister({
+            discordID,
             usernameregister,
             teamName,
             shortName,
@@ -91,7 +92,7 @@ router.post('/registerAOV', async (req, res) => {
   
 router.post('/checkregisterAOV', async (req, res) => {
     try {
-        const { teamName, shortName, classTeam, logoUrl, games, gameMembers,usernameregister } = req.body;
+        const { usernameregister } = req.body;
   
         const existingTeam = await TeamRegister.findOne({usernameregister});
   

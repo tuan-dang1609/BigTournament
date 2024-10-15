@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import {  FaMinus, FaUserPlus } from "react-icons/fa";
+import { FaMinus, FaUserPlus } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from 'axios';
+import Image from '../image/waiting.png'
 import { useNavigate, Link } from 'react-router-dom';
 
 const TeamRegistrationForm = () => {
-    const { currentUser} = useSelector((state) => state.user);
+    const { currentUser } = useSelector((state) => state.user);
     const [formData, setFormData] = useState({
-        usernameregister:currentUser,
+        discordID: currentUser.discordID,
+        usernameregister: currentUser,
         teamName: "",
         shortName: "",
         classTeam: "",
@@ -16,46 +18,52 @@ const TeamRegistrationForm = () => {
         games: [],
         gameMembers: {}
     });
-    
+    const [userRegister, setUserRegister] = useState(null); // Check if user is already registered
     const [errors, setErrors] = useState({});
     const [submitStatus, setSubmitStatus] = useState(null);
     const [signupSuccess, setSignupSuccess] = useState(false);
     const [countdown, setCountdown] = useState(5);
+    const [loading, setLoading] = useState(true); // Loading state
+    const [checkingRegistration, setCheckingRegistration] = useState(true); // New state for checking registration
     const navigate = useNavigate();
+    const gameOptions = ["Liên Quân Mobile"];
+
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterAOV',{usernameregister:currentUser}, {
+                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterAOV', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    body: JSON.stringify({ usernameregister: currentUser })
                 });
-
+        
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+        
                 const data = await response.json();
-                SetuserRegister(data); // Save the fetched teams
+                setUserRegister(data); // Save the fetched user registration info
             } catch (error) {
-                console.error("Failed to fetch teams:", error);
+                console.log("Failed to fetch registration status:", error);
             } finally {
-                setLoading(false);
+                setLoading(false); // Set loading to false once the check is complete
+                setCheckingRegistration(false); // Checking registration is done
             }
         };
-
+        
         fetchTeams();
-    }, []);
-    const gameOptions = ["Liên Quân Mobile"];
+    }, [currentUser]);
+
     useEffect(() => {
         const scrollToTop = () => {
             document.documentElement.scrollTop = 0;
         };
         setTimeout(scrollToTop, 0);
         document.title = "Form đăng kí giải";
-
     }, []);
+
     useEffect(() => {
         if (signupSuccess) {
             const timer = setInterval(() => {
@@ -96,7 +104,6 @@ const TeamRegistrationForm = () => {
         const updatedGameMembers = { ...formData.gameMembers };
         updatedGameMembers[game][index] = value;
     
-        // Check if the value exists elsewhere in the same game members list
         const isDuplicate = updatedGameMembers[game].filter((member) => member === value).length > 1;
     
         if (isDuplicate) {
@@ -105,7 +112,6 @@ const TeamRegistrationForm = () => {
                 gameMembers: `Thành viên "${value}" đã tồn tại.`
             }));
         } else {
-            // Remove the error when no longer a duplicate
             const newErrors = { ...errors };
             delete newErrors.gameMembers;
             setErrors(newErrors);
@@ -114,13 +120,9 @@ const TeamRegistrationForm = () => {
         setFormData({ ...formData, gameMembers: updatedGameMembers });
     };
     
-    
-
     const addMember = (game) => {
         const updatedGameMembers = { ...formData.gameMembers };
-        
-        // Check if the game already has 9 members
-        if (updatedGameMembers[game].length < 8) {
+        if (updatedGameMembers[game].length < 7) {
             updatedGameMembers[game] = [...updatedGameMembers[game], ""];
             setFormData({ ...formData, gameMembers: updatedGameMembers });
         }
@@ -187,40 +189,25 @@ const TeamRegistrationForm = () => {
     
         setErrors(newErrors);
     };
-    
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
     
-        // Temporary object to store errors
         let tempErrors = { ...errors };
-    
-        // Validate all fields
         const formFields = ["teamName", "shortName", "classTeam", "logoUrl", "games", "gameMembers"];
-        formFields.forEach((field) => {
-            validateField(field, formData[field]);
+        formFields.forEach((field) => validateField(field, formData[field]));
     
-            // Update tempErrors based on validation results
-            if (errors[field]) {
-                tempErrors[field] = errors[field];
-            }
-        });
-    
-        // Check if there are still errors (including for duplicate members)
         if (Object.keys(tempErrors).length > 0) {
-            setErrors(tempErrors); // Update the actual errors state
+            setErrors(tempErrors);
             setSubmitStatus({ success: false, message: "Please fix the errors in the form." });
             return;
         }
     
-        // Proceed with form submission if no errors
         try {
             const response = await axios.post('https://dongchuyennghiep-backend.vercel.app/api/auth/registerAOV', formData);
             setSubmitStatus({ success: true, message: "Team registered successfully!" });
             setSignupSuccess(true);
     
-            // Reset the form and errors state after successful submission
             setFormData({
                 teamName: "",
                 shortName: "",
@@ -231,27 +218,58 @@ const TeamRegistrationForm = () => {
             });
             setErrors({});
         } catch (error) {
-            if (error.response && error.response.data) {
-                setSubmitStatus({ success: false, message: error.response.data.message || "Submission failed." });
-            } else {
-                setSubmitStatus({ success: false, message: error.response?.data?.message || error.message || "An unexpected error occurred." });
-            }
+            setSubmitStatus({ success: false, message: error.response?.data?.message || error.message || "An unexpected error occurred." });
         }
     };
-    
-    
+
+    if (checkingRegistration) {
+        return (
+            <div className="min-h-screen flex items-center justify-center ">
+                <div className="p-8 rounded-lg shadow-md w-full max-w-xl mx-2 justify-center flex items-center flex-col">
+                    <img src={Image}  className=" h-32 w-32 pb-2"/>
+                    <h4 className="text-xl font-semibold text-center text-base-content">Hãy đợi hệ thống của tụi mình kiểm tra xem tài khoản của bạn đã từng đăng kí cho đội chưa nhé</h4>
+                    <h4 className="text-xl font-semibold text-center text-base-content">Hành động này sẽ mất vài giây</h4>
+                    <span className="loading loading-dots loading-lg text-primary mt-5"></span>
+                </div>
+            </div>
+        );
+    }
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (userRegister && userRegister.teamName) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-5 flex justify-center items-center flex-col">
+                    <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Bạn đã đăng kí đội</h2>
+                    <img src={`https://drive.google.com/thumbnail?id=${userRegister.logoUrl}`} className="w-28 h-28 mb-5" />
+                    <p className=" text-gray-600">Tên đội: {userRegister.teamName}</p>
+                    <p className=" text-gray-600">Tên viết tắt: {userRegister.shortName}</p>
+                    <p className=" text-gray-600">Lớp: {userRegister.classTeam}</p>
+                    <p className=" text-gray-600">
+                        Thành viên Liên Quân Mobile:
+                        
+                            {userRegister.gameMembers["Liên Quân Mobile"].map((member, index) => (
+                                <p key={index} className="text-center text-gray-600">
+                                    <strong>Thành viên {index + 1}:</strong> {member}
+                                </p>
+                            ))}
+                        
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     if (signupSuccess) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
                     <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Đăng kí thành công!</h2>
-                    <p className="text-center text-gray-600">
-                        Cảm ơn bạn đã đăng kí đội cho lớp. Bây giờ bạn có thể chờ đợi lịch thi đấu bằng cách theo dõi thông tin trong Discord trường mình nhé
-                    </p>
-                    <p className="text-center text-gray-600 mt-4">
-                        Tự động chuyển tới trang chủ trong {countdown} giây...
-                    </p>
+                    <p className="text-center text-gray-600">Cảm ơn bạn đã đăng kí đội cho lớp.</p>
+                    <p className="text-center text-gray-600 mt-4">Tự động chuyển tới trang chủ trong {countdown} giây...</p>
                 </div>
             </div>
         );

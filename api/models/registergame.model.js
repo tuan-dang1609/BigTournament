@@ -4,6 +4,9 @@ import mongoose from 'mongoose';
 const gameMembersSchema = new mongoose.Schema({}, { strict: false });
 
 const teamSchema = new mongoose.Schema({
+    discordID:{
+        type:String
+    },
     usernameregister:{
         type:String
     },
