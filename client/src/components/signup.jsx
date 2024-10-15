@@ -141,7 +141,7 @@ const SignupPage = () => {
       }, 1000);
 
       if (countdown === 0) {
-        navigate('/');
+        navigate('/arenaofvalor');
       }
 
       // Cleanup the interval on component unmount
