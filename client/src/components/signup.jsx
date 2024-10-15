@@ -200,7 +200,7 @@ const SignupPage = () => {
                       {/* Discord ID Input */}
           <div>
             <label htmlFor="discordID" className="block text-sm font-medium text-gray-700">
-              Discord ID
+              Username Discord
             </label>
             <div className="mt-1 relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
