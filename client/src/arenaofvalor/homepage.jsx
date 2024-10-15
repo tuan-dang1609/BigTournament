@@ -5,14 +5,36 @@ import LQ from '../image/LienQuan.jpg';
 import { Link } from "react-router-dom";
 import { FaMedal } from "react-icons/fa";
 import 'animate.css';
+import $ from 'jquery';
+// Custom hook to detect screen size
+const useMediaQuery = (query) => {
+    const [matches, setMatches] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia(query);
+        const handleChange = () => setMatches(mediaQuery.matches);
+        handleChange();
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
+    }, [query]);
+
+    return matches;
+};
+
 const CompetitionPage = () => {
     const [loading, setLoading] = useState(true);
     const [teams, setTeams] = useState([]);
     const [showPlayers, setShowPlayers] = useState(false);
+
     const prizePool = [
         { place: "1st", prize: "TBD", color: "#FFD700" }, // Gold
         { place: "2nd", prize: "TBD", color: "#C0C0C0" },  // Silver
         { place: "3rd", prize: "TBD", color: "#CD7F32" }   // Bronze
+    ];
+    const timeline = [
+        { stage: "Registration", date: "June 1 - June 15", completed: true },
+        { stage: "Preliminary Rounds", date: "June 20 - July 5", completed: true },
+        { stage: "Finals", date: "July 10", completed: false }
     ];
     useEffect(() => {
         const scrollToTop = () => {
@@ -70,9 +92,17 @@ const CompetitionPage = () => {
                     <div className="text-6xl animate__animated animate__fadeIn mb-6 text-red-500 flex items-center justify-center">
                         <img src={ImageDCN} alt="DCN logo" className="h-32 w-32" />
                     </div>
-                    <h1 className="text-6xl md:text-7xl animate__animated animate__fadeIn font-extrabold mb-6 animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Giải Liên Quân Mobile DCN: Season 2 </h1>
-                    <p className="animate__animated animate__fadeIn text-xl md:text-xl mb-8 animate-fade-in-up">Bản lĩnh tạo nên nhà vô địch, tư duy làm nên huyền thoại!</p>
-                    <Link to="/arenaofvalor/register"><button className="animate__animated animate__fadeInUp bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent text-white font-bold py-4 px-10 rounded-full text-xl transform hover:scale-105 shadow-lg">Đăng kí ngay</button></Link>
+                    <h1 className="text-6xl md:text-7xl animate__animated animate__fadeIn font-extrabold mb-6 animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                        Giải Liên Quân Mobile DCN: Season 2
+                    </h1>
+                    <p className="animate__animated animate__fadeIn text-xl md:text-xl mb-8 animate-fade-in-up">
+                        Bản lĩnh tạo nên nhà vô địch, tư duy làm nên huyền thoại!
+                    </p>
+                    <Link to="/arenaofvalor/register">
+                        <button className="animate__animated animate__fadeInUp bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent text-white font-bold py-4 px-10 rounded-full text-xl transform hover:scale-105 shadow-lg">
+                            Đăng kí ngay
+                        </button>
+                    </Link>
                 </div>
                 <div className="absolute bottom-8 left-0 right-0 flex justify-center">
                     <button
@@ -82,29 +112,41 @@ const CompetitionPage = () => {
                         <IoMdArrowDown />
                     </button>
                 </div>
-
             </header>
+            { /* Timeline Section */}
+
 
             {/* Content Section */}
-            <section id="participant" className="py-20 px-4 md:px-8 bg-gradient-to-b text-white">
+            <section id="participant" className="py-12 lg:py-16 px-4 md:px-8 bg-gradient-to-b text-white">
                 <div className="mx-auto">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-primary">Các đội tham dự giải đấu</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center text-primary tag">Các đội tham dự giải đấu</h2>
 
                     {loading ? (
                         <div className="flex items-center justify-center">
                             <span className="loading loading-dots loading-lg text-primary"></span>
                         </div>
                     ) : (
-                        <> <p className="flex items-center text-base-content space-x-2 gap-x-3 justify-end my-5 lg:text-[17px] text-[14px]">
-                            Hiện toàn bộ thành viên{" "}
-                            <input
-                                type="checkbox"
-                                className="toggle"
-                                checked={showPlayers}
-                                onChange={() => setShowPlayers(!showPlayers)} // Toggle the state
-                            />
-                        </p>
-                            <div className="grid grid-cols-2 lg:grid-cols-4 lg:gap-8 gap-1">
+                        <>
+                            <div className="tag flex items-center text-base-content space-x-2 gap-x-3 justify-end my-5 lg:text-[17px] text-[14px]">
+                                Hiện toàn bộ thành viên{" "}
+                                <div className="flex items-center">
+                                    <label className="relative inline-block w-14 h-8">
+                                        <input
+                                            type="checkbox"
+                                            checked={showPlayers}
+                                            onChange={() => setShowPlayers(!showPlayers)} // Toggle the state
+                                            className="sr-only" // Visually hide the checkbox
+                                        />
+                                        <div
+                                            className={`block bg-gray-300 w-14 h-8 rounded-full ${showPlayers ? 'bg-green-500' : 'bg-gray-300'} transition duration-300 ease-in-out`}
+                                        ></div>
+                                        <div
+                                            className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${showPlayers ? 'transform translate-x-6' : ''}`}
+                                        ></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div className="tag grid grid-cols-2 lg:grid-cols-4 lg:gap-8 gap-1">
                                 {teams.map((team, index) => (
                                     <TeamCard key={index} team={team} showPlayers={showPlayers} />
                                 ))}
@@ -115,8 +157,8 @@ const CompetitionPage = () => {
             </section>
 
             {/* Prize Pool Section */}
-            <div className="lg:my-16 px-4 my-10">
-                <h2 className="max-w-xl mx-auto text-4xl md:text-5xl font-bold mb-10 text-center text-primary"> {/* Removed bg-clip-text */}
+            <div className="lg:my-12 px-4 my-10 tag">
+                <h2 className="max-w-xl mx-auto text-4xl md:text-5xl font-bold mb-10 text-center text-primary">
                     Giải thưởng
                 </h2>
                 <div className="mx-auto">
@@ -133,10 +175,6 @@ const CompetitionPage = () => {
                     </div>
                 </div>
             </div>
-
-
-
-
         </div>
     );
 };
@@ -144,9 +182,14 @@ const CompetitionPage = () => {
 const TeamCard = ({ team, showPlayers }) => {
     const [isHovered, setIsHovered] = useState(false);
 
+    // Check if the screen size is smaller than `lg`
+    const isSmallScreen = useMediaQuery('(max-width: 1024px)');
+
     // Build the Google Drive image URL
     const logoUrl = `https://drive.google.com/thumbnail?id=${team.logoUrl}`;
-    const players = team.gameMembers["Liên Quân Mobile"];
+
+    // Limit players based on screen size
+    const playersToShow = isSmallScreen ? team.gameMembers["Liên Quân Mobile"].slice(0, 5) : team.gameMembers["Liên Quân Mobile"];
 
     return (
         <div
@@ -161,14 +204,31 @@ const TeamCard = ({ team, showPlayers }) => {
                     className={`h-full flex w-full justify-center items-center lg:block object-contain transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-[.19]' : 'opacity-100'}`}
                 />
                 <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-100' : 'opacity-0'}`}>
-                    {players.map((player, playerIndex) => (
-                        <div key={playerIndex} className="h-1/3 flex items-center font-semibold justify-center text-[10px] lg:text-[14px]">{player}</div>
+                    {playersToShow.map((player, playerIndex) => (
+                        <div key={playerIndex} className="h-1/3 flex items-center font-semibold justify-center text-[10px] lg:text-[14px]">
+                            {player}
+                        </div>
                     ))}
                 </div>
             </div>
-            <p className="text-lg lg:pt-3 lg:pb-2 font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent lg:text-[18px] text-[13.25px]">{team.teamName}</p>
+            <p className="text-lg lg:pt-3 lg:pb-2 font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent lg:text-[18px] text-[12px]">
+                {team.teamName}
+            </p>
         </div>
     );
 };
+$(document).on("scroll", function () {
+    var pageTop = $(document).scrollTop();
+    var pageBottom = pageTop + $(window).height();
+    var tags = $(".tag");
 
+    for (var i = 0; i < tags.length; i++) {
+        var tag = tags[i];
+        if ($(tag).position().top < pageBottom) {
+            $(tag).addClass("visible");
+        } else {
+            $(tag).removeClass("visible");
+        }
+    }
+});
 export default CompetitionPage;
