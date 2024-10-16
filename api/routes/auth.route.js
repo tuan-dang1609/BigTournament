@@ -71,10 +71,7 @@ router.post('/checkregisterAOV', async (req, res) => {
         if (existingTeam) {
             // If the team is found, return the team information
             return res.status(200).json(existingTeam);
-        } else {
-            // If the team is not found, return an error message
-            return res.status(404).json({ message: 'Could not find your registration form.' });
-        }
+        } 
 
     } catch (error) {
         // Handle server errors
