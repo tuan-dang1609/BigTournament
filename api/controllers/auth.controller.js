@@ -167,7 +167,50 @@ export const submitCorrectAnswer = async (req, res) => {
       }
     }
 
-    res.status(201).json({ message: 'Correct answers added/updated successfully!' });
+    // Fetch the updated correct answers
+    const updatedCorrectAnswers = await CorrectAnswersSubmit.findOne();
+
+    // Fetch all user predictions
+    const allPredictions = await PredictionPickem.find();
+
+    // Recalculate the score for each user based on the updated correct answers
+    const pointSystem = {
+      3: 5,   // Question 3 is worth 5 points per correct answer
+      4: 20,  // Question 4 is worth 20 points per correct answer
+      5: 8    // Question 5 is worth 8 points per correct answer
+    };
+
+    for (const prediction of allPredictions) {
+      let totalPoints = 0;
+
+      // Calculate points for each user's predictions
+      prediction.answers.forEach((userAnswer) => {
+        const correctAnswer = updatedCorrectAnswers.answers.find(
+          (ans) => ans.questionId === userAnswer.questionId
+        );
+
+        if (correctAnswer) {
+          let correctChoicesForQuestion = 0;
+          correctAnswer.correctTeams.forEach((correctTeam) => {
+            if (userAnswer.selectedTeams.includes(correctTeam)) {
+              correctChoicesForQuestion += 1;
+            }
+          });
+
+          const pointsForQuestion = correctChoicesForQuestion * (pointSystem[userAnswer.questionId] || 0);
+          totalPoints += pointsForQuestion;
+        }
+      });
+
+      // Update the user's total score in the AllUserScore collection
+      await AllUserScore.findOneAndUpdate(
+        { userID: prediction.userId },  // Find by userId
+        { userID: prediction.userId, totalScore: totalPoints },  // Update the score
+        { upsert: true, new: true }  // Create if not found
+      );
+    }
+
+    res.status(201).json({ message: 'Correct answers added/updated and user scores recalculated successfully!' });
   } catch (error) {
     console.error('Error adding/updating correct answers:', error);
     res.status(500).json({ error: 'Internal server error' });

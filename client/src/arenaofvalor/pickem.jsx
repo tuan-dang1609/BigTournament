@@ -17,6 +17,8 @@ const PickemChallenge = () => {
   // Fetch existing predictions if available
   useEffect(() => {
     const fetchPrediction = async () => {
+      if (!currentUser || !currentUser._id) return; // Ensure currentUser is available
+  
       try {
         const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction`, {
           method: 'POST',
@@ -27,7 +29,7 @@ const PickemChallenge = () => {
         });
   
         const result = await response.json();
-        if (response.ok) {
+        if (response.ok && result.data) {
           const previousPrediction = result.data;
           const answers = previousPrediction.answers.reduce((acc, curr) => {
             acc[curr.questionId] = curr.selectedTeams;
@@ -35,7 +37,8 @@ const PickemChallenge = () => {
           }, {});
           setPredictions(answers);
         } else {
-          console.log(result.message);
+          // Handle case when no previous predictions exist
+          console.log("No previous predictions found.");
         }
       } catch (error) {
         console.error("Error fetching prediction:", error);
