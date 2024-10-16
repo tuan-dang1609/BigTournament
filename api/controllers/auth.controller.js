@@ -8,7 +8,7 @@ import BanPick from '../models/veto.model.js';
 import AllGame from '../models/allgame.model.js';
 import MatchID from '../models/matchid.model.js';
 import TeamRegister from '../models/registergame.model.js'
-
+import PredictionPickem from '../models/PredictionPickem.js';
 export const signup = async (req, res, next) => {
   const { riotID, username, password, discordID } = req.body;
   try {
@@ -19,6 +19,31 @@ export const signup = async (req, res, next) => {
     res.status(201).json({ message: 'Tạo tài khoản thành công' });
   } catch (error) {
     return next(errorHandler(500, 'Tạo tài khoản thất bại'));
+  }
+};
+
+export const submitPrediction = async (req, res) => {
+  try {
+    const { userId, answers } = req.body;
+
+    // Validate request body
+    if (!userId || !answers || !Array.isArray(answers)) {
+      return res.status(400).json({ error: 'Invalid input. Please provide userId and answers.' });
+    }
+
+    // Create a new PredictionPickem document
+    const newPrediction = new PredictionPickem({
+      userId,
+      answers
+    });
+
+    // Save the prediction to the database
+    await newPrediction.save();
+
+    res.status(201).json({ message: 'Prediction submitted successfully!', data: newPrediction });
+  } catch (error) {
+    console.error('Error submitting prediction:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 

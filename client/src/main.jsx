@@ -23,6 +23,7 @@ import SwissStageLOL from './leagueoflegend/bracket.jsx'
 import TeamRegistrationForm from './components/registerfor.jsx'
 import TeamRegistrationFormAOV from './arenaofvalor/registerfor.jsx'
 import RuleAOV from './arenaofvalor/rule.jsx';
+import PickemChallenge from './arenaofvalor/pickem.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -51,6 +52,7 @@ if (rootElement) {
               <Route element={<PrivateRoute />}>
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
                 <Route path='/profile' element={<Profile />} />
+                <Route path='/arenaofvalor/pickem' element={<PickemChallenge />} />
               </Route>
             </Routes>
             <Footer />

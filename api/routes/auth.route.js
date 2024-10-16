@@ -1,5 +1,5 @@
 import express from 'express';
-import { signin, signup, signout, addteam, findteam, addMatch, getAllMatches, findMatchPlayoff, findPlayer,findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID,findmatchID } from '../controllers/auth.controller.js';
+import { signin, signup, signout, addteam, findteam, addMatch,submitPrediction, getAllMatches, findMatchPlayoff, findPlayer,findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID,findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
@@ -22,6 +22,7 @@ router.post('/addmatch',addMatchID)
 router.post('/findallmatchid',findAllMatchID)
 router.post('/findmatchid',findmatchID)
 router.post('/findallteamAOV',findAllteam)
+router.post('/submitPrediction',submitPrediction)
 router.post('/register', async (req, res) => {
   try {
       const { teamName, shortName, classTeam, logoUrl, games, gameMembers } = req.body;

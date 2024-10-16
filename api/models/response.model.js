@@ -1,20 +1,15 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-// Define the user response schema, referencing the questionId
-const UserResponseSchema = new mongoose.Schema({
-    idquestionset: { type: String, required: true }, // idquestionset from questionPickemSchema
-    questionIndex: { type: String, required: true }, // question field from questionSchema
-    selectedOption: { type: String } // This should match the teamname or playername in choiceSchema
-}, { _id: false });
+const { Schema, model } = mongoose;
 
-// Define the overall response schema
-const ResponseSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
-    userresponse: [UserResponseSchema]
+const questionResponseSchema = new Schema({
+  questionId: { type: Number, required: true },     // Question ID (e.g., 3, 4, 5, etc.)
+  selectedTeams: { type: [String], required: true } // Selected teams for this question
 });
 
-// Create the response model
-const Response = mongoose.model('Response', ResponseSchema, "useresponse");
+const predictionSchema = new Schema({
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  answers: { type: [questionResponseSchema], required: true },  // Array of question answers 
+});
 
-// Export the models
-export default Response;
+export default model('PredictionPickem', predictionSchema,'PredictionPickem');
