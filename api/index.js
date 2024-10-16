@@ -11,10 +11,14 @@ import axios from 'axios';  // Import axios to make HTTP requests
 
 dotenv.config();
 
+// Kết nối MongoDB với connection pooling
 mongoose
-  .connect(process.env.MONGO)
+  .connect(process.env.MONGO, {
+    maxPoolSize: 500,  // Số lượng kết nối tối đa trong pool
+    minPoolSize: 0    // Số lượng kết nối tối thiểu trong pool
+  })
   .then(() => {
-    console.log('Connected to MongoDB');
+    console.log('Connected to MongoDB with connection pooling');
   })
   .catch((err) => {
     console.log(err);
