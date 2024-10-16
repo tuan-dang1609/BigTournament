@@ -114,7 +114,7 @@ function LoginForm() {
             >
               {loading ? "Đăng nhập vào " : "Đăng nhập"}
               {loading ? (
-                <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 mr-3" />
+                <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 ml-2" />
               ) : null}
               
             </button>
