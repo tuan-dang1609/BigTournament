@@ -345,11 +345,10 @@ export const getAllMatches = async (req, res, next) => {
 };
 
 export const signin = async (req, res, next) => {
-  const { email, username, password } = req.body;
+  const {username, password } = req.body;
   try {
     const validUser = await User.findOne({
       $or: [
-        { email: email },
         { username: username }
       ]
     });
