@@ -42,7 +42,7 @@ const PickemChallenge = () => {
       }
     };
   
-    if (currentUser && currentUser._id) {
+    if (currentUser._id) {
       fetchPrediction();
     }
   }, [currentUser]);
