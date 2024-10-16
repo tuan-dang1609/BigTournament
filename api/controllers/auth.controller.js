@@ -2,8 +2,6 @@ import User from '../models/user.model.js';
 import bcryptjs from 'bcryptjs';
 import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken';
-import Team from '../models/team.model.js';
-import Match from '../models/match.model.js';
 import BanPick from '../models/veto.model.js';
 import AllGame from '../models/allgame.model.js';
 import MatchID from '../models/matchid.model.js';
@@ -129,6 +127,25 @@ export const submitPrediction = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+export const leaderboardpickem = async (req, res) => {
+  try {
+    const { limit } = req.body;  // Optional: allow clients to specify the number of top users
+
+    // Fetch all users and sort them by totalScore in descending order
+    const leaderboard = await AllUserScore.find({})
+      .sort({ totalScore: -1 })  // Sort by totalScore in descending order
+      .limit(limit || 10);  // Limit to top 'limit' users or default to 10
+
+    // Send the sorted leaderboard data as the response
+    res.status(200).json({
+      message: 'Leaderboard fetched successfully!',
+      leaderboard
+    });
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 export const submitCorrectAnswer = async (req, res) => {
   try {
     const { answers } = req.body;
@@ -236,114 +253,7 @@ export const finduserPrediction = async (req, res) => {
   }
 };
 
-export const addteam = async (req, res, next) => {
-  const { team, logoURL, shortname, player1, player2, player3, player4, player5, player6, player7, player8, player9, player10 } = req.body;
-  const newTeam = new Team({ team, logoURL, shortname, player1, player2, player3, player4, player5, player6, player7, player8, player9, player10 });
-  try {
-    await newTeam.save();
-    res.status(201).json({ message: 'Team created successfully' });
-  } catch (error) {
-    next(error);
-  }
-};
-export const findteam = async (req, res, next) => {
-  const { player } = req.body;
-  try {
-    const validUser = await Team.findOne({
-      $or: [
-        { player1: player },
-        { player2: player },
-        { player3: player },
-        { player4: player },
-        { player5: player },
-        { player6: player },
-        { player7: player },
-        { player8: player },
-        { player9: player },
-        { player10: player }
-      ]
-    });
 
-    if (!validUser) {
-      return next(errorHandler(404, 'User not found'));
-    }
-
-    const { ...rest } = validUser._doc;
-
-    res.status(200).json(rest);
-  } catch (error) {
-    next(error);
-  }
-};
-// Assuming your Match model is in a file called matchModel.js
-
-export const addMatch = async (req, res, next) => {
-  const { idmatch, group, timestartmatch, league, type, teamleft, teamright, maps, stage } = req.body;
-
-  // Initialize scores
-  let scoreteamA = 0;
-  let scoreteamB = 0;
-
-  // Check if maps is defined and is an array
-  if (Array.isArray(maps)) {
-    // Calculate scores for each team based on the maps' scores
-    maps.forEach(map => {
-      const scoreLeft = map.infoTeamleft?.score;
-      const scoreRight = map.infoTeamright?.score;
-
-      if (scoreLeft !== undefined && scoreRight !== undefined) {
-        if (scoreLeft > scoreRight) {
-          scoreteamA += 1;
-        } else if (scoreLeft < scoreRight) {
-          scoreteamB += 1;
-        }
-      }
-    });
-  } else {
-    return res.status(400).json({ message: 'Maps data is missing or not properly formatted' });
-  }
-
-  try {
-    // Check if match with the given idmatch already exists
-    const existingMatch = await Match.findOne({ idmatch, stage });
-
-    if (existingMatch) {
-      // Update existing match
-      existingMatch.timestartmatch = timestartmatch;
-      existingMatch.league = league;
-      existingMatch.type = type;
-      existingMatch.teamleft = teamleft;
-      existingMatch.teamright = teamright;
-      existingMatch.maps = maps;
-      existingMatch.group = group;
-      existingMatch.scoreteamA = scoreteamA;
-      existingMatch.scoreteamB = scoreteamB;
-
-      await existingMatch.save();
-      res.status(200).json({ message: 'Match updated successfully' });
-    } else {
-      // Create new match
-      const newMatch = new Match({
-        idmatch,
-        timestartmatch,
-        league,
-        type,
-        teamleft,
-        teamright,
-        maps,
-        group,
-        scoreteamA,
-        scoreteamB,
-        stage
-      });
-
-      await newMatch.save();
-      res.status(201).json({ message: 'Match added successfully' });
-    }
-  } catch (error) {
-    res.status(400).json({ error: err.message });
-  }
-};
 export const addAllGame = async (req,res,next) => {
   const { url,game,image,description,badges } = req.body;
   try{
@@ -493,72 +403,7 @@ export const findBanPickVeto = async (req, res) => {
       res.status(400).json({ error: err.message });
   }
 };
-export const findMatch = async (req, res, next) => {
-  const { idmatch, stage } = req.body; // Removed _id and ign
-  try {
-    const query = {};
 
-    // Only add to query if idmatch and stage are provided
-    if (idmatch) {
-      query.idmatch = idmatch;
-    }
-
-    if (stage) {
-      query.stage = stage;
-    }
-
-    // Ensure both idmatch and stage are present in the query
-    if (!idmatch || !stage) {
-      return next(errorHandler(400, 'Both idmatch and stage are required'));
-    }
-
-    const validMatches = await Match.find(query).sort({ updatedAt: -1 });
-
-    if (validMatches.length === 0) {
-      return next(errorHandler(404, 'No matches found'));
-    }
-
-    res.status(200).json(validMatches);
-  } catch (error) {
-    next(error);
-  }
-};
-
-
-export const findMatchPlayoff = async (req, res, next) => {
-  const { idmatch, _id } = req.body;
-  try {
-    const validMatch = await Match.findOne({
-      $or: [
-        { idmatch: idmatch },
-        { _id: _id }
-      ]
-    });
-
-    if (!validMatch) {
-      return next(errorHandler(404, 'User not found'));
-    }
-
-    const { password: hashedPassword, ...rest } = validMatch._doc;
-
-    res.status(200).json(rest);
-  } catch (error) {
-    next(error);
-  }
-};
-export const getAllMatches = async (req, res, next) => {
-  try {
-    const allMatches = await Match.find();
-
-    if (allMatches.length === 0) {
-      return next(errorHandler(404, 'No matches found'));
-    }
-
-    res.status(200).json(allMatches);
-  } catch (error) {
-    next(error);
-  }
-};
 
 
 export const signin = async (req, res, next) => {

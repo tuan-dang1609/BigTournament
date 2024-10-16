@@ -1,5 +1,5 @@
 import express from 'express';
-import { signin, signup, signout, addteam, findteam, comparePredictions,addMatch,submitPrediction,submitCorrectAnswer ,getAllMatches,finduserPrediction, findMatchPlayoff, findPlayer,findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID,findmatchID } from '../controllers/auth.controller.js';
+import { signin, signup, signout, comparePredictions,submitPrediction,submitCorrectAnswer,leaderboardpickem ,finduserPrediction, findPlayer,findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID,findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
@@ -7,12 +7,7 @@ const router = express.Router();
 
 router.post('/signup', signup);
 router.post('/signin', signin);
-router.post('/addteam', addteam)
 router.get('/signout', signout);
-router.post('/findteam', findteam)
-router.post('/addmatchid', addMatch);
-router.post('/findallmatch', getAllMatches);
-router.post('/findallmatchplayoff', findMatchPlayoff)
 router.post('/findallgame',findAllGame)
 router.post('/findplayer', findPlayer)
 router.post('/banpick', addBanPickVeto)
@@ -26,6 +21,7 @@ router.post('/submitPrediction',submitPrediction)
 router.post('/checkuserprediction',finduserPrediction)
 router.post('/addcorrectanswer',submitCorrectAnswer)
 router.post('/comparepredictions',comparePredictions);
+router.post('/leaderboardpickem',leaderboardpickem)
 router.post('/registerAOV', async (req, res) => {
     try {
         const { teamName, shortName, classTeam, logoUrl, games, gameMembers,usernameregister,discordID } = req.body;
