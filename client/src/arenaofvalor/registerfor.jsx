@@ -324,7 +324,7 @@ const TeamRegistrationForm = () => {
                                 </div>
 
                                 <div className="flex flex-col">
-                                    <label className="leading-loose font-semibold text-base-content" htmlFor="classTeam">Team bạn là của lớp nào</label>
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="classTeam">Team bạn là của lớp nào (cú pháp: xAy, trong đó x là 10,11,12)</label>
                                     <input
                                         type="text"
                                         id="classTeam"

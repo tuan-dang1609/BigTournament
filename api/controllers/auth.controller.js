@@ -9,6 +9,8 @@ import AllGame from '../models/allgame.model.js';
 import MatchID from '../models/matchid.model.js';
 import TeamRegister from '../models/registergame.model.js'
 import PredictionPickem from '../models/response.model.js';
+import CorrectAnswersSubmit from '../models/correctanswer.model.js';
+import AllUserScore from '../models/alluserscore.model.js';
 export const signup = async (req, res, next) => {
   const { riotID, username, password, discordID } = req.body;
   try {
@@ -19,6 +21,89 @@ export const signup = async (req, res, next) => {
     res.status(201).json({ message: 'Tạo tài khoản thành công' });
   } catch (error) {
     return next(errorHandler(500, 'Tạo tài khoản thất bại'));
+  }
+};
+export const comparePredictions = async (req, res) => {
+  try {
+    const { userId } = req.body;  // Expecting userId in the request body
+
+    // Fetch the user's predictions by userId
+    const userPrediction = await PredictionPickem.findOne({ userId });
+    if (!userPrediction) {
+      return res.status(404).json({ message: 'User prediction not found' });
+    }
+
+    // Fetch the correct answers
+    const correctAnswers = await CorrectAnswersSubmit.findOne();
+    if (!correctAnswers) {
+      return res.status(404).json({ message: 'Correct answers not found' });
+    }
+
+    // Initialize counters
+    let totalCorrectChoices = 0;
+    let totalPossibleChoices = 0;
+    let totalPoints = 0;
+    let detailedResults = [];
+
+    // Point system based on questionId
+    const pointSystem = {
+      3: 5,   // Question 3 is worth 5 points per correct answer
+      4: 20,  // Question 4 is worth 20 points per correct answer
+      5: 8    // Question 5 is worth 8 points per correct answer
+    };
+
+    // Iterate over the user's predictions
+    userPrediction.answers.forEach((userAnswer) => {
+      // Find the corresponding correct answer for the same questionId
+      const correctAnswer = correctAnswers.answers.find(
+        (ans) => ans.questionId === userAnswer.questionId
+      );
+
+      if (correctAnswer) {
+        // Count how many teams the user got right
+        let correctChoicesForQuestion = 0;
+        correctAnswer.correctTeams.forEach((correctTeam) => {
+          if (userAnswer.selectedTeams.includes(correctTeam)) {
+            correctChoicesForQuestion += 1;
+          }
+        });
+
+        // Calculate points for this question
+        const pointsForQuestion = correctChoicesForQuestion * (pointSystem[userAnswer.questionId] || 0);
+        totalPoints += pointsForQuestion;
+
+        // Add detailed result for the question
+        detailedResults.push({
+          questionId: userAnswer.questionId,
+          correctChoices: correctChoicesForQuestion,
+          totalChoices: correctAnswer.correctTeams.length,
+          pointsForQuestion
+        });
+
+        // Increment the total counts
+        totalCorrectChoices += correctChoicesForQuestion;
+        totalPossibleChoices += correctAnswer.correctTeams.length;
+      }
+    });
+
+    // Save the total score to AllUserScore collection
+    await AllUserScore.findOneAndUpdate(
+      { userID: userId },  // Find by userId
+      { userID: userId, totalScore: totalPoints },  // Update or set the totalScore
+      { upsert: true, new: true }  // Create a new document if not found, return the updated document
+    );
+
+    // Return the detailed result and the total number of correct answers and points
+    res.status(200).json({
+      message: `User got ${totalCorrectChoices} out of ${totalPossibleChoices} choices correct and earned ${totalPoints} points.`,
+      totalCorrectChoices,
+      totalPossibleChoices,
+      totalPoints,
+      detailedResults
+    });
+  } catch (error) {
+    console.error('Error comparing predictions:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -44,6 +129,51 @@ export const submitPrediction = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+export const submitCorrectAnswer = async (req, res) => {
+  try {
+    const { answers } = req.body;
+
+    // Validate the input
+    if (!answers || !Array.isArray(answers)) {
+      return res.status(400).json({ error: 'Invalid input. Please provide an array of answers.' });
+    }
+
+    // Loop through each answer and update/add correct answers for each question
+    for (const answer of answers) {
+      const { questionId, correctTeams } = answer;
+
+      if (!questionId || !correctTeams || !Array.isArray(correctTeams)) {
+        return res.status(400).json({ error: `Invalid input for questionId: ${questionId}. Please provide questionId and correctTeams.` });
+      }
+
+      // Check if the document with the correct answers exists
+      const existingDocument = await CorrectAnswersSubmit.findOne({
+        'answers.questionId': questionId
+      });
+
+      if (existingDocument) {
+        // Update the correctTeams for the existing questionId
+        await CorrectAnswersSubmit.updateOne(
+          { 'answers.questionId': questionId },
+          { $set: { 'answers.$.correctTeams': correctTeams } }
+        );
+      } else {
+        // If questionId doesn't exist, push a new answer into the answers array
+        await CorrectAnswersSubmit.updateOne(
+          {}, // You may want to target a specific document if needed
+          { $push: { answers: { questionId, correctTeams } } },
+          { upsert: true } // Create the document if it doesn't exist
+        );
+      }
+    }
+
+    res.status(201).json({ message: 'Correct answers added/updated successfully!' });
+  } catch (error) {
+    console.error('Error adding/updating correct answers:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 
 export const finduserPrediction = async (req, res) => {
   try {

@@ -12,6 +12,7 @@ const PickemChallenge = () => {
   });
   const [errors, setErrors] = useState({});
   const [submitStatus, setSubmitStatus] = useState(""); // To track submit status
+  const [totalScore, setTotalScore] = useState(0); // For displaying the final score
 
   // Fetch existing predictions if available
   useEffect(() => {
@@ -27,7 +28,6 @@ const PickemChallenge = () => {
   
         const result = await response.json();
         if (response.ok) {
-          // Populate the form with the user's previous responses
           const previousPrediction = result.data;
           const answers = previousPrediction.answers.reduce((acc, curr) => {
             acc[curr.questionId] = curr.selectedTeams;
@@ -58,7 +58,7 @@ const PickemChallenge = () => {
         { name: "Kero Esport", logo: "1VOegHodLok5NHcWvS6GECprWaMRo45uE" },
         { name: "Dong Chuyen Nghiep", logo: "19JF-fhVhMdsCD9HlE8CY-Nv9B9v-1Rpu" },
         { name: "Young Gen", logo: "1ZzhKLmpxond5b7jqkuYAw1BSe5cydqkZ" },
-        { name: "DWG KIA", logo: "1xDI973eUq_zqhC4xIte5s1N2dwqn7-GP" },
+        { name: "Biscuit Council", logo: "1xDI973eUq_zqhC4xIte5s1N2dwqn7-GP" },
         { name: "10A4", logo: "10LaLO23gCAlnmOpI04es2kicyLARuRM9" }
       ]
     },
@@ -72,7 +72,7 @@ const PickemChallenge = () => {
         { name: "Kero Esport", logo: "1VOegHodLok5NHcWvS6GECprWaMRo45uE" },
         { name: "Dong Chuyen Nghiep", logo: "19JF-fhVhMdsCD9HlE8CY-Nv9B9v-1Rpu" },
         { name: "Young Gen", logo: "1ZzhKLmpxond5b7jqkuYAw1BSe5cydqkZ" },
-        { name: "DWG KIA", logo: "1xDI973eUq_zqhC4xIte5s1N2dwqn7-GP" },
+        { name: "Biscuit Council", logo: "1xDI973eUq_zqhC4xIte5s1N2dwqn7-GP" },
         { name: "10A4", logo: "10LaLO23gCAlnmOpI04es2kicyLARuRM9" }
       ]
     },
@@ -86,7 +86,7 @@ const PickemChallenge = () => {
         { name: "Kero Esport", logo: "1VOegHodLok5NHcWvS6GECprWaMRo45uE" },
         { name: "Dong Chuyen Nghiep", logo: "19JF-fhVhMdsCD9HlE8CY-Nv9B9v-1Rpu" },
         { name: "Young Gen", logo: "1ZzhKLmpxond5b7jqkuYAw1BSe5cydqkZ" },
-        { name: "DWG KIA", logo: "1xDI973eUq_zqhC4xIte5s1N2dwqn7-GP" },
+        { name: "Biscuit Council", logo: "1xDI973eUq_zqhC4xIte5s1N2dwqn7-GP" },
         { name: "10A4", logo: "10LaLO23gCAlnmOpI04es2kicyLARuRM9" }
       ]
     }
@@ -134,6 +134,7 @@ const PickemChallenge = () => {
           }))
         };
 
+        // Submit the predictions to the server
         const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/submitPrediction', {
           method: 'POST',
           headers: {
@@ -145,6 +146,23 @@ const PickemChallenge = () => {
         const result = await response.json();
         if (response.ok) {
           setSubmitStatus("Predictions submitted successfully!");
+
+          // Now compare predictions and calculate total score
+          const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId: currentUser._id })
+          });
+
+          const scoreResult = await scoreResponse.json();
+          if (scoreResponse.ok) {
+            setTotalScore(scoreResult.totalPoints);  // Set the total score after comparison
+          } else {
+            console.log(`Error calculating score: ${scoreResult.message}`);
+          }
+
         } else {
           setSubmitStatus(`Error: ${result.error}`);
         }
@@ -185,10 +203,10 @@ const PickemChallenge = () => {
                         <img
                           src={`https://drive.google.com/thumbnail?id=${option.logo}`}
                           alt={option.name}
-                          className="w-28 h-28 mb-4"
+                          className="w-28 h-28 mb-3"
                         />
-                      )}
-                      {option.name}
+                      )}<p className="text-[14.5px] pb-2 font-semibold">{option.name}</p>
+                      
                     </motion.button>
                   ))}
                 </div>
