@@ -159,10 +159,10 @@ const PickemChallenge = () => {
                       onClick={() =>
                         handleTeamSelection(option, question)
                       }
-                      className={`p-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex flex-col items-center justify-center ${
+                      className={`p-2 rounded-lg text-sm focus:outline-none flex flex-col items-center justify-center ${
                         predictions[question.id]?.includes(option.name)
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200 text-gray-800"
+                          ? "w-full bg-gradient-to-r from-secondary to-accent text-white p-3 rounded-lg font-semibold hover:bg-gradient-to-r hover:from-primary hover:to-accent focus:outline-none"
+                          : "bg-gray-200 text-gray-800 p-3 border-2 border-accent"
                       }`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}

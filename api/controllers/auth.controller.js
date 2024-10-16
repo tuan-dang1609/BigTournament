@@ -131,21 +131,42 @@ export const leaderboardpickem = async (req, res) => {
   try {
     const { limit } = req.body;  // Optional: allow clients to specify the number of top users
 
-    // Fetch all users and sort them by totalScore in descending order
-    const leaderboard = await AllUserScore.find({})
+    // Fetch the leaderboard data sorted by totalScore
+    const leaderboardEntries = await AllUserScore.find({})
       .sort({ totalScore: -1 })  // Sort by totalScore in descending order
       .limit(limit || 10);  // Limit to top 'limit' users or default to 10
 
-    // Send the sorted leaderboard data as the response
+    // Create an array to hold the enriched leaderboard data
+    const enrichedLeaderboard = await Promise.all(
+      leaderboardEntries.map(async (entry) => {
+        // Fetch the corresponding user data
+        const user = await User.findOne({ _id: entry.userID });
+        if (user) {
+          return {
+            name: user.username,           // User's name
+            avatar: user.profilePicture,   // User's profile picture
+            score: entry.totalScore        // User's score
+          };
+        } else {
+          return null;  // Handle case where user is not found (optional)
+        }
+      })
+    );
+
+    // Filter out any null values (in case any user wasn't found)
+    const filteredLeaderboard = enrichedLeaderboard.filter(entry => entry !== null);
+
+    // Send the enriched leaderboard data as the response
     res.status(200).json({
       message: 'Leaderboard fetched successfully!',
-      leaderboard
+      leaderboard: filteredLeaderboard
     });
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 export const submitCorrectAnswer = async (req, res) => {
   try {
     const { answers } = req.body;
@@ -434,17 +455,14 @@ export const signin = async (req, res, next) => {
 };
 
 export const findPlayer = async (req, res, next) => {
-  const { riotID } = req.body;
+  const { _id } = req.body;
   try {
-    const validMatch = await User.findOne({ riotID });
+    const validUser = await User.findOne({ _id  });
 
-    if (!validMatch) {
+    if (!validUser) {
       return next(errorHandler(404, 'User not found'));
     }
-
-    const userWithoutPassword = { ...validMatch._doc };
-
-    res.status(200).json(userWithoutPassword);
+    res.status(200).json(validUser);
   } catch (error) {
     next(error);
   }
