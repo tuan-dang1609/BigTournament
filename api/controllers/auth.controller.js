@@ -8,7 +8,7 @@ import BanPick from '../models/veto.model.js';
 import AllGame from '../models/allgame.model.js';
 import MatchID from '../models/matchid.model.js';
 import TeamRegister from '../models/registergame.model.js'
-import PredictionPickem from '../models/PredictionPickem.js';
+import PredictionPickem from '../models/response.model.js';
 export const signup = async (req, res, next) => {
   const { riotID, username, password, discordID } = req.body;
   try {
