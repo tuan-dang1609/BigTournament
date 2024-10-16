@@ -11,7 +11,7 @@ import TeamRegister from '../models/registergame.model.js'
 export const signup = async (req, res, next) => {
   const { riotID, username, password ,discordID} = req.body;
   const hashedPassword = bcryptjs.hashSync(password, 10);
-  const newUser = new User({ riotID, username,discordID, password: hashedPassword });
+  const newUser = new User({ riotID, username,discordID, password });
   try {
     await newUser.save();
     res.status(201).json({ message: 'User created successfully' });
