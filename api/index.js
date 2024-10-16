@@ -14,7 +14,7 @@ dotenv.config();
 // Kết nối MongoDB với connection pooling
 mongoose
   .connect(process.env.MONGO, {
-    maxPoolSize: 500,  // Số lượng kết nối tối đa trong pool
+    maxPoolSize: 50,  // Số lượng kết nối tối đa trong pool
     minPoolSize: 0    // Số lượng kết nối tối thiểu trong pool
   })
   .then(() => {

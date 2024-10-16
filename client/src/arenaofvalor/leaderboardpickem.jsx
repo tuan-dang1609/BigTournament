@@ -34,6 +34,27 @@ const LeaderboardComponent = () => {
     fetchLeaderboard();
   }, []);
 
+  // Function to calculate ranks with shared placements
+  const calculateRanks = (data) => {
+    if (data.length === 0) return [];
+
+    let rank = 1; // Start from rank 1
+    let rankedData = [{ ...data[0], rank }]; // Initialize first rank
+    
+    for (let i = 1; i < data.length; i++) {
+      // If the score is the same as the previous one, they share the same rank
+      if (data[i].score === data[i - 1].score) {
+        rankedData.push({ ...data[i], rank });
+      } else {
+        // Otherwise, increase the rank based on the current index
+        rank = i + 1;
+        rankedData.push({ ...data[i], rank });
+      }
+    }
+
+    return rankedData;
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading leaderboard...</div>;
   }
@@ -42,44 +63,39 @@ const LeaderboardComponent = () => {
     return <div className="text-center py-8 text-red-500">Error: {error}</div>;
   }
 
+  const rankedLeaderboardData = calculateRanks(leaderboardData);
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Leaderboard</h2>
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-              <th className="py-3 px-6 text-left">Rank</th>
-              <th className="py-3 px-6 text-left">User</th>
-              <th className="py-3 px-6 text-center">Score</th>
-            </tr>
-          </thead>
+    <div className="container mx-auto px-4 py-8 mt-20">
+      <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Leaderboard</h2>
+      <div className="overflow-hidden">
+        <table className="w-[95%] mx-auto">
           <tbody className="text-gray-600 text-sm font-light">
-            {leaderboardData.map((user, index) => (
+            {rankedLeaderboardData.map((user, index) => (
               <tr
-                key={user._id} // Use unique key
-                className="border-b border-gray-200 hover:bg-gray-100 transition duration-300 ease-in-out"
+                key={user._id || `${user.rank}-${index}`} // Use a combination of `user.rank` and `index` to ensure uniqueness
+                className="border-b-[0.1px] first:border-t-[0.1px] border-base-content text-base-content transition duration-300 ease-in-out"
               >
                 <td className="py-3 px-6 text-left whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="font-medium">{index + 1}</span>
+                  <div className="flex items-center  justify-center">
+                    <span className="text-[12px] font-semibold lg:text-[16px]">{user.rank}</span>
                   </div>
                 </td>
-                <td className="py-3 px-6 text-left">
+                <td className="lg:py-2 lg:px-6 text-left">
                   <div className="flex items-center">
-                    <div className="mr-2">
+                    <div className="lg:mr-3 mr-2">
                       <img
-                        className="w-8 h-8 rounded-full"
+                        className="lg:w-12 lg:h-12 h-7 w-7 rounded-full"
                         src={`https://drive.google.com/thumbnail?id=${user.avatar}`} // Assuming the avatar URL is in the `avatar` field
                         alt={`${user.name}'s avatar`}
                       />
                     </div>
-                    <span className="font-medium">{user.name}</span>
+                    <span className="text-[11.5px] font-semibold lg:text-[14px]">{user.name}</span>
                   </div>
                 </td>
                 <td className="py-3 px-6 text-center">
                   <div className="flex items-center justify-center">
-                    <span className="font-medium">{user.score}</span> {/* Display user's score */}
+                    <span className="text-[12px] font-semibold lg:text-[16px]">{user.score}</span> {/* Display user's score */}
                   </div>
                 </td>
               </tr>

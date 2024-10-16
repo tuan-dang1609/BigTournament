@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
     profilePicture: {
       type: String,
       default:
-        '1dJXC3sq1fK3XKrRsTq3AfPUtalLrzds1',
+        '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L',
     },
   },
   { timestamps: true }
