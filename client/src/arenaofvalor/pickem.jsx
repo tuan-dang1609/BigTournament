@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaExclamationCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useNavigate, Link } from 'react-router-dom';
 import { useSelector } from "react-redux";
 
 const PickemChallenge = () => {
-    const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state) => state.user);
   const [predictions, setPredictions] = useState({
     qualifiedTeams: [], // For question 3
     question4Teams: [], // For question 4 (select 2 teams)
@@ -13,6 +12,40 @@ const PickemChallenge = () => {
   });
   const [errors, setErrors] = useState({});
   const [submitStatus, setSubmitStatus] = useState(""); // To track submit status
+
+  // Fetch existing predictions if available
+  useEffect(() => {
+    const fetchPrediction = async () => {
+      try {
+        const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userId: currentUser._id })
+        });
+  
+        const result = await response.json();
+        if (response.ok) {
+          // Populate the form with the user's previous responses
+          const previousPrediction = result.data;
+          const answers = previousPrediction.answers.reduce((acc, curr) => {
+            acc[curr.questionId] = curr.selectedTeams;
+            return acc;
+          }, {});
+          setPredictions(answers);
+        } else {
+          console.log(result.message);
+        }
+      } catch (error) {
+        console.error("Error fetching prediction:", error);
+      }
+    };
+  
+    if (currentUser && currentUser._id) {
+      fetchPrediction();
+    }
+  }, [currentUser]);
 
   const questions = [
     {
@@ -93,9 +126,8 @@ const PickemChallenge = () => {
 
     if (!hasErrors) {
       try {
-        // Prepare the data in the correct format
         const data = {
-          userId: currentUser,
+          userId: currentUser._id,
           answers: questions.map((q) => ({
             questionId: q.id,
             selectedTeams: predictions[q.id] || []

@@ -47,6 +47,24 @@ export const submitPrediction = async (req, res) => {
   }
 };
 
+export const finduserPrediction = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Find prediction by userId
+    const prediction = await PredictionPickem.findOne({ userId });
+
+    if (prediction) {
+      return res.status(200).json({ message: 'Prediction found', data: prediction });
+    } else {
+      return res.status(404).json({ message: 'No prediction found for this user' });
+    }
+  } catch (error) {
+    console.error('Error checking prediction:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const addteam = async (req, res, next) => {
   const { team, logoURL, shortname, player1, player2, player3, player4, player5, player6, player7, player8, player9, player10 } = req.body;
   const newTeam = new Team({ team, logoURL, shortname, player1, player2, player3, player4, player5, player6, player7, player8, player9, player10 });
