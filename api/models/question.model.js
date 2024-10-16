@@ -1,36 +1,23 @@
 import mongoose from 'mongoose';
 
-const choiceSchema = new mongoose.Schema(
-  {
-    imageid: { type: String, required: true },
-    teamname: { type: String },
-    playername: { type: String },
-  },
-  { _id: false } // Prevents creation of an `_id` field in subdocuments
-);
+const { Schema } = mongoose;
 
-const questionSchema = new mongoose.Schema(
-  {
-    question: { type: String, required: true },
-    choice: [choiceSchema]
-  },
-  { _id: false } // Prevents creation of an `_id` field in subdocuments
-);
+// Define optionSchema for each option in the question
+const optionSchema = new Schema({
+  name: { type: String, required: true },
+  logo: { type: String, required: true }
+});
 
-const questionPickemSchema = new mongoose.Schema(
-  {
-    idquestionset: {
-      required: true,
-      type: String,
-      unique: true // Ensure idquestionset is unique
-    },
-    questionSet: [questionSchema]
-  },
-  {
-    timestamps: true, // Add timestamps for creation and update times
-  }
-);
+// Define questionSchema for each question
+const questionSchema = new Schema({
+  id: { type: Number, required: true },  // No unique: true constraint
+  question: { type: String, required: true },
+  maxChoose: { type: Number, required: true },
+  type: { type: String, required: true, enum: ['multiple'] },
+  options: [optionSchema]
+});
 
-const QuestionPickem = mongoose.model('QuestionPickem', questionPickemSchema, 'QuestionPickem');
+// Define the main schema
+const QuestionPickem = mongoose.model('QuestionPickem', questionSchema,'QuestionPickem');
 
 export default QuestionPickem;

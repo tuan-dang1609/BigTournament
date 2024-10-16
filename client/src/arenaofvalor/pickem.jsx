@@ -5,95 +5,60 @@ import { useSelector } from "react-redux";
 
 const PickemChallenge = () => {
   const { currentUser } = useSelector((state) => state.user);
-  const [predictions, setPredictions] = useState({
-    qualifiedTeams: [], // For question 3
-    question4Teams: [], // For question 4 (select 2 teams)
-    question5Teams: [], // For question 5 (select 3 teams)
-  });
+  const [predictions, setPredictions] = useState({});
+  const [questions, setQuestions] = useState([]); // Dynamic questions from backend
   const [errors, setErrors] = useState({});
-  const [submitStatus, setSubmitStatus] = useState(""); // To track submit status
-  const [totalScore, setTotalScore] = useState(0); // For displaying the final score
+  const [submitStatus, setSubmitStatus] = useState("");
+  const [totalScore, setTotalScore] = useState(0);
 
-  // Fetch existing predictions if available
+  // Fetch questions and predictions
   useEffect(() => {
-    const fetchPrediction = async () => {
-      if (!currentUser || !currentUser._id) return; // Ensure currentUser is available
-  
+    const fetchQuestionsAndPredictions = async () => {
       try {
-        const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction`, {
+        // Fetch questions from backend
+        const questionResponse = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/auth/getquestions`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const questionResult = await questionResponse.json();
+        if (questionResponse.ok && questionResult.data) {
+          setQuestions(questionResult.data);
+        }
+
+        if (!currentUser || !currentUser._id) return;
+
+        // Fetch existing predictions if available
+        const predictionResponse = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ userId: currentUser._id })
         });
-  
-        const result = await response.json();
-        if (response.ok && result.data) {
-          const previousPrediction = result.data;
+
+        const predictionResult = await predictionResponse.json();
+        if (predictionResponse.ok && predictionResult.data) {
+          const previousPrediction = predictionResult.data;
           const answers = previousPrediction.answers.reduce((acc, curr) => {
             acc[curr.questionId] = curr.selectedTeams;
             return acc;
           }, {});
           setPredictions(answers);
         } else {
-          // Handle case when no previous predictions exist
           console.log("No previous predictions found.");
         }
       } catch (error) {
-        console.error("Error fetching prediction:", error);
+        console.error("Error fetching data:", error);
       }
     };
-  
-    if (currentUser._id) {
-      fetchPrediction();
+
+    if (currentUser) {
+      fetchQuestionsAndPredictions();
     }
   }, [currentUser]);
-
-  const questions = [
-    {
-      id: 3,
-      question: `Team nào sẽ vượt qua vòng 1 (Select up to 5)`,
-      maxQualifiedTeams: 5,
-      type: "multiple",
-      options: [
-        { name: "We Are One", logo: "1HtwSX-OrX12BdekcMt5B0DUWbsfXQ95L" },
-        { name: "Kero Esport", logo: "1VOegHodLok5NHcWvS6GECprWaMRo45uE" },
-        { name: "Dong Chuyen Nghiep", logo: "19JF-fhVhMdsCD9HlE8CY-Nv9B9v-1Rpu" },
-        { name: "Young Gen", logo: "1ZzhKLmpxond5b7jqkuYAw1BSe5cydqkZ" },
-        { name: "Biscuit Council", logo: "1xDI973eUq_zqhC4xIte5s1N2dwqn7-GP" },
-        { name: "10A4", logo: "10LaLO23gCAlnmOpI04es2kicyLARuRM9" }
-      ]
-    },
-    {
-      id: 4,
-      question: `Chọn 2 đội sẽ tiến vào chung kết`,
-      maxQualifiedTeams: 2,
-      type: "multiple",
-      options: [
-        { name: "We Are One", logo: "1HtwSX-OrX12BdekcMt5B0DUWbsfXQ95L" },
-        { name: "Kero Esport", logo: "1VOegHodLok5NHcWvS6GECprWaMRo45uE" },
-        { name: "Dong Chuyen Nghiep", logo: "19JF-fhVhMdsCD9HlE8CY-Nv9B9v-1Rpu" },
-        { name: "Young Gen", logo: "1ZzhKLmpxond5b7jqkuYAw1BSe5cydqkZ" },
-        { name: "Biscuit Council", logo: "1xDI973eUq_zqhC4xIte5s1N2dwqn7-GP" },
-        { name: "10A4", logo: "10LaLO23gCAlnmOpI04es2kicyLARuRM9" }
-      ]
-    },
-    {
-      id: 5,
-      question: `Chọn 3 đội sẽ vào vòng bán kết`,
-      maxQualifiedTeams: 3,
-      type: "multiple",
-      options: [
-        { name: "We Are One", logo: "1HtwSX-OrX12BdekcMt5B0DUWbsfXQ95L" },
-        { name: "Kero Esport", logo: "1VOegHodLok5NHcWvS6GECprWaMRo45uE" },
-        { name: "Dong Chuyen Nghiep", logo: "19JF-fhVhMdsCD9HlE8CY-Nv9B9v-1Rpu" },
-        { name: "Young Gen", logo: "1ZzhKLmpxond5b7jqkuYAw1BSe5cydqkZ" },
-        { name: "Biscuit Council", logo: "1xDI973eUq_zqhC4xIte5s1N2dwqn7-GP" },
-        { name: "10A4", logo: "10LaLO23gCAlnmOpI04es2kicyLARuRM9" }
-      ]
-    }
-  ];
 
   const handleTeamSelection = (team, question) => {
     const selectedTeams = predictions[question.id] || [];
@@ -101,16 +66,16 @@ const PickemChallenge = () => {
       ? selectedTeams.filter((t) => t !== team.name)
       : [...selectedTeams, team.name];
 
-    if (newSelectedTeams.length <= question.maxQualifiedTeams) {
+    if (newSelectedTeams.length <= question.maxChoose) {
       setPredictions({ ...predictions, [question.id]: newSelectedTeams });
-      validateQualifiedTeams(newSelectedTeams, question.maxQualifiedTeams, question.id);
+      validateQualifiedTeams(newSelectedTeams, question.maxChoose, question.id);
     }
   };
 
-  const validateQualifiedTeams = (selectedTeams, maxQualifiedTeams, questionId) => {
+  const validateQualifiedTeams = (selectedTeams, maxChoose, questionId) => {
     const newErrors = { ...errors };
-    if (selectedTeams.length !== maxQualifiedTeams) {
-      newErrors[questionId] = `Please select exactly ${maxQualifiedTeams} teams`;
+    if (selectedTeams.length !== maxChoose) {
+      newErrors[questionId] = `Please select exactly ${maxChoose} teams`;
     } else {
       delete newErrors[questionId];
     }
@@ -119,10 +84,10 @@ const PickemChallenge = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validQuestions = questions.filter((q) => q.type === "multiple").map((q) => ({
+    const validQuestions = questions.map((q) => ({
       id: q.id,
       selected: predictions[q.id]?.length || 0,
-      max: q.maxQualifiedTeams
+      max: q.maxChoose
     }));
 
     const hasErrors = validQuestions.some((q) => q.selected !== q.max);
@@ -141,9 +106,9 @@ const PickemChallenge = () => {
         const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/submitPrediction', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify(data)
+          body: JSON.stringify(data),
         });
 
         const result = await response.json();
@@ -154,9 +119,9 @@ const PickemChallenge = () => {
           const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ userId: currentUser._id })
+            body: JSON.stringify({ userId: currentUser._id }),
           });
 
           const scoreResult = await scoreResponse.json();
@@ -209,7 +174,6 @@ const PickemChallenge = () => {
                           className="w-28 h-28 mb-3"
                         />
                       )}<p className="text-[14.5px] pb-2 font-semibold">{option.name}</p>
-                      
                     </motion.button>
                   ))}
                 </div>
