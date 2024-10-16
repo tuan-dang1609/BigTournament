@@ -29,7 +29,7 @@ const SignupPage = () => {
   };
 
   const validatePassword = (password) => {
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@!#%^&*])[A-Za-z\d@!#%^&*]{7,}$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?:.*[@!#%^&*])?[A-Za-z\d@!#%^&*]{7,}$/;
     return passwordRegex.test(password);
   };
 
@@ -94,15 +94,16 @@ const SignupPage = () => {
   
     // Validate all fields before submission
     Object.keys(formData).forEach((key) => {
-      validateField(key, formData[key]);
+      validateField(key, formData[key]); // Validate each field and update errors
     });
   
-    newErrors = { ...errors }; // Use the updated errors state
-    setErrors(newErrors);
+    // After validation, get the latest errors state
+    newErrors = { ...errors };
   
-    // Prevent form submission if there are any errors
-    if (Object.keys(newErrors).length > 0) {
+    // If any error exists, prevent submission and display error message
+    if (Object.keys(newErrors).length > 0 || !formData.password) {
       setErrorMessage("Please fix the errors before submitting.");
+      setErrors(newErrors); // Update the errors state to display the latest errors
       return;
     }
   
@@ -132,6 +133,7 @@ const SignupPage = () => {
       setErrorMessage("An error occurred. Please try again.");
     }
   };
+  
 
   const togglePasswordVisibility = (field) => {
     if (field === "password") {
@@ -250,6 +252,7 @@ const SignupPage = () => {
                 onChange={handleChange}
                 aria-invalid={errors.username ? "true" : "false"}
                 aria-describedby="username-error"
+                autoComplete="username"
               />
             </div>
             {errors.username && (
@@ -280,6 +283,7 @@ const SignupPage = () => {
                 onChange={handleChange}
                 aria-invalid={errors.password ? "true" : "false"}
                 aria-describedby="password-error"
+                autoComplete="new-password"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
@@ -317,6 +321,7 @@ const SignupPage = () => {
                 onChange={handleChange}
                 aria-invalid={errors.retypePassword ? "true" : "false"}
                 aria-describedby="retypePassword-error"
+                autoComplete="new-password"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
