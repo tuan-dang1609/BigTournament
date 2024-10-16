@@ -8,15 +8,17 @@ import BanPick from '../models/veto.model.js';
 import AllGame from '../models/allgame.model.js';
 import MatchID from '../models/matchid.model.js';
 import TeamRegister from '../models/registergame.model.js'
+
 export const signup = async (req, res, next) => {
-  const { riotID, username, password ,discordID} = req.body;
-  const hashedPassword = bcryptjs.hashSync(password, 10);
-  const newUser = new User({ riotID, username,discordID, password: hashedPassword });
+  const { riotID, username, password, discordID } = req.body;
   try {
+    const hashedPassword = bcryptjs.hashSync(password, 10);
+    const newUser = new User({ riotID, username, discordID, password: hashedPassword });
+
     await newUser.save();
-    res.status(201).json({ message: 'User created successfully' });
+    res.status(201).json({ message: 'Tạo tài khoản thành công' });
   } catch (error) {
-    next(error);
+    return next(errorHandler(500, 'Tạo tài khoản thất bại'));
   }
 };
 
@@ -344,26 +346,31 @@ export const getAllMatches = async (req, res, next) => {
   }
 };
 
+
 export const signin = async (req, res, next) => {
-  const {username, password } = req.body;
+  const { username, password } = req.body;
   try {
-    const validUser = await User.findOne({
-      $or: [
-        { username: username }
-      ]
-    });
-    if (!validUser) return next(errorHandler(404, 'User not found'));
+    const validUser = await User.findOne({ username });
+
+    if (!validUser) return next(errorHandler(404, 'Người dùng không tìm thấy'));
+
     const validPassword = bcryptjs.compareSync(password, validUser.password);
-    if (!validPassword) return next(errorHandler(401, 'wrong credentials'));
-    const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET);
+    if (!validPassword) return next(errorHandler(401, 'Thông tin đăng nhập sai'));
+
+    const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    
+    if (!validUser._doc) return next(errorHandler(500, 'Không thể truy cập dữ liệu người dùng'));
+
     const { password: hashedPassword, ...rest } = validUser._doc;
-    const expiryDate = new Date(Date.now() + 2629824000); // 1 hour
+    
+    const expiryDate = new Date(Date.now() + 60 * 60 * 1000); // 1 giờ
+
     res
       .cookie('access_token', token, { httpOnly: true, expires: expiryDate })
       .status(200)
       .json(rest);
   } catch (error) {
-    next(error);
+    return next(errorHandler(500, 'Lỗi máy chủ nội bộ'));
   }
 };
 
