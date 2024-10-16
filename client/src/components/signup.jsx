@@ -29,7 +29,7 @@ const SignupPage = () => {
   };
 
   const validatePassword = (password) => {
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{7,}$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@!#%^&*])[A-Za-z\d@!#%^&*]{7,}$/;
     return passwordRegex.test(password);
   };
 
