@@ -90,39 +90,46 @@ const SignupPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = {};
+    let newErrors = {};
+  
+    // Validate all fields before submission
     Object.keys(formData).forEach((key) => {
       validateField(key, formData[key]);
     });
-
-    if (Object.keys(newErrors).length === 0) {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/signup', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
-
-        const data = await res.json();
-        setLoading(false);
-
-        if (data.success === false) {
-          setErrorMessage(data.message || "Something went wrong!");
-          return;
-        }
-
-        setSignupSuccess(true);
-      } catch (error) {
-        setLoading(false);
-        setErrorMessage("An error occurred. Please try again.");
+  
+    newErrors = { ...errors }; // Use the updated errors state
+    setErrors(newErrors);
+  
+    // Prevent form submission if there are any errors
+    if (Object.keys(newErrors).length > 0) {
+      setErrorMessage("Please fix the errors before submitting.");
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      setErrorMessage("");
+  
+      const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      const data = await res.json();
+      setLoading(false);
+  
+      if (data.success === false) {
+        setErrorMessage(data.message || "Something went wrong!");
+        return;
       }
-    } else {
-      setErrors(newErrors);
+  
+      setSignupSuccess(true);
+    } catch (error) {
+      setLoading(false);
+      setErrorMessage("An error occurred. Please try again.");
     }
   };
 
