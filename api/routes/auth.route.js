@@ -23,7 +23,7 @@ router.post('/findallmatchid',findAllMatchID)
 router.post('/findmatchid',findmatchID)
 router.post('/findallteamAOV',findAllteam)
 router.post('/submitPrediction',submitPrediction)
-router.post('/checkuserprediction/:userId',finduserPrediction)
+router.post('/checkuserprediction',finduserPrediction)
 router.post('/register', async (req, res) => {
   try {
       const { teamName, shortName, classTeam, logoUrl, games, gameMembers } = req.body;
