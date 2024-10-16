@@ -49,8 +49,8 @@ export const submitPrediction = async (req, res) => {
 
 export const finduserPrediction = async (req, res) => {
   try {
-    const { userId } = req.params;
-    
+    const { userId } = req.body;
+
     // Find prediction by userId
     const prediction = await PredictionPickem.findOne({ userId });
 
