@@ -3,7 +3,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { signInStart, signInFailure, signInSuccess } from '../../redux/user/userSlice';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +15,10 @@ function LoginForm() {
   const { loading, error } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation(); // To capture the previous link
+
+  // Check if there's a 'from' location or default to home ('/')
+  const from = location.state?.from?.pathname || '/';
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -44,7 +48,9 @@ function LoginForm() {
       }
 
       dispatch(signInSuccess(data));
-      navigate('/arenaofvalor');
+      
+      // Navigate to the original page or default to '/'
+      navigate(from, { replace: true });
     } catch (error) {
       dispatch(signInFailure(error));
     }
@@ -116,7 +122,6 @@ function LoginForm() {
               {loading ? (
                 <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 ml-2" />
               ) : null}
-              
             </button>
           </div>
         </form>
@@ -127,13 +132,13 @@ function LoginForm() {
         )}
         <p className="mt-4 text-center text-sm text-gray-600">
           Chưa có tài khoản?{" "}
-          <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500" >
+          <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
             Đăng kí
           </Link>
         </p>
       </div>
     </div>
   );
-};
+}
 
 export default LoginForm;

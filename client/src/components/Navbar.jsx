@@ -48,6 +48,7 @@ export default function Example() {
     aov: [
       { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },
       { name: "Luật lệ", href: "/arenaofvalor/luatle", current: location.pathname === "/arenaofvalor/luatle"},
+      { name: "Pick'em", href: "/arenaofvalor/pickem/welcome", current: location.pathname === "/arenaofvalor/pickem/welcome"},
 
     ],
     tft: [

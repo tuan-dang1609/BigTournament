@@ -25,6 +25,7 @@ import TeamRegistrationFormAOV from './arenaofvalor/registerfor.jsx'
 import RuleAOV from './arenaofvalor/rule.jsx';
 import PickemChallenge from './arenaofvalor/pickem.jsx';
 import LeaderboardComponent from './arenaofvalor/leaderboardpickem.jsx';
+import WelcomePage from './arenaofvalor/welcomepickem.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -50,6 +51,7 @@ if (rootElement) {
               <Route path="/arenaofvalor" element={<HomepageAOV />} />
               <Route path='/register' element={<TeamRegistrationForm />} />
               <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
+              <Route path='/arenaofvalor/pickem/welcome' element={<WelcomePage />} />
               <Route element={<PrivateRoute />}>
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
                 <Route path='/arenaofvalor/pickem/leaderboard' element={<LeaderboardComponent />} />
