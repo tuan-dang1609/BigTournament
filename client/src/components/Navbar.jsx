@@ -47,10 +47,14 @@ export default function Example() {
     ],
     aov: [
       { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },
-      { name: "Luật lệ", href: "/arenaofvalor/luatle", current: location.pathname === "/arenaofvalor/luatle"},
-      { name: "Pick'em", href: "/arenaofvalor/pickem/welcome", current: location.pathname === "/arenaofvalor/pickem/welcome"},
-
-    ],
+      { name: "Luật lệ", href: "/arenaofvalor/luatle", current: location.pathname === "/arenaofvalor/luatle" },
+      { 
+        name: "Pick'em", 
+        href: "/arenaofvalor/pickem/welcome", 
+        current: ["/arenaofvalor/pickem/welcome", "/arenaofvalor/pickem", "/arenaofvalor/pickem/leaderboard"].includes(location.pathname)
+      },
+    ]
+,    
     tft: [
       { name: "Teamfight Tactics", href: "/tft", current: location.pathname === "/tft", logo: "tft_icon" },
 
