@@ -47,12 +47,13 @@ export default function Example() {
     ],
     aov: [
       { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },
-      { name: "Luật lệ", href: "/arenaofvalor/luatle", current: location.pathname === "/arenaofvalor/luatle" },
+      
       { 
         name: "Pick'em", 
         href: "/arenaofvalor/pickem/welcome", 
         current: ["/arenaofvalor/pickem/welcome", "/arenaofvalor/pickem", "/arenaofvalor/pickem/leaderboard"].includes(location.pathname)
       },
+      { name: "Luật lệ", href: "/arenaofvalor/luatle", current: location.pathname === "/arenaofvalor/luatle" },
     ]
 ,    
     tft: [
