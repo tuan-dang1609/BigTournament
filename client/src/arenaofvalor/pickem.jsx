@@ -113,7 +113,7 @@ const PickemChallenge = () => {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
         });
         const result = await response.json();
-        setSubmitStatus(response.ok ? "Predictions submitted successfully!" : `Error: ${result.error}`);
+        setSubmitStatus(response.ok ? "Kết quả dự đoán của bạn đã gửi thành công!" : `Error: ${result.error}`);
         if (response.ok) {
           const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -145,7 +145,7 @@ const PickemChallenge = () => {
     <>
       <MyNavbar2 navigation={navigation} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
 
-      <div className="min-h-screen mt-40 px-4 sm:px-10 lg:px-8">
+      <div className="min-h-screen mt-40 mb-20 px-4 sm:px-10 lg:px-8">
         <form onSubmit={handleSubmit} className="lg:p-6 p-1 space-y-6">
           {questions.map((question) => (
             <div key={question.id} className="space-y-4">
@@ -187,10 +187,10 @@ const PickemChallenge = () => {
               )}
             </div>
           ))}
-          <motion.button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700">
-            Submit Predictions
+          <motion.button type="submit" className="w-full bg-accent text-white p-3 rounded-lg font-semibold hover:bg-blue-700">
+            Gửi dự đoán kết quả của tôi
           </motion.button>
-          {submitStatus && <p className={`mt-4 text-sm ${submitStatus.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>{submitStatus}</p>}
+          {submitStatus && <p className={`mt-4 text-[15px] font-semibold ${submitStatus.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>{submitStatus}</p>}
         </form>
       </div>
 
