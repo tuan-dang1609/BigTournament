@@ -28,8 +28,8 @@ const PickemChallenge = () => {
 
   const getNavigation = () => navigationAll1.aov;
   const navigation = getNavigation();
-
   useEffect(() => {
+    document.title="Pick'em Challenge Liên Quân Mobile"
     const fetchQuestionsAndPredictions = async () => {
       setLoading(true);
       try {
@@ -156,7 +156,7 @@ const PickemChallenge = () => {
                   onClick={() => openModal(question)}
                 >
                   {predictions[question.id]?.length > 0 ? (
-                   <div className={`grid grid-cols-2 lg:!grid-cols-${question.maxChoose} gap-2 lg:gap-x-8`}>
+                   <div className={`grid grid-cols-2 ${question.maxChoose === 3 ? 'lg:grid-cols-3' : question.maxChoose === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-2 lg:gap-x-8`}>
                       {predictions[question.id]?.map((team) => {
                         const selectedTeam = question.options.find((option) => option.name === team);
                         return (
