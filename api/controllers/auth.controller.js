@@ -152,6 +152,9 @@ export const submitPrediction = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
+
 export const leaderboardpickem = async (req, res) => {
   try {
     const { limit } = req.body;  // Optional: allow clients to specify the number of top users
