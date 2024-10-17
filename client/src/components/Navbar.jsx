@@ -51,7 +51,7 @@ export default function Example() {
       { 
         name: "Pick'em", 
         href: "/arenaofvalor/pickem/welcome", 
-        current: ["/arenaofvalor/pickem/welcome", "/arenaofvalor/pickem", "/arenaofvalor/pickem/leaderboard"].includes(location.pathname)
+        current: ["/arenaofvalor/pickem/welcome", "/arenaofvalor/pickem", "/arenaofvalor/pickem/leaderboard","/arenaofvalor/pickem/pickemmatch"].includes(location.pathname)
       },
       { name: "Luật lệ", href: "/arenaofvalor/luatle", current: location.pathname === "/arenaofvalor/luatle" },
     ]

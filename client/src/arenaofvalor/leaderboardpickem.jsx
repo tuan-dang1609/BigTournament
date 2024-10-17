@@ -9,7 +9,8 @@ const LeaderboardComponent = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigationAll1 = {
     aov: [
-      { name: "Pick'em", href: "/arenaofvalor/pickem", current: location.pathname === "/arenaofvalor/pickem" },
+      { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },
+      { name: "Đoán tổng thể", href: "/arenaofvalor/pickem", current: location.pathname === "/arenaofvalor/pickem" },
       { name: "Bảng xếp hạng", href: "/arenaofvalor/pickem/leaderboard", current: location.pathname === "/arenaofvalor/pickem/leaderboard" },
     ]
   };
@@ -99,26 +100,26 @@ const LeaderboardComponent = () => {
                   key={user._id || `${user.rank}-${index}`} // Use a combination of `user.rank` and `index` to ensure uniqueness
                   className="border-b-[0.1px] first:border-t-[0.1px] border-base-content text-base-content transition duration-300 ease-in-out"
                 >
-                  <td className="py-3 px-6 text-left whitespace-nowrap">
-                    <div className="flex items-center  justify-center">
-                      <span className="text-[12px] font-semibold lg:text-[16px]">{user.rank}</span>
+                  <td className="px-4 py-3 text-left whitespace-nowrap">
+                    <div className="flex items-center justify-center">
+                      <span className="text-[14px] font-semibold lg:text-[16px]">{user.rank}</span>
                     </div>
                   </td>
-                  <td className="lg:py-2 lg:px-6 text-left">
+                  <td className="lg:py-2 lg:px-6 py-3 text-left">
                     <div className="flex items-center">
                       <div className="lg:mr-3 mr-2">
                         <img
-                          className="lg:w-14 lg:h-14 h-10 w-10 rounded-full"
+                          className="lg:w-14 lg:h-14 h-14 w-14 rounded-full"
                           src={`https://drive.google.com/thumbnail?id=${user.avatar}`} // Assuming the avatar URL is in the `avatar` field
                           alt={`${user.name}'s avatar`}
                         />
                       </div>
-                      <span className="text-[11.5px] font-semibold lg:text-[14px]">{user.name}</span>
+                      <span className="text-[14px] font-semibold lg:text-[14px]">{user.name}</span>
                     </div>
                   </td>
                   <td className="py-3 px-6 text-center">
                     <div className="flex items-center justify-center">
-                      <span className="text-[12px] font-semibold lg:text-[16px]">{user.score}</span> {/* Display user's score */}
+                      <span className="text-[15px] font-semibold lg:text-[16px]">{user.score}</span> {/* Display user's score */}
                     </div>
                   </td>
                 </tr>

@@ -114,14 +114,39 @@ export const submitPrediction = async (req, res) => {
       return res.status(400).json({ error: 'Invalid input. Please provide userId and answers.' });
     }
 
-    // Find the user's prediction and update it, or create a new one if it doesn't exist
-    const updatedPrediction = await PredictionPickem.findOneAndUpdate(
-      { userId }, // Find by userId
-      { userId, answers }, // Update with new answers
-      { new: true, upsert: true } // Return the updated document, create if not found
-    );
+    // Find the user's existing prediction
+    let existingPrediction = await PredictionPickem.findOne({ userId });
 
-    res.status(201).json({ message: 'Prediction submitted successfully!', data: updatedPrediction });
+    if (existingPrediction) {
+      // If the user has an existing prediction, merge the new answers with the old ones
+      const updatedAnswers = [...existingPrediction.answers]; // Copy existing answers
+
+      // Loop through new answers and add them to the existing ones without replacing
+      answers.forEach((newAnswer) => {
+        const existingAnswerIndex = updatedAnswers.findIndex(
+          (answer) => answer.questionId === newAnswer.questionId
+        );
+
+        if (existingAnswerIndex !== -1) {
+          // If the questionId exists, update the selectedTeams for that questionId
+          updatedAnswers[existingAnswerIndex] = newAnswer;
+        } else {
+          // If the questionId doesn't exist, add the new answer to the list
+          updatedAnswers.push(newAnswer);
+        }
+      });
+
+      // Save the updated prediction with combined answers
+      existingPrediction.answers = updatedAnswers;
+      await existingPrediction.save();
+
+      res.status(201).json({ message: 'Prediction updated successfully!', data: existingPrediction });
+    } else {
+      // If no existing prediction, create a new one
+      const newPrediction = await PredictionPickem.create({ userId, answers });
+
+      res.status(201).json({ message: 'Prediction submitted successfully!', data: newPrediction });
+    }
   } catch (error) {
     console.error('Error submitting prediction:', error);
     res.status(500).json({ error: 'Internal server error' });

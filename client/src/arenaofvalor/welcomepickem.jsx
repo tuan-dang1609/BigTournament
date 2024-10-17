@@ -66,44 +66,6 @@ const WelcomePage = () => {
     );
 };
 
-const TeamCard = ({ team, showPlayers }) => {
-    const [isHovered, setIsHovered] = useState(false);
-
-    // Check if the screen size is smaller than `lg`
-    const isSmallScreen = useMediaQuery('(max-width: 1024px)');
-
-    // Build the Google Drive image URL
-    const logoUrl = `https://drive.google.com/thumbnail?id=${team.logoUrl}`;
-
-    // Limit players based on screen size
-    const playersToShow = isSmallScreen ? team.gameMembers["Liên Quân Mobile"].slice(0, 5) : team.gameMembers["Liên Quân Mobile"];
-
-    return (
-        <div
-            className="bg-gray-700 py-1 lg:p-5 rounded-lg shadow-lg text-center transition duration-300 ease-in-out"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <div className="w-full lg:h-48 h-24 lg:p-0 p-2 overflow-hidden relative">
-                <img
-                    src={logoUrl}
-                    alt={`${team.teamName} logo`}
-                    className={`h-full flex w-full justify-center items-center lg:block object-contain transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-[.19]' : 'opacity-100'}`}
-                />
-                <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-100' : 'opacity-0'}`}>
-                    {playersToShow.map((player, playerIndex) => (
-                        <div key={playerIndex} className="h-1/3 flex items-center font-semibold justify-center text-[10px] lg:text-[15px]">
-                            {player}
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <p className="font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent text-[12.5px] lg:text-[18px] lg:pt-4 lg:pb-2">
-  {team.teamName} ({team.classTeam})
-</p>
-        </div>
-    );
-};
 $(document).on("scroll", function () {
     var pageTop = $(document).scrollTop();
     var pageBottom = pageTop + $(window).height();

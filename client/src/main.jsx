@@ -26,6 +26,7 @@ import RuleAOV from './arenaofvalor/rule.jsx';
 import PickemChallenge from './arenaofvalor/pickem.jsx';
 import LeaderboardComponent from './arenaofvalor/leaderboardpickem.jsx';
 import WelcomePage from './arenaofvalor/welcomepickem.jsx';
+import PickemChallengeMatch from './arenaofvalor/pickemmatch.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -53,6 +54,7 @@ if (rootElement) {
               <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
               <Route path='/arenaofvalor/pickem/welcome' element={<WelcomePage />} />
               <Route element={<PrivateRoute />}>
+              <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
                 <Route path='/arenaofvalor/pickem/leaderboard' element={<LeaderboardComponent />} />
                 <Route path='/profile' element={<Profile />} />
