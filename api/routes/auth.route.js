@@ -24,9 +24,9 @@ router.post('/comparepredictions', comparePredictions);
 router.post('/leaderboardpickem', leaderboardpickem)
 router.post('/registerAOV', async (req, res) => {
     try {
-        const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID } = req.body;
+        const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID,color } = req.body;
 
-        if (!teamName || !shortName || !classTeam || !logoUrl || !games || !gameMembers) {
+        if (!teamName || !shortName || !classTeam || !logoUrl || !games || !gameMembers||!color) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
@@ -46,6 +46,7 @@ router.post('/registerAOV', async (req, res) => {
             shortName,
             classTeam,
             logoUrl,
+            color,
             games,
             gameMembers,
         });
@@ -78,7 +79,25 @@ router.post('/checkregisterAOV', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+router.post('/allteamAOVcolor', async (req, res) => {
+    try {
+        const { usernameregister } = req.body;
 
+        // Fetch only teamName, logoUrl, and color fields
+        const teams = await TeamRegister.find().select('teamName logoUrl color');
+
+        if (teams.length > 0) {
+            // If teams are found, return the relevant information
+            return res.status(200).json(teams);
+        } else {
+            return res.status(404).json({ message: 'No teams found' });
+        }
+
+    } catch (error) {
+        // Handle server errors
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 router.post('/upsertquestions', async (req, res) => {
     try {

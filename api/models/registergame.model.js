@@ -28,6 +28,12 @@ const teamSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
+    color: {
+        type: String,
+        required: true,
+        trim: true,
+    }
+    ,
     logoUrl: {
         type: String,
         required: true,

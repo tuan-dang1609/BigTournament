@@ -15,6 +15,7 @@ const TeamRegistrationForm = () => {
         shortName: "",
         classTeam: "",
         logoUrl: "",
+        color:"",
         games: [],
         gameMembers: {}
     });
@@ -169,6 +170,13 @@ const TeamRegistrationForm = () => {
                     delete newErrors.logoUrl;
                 }
                 break;
+            case "color":
+                    if (!value.trim()) {
+                        newErrors.color = "Bạn phải nhập màu chủ đạo cho đội của mình";
+                    } else {
+                        delete newErrors.color;
+                    }
+                    break;
             case "games":
                 if (value.length === 0) {
                     newErrors.games = "Hãy chọn ít nhất 1 game";
@@ -213,6 +221,7 @@ const TeamRegistrationForm = () => {
                 shortName: "",
                 classTeam: "",
                 logoUrl: "",
+                color:"",
                 games: [],
                 gameMembers: {}
             });
@@ -362,7 +371,29 @@ const TeamRegistrationForm = () => {
                                         <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
                                     )}
                                 </div>
-
+                                
+                                <div className="flex flex-col">
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">
+                                    Chọn màu chủ đạo cho đội của bạn
+                                    </label>
+                                    <input
+                                        type="color"
+                                        id="color"
+                                        name="color"
+                                        value={formData.color}
+                                        onChange={handleInputChange}
+                                        className="h-10 border-base-100 w-20"
+                                    />
+                                    <small className="text-base-content mt-1">
+                                        Xem hướng dẫn{" "}
+                                        <Link className="text-primary" to="https://docs.google.com/document/d/1zlei9yIWtSLfukegTeREZd8iwH2EUT1rTECH4F6Ph64/edit?tab=t.0" target="_blank" rel="noopener noreferrer">
+                                            <strong>Tại Đây</strong>
+                                        </Link>.
+                                    </small>
+                                    {errors.logoUrl && (
+                                        <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
+                                    )}
+                                </div>
 
                                 <div className="flex flex-col">
                                     <label className="leading-loose font-semibold text-base-content">Chọn game mà đội bạn sẽ tham gia</label>

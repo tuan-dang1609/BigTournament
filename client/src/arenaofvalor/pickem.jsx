@@ -163,7 +163,7 @@ const PickemChallenge = () => {
                       {predictions[question.id]?.map((team) => {
                         const selectedTeam = question.options.find((option) => option.name === team);
                         return (
-                          <div key={team} className="lg:p-8 p-1 aspect-square rounded-lg text-sm flex flex-col items-center justify-center 
+                          <div key={team} className="lg:p-8 p-1 rounded-lg text-sm flex flex-col items-center justify-center 
                             bg-gradient-to-r from-secondary to-accent text-white">
                             {selectedTeam?.logo && (
                               <img
@@ -201,7 +201,7 @@ const PickemChallenge = () => {
   isOpen={isModalOpen}
   onRequestClose={closeModal}
   contentLabel="Select Teams"
-  className="bg-white border-2 border-gray-300 lg:p-8 p-2 rounded-lg shadow-lg max-w-7xl xl:mx-auto mx-2 mt-12 z-[10000] relative lg:mt-10"
+  className="bg-white border-2 border-gray-300 lg:p-8 p-2 rounded-lg shadow-lg max-w-7xl xl:mx-auto mx-2 mt-14 z-[10000] relative lg:mt-10"
   overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[9999]"
   ariaHideApp={false}
   shouldCloseOnOverlayClick={false}

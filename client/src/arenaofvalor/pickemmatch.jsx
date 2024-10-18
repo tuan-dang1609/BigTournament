@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux"; // Assuming you're using Redux to get the current user
+import MyNavbar2 from "../components/Navbar2";
 
 const PickemChallenge = () => {
   const { currentUser } = useSelector((state) => state.user); // Get current user from Redux store
@@ -7,7 +8,24 @@ const PickemChallenge = () => {
   const [questions, setQuestions] = useState([]);
   const [submitStatus, setSubmitStatus] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // Define your team colors
+  const teamColors = [
+    { name: "We Are One", bg: "bg-red-200" },
+    { name: "Kero Esport", bg: "bg-yellow-200" },
+  ];
+
+  const navigationAll1 = {
+    aov: [
+      { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },
+      { name: "Đoán tổng thể", href: "/arenaofvalor/pickem", current: location.pathname === "/arenaofvalor/pickem" },
+      { name: "Bảng xếp hạng", href: "/arenaofvalor/pickem/leaderboard", current: location.pathname === "/arenaofvalor/pickem/leaderboard" },
+    ]
+  };
+  const getNavigation = () => navigationAll1.aov;
+  const navigation = getNavigation();
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -92,71 +110,101 @@ const PickemChallenge = () => {
   const getTeamWidth = (questionId, teamName) => {
     const selectedTeam = selectedTeams[questionId];
     if (selectedTeam === teamName) {
-      return windowWidth >= 768 ? "w-[60%]" : "w-[70%]";
+      return windowWidth >= 768 ? "w-[75%]" : "w-[75%]";
     }
-    return selectedTeam ? "w-[40%]" : "w-1/2";
+    return selectedTeam ? "w-[25%]" : "w-1/2";
+  };
+
+  // Function to get background color based on team name
+  const getBackgroundColor = (teamName) => {
+    const team = teamColors.find((team) => team.name === teamName);
+    return team ? team.bg : "bg-gray-400"; // Default to gray if no match
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <>
+        <MyNavbar2 navigation={navigation} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+        <div className="flex justify-center items-center min-h-[100dvh]">
+          <span className="loading loading-dots loading-lg text-primary"></span>
+        </div>
+      </>
+    );
   }
 
   return (
-    <div className="font-sans bg-gray-100 min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden">
-        <h1 className="text-3xl font-bold text-center py-6 bg-blue-600 text-white">
-          League of Legends Pick'em Challenge
-        </h1>
-        <div className="p-6">
-          {questions.map((question) => (
-            <div key={question.id} className="mb-8">
-              <h3 className="text-lg font-semibold mb-4">{question.question}</h3>
-              <div className="flex flex-col md:flex-row justify-between items-stretch h-96 md:h-64 relative">
-                {question.options.map((option) => (
-                  <button
-                    key={option.name}
-                    aria-label={`Select ${option.name}`}
-                    className={`${getTeamWidth(
-                      question.id,
-                      option.name
-                    )} h-1/2 md:h-full bg-gray-400 text-white font-bold text-xl md:text-2xl flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-blue-300 ${
-                      selectedTeams[question.id] === option.name
-                        ? "ring-4 ring-blue-300"
-                        : ""
-                    }`}
-                    onClick={() => handleTeamSelect(question.id, option.name)}
-                  >
-                    <img
-                      src={option.logo}
-                      alt={`${option.name} Logo`}
-                      className="w-8 h-8 mr-2"
-                    />
-                    {option.name}
-                  </button>
-                ))}
-              </div>
+    <>
+      <MyNavbar2 navigation={navigation} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+      <div className="font-sans min-h-screen flex items-center justify-center mt-36 p-4">
+        <div className="w-full lg:max-w-[95%] max-w-[99%] overflow-hidden">
+          <div className="lg:p-6 p-2">
+            {questions.map((question) => (
+              <div key={question.id} className="mb-8">
+                <h3 className="text-lg font-semibold mb-4">{question.question}</h3>
+                <div className="flex flex-row justify-between items-stretch h-28 relative">
+                  {question.options.map((option, index) => (
+                    <button
+                      key={option.name}
+                      aria-label={`Select ${option.name}`}
+                      className={`py-6 px-3 ${getTeamWidth(
+                        question.id,
+                        option.name
+                      )} ${getBackgroundColor(option.name)} text-white font-bold text-xl md:text-2xl flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none ${
+                        selectedTeams[question.id] === option.name
+                          ? ""
+                          : ""
+                      }`}
+                      onClick={() => handleTeamSelect(question.id, option.name)}
+                    >
+                      {/* Left side team layout: [teamName][logo] */}
+                      {index === 0 && (
+                        <>
+                          <span
+                            className={`transition-opacity duration-300 ${
+                              selectedTeams[question.id] === option.name || !selectedTeams[question.id]
+                                ? "opacity-100"
+                                : "opacity-0 w-0"
+                            }`}
+                          >
+                            {option.name}
+                          </span>
+                          <img
+                            src={`https://drive.google.com/thumbnail?id=${option.logo}`}
+                            alt={`${option.name} Logo`}
+                            className="w-16 h-16 ml-2"
+                          />
+                        </>
+                      )}
 
-              {/* Selected Team Message */}
-              <div className="mt-4 text-center">
-                {selectedTeams[question.id] ? (
-                  <p className="text-lg font-semibold text-gray-700">
-                    You've selected{" "}
-                    <span className="font-bold text-blue-600">
-                      {selectedTeams[question.id]}
-                    </span>
-                  </p>
-                ) : (
-                  <p className="text-lg font-semibold text-gray-700">
-                    Select a team to make your pick!
-                  </p>
-                )}
+                      {/* Right side team layout: [logo][teamName] */}
+                      {index === 1 && (
+                        <>
+                          <img
+                            src={`https://drive.google.com/thumbnail?id=${option.logo}`}
+                            alt={`${option.name} Logo`}
+                            className="w-16 h-16 mr-2"
+                          />
+                          <span
+                            className={`transition-opacity duration-300 ${
+                              selectedTeams[question.id] === option.name || !selectedTeams[question.id]
+                                ? "opacity-100"
+                                : "opacity-0 w-0"
+                            }`}
+                          >
+                            {option.name}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-          {submitStatus && <p className="mt-4 text-lg">{submitStatus}</p>}
+            ))}
+            {submitStatus && <p className="mt-4 text-lg">{submitStatus}</p>}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
