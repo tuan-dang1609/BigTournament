@@ -10,12 +10,7 @@ const PickemChallenge = () => {
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
-  // Define your team colors
-  const teamColors = [
-    { name: "We Are One", bg: "bg-red-200" },
-    { name: "Kero Esport", bg: "bg-yellow-200" },
-  ];
+  const [userRegister, setUserRegister] = useState(null); // Store the fetched team data
 
   const navigationAll1 = {
     aov: [
@@ -32,6 +27,33 @@ const PickemChallenge = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/allteamAOVcolor', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ usernameregister: currentUser })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setUserRegister(data); // Save the fetched user registration info
+      } catch (error) {
+        console.error("Error fetching team data:", error);
+      } finally {
+        setLoading(false); // Set loading to false once the check is complete
+      }
+    };
+
+    fetchTeams();
+  }, [currentUser]);
 
   useEffect(() => {
     const fetchQuestionsAndPredictions = async () => {
@@ -109,17 +131,33 @@ const PickemChallenge = () => {
 
   const getTeamWidth = (questionId, teamName) => {
     const selectedTeam = selectedTeams[questionId];
+    
+    // Always return 75% for the selected team and 25% for the unselected team
     if (selectedTeam === teamName) {
-      return windowWidth >= 768 ? "w-[75%]" : "w-[75%]";
+      return "w-[75%]";
     }
-    return selectedTeam ? "w-[25%]" : "w-1/2";
+    return selectedTeam ? "w-[25%]" : "w-1/2"; // Default to 50%-50% if no team is selected
   };
-
-  // Function to get background color based on team name
-  const getBackgroundColor = (teamName) => {
-    const team = teamColors.find((team) => team.name === teamName);
-    return team ? team.bg : "bg-gray-400"; // Default to gray if no match
+  // Function to get logo and color from the userRegister data
+  const getTeamData = (teamName) => {
+    if (!userRegister) {
+      console.log("No userRegister data available.");
+      return { logoUrl: '', color: 'bg-gray-400' };
+    }
+  
+    const team = userRegister.find(team => team.teamName === teamName);
+    
+    if (team) {
+      // Construct the proper Google Drive thumbnail URL
+      const logoUrl = team.logoUrl;
+      console.log(`Team Found: ${teamName}, Logo URL: ${logoUrl}, Color: ${team.color}`);
+      return { logoUrl, color: `bg-[${team.color}]` };
+    } else {
+      console.log(`Team Not Found: ${teamName}`);
+      return { logoUrl: '', color: 'bg-gray-400' };
+    }
   };
+  
 
   if (loading) {
     return (
@@ -142,61 +180,60 @@ const PickemChallenge = () => {
               <div key={question.id} className="mb-8">
                 <h3 className="text-lg font-semibold mb-4">{question.question}</h3>
                 <div className="flex flex-row justify-between items-stretch h-28 relative">
-                  {question.options.map((option, index) => (
-                    <button
-                      key={option.name}
-                      aria-label={`Select ${option.name}`}
-                      className={`py-6 px-3 ${getTeamWidth(
-                        question.id,
-                        option.name
-                      )} ${getBackgroundColor(option.name)} text-white font-bold text-xl md:text-2xl flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none ${
-                        selectedTeams[question.id] === option.name
-                          ? ""
-                          : ""
-                      }`}
-                      onClick={() => handleTeamSelect(question.id, option.name)}
-                    >
-                      {/* Left side team layout: [teamName][logo] */}
-                      {index === 0 && (
-                        <>
-                          <span
-                            className={`transition-opacity duration-300 ${
-                              selectedTeams[question.id] === option.name || !selectedTeams[question.id]
-                                ? "opacity-100"
-                                : "opacity-0 w-0"
-                            }`}
-                          >
-                            {option.name}
-                          </span>
-                          <img
-                            src={`https://drive.google.com/thumbnail?id=${option.logo}`}
-                            alt={`${option.name} Logo`}
-                            className="w-16 h-16 ml-2"
-                          />
-                        </>
-                      )}
+                  {question.options.map((option, index) => {
+                    const { logoUrl, color } = getTeamData(option.name);
+                    return (
+                      <button
+                        key={option.name}
+                        aria-label={`Select ${option.name}`}
+                        className={`py-6 px-3 ${getTeamWidth(
+                          question.id,
+                          option.name
+                        )} ${color} text-white font-bold text-xl md:text-2xl flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none`}
+                        onClick={() => handleTeamSelect(question.id, option.name)}
+                      >
+                        {/* Left side team layout: [teamName][logo] */}
+                        {index === 0 && (
+                          <>
+                            <span
+                              className={`transition-opacity duration-300 ${
+                                selectedTeams[question.id] === option.name || !selectedTeams[question.id]
+                                  ? "opacity-100"
+                                  : "opacity-0 w-0"
+                              }`}
+                            >
+                              {option.name}
+                            </span>
+                            <img
+                              src={`https://drive.google.com/thumbnail?id=${logoUrl}`}
+                              alt={`${option.name} Logo`}
+                              className="w-16 h-16 ml-2"
+                            />
+                          </>
+                        )}
 
-                      {/* Right side team layout: [logo][teamName] */}
-                      {index === 1 && (
-                        <>
-                          <img
-                            src={`https://drive.google.com/thumbnail?id=${option.logo}`}
-                            alt={`${option.name} Logo`}
-                            className="w-16 h-16 mr-2"
-                          />
-                          <span
-                            className={`transition-opacity duration-300 ${
-                              selectedTeams[question.id] === option.name || !selectedTeams[question.id]
-                                ? "opacity-100"
-                                : "opacity-0 w-0"
-                            }`}
-                          >
-                            {option.name}
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  ))}
+                        {/* Right side team layout: [logo][teamName] */}
+                        {index === 1 && (
+                          <>
+                            <img
+                              src={`https://drive.google.com/thumbnail?id=${logoUrl}`}
+                              alt={`${option.name} Logo`}
+                              className="w-16 h-16 mr-2"
+                            />
+                            <span
+                              className={`transition-opacity duration-300 ${
+                                selectedTeams[question.id] === option.name || !selectedTeams[question.id]
+                                  ? "opacity-100"
+                                  : "opacity-0 w-0"
+                              }`}
+                            >
+                              {option.name}
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ))}
