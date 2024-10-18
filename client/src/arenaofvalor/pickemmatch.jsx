@@ -142,15 +142,14 @@ const PickemChallenge = () => {
     
     // Always return 75% for the selected team and 25% for the unselected team
     if (selectedTeam === teamName) {
-      return "w-[80%]";
+      return "lg:w-[80%] w-[70%]";
     }
-    return selectedTeam ? "w-[20%]" : "w-1/2"; // Default to 50%-50% if no team is selected
+    return selectedTeam ? "lg:w-[20%] w-[30%]" : "w-1/2"; // Default to 50%-50% if no team is selected
   };
 
   // Function to get logo and color from the userRegister data
   const getTeamData = (teamName) => {
     if (!userRegister) {
-      console.log("No userRegister data available.");
       return { logoUrl: '', color: 'bg-black' };
     }
   
@@ -159,10 +158,8 @@ const PickemChallenge = () => {
     if (team) {
       // Construct the proper Google Drive thumbnail URL
       const logoUrl = team.logoUrl;
-      console.log(`Team Found: ${teamName}, Logo URL: ${logoUrl}, Color: ${team.color}`);
       return { logoUrl, color: `${team.color}` };
     } else {
-      console.log(`Team Not Found: ${teamName}`);
       return { logoUrl: '', color: 'bg-black' };
     }
   };
@@ -194,13 +191,13 @@ const PickemChallenge = () => {
   return (
     <>
       <MyNavbar2 navigation={navigation} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-      <div className="font-sans min-h-screen flex items-center justify-center mt-36 p-4">
-        <div className="w-full lg:max-w-[95%] max-w-[99%] overflow-hidden">
+      <div className="font-sans min-h-screen flex items-center justify-center mt-36 lg:p-4 p-2">
+        <div className="w-full lg:max-w-[95%] max-w-full overflow-hidden">
           <div className="lg:p-6 p-2">
             {questions.map((question) => (
               <div key={question.id} className="mb-8">
                 <h3 className="text-lg font-semibold mb-4">{question.question}</h3>
-                <div className="flex flex-row justify-between items-stretch h-32 gap-3 relative">
+                <div className="flex flex-row justify-between items-stretch lg:h-32 h-24 lg:gap-3 gap-1 relative">
                   {question.options.map((option, index) => {
                     const { logoUrl, color } = getTeamData(option.name);
                     const selectedTeam = selectedTeams[question.id]; // Get the selected team for the current question
@@ -229,7 +226,7 @@ const PickemChallenge = () => {
                             <span
                               className={`transition-opacity duration-300 ${
                                 selectedTeam === option.name || !selectedTeam
-                                  ? "opacity-100"
+                                  ? "opacity-100 lg:text-[20px] text-[12px]"
                                   : "opacity-0 w-0"
                               }`}
                             >
@@ -238,7 +235,7 @@ const PickemChallenge = () => {
                             <img
                               src={`https://drive.google.com/thumbnail?id=${logoUrl}`}
                               alt={`${option.name} Logo`}
-                              className="w-20 h-20 ml-5"
+                              className="lg:w-20 lg:h-20 w-10 h-10 lg:ml-5 ml-2"
                             />
                           </>
                         )}
@@ -249,12 +246,12 @@ const PickemChallenge = () => {
                             <img
                               src={`https://drive.google.com/thumbnail?id=${logoUrl}`}
                               alt={`${option.name} Logo`}
-                              className="w-20 h-20 mr-5"
+                              className="lg:w-20 lg:h-20 w-10 h-10 lg:mr-5 mr-2"
                             />
                             <span
                               className={`transition-opacity duration-300 ${
                                 selectedTeam === option.name || !selectedTeam
-                                  ? "opacity-100"
+                                  ? "opacity-100 lg:text-[20px] text-[12px]"
                                   : "opacity-0 w-0"
                               }`}
                             >
