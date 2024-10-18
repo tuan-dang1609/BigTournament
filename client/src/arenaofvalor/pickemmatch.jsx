@@ -151,7 +151,7 @@ const PickemChallenge = () => {
       // Construct the proper Google Drive thumbnail URL
       const logoUrl = team.logoUrl;
       console.log(`Team Found: ${teamName}, Logo URL: ${logoUrl}, Color: ${team.color}`);
-      return { logoUrl, color: `bg-[${team.color}]` };
+      return { logoUrl, color: `${team.color}` };
     } else {
       console.log(`Team Not Found: ${teamName}`);
       return { logoUrl: '', color: 'bg-gray-400' };
@@ -186,10 +186,11 @@ const PickemChallenge = () => {
                       <button
                         key={option.name}
                         aria-label={`Select ${option.name}`}
+                        style={{ backgroundColor: color }}
                         className={`py-6 px-3 ${getTeamWidth(
                           question.id,
                           option.name
-                        )} ${color} text-white font-bold text-xl md:text-2xl flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none`}
+                        )} text-white font-bold text-xl md:text-2xl flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none`}
                         onClick={() => handleTeamSelect(question.id, option.name)}
                       >
                         {/* Left side team layout: [teamName][logo] */}
