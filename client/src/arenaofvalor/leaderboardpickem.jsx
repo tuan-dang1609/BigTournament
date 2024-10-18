@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import MyNavbar2 from "../components/Navbar2";
+import { useSelector } from "react-redux";
 
 const LeaderboardComponent = () => {
+  const { currentUser } = useSelector((state) => state.user);
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true); // State to show loading state
   const [error, setError] = useState(null); // State to handle errors
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userRank,setUserRank] = useState(null)
   useEffect(() => {
     const scrollToTop = () => {
         document.documentElement.scrollTop = 0;
@@ -54,6 +57,40 @@ const LeaderboardComponent = () => {
 
     fetchLeaderboard();
   }, []);
+
+  useEffect(() => {
+    const fetchUserRank = async () => {
+      try {
+        const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/myrankpickem', {
+          method: 'POST', // If you are using POST, otherwise change to GET
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userID: currentUser._id })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          setUserRank(result.leaderboard); // Set the leaderboard data
+        } else {
+          throw new Error(result.message || 'Error fetching leaderboard');
+        }
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserRank();
+  }, []);
+  useEffect(() => {
+   
+      console.log(userRank)
+    
+  }, [userRank]);
+
 
   // Function to calculate ranks with shared placements
   const calculateRanks = (data) => {

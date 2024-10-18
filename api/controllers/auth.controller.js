@@ -199,17 +199,17 @@ export const leaderboardpickem = async (req, res) => {
 };
 export const getUserPickemScore = async (req, res) => {
   try {
-    const { userId } = req.body; // Assuming you're sending the userId in the request body
+    const { userID } = req.body; // Assuming you're sending the userId in the request body
 
     // Find the user's score in the AllUserScore collection
-    const userScoreEntry = await AllUserScore.findOne({ userID: userId });
+    const userScoreEntry = await AllUserScore.findOne({ userID: userID });
 
     if (!userScoreEntry) {
       return res.status(404).json({ message: "User score not found" });
     }
 
     // Find the user's details in the User collection
-    const user = await User.findOne({ _id: userId });
+    const user = await User.findOne({ _id: userID });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
