@@ -11,7 +11,15 @@ const PickemChallenge = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [userRegister, setUserRegister] = useState(null); // Store the fetched team data
+  useEffect(() => {
+    const scrollToTop = () => {
+        document.documentElement.scrollTop = 0;
+        setLoading(true);
+    };
+    setTimeout(scrollToTop, 0);
+    document.title = "Pick'em theo trận";
 
+}, []);
   const navigationAll1 = {
     aov: [
       { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },
@@ -134,15 +142,16 @@ const PickemChallenge = () => {
     
     // Always return 75% for the selected team and 25% for the unselected team
     if (selectedTeam === teamName) {
-      return "w-[75%]";
+      return "w-[80%]";
     }
-    return selectedTeam ? "w-[25%]" : "w-1/2"; // Default to 50%-50% if no team is selected
+    return selectedTeam ? "w-[20%]" : "w-1/2"; // Default to 50%-50% if no team is selected
   };
+
   // Function to get logo and color from the userRegister data
   const getTeamData = (teamName) => {
     if (!userRegister) {
       console.log("No userRegister data available.");
-      return { logoUrl: '', color: 'bg-gray-400' };
+      return { logoUrl: '', color: 'bg-black' };
     }
   
     const team = userRegister.find(team => team.teamName === teamName);
@@ -154,10 +163,22 @@ const PickemChallenge = () => {
       return { logoUrl, color: `${team.color}` };
     } else {
       console.log(`Team Not Found: ${teamName}`);
-      return { logoUrl: '', color: 'bg-gray-400' };
+      return { logoUrl: '', color: 'bg-black' };
     }
   };
-  
+
+  // Function to get the gradient based on position (left or right)
+  const getGradientBackground = (index, color, selected) => {
+    if (selected) {
+      if (index === 0) {
+        // For left-side team, gradient goes from black to color (right)
+        return `linear-gradient(to right, black, ${color})`;
+      } else if (index === 1) {
+        // For right-side team, gradient goes from color to black (left)
+        return `linear-gradient(to left, black, ${color})`;
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -179,18 +200,27 @@ const PickemChallenge = () => {
             {questions.map((question) => (
               <div key={question.id} className="mb-8">
                 <h3 className="text-lg font-semibold mb-4">{question.question}</h3>
-                <div className="flex flex-row justify-between items-stretch h-28 relative">
+                <div className="flex flex-row justify-between items-stretch h-32 gap-3 relative">
                   {question.options.map((option, index) => {
                     const { logoUrl, color } = getTeamData(option.name);
+                    const selectedTeam = selectedTeams[question.id]; // Get the selected team for the current question
+                    
                     return (
                       <button
                         key={option.name}
                         aria-label={`Select ${option.name}`}
-                        style={{ backgroundColor: color }}
+                        style={{
+                          backgroundImage: selectedTeam === option.name
+                            ? getGradientBackground(index, color, true) // Show gradient when selected
+                            : "none", // No gradient when not selected
+                          backgroundColor: selectedTeam === option.name ? "initial" : "#cbcbcb", // gray if not selected
+                        }}
                         className={`py-6 px-3 ${getTeamWidth(
                           question.id,
                           option.name
-                        )} text-white font-bold text-xl md:text-2xl flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none`}
+                        )} text-white font-bold text-xl md:text-2xl rounded-lg flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none ${
+                          selectedTeam !== option.name && selectedTeam ? "bg-black" : ""
+                        }`} // Apply bg-gray-500 if the option is not selected
                         onClick={() => handleTeamSelect(question.id, option.name)}
                       >
                         {/* Left side team layout: [teamName][logo] */}
@@ -198,7 +228,7 @@ const PickemChallenge = () => {
                           <>
                             <span
                               className={`transition-opacity duration-300 ${
-                                selectedTeams[question.id] === option.name || !selectedTeams[question.id]
+                                selectedTeam === option.name || !selectedTeam
                                   ? "opacity-100"
                                   : "opacity-0 w-0"
                               }`}
@@ -208,7 +238,7 @@ const PickemChallenge = () => {
                             <img
                               src={`https://drive.google.com/thumbnail?id=${logoUrl}`}
                               alt={`${option.name} Logo`}
-                              className="w-16 h-16 ml-2"
+                              className="w-20 h-20 ml-5"
                             />
                           </>
                         )}
@@ -219,11 +249,11 @@ const PickemChallenge = () => {
                             <img
                               src={`https://drive.google.com/thumbnail?id=${logoUrl}`}
                               alt={`${option.name} Logo`}
-                              className="w-16 h-16 mr-2"
+                              className="w-20 h-20 mr-5"
                             />
                             <span
                               className={`transition-opacity duration-300 ${
-                                selectedTeams[question.id] === option.name || !selectedTeams[question.id]
+                                selectedTeam === option.name || !selectedTeam
                                   ? "opacity-100"
                                   : "opacity-0 w-0"
                               }`}

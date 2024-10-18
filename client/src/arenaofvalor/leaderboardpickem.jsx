@@ -7,6 +7,15 @@ const LeaderboardComponent = () => {
   const [loading, setLoading] = useState(true); // State to show loading state
   const [error, setError] = useState(null); // State to handle errors
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  useEffect(() => {
+    const scrollToTop = () => {
+        document.documentElement.scrollTop = 0;
+        setLoading(true);
+    };
+    setTimeout(scrollToTop, 0);
+    document.title = "Bảng xếp hạng Dự đoán";
+
+}, []);
   const navigationAll1 = {
     aov: [
       { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },

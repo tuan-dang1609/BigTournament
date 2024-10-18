@@ -18,7 +18,15 @@ const PickemChallenge = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [tempSelection, setTempSelection] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); // New search state
+  useEffect(() => {
+    const scrollToTop = () => {
+        document.documentElement.scrollTop = 0;
+        setLoading(true);
+    };
+    setTimeout(scrollToTop, 0);
+    document.title = "Pick'em theo toàn giải";
 
+}, []);
   const navigationAll1 = {
     aov: [
       { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },
@@ -31,7 +39,6 @@ const PickemChallenge = () => {
   const getNavigation = () => navigationAll1.aov;
   const navigation = getNavigation();
   useEffect(() => {
-    document.title="Pick'em Challenge Liên Quân Mobile"
     const fetchQuestionsAndPredictions = async () => {
       setLoading(true);
       try {
