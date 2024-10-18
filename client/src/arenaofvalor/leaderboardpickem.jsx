@@ -35,8 +35,7 @@ const LeaderboardComponent = () => {
           method: 'POST', // If you are using POST, otherwise change to GET
           headers: {
             'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ limit: 10 }) // Optional: Limit top 10 users
+          }
         });
 
         const result = await response.json();

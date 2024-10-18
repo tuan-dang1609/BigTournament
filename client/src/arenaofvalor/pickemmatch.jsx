@@ -11,15 +11,16 @@ const PickemChallenge = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [userRegister, setUserRegister] = useState(null); // Store the fetched team data
+
   useEffect(() => {
     const scrollToTop = () => {
-        document.documentElement.scrollTop = 0;
-        setLoading(true);
+      document.documentElement.scrollTop = 0;
+      setLoading(true);
     };
     setTimeout(scrollToTop, 0);
     document.title = "Pick'em theo trận";
+  }, []);
 
-}, []);
   const navigationAll1 = {
     aov: [
       { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },
@@ -128,13 +129,44 @@ const PickemChallenge = () => {
     }
   };
 
-  const handleTeamSelect = (questionId, teamName) => {
+  const handleTeamSelect = async (questionId, teamName) => {
     const newSelectedTeams = { ...selectedTeams };
     newSelectedTeams[questionId] = teamName;
     setSelectedTeams(newSelectedTeams);
-
+  
     // Automatically submit when team is selected
-    handleSubmit(questionId, teamName);
+    try {
+      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/submitPrediction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser._id, // Replace with actual user ID
+          answers: [
+            {
+              questionId: questionId,
+              selectedTeams: [teamName],
+            },
+          ],
+        }),
+      });
+  
+      // If the submission is successful, update the score
+      if (response.ok) {
+        const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUser._id })
+        });
+        const scoreResult = await scoreResponse.json();
+        setSubmitStatus(`Prediction for question ${questionId} submitted successfully!`);
+        setTotalScore(scoreResult.totalPoints || 0); // Update the total score after comparing predictions
+      } else {
+        const result = await response.json();
+        setSubmitStatus(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      setSubmitStatus("Error submitting predictions.");
+    }
   };
 
   const getTeamWidth = (questionId, teamName) => {
@@ -142,25 +174,26 @@ const PickemChallenge = () => {
     
     // Always return 75% for the selected team and 25% for the unselected team
     if (selectedTeam === teamName) {
-      return "lg:w-[80%] w-[70%]";
+      return "lg:w-[75%] w-[70%]";
     }
-    return selectedTeam ? "lg:w-[20%] w-[30%]" : "w-1/2"; // Default to 50%-50% if no team is selected
+    return selectedTeam ? "lg:w-[25%] w-[30%]" : "w-1/2"; // Default to 50%-50% if no team is selected
   };
 
   // Function to get logo and color from the userRegister data
   const getTeamData = (teamName) => {
     if (!userRegister) {
-      return { logoUrl: '', color: 'bg-black' };
+      return { logoUrl: '', shortName: '', color: 'bg-black' };
     }
   
     const team = userRegister.find(team => team.teamName === teamName);
     
     if (team) {
       // Construct the proper Google Drive thumbnail URL
+      const shortName = team.shortName;
       const logoUrl = team.logoUrl;
-      return { logoUrl, color: `${team.color}` };
+      return { logoUrl, shortName, color: `${team.color}` };
     } else {
-      return { logoUrl: '', color: 'bg-black' };
+      return { logoUrl: '', shortName: '', color: 'bg-black' };
     }
   };
 
@@ -197,9 +230,9 @@ const PickemChallenge = () => {
             {questions.map((question) => (
               <div key={question.id} className="mb-8">
                 <h3 className="text-lg font-semibold mb-4">{question.question}</h3>
-                <div className="flex flex-row justify-between items-stretch lg:h-32 h-24 lg:gap-3 gap-1 relative">
+                <div className="flex flex-row justify-between items-stretch md:h-32 h-28 lg:gap-3 gap-1 relative">
                   {question.options.map((option, index) => {
-                    const { logoUrl, color } = getTeamData(option.name);
+                    const { logoUrl, color, shortName } = getTeamData(option.name);
                     const selectedTeam = selectedTeams[question.id]; // Get the selected team for the current question
                     
                     return (
@@ -212,30 +245,29 @@ const PickemChallenge = () => {
                             : "none", // No gradient when not selected
                           backgroundColor: selectedTeam === option.name ? "initial" : "#cbcbcb", // gray if not selected
                         }}
-                        className={`py-6 px-3 ${getTeamWidth(
+                        className={`py-6 px-3 flex md:flex-row ${index === 0 ? 'flex-col-reverse' : 'flex-col'} ${getTeamWidth(
                           question.id,
                           option.name
-                        )} text-white font-bold text-xl md:text-2xl rounded-lg flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none ${
-                          selectedTeam !== option.name && selectedTeam ? "bg-black" : ""
-                        }`} // Apply bg-gray-500 if the option is not selected
+                        )} text-white font-bold text-xl md:text-2xl rounded-lg flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none`}
                         onClick={() => handleTeamSelect(question.id, option.name)}
                       >
                         {/* Left side team layout: [teamName][logo] */}
                         {index === 0 && (
                           <>
                             <span
-                              className={`transition-opacity duration-300 ${
+                              className={`transition-opacity duration-300 lg:text-[20px] md:text-[16px] text-[12px] ${
                                 selectedTeam === option.name || !selectedTeam
-                                  ? "opacity-100 lg:text-[20px] text-[12px]"
-                                  : "opacity-0 w-0"
+                                  ? "opacity-100"
+                                  : "hidden w-0"
                               }`}
                             >
-                              {option.name}
+                              <span className="md:inline hidden">{option.name}</span>
+                              <span className="md:hidden uppercase">{shortName}</span>
                             </span>
                             <img
                               src={`https://drive.google.com/thumbnail?id=${logoUrl}`}
                               alt={`${option.name} Logo`}
-                              className="lg:w-20 lg:h-20 w-10 h-10 lg:ml-5 ml-2"
+                              className="lg:w-20 lg:h-20 md:w-16 md:h-16 w-12 h-12 xl:ml-5 md:ml-3 ml-0 mb-1"
                             />
                           </>
                         )}
@@ -246,16 +278,17 @@ const PickemChallenge = () => {
                             <img
                               src={`https://drive.google.com/thumbnail?id=${logoUrl}`}
                               alt={`${option.name} Logo`}
-                              className="lg:w-20 lg:h-20 w-10 h-10 lg:mr-5 mr-2"
+                              className="lg:w-20 lg:h-20 md:w-16 md:h-16 w-12 h-12 lg:mr-5 md:mr-3 mr-0 mb-1"
                             />
                             <span
-                              className={`transition-opacity duration-300 ${
+                              className={`transition-opacity duration-300 lg:text-[20px] md:text-[16px] text-[12px] ${
                                 selectedTeam === option.name || !selectedTeam
-                                  ? "opacity-100 lg:text-[20px] text-[12px]"
-                                  : "opacity-0 w-0"
+                                  ? "opacity-100"
+                                  : "hidden w-0"
                               }`}
                             >
-                              {option.name}
+                              <span className="md:inline hidden">{option.name}</span>
+                              <span className="md:hidden uppercase">{shortName}</span>
                             </span>
                           </>
                         )}

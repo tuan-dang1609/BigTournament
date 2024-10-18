@@ -1,5 +1,5 @@
 import express from 'express';
-import { signin, signup, signout, comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
+import { signin, signup, signout,getUserPickemScore, comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
@@ -22,6 +22,7 @@ router.post('/checkuserprediction', finduserPrediction)
 router.post('/addcorrectanswer', submitCorrectAnswer)
 router.post('/comparepredictions', comparePredictions);
 router.post('/leaderboardpickem', leaderboardpickem)
+router.post('/myrankpickem', getUserPickemScore)
 router.post('/registerAOV', async (req, res) => {
     try {
         const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID,color } = req.body;
@@ -114,23 +115,6 @@ router.post('/upsertquestions', async (req, res) => {
                     error: 'Invalid input. Please provide all required fields (id, question, maxChoose, type, and options).'
                 });
             }
-
-            // Check if type is "multiple"
-            if (question.type !== 'multiple') {
-                return res.status(400).json({
-                    error: `Invalid input. Question type must be 'multiple'. Error in question id: ${question.id}`
-                });
-            }
-
-            // Validate each option
-            for (const option of question.options) {
-                if (!option.name || !option.logo) {
-                    return res.status(400).json({
-                        error: `Invalid input. Each option must have a name and a logo. Error in question id: ${question.id}`
-                    });
-                }
-            }
-
             // Upsert the question: Update if it exists, otherwise insert a new one
             await QuestionPickem.findOneAndUpdate(
                 { id: question.id }, // Search by question id

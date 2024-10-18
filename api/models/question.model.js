@@ -13,7 +13,7 @@ const questionSchema = new Schema({
   id: { type: Number, required: true },  // No unique: true constraint
   question: { type: String, required: true },
   maxChoose: { type: Number, required: true },
-  type: { type: String, required: true, enum: ['multiple'] },
+  type: { type: String, required: true },
   options: [optionSchema]
 });
 

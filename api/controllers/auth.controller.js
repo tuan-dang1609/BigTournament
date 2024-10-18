@@ -163,12 +163,9 @@ export const submitPrediction = async (req, res) => {
 
 export const leaderboardpickem = async (req, res) => {
   try {
-    const { limit } = req.body;  // Optional: allow clients to specify the number of top users
-
     // Fetch the leaderboard data sorted by totalScore
     const leaderboardEntries = await AllUserScore.find({})
       .sort({ totalScore: -1 })  // Sort by totalScore in descending order
-      .limit(limit || 10);  // Limit to top 'limit' users or default to 10
 
     // Create an array to hold the enriched leaderboard data
     const enrichedLeaderboard = await Promise.all(
@@ -200,7 +197,41 @@ export const leaderboardpickem = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+export const getUserPickemScore = async (req, res) => {
+  try {
+    const { userId } = req.body; // Assuming you're sending the userId in the request body
 
+    // Find the user's score in the AllUserScore collection
+    const userScoreEntry = await AllUserScore.findOne({ userID: userId });
+
+    if (!userScoreEntry) {
+      return res.status(404).json({ message: "User score not found" });
+    }
+
+    // Find the user's details in the User collection
+    const user = await User.findOne({ _id: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Prepare the response data
+    const userData = {
+      name: user.username,          // User's name
+      avatar: user.profilePicture,  // User's profile picture
+      score: userScoreEntry.totalScore // User's total score
+    };
+
+    // Send the user's data as the response
+    res.status(200).json({
+      message: "User score and image fetched successfully!",
+      userData: userData
+    });
+  } catch (error) {
+    console.error('Error fetching user score:', error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 export const submitCorrectAnswer = async (req, res) => {
   try {
     const { answers } = req.body;
