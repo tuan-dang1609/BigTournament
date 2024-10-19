@@ -421,7 +421,7 @@ const TeamRegistrationForm = () => {
 
                                 {formData.games.map((game) => (
                                     <div key={game} className="flex flex-col mt-4">
-                                        <label className="leading-loose text-base-content font-bold">Thành viên của game {game}</label>
+                                        <label className="leading-loose text-base-content font-bold">Tên trong game {game} của các thành viên</label>
                                         <small className="text-base-content mt-1">
                                         Mình khuyên phần này các bạn nên đọc{" "}
                                         <Link className="text-primary" to="https://docs.google.com/document/d/1zlei9yIWtSLfukegTeREZd8iwH2EUT1rTECH4F6Ph64/edit?tab=t.6823b1wcmvmd" target="_blank" rel="noopener noreferrer">
