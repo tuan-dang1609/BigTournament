@@ -56,7 +56,26 @@ const TournamentBracket = () => {
       console.error("Failed to fetch teams from API:", error);
     }
   };
-
+  const renderSectionForRound11 = () => (
+    <div className="flex flex-col border-2 border-gray-300 rounded-lg overflow-hidden relative">
+      <h2 className="text-lg font-bold p-2 bg-[#D9D9D94D] border-b border-gray-300">1W-1L</h2>
+      <div className="p-2">
+        {teams[3].map((match, index) => (
+          <div key={index} className="flex items-center justify-between p-2 border-b last:border-b-0">
+            <div className="flex items-center">
+              <img src={'default-icon.png'} alt={match.teamA || 'Team Logo'} className="w-8 h-8 mr-2" />
+              <span>{match.teamA}</span>
+            </div>
+            <div className="flex items-center">
+              <span className="mr-2">vs</span>
+              <img src={'default-icon.png'} alt={match.teamB || 'Team Logo'} className="w-8 h-8 mr-2" />
+              <span>{match.teamB}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
   // Hàm xử lý Swiss Stage
   const processSwissStage = async () => {
     try {
@@ -206,7 +225,7 @@ const TournamentBracket = () => {
           </div>
 
           <div className="w-full lg:w-1/4 relative">
-            {renderSection("1W-1L", teams[3])}
+            {renderSectionForRound11}
             <div className="hidden lg:block absolute top-[calc(45%+1rem)] left-full h-[2.5px] w-[50%] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[calc(34%+1rem)] left-[calc(149.5%)] h-20 w-[2px] bg-secondary"></div>
             <div className="hidden lg:block absolute bottom-[calc(35%+5.9rem)] left-full h-[2px] w-[50%] bg-secondary"></div>

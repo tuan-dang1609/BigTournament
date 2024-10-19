@@ -17,26 +17,27 @@ let shuffledOnce = false;  // Đảm bảo chỉ xáo 1 lần duy nhất
 
 export const ProcessSwissStage = async (req, res) => {
   try {
-    // Tìm tất cả các trận đấu ở round "0-0"
-    const round00Matches = await StaticTeam.find({ round: '0-0' });
-
-    if (!round00Matches.length) {
-      return res.status(404).json({ message: 'No matches found in round 0-0' });
-    }
-
-    // Kiểm tra xem đã có các vòng "1-0", "0-1", "1-1" được xử lý hay chưa
+    // Kiểm tra nếu các trận đấu đã tồn tại cho vòng 1-0, 0-1 và 1-1
     const round10Matches = await StaticTeam.find({ round: '1-0' });
     const round01Matches = await StaticTeam.find({ round: '0-1' });
     const round11MatchesExisting = await StaticTeam.find({ round: '1-1' });
 
-    if (round11MatchesExisting.length > 0) {
+    // Nếu đã có các trận đấu cho 1-0, 0-1 và 1-1, không cần tạo lại
+    if (round10Matches.length > 0 && round01Matches.length > 0 && round11MatchesExisting.length > 0) {
       return res.status(200).json({ message: 'Swiss stage already processed for this round' });
     }
 
     const winners = [];
     const losers = [];
 
-    // Phân loại các đội thắng và thua từ round "0-0"
+    // Lấy các trận đấu từ round 0-0
+    const round00Matches = await StaticTeam.find({ round: '0-0' });
+
+    if (!round00Matches.length) {
+      return res.status(404).json({ message: 'No matches found in round 0-0' });
+    }
+
+    // Phân loại đội thắng và thua từ round 0-0
     round00Matches.forEach(match => {
       if (match.scoreA > match.scoreB) {
         winners.push(match.teamA);
@@ -47,25 +48,26 @@ export const ProcessSwissStage = async (req, res) => {
       }
     });
 
-    // Xáo trộn danh sách các đội thắng và thua
+    // Shuffle đội thắng và thua
     shuffleArray(winners);
     shuffleArray(losers);
 
-    // Tạo cặp đấu cho round "1-0" và "0-1"
-    const winnerMatches = createSwissPairs(winners, '1-0');
-    const loserMatches = createSwissPairs(losers, '0-1');
+    // Tạo cặp đấu cho 1-0 và 0-1 nếu chưa có
+    if (round10Matches.length === 0) {
+      const winnerMatches = createSwissPairs(winners, '1-0');
+      await Promise.all(winnerMatches.map(match => AddBracketSwiss(match)));
+    }
 
-    // Lưu cặp đấu cho round "1-0" và "0-1"
-    await Promise.all(winnerMatches.map(match => AddBracketSwiss(match)));
-    await Promise.all(loserMatches.map(match => AddBracketSwiss(match)));
+    if (round01Matches.length === 0) {
+      const loserMatches = createSwissPairs(losers, '0-1');
+      await Promise.all(loserMatches.map(match => AddBracketSwiss(match)));
+    }
 
-    // Xử lý tiếp các round "1-0" và "0-1"
+    // Xử lý tiếp các round "1-0" và "0-1" để tạo nhánh 1-1
     const subsequentRoundsResult = await processSubsequentRounds();
 
     res.status(200).json({
       message: 'Swiss stage processed successfully',
-      winnerMatches,
-      loserMatches,
       playoffTeams: subsequentRoundsResult.playoffTeams,
       eliminatedTeams: subsequentRoundsResult.eliminatedTeams,
       round11Matches: subsequentRoundsResult.round11Matches
@@ -77,46 +79,50 @@ export const ProcessSwissStage = async (req, res) => {
   }
 };
 
-// Xử lý logic cho các round "1-0" và "0-1"
+// Function to process 1-0 and 0-1 rounds and generate playoff and 1-1 matches
 const processSubsequentRounds = async () => {
   try {
-    // Lấy các trận đấu ở round "1-0" và "0-1"
     const round10Matches = await StaticTeam.find({ round: '1-0' });
     const round01Matches = await StaticTeam.find({ round: '0-1' });
+    const round11MatchesExisting = await StaticTeam.find({ round: '1-1' });
+
+    if (round11MatchesExisting.length > 0) {
+      return {
+        playoffTeams: [],
+        eliminatedTeams: [],
+        round11Matches: round11MatchesExisting
+      };
+    }
 
     const playoffTeams = [];
     const moveToRound11 = [];
     const eliminatedTeams = [];
 
-    // Xử lý các đội thắng và thua ở round "1-0"
+    // Xử lý các đội thắng/thua ở round 1-0
     round10Matches.forEach(match => {
       if (match.scoreA > match.scoreB) {
-        playoffTeams.push(match.teamA);  // Đội thắng vào playoff
-        moveToRound11.push(match.teamB); // Đội thua chuyển xuống round "1-1"
+        playoffTeams.push(match.teamA);
+        moveToRound11.push(match.teamB);
       } else if (match.scoreA < match.scoreB) {
-        playoffTeams.push(match.teamB);  // Đội thắng vào playoff
-        moveToRound11.push(match.teamA); // Đội thua chuyển xuống round "1-1"
+        playoffTeams.push(match.teamB);
+        moveToRound11.push(match.teamA);
       }
     });
 
-    // Xử lý các đội thắng và thua ở round "0-1"
+    // Xử lý các đội thắng/thua ở round 0-1
     round01Matches.forEach(match => {
       if (match.scoreA > match.scoreB) {
-        moveToRound11.push(match.teamA);  // Đội thắng lên round "1-1"
-        eliminatedTeams.push(match.teamB);  // Đội thua bị loại
+        moveToRound11.push(match.teamA);
+        eliminatedTeams.push(match.teamB);
       } else if (match.scoreA < match.scoreB) {
-        moveToRound11.push(match.teamB);  // Đội thắng lên round "1-1"
-        eliminatedTeams.push(match.teamA);  // Đội thua bị loại
+        moveToRound11.push(match.teamB);
+        eliminatedTeams.push(match.teamA);
       }
     });
 
-    // Xáo trộn danh sách các đội chuyển xuống round "1-1"
     shuffleArray(moveToRound11);
-
-    // Tạo cặp đấu cho round "1-1"
     const round11Matches = createSwissPairs(moveToRound11, '1-1');
 
-    // Lưu các cặp đấu mới của round "1-1"
     await Promise.all(round11Matches.map(match => AddBracketSwiss(match)));
 
     return {
@@ -129,6 +135,7 @@ const processSubsequentRounds = async () => {
     throw error;
   }
 };
+
 
 // Hàm xáo trộn đội
 const shuffleArray = (array) => {
