@@ -10,7 +10,36 @@ import PredictionPickem from '../models/response.model.js';
 import CorrectAnswersSubmit from '../models/correctanswer.model.js';
 import AllUserScore from '../models/alluserscore.model.js';
 import Queue from 'bull';
+import StaticTeam from '../models/bracket.model.js';
 const scoreQueue = new Queue('score-processing');
+export const AddBracketSwiss = async (req, res) => {
+  const { teamA, scoreA, teamB, scoreB, matchID, round } = req.body;
+
+  const newTeam = new StaticTeam({
+    teamA,
+    scoreA,
+    teamB,
+    scoreB,
+    matchID,
+    round
+  });
+
+  try {
+    await newTeam.save();
+    res.status(201).json(newTeam);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create team' });
+  }
+};
+export const FindBracketSwiss = async (req, res) => {
+  try {
+    const teams = await StaticTeam.find(); 
+    res.status(200).json(teams);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch teams' });
+  }
+};
+
 export const signup = async (req, res, next) => {
   const { riotID, username, password, discordID } = req.body;
   try {
