@@ -208,7 +208,7 @@ const TournamentBracket = () => {
           </div>
 
           <div className="w-full lg:w-1/4 relative">
-            {renderSection("1W-1L", teams[3])}
+            {renderSection("1W-1L", teams[3])}  {/* Render 1W-1L Section here */}
             <div className="hidden lg:block absolute top-[calc(45%+1rem)] left-full h-[2.5px] w-[50%] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[calc(34%+1rem)] left-[calc(149.5%)] h-20 w-[2px] bg-secondary"></div>
             <div className="hidden lg:block absolute bottom-[calc(35%+5.9rem)] left-full h-[2px] w-[50%] bg-secondary"></div>
