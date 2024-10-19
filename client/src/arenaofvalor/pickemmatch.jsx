@@ -38,96 +38,63 @@ const PickemChallenge = () => {
   }, []);
 
   useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/allteamAOVcolor', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ usernameregister: currentUser })
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setUserRegister(data); // Save the fetched user registration info
-      } catch (error) {
-        console.error("Error fetching team data:", error);
-      } finally {
-        setLoading(false); // Set loading to false once the check is complete
-      }
-    };
-
-    fetchTeams();
-  }, [currentUser]);
-
-  useEffect(() => {
-    const fetchQuestionsAndPredictions = async () => {
+    const fetchInitialData = async () => {
       setLoading(true);
       try {
-        // Fetch the questions
-        const questionResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/getquestions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        const questionResult = await questionResponse.json();
+        // Fetch teams và questions song song bằng Promise.all
+        const [teamsResponse, questionsResponse] = await Promise.all([
+          // Fetch teams
+          fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/allteamAOVcolor', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ usernameregister: currentUser })
+          }),
+          
+          // Fetch questions
+          fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/getquestions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          })
+        ]);
 
-        // Filter to show only questions with "type": "team"
-        const filteredQuestions = questionResult.data.filter(q => q.type === 'team');
+        // Xử lý kết quả của các API đã fetch xong
+        const teamsData = await teamsResponse.json();
+        setUserRegister(teamsData);
+
+        const questionsData = await questionsResponse.json();
+        const filteredQuestions = questionsData.data.filter(q => q.type === 'team');
         setQuestions(filteredQuestions);
 
-        // Fetch the user's previous predictions
+        // Sau khi fetch teams và questions xong, dừng loading
+        setLoading(false);
+
+        // Sau đó fetch tiếp predictions nếu có currentUser
         if (currentUser?._id) {
-          const predictionResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction', {
+          const predictionsResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: currentUser._id }),
           });
-          const predictionResult = await predictionResponse.json();
+          const predictionsData = await predictionsResponse.json();
 
-          // Map the predictions to `selectedTeams` state
-          const previousSelections = predictionResult.data?.answers.reduce((acc, curr) => {
-            acc[curr.questionId] = curr.selectedTeams[0]; // Assuming single team choice for each question
+          // Map predictions vào state selectedTeams
+          const previousSelections = predictionsData.data?.answers.reduce((acc, curr) => {
+            acc[curr.questionId] = curr.selectedTeams[0];
             return acc;
           }, {});
           setSelectedTeams(previousSelections || {});
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
     if (currentUser) {
-      fetchQuestionsAndPredictions();
+      fetchInitialData();
     }
   }, [currentUser]);
-
-  const handleSubmit = async (questionId, teamName) => {
-    try {
-      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/submitPrediction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: currentUser._id, // Replace with actual user ID
-          answers: [
-            {
-              questionId: questionId,
-              selectedTeams: [teamName],
-            },
-          ],
-        }),
-      });
-      const result = await response.json();
-      setSubmitStatus(response.ok ? `Prediction for question ${questionId} submitted successfully!` : `Error: ${result.error}`);
-    } catch (error) {
-      setSubmitStatus("Error submitting predictions.");
-    }
-  };
 
   const handleTeamSelect = async (questionId, teamName) => {
     const newSelectedTeams = { ...selectedTeams };
@@ -140,7 +107,7 @@ const PickemChallenge = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: currentUser._id, // Replace with actual user ID
+          userId: currentUser._id,
           answers: [
             {
               questionId: questionId,
@@ -150,7 +117,6 @@ const PickemChallenge = () => {
         }),
       });
   
-      // If the submission is successful, update the score
       if (response.ok) {
         const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
           method: 'POST',
@@ -159,7 +125,7 @@ const PickemChallenge = () => {
         });
         const scoreResult = await scoreResponse.json();
         setSubmitStatus(`Prediction for question ${questionId} submitted successfully!`);
-        setTotalScore(scoreResult.totalPoints || 0); // Update the total score after comparing predictions
+        setTotalScore(scoreResult.totalPoints || 0);
       } else {
         const result = await response.json();
         setSubmitStatus(`Error: ${result.error}`);
@@ -172,14 +138,12 @@ const PickemChallenge = () => {
   const getTeamWidth = (questionId, teamName) => {
     const selectedTeam = selectedTeams[questionId];
     
-    // Always return 75% for the selected team and 25% for the unselected team
     if (selectedTeam === teamName) {
       return "lg:w-[75%] w-[70%]";
     }
-    return selectedTeam ? "lg:w-[25%] w-[30%]" : "w-1/2"; // Default to 50%-50% if no team is selected
+    return selectedTeam ? "lg:w-[25%] w-[30%]" : "w-1/2";
   };
 
-  // Function to get logo and color from the userRegister data
   const getTeamData = (teamName) => {
     if (!userRegister) {
       return { logoUrl: '', shortName: '', color: 'bg-black' };
@@ -188,7 +152,6 @@ const PickemChallenge = () => {
     const team = userRegister.find(team => team.teamName === teamName);
     
     if (team) {
-      // Construct the proper Google Drive thumbnail URL
       const shortName = team.shortName;
       const logoUrl = team.logoUrl;
       return { logoUrl, shortName, color: `${team.color}` };
@@ -197,14 +160,11 @@ const PickemChallenge = () => {
     }
   };
 
-  // Function to get the gradient based on position (left or right)
   const getGradientBackground = (index, color, selected) => {
     if (selected) {
       if (index === 0) {
-        // For left-side team, gradient goes from black to color (right)
         return `linear-gradient(to right, black, ${color})`;
       } else if (index === 1) {
-        // For right-side team, gradient goes from color to black (left)
         return `linear-gradient(to left, black, ${color})`;
       }
     }
@@ -233,7 +193,7 @@ const PickemChallenge = () => {
                 <div className="flex flex-row justify-between items-stretch md:h-32 h-28 lg:gap-3 gap-1 relative">
                   {question.options.map((option, index) => {
                     const { logoUrl, color, shortName } = getTeamData(option.name);
-                    const selectedTeam = selectedTeams[question.id]; // Get the selected team for the current question
+                    const selectedTeam = selectedTeams[question.id];
                     
                     return (
                       <button
@@ -241,9 +201,9 @@ const PickemChallenge = () => {
                         aria-label={`Select ${option.name}`}
                         style={{
                           backgroundImage: selectedTeam === option.name
-                            ? getGradientBackground(index, color, true) // Show gradient when selected
-                            : "none", // No gradient when not selected
-                          backgroundColor: selectedTeam === option.name ? "initial" : "#cbcbcb", // gray if not selected
+                            ? getGradientBackground(index, color, true)
+                            : "none",
+                          backgroundColor: selectedTeam === option.name ? "initial" : "#cbcbcb",
                         }}
                         className={`py-6 px-3 flex md:flex-row ${index === 0 ? 'flex-col-reverse' : 'flex-col'} ${getTeamWidth(
                           question.id,
@@ -251,7 +211,6 @@ const PickemChallenge = () => {
                         )} text-white font-bold text-xl md:text-2xl rounded-lg flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none`}
                         onClick={() => handleTeamSelect(question.id, option.name)}
                       >
-                        {/* Left side team layout: [teamName][logo] */}
                         {index === 0 && (
                           <>
                             <span
@@ -272,7 +231,6 @@ const PickemChallenge = () => {
                           </>
                         )}
 
-                        {/* Right side team layout: [logo][teamName] */}
                         {index === 1 && (
                           <>
                             <img
