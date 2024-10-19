@@ -24,7 +24,7 @@ const TournamentBracket = () => {
       const round00 = [];
       const round10 = [];
       const round01 = [];
-      const round11 = []; // Nhánh 1-1
+      const round11 = [];
 
       data.forEach(match => {
         switch (match.round) {
@@ -37,7 +37,7 @@ const TournamentBracket = () => {
           case "0-1":
             round01.push(match);
             break;
-          case "1-1": // Xử lý vòng 1-1
+          case "1-1":
             round11.push(match);
             break;
           default:
@@ -49,7 +49,7 @@ const TournamentBracket = () => {
       setTeams(formattedTeams);
       setLoading(false);
 
-      if (round10.length > 0 || round01.length > 0 || round11.length > 0) {
+      if (round10.length > 0 || round01.length > 0) {
         setSwissStageProcessed(true);
       }
     } catch (error) {
@@ -57,6 +57,29 @@ const TournamentBracket = () => {
     }
   };
 
+  // Hàm xử lý Swiss Stage
+  const processSwissStage = async () => {
+    try {
+      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/process-swiss-stage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Swiss stage processed successfully", data);
+      fetchTeams(); 
+    } catch (error) {
+      console.error("Failed to process Swiss stage:", error);
+    }
+  };
+
+  // Chỉ xử lý Swiss stage nếu chưa được xử lý
   useEffect(() => {
     fetchTeams();
 
@@ -68,7 +91,7 @@ const TournamentBracket = () => {
   const roundStyles = {
     "0W-0L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
     "1W-0L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
-    "1W-1L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" }, // Add style cho vòng 1-1
+    "1W-1L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
     "0W-1L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
   };
 
@@ -183,7 +206,7 @@ const TournamentBracket = () => {
           </div>
 
           <div className="w-full lg:w-1/4 relative">
-            {renderSection("1W-1L", teams[3])}  {/* Hiển thị nhánh 1-1 */}
+            {renderSection("1W-1L", teams[3])}
             <div className="hidden lg:block absolute top-[calc(45%+1rem)] left-full h-[2.5px] w-[50%] bg-secondary"></div>
             <div className="hidden lg:block absolute top-[calc(34%+1rem)] left-[calc(149.5%)] h-20 w-[2px] bg-secondary"></div>
             <div className="hidden lg:block absolute bottom-[calc(35%+5.9rem)] left-full h-[2px] w-[50%] bg-secondary"></div>
