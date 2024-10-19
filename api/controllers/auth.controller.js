@@ -31,14 +31,13 @@ export const ProcessSwissStage = async (req, res) => {
     const round01Matches = await StaticTeam.find({ round: '0-1' });
 
     if (round10Matches.length > 0 || round01Matches.length > 0) {
-      // Nếu đã có dữ liệu cho các vòng này, không cần xử lý lại Swiss stage
       return res.status(200).json({ message: 'Swiss stage already processed for this round' });
     }
 
     const winners = [];
     const losers = [];
 
-    // Sort winners and losers based on score
+    // Xử lý các đội thắng/thua ở round 0-0
     round00Matches.forEach(match => {
       if (match.scoreA > match.scoreB) {
         winners.push(match.teamA);
@@ -47,20 +46,22 @@ export const ProcessSwissStage = async (req, res) => {
         winners.push(match.teamB);
         losers.push(match.teamA);
       }
-      // Skip matches where teams have tied
     });
 
-    // Shuffle the teams once if it hasn't been shuffled
+    // Shuffle the teams
     shuffleArray(winners);
     shuffleArray(losers);
 
-    // Create matchups for 1-0 and 0-1 rounds
+    // Tạo cặp đấu cho nhánh 1-0 (winners) và 0-1 (losers)
     const winnerMatches = createSwissPairs(winners, '1-0');
     const loserMatches = createSwissPairs(losers, '0-1');
 
-    // Save matches using AddBracketSwiss
+    // Save matches
     await Promise.all(winnerMatches.map(match => AddBracketSwiss(match)));
     await Promise.all(loserMatches.map(match => AddBracketSwiss(match)));
+
+    // Tiếp theo là xử lý kết quả các vòng đấu khác
+    await processSubsequentRounds();
 
     res.status(200).json({ message: 'Swiss stage processed successfully', winnerMatches, loserMatches });
   } catch (error) {
@@ -69,7 +70,57 @@ export const ProcessSwissStage = async (req, res) => {
   }
 };
 
-// Utility function to shuffle the teams array
+const processSubsequentRounds = async () => {
+  try {
+    // Tìm các trận đấu ở round 1-0 và 0-1 để xử lý tiếp
+    const round10Matches = await StaticTeam.find({ round: '1-0' });
+    const round01Matches = await StaticTeam.find({ round: '0-1' });
+
+    const playoffTeams = [];
+    const moveToRound11 = [];
+    const eliminatedTeams = [];
+
+    // Xử lý kết quả nhánh 1-0
+    round10Matches.forEach(match => {
+      if (match.scoreA > match.scoreB) {
+        playoffTeams.push(match.teamA);  // Thắng vào playoff
+        moveToRound11.push(match.teamB); // Thua xuống nhánh 1-1
+      } else if (match.scoreA < match.scoreB) {
+        playoffTeams.push(match.teamB);  // Thắng vào playoff
+        moveToRound11.push(match.teamA); // Thua xuống nhánh 1-1
+      }
+    });
+
+    // Xử lý kết quả nhánh 0-1
+    round01Matches.forEach(match => {
+      if (match.scoreA > match.scoreB) {
+        moveToRound11.push(match.teamA);  // Thắng lên nhánh 1-1
+        eliminatedTeams.push(match.teamB);  // Thua bị loại
+      } else if (match.scoreA < match.scoreB) {
+        moveToRound11.push(match.teamB);  // Thắng lên nhánh 1-1
+        eliminatedTeams.push(match.teamA);  // Thua bị loại
+      }
+    });
+
+    // Shuffle các đội vào nhánh 1-1 và tạo cặp đấu
+    shuffleArray(moveToRound11);
+    const round11Matches = createSwissPairs(moveToRound11, '1-1');
+
+    // Lưu các cặp đấu mới
+    await Promise.all(round11Matches.map(match => AddBracketSwiss(match)));
+
+    return {
+      playoffTeams,
+      eliminatedTeams,
+      round11Matches
+    };
+  } catch (error) {
+    console.error('Error processing subsequent rounds:', error);
+    throw error;
+  }
+};
+
+// Hàm trộn mảng
 const shuffleArray = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -77,7 +128,7 @@ const shuffleArray = (array) => {
   }
 };
 
-// Utility function to create pairs from a shuffled list of teams
+// Tạo cặp đấu
 const createSwissPairs = (teams, round) => {
   const matches = [];
   for (let i = 0; i < teams.length; i += 2) {
@@ -85,9 +136,9 @@ const createSwissPairs = (teams, round) => {
       const matchID = `match_${round}_${i / 2}`;
       matches.push({
         teamA: teams[i],
-        scoreA: 0,  // Default score, can be updated later
+        scoreA: 0,
         teamB: teams[i + 1],
-        scoreB: 0,  // Default score, can be updated later
+        scoreB: 0,
         matchID,
         round
       });
@@ -95,7 +146,6 @@ const createSwissPairs = (teams, round) => {
   }
   return matches;
 };
-
 
 export const AddBracketSwiss = async (match) => {
   const { teamA, scoreA, teamB, scoreB, matchID, round } = match;  // Truyền trực tiếp từ match object
