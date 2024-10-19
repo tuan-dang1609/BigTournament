@@ -114,46 +114,30 @@ export const submitPrediction = async (req, res) => {
       return res.status(400).json({ error: 'Invalid input. Please provide userId and answers.' });
     }
 
-    // Find the user's prediction
+    // Find the user's prediction or create new one
     const existingPrediction = await PredictionPickem.findOne({ userId });
-
+    
     if (existingPrediction) {
-      // Loop through new answers and update or add them to existing answers
       answers.forEach((newAnswer) => {
         const existingAnswerIndex = existingPrediction.answers.findIndex(
           (answer) => answer.questionId === newAnswer.questionId
         );
-
         if (existingAnswerIndex !== -1) {
-          // Update existing answer
           existingPrediction.answers[existingAnswerIndex].selectedTeams = newAnswer.selectedTeams;
         } else {
-          // Add new answer if the questionId doesn't exist
           existingPrediction.answers.push(newAnswer);
         }
       });
-
-      // Save the updated prediction
       await existingPrediction.save();
-
-      res.status(200).json({
-        message: 'Prediction updated successfully!',
-        data: existingPrediction,
-      });
     } else {
-      // If no existing prediction, create a new one
-      const newPrediction = new PredictionPickem({
-        userId,
-        answers,
-      });
-
+      const newPrediction = new PredictionPickem({ userId, answers });
       await newPrediction.save();
-
-      res.status(201).json({
-        message: 'Prediction submitted successfully!',
-        data: newPrediction,
-      });
     }
+
+    // After saving, push the task to Bull queue for background processing
+    scoreQueue.add({ userId, answers });
+
+    res.status(200).json({ success: true, message: 'Prediction submitted and processing in the background.' });
   } catch (error) {
     console.error('Error submitting prediction:', error);
     res.status(500).json({ error: 'Internal server error' });
