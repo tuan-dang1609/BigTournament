@@ -1,24 +1,72 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import MyNavbar2 from "../components/Navbar2";
 import { useSelector } from "react-redux";
+import MyNavbar2 from "../components/Navbar2";
+
+// Reusable table row component
+const LeaderboardRow = ({ user, className, isSticky = false, highlightUser = false }) => {
+  return (
+    <tr
+      className={`border-b-[0.1px] ${className} first:border-t-[0.1px] border-opacity-20 ${
+        isSticky ? "border-white text-white" : "border-base-content text-base-content"
+      } transition duration-300 ease-in-out`}
+      style={isSticky ? { height: "60px" } : {}}
+    >
+      <td className={`px-4 py-3 text-left whitespace-nowrap w-[10%] ${isSticky ? '' : 'first:border-0'}`}>
+        <div className="flex items-center justify-center">
+          <span className={`text-[12px] font-semibold md:text-[14px] ${isSticky ? 'md:text-[14px]' : ''}  ${
+            highlightUser ? 'text-primary' : ''
+          }`}>
+            {user.rank}
+          </span>
+        </div>
+      </td>
+      <td className="lg:py-2 lg:px-6 py-3 text-left w-[55%] lg:w-[68%]">
+        <div className="flex items-center">
+          <div className="lg:mr-3 mr-2">
+            <img
+              className={`lg:w-14 lg:h-14 h-12 w-12 rounded-full ${isSticky ? 'lg:w-14 lg:h-14 h-12 w-12' : ''}`}
+              src={`https://drive.google.com/thumbnail?id=${user.avatar}`}
+              alt={`${user.name}'s avatar`}
+            />
+          </div>
+          <span className={`text-[12px] font-semibold md:text-[14px] ${
+            highlightUser ? 'text-primary' : ''
+          }`}>
+            {user.name}
+          </span>
+        </div>
+      </td>
+      <td className="py-3 px-6 text-center lg:w-[25%] w-[32%]">
+        <div className="flex items-center justify-center">
+          <span className={`text-[12px] font-semibold md:text-[16px] ${isSticky ? 'md:text-[16px]' : ''}  ${
+            highlightUser ? 'text-primary' : ''
+          }`}>
+            {user.score} PTS
+          </span>
+        </div>
+      </td>
+    </tr>
+  );
+};
 
 const LeaderboardComponent = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [leaderboardData, setLeaderboardData] = useState([]);
-  const [loading, setLoading] = useState(true); // State to show loading state
-  const [error, setError] = useState(null); // State to handle errors
+  const [rankedLeaderboardData, setRankedLeaderboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [userRank,setUserRank] = useState(null)
+  const [userRank, setUserRank] = useState(null); // State to store user's specific rank data
+
   useEffect(() => {
     const scrollToTop = () => {
-        document.documentElement.scrollTop = 0;
-        setLoading(true);
+      document.documentElement.scrollTop = 0;
+      setLoading(true);
     };
     setTimeout(scrollToTop, 0);
     document.title = "Bảng xếp hạng Dự đoán";
+  }, []);
 
-}, []);
   const navigationAll1 = {
     aov: [
       { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },
@@ -27,15 +75,13 @@ const LeaderboardComponent = () => {
     ]
   };
 
-  const getNavigation = () => navigationAll1.aov; // Assuming always `aov` here
-  const navigation = getNavigation();
+  const getNavigation = () => navigationAll1.aov;
 
-  // Fetch leaderboard data on component mount
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
         const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/leaderboardpickem', {
-          method: 'POST', // If you are using POST, otherwise change to GET
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           }
@@ -44,7 +90,7 @@ const LeaderboardComponent = () => {
         const result = await response.json();
 
         if (response.ok) {
-          setLeaderboardData(result.leaderboard); // Set the leaderboard data
+          setLeaderboardData(result.leaderboard); // Set leaderboard data
         } else {
           throw new Error(result.message || 'Error fetching leaderboard');
         }
@@ -58,123 +104,83 @@ const LeaderboardComponent = () => {
     fetchLeaderboard();
   }, []);
 
+  // Calculate ranks for leaderboard data and find current user's rank
   useEffect(() => {
-    const fetchUserRank = async () => {
-      try {
-        const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/myrankpickem', {
-          method: 'POST', // If you are using POST, otherwise change to GET
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ userID: currentUser._id })
-        });
+    if (leaderboardData.length > 0) {
+      const calculateRanks = (data) => {
+        let rank = 1;
+        let rankedData = [{ ...data[0], rank }];
 
-        const result = await response.json();
-
-        if (response.ok) {
-          setUserRank(result.leaderboard); // Set the leaderboard data
-        } else {
-          throw new Error(result.message || 'Error fetching leaderboard');
+        for (let i = 1; i < data.length; i++) {
+          if (data[i].score === data[i - 1].score) {
+            rankedData.push({ ...data[i], rank });
+          } else {
+            rank = i + 1;
+            rankedData.push({ ...data[i], rank });
+          }
         }
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchUserRank();
-  }, []);
-  useEffect(() => {
-   
-      console.log(userRank)
-    
-  }, [userRank]);
+        return rankedData;
+      };
 
+      const rankedData = calculateRanks(leaderboardData);
+      setRankedLeaderboardData(rankedData); // Update ranked leaderboard data
 
-  // Function to calculate ranks with shared placements
-  const calculateRanks = (data) => {
-    if (data.length === 0) return [];
-
-    let rank = 1; // Start from rank 1
-    let rankedData = [{ ...data[0], rank }]; // Initialize first rank
-
-    for (let i = 1; i < data.length; i++) {
-      // If the score is the same as the previous one, they share the same rank
-      if (data[i].score === data[i - 1].score) {
-        rankedData.push({ ...data[i], rank });
-      } else {
-        // Otherwise, increase the rank based on the current index
-        rank = i + 1;
-        rankedData.push({ ...data[i], rank });
+      // Find current user's rank in the ranked data
+      const currentUserRank = rankedData.find(user => user.name === currentUser.username);
+      if (currentUserRank) {
+        setUserRank({ ...currentUserRank });
       }
     }
-
-    return rankedData;
-  };
+  }, [leaderboardData, currentUser]);
 
   if (loading) {
-    return <>
-      <MyNavbar2 navigation={navigation}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen} />
-      <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-dots loading-lg text-primary"></span>
-      </div>
-    </>;
+    return (
+      <>
+        <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+        <div className="flex justify-center items-center min-h-screen">
+          <span className="loading loading-dots loading-lg text-primary"></span>
+        </div>
+      </>
+    );
   }
 
   if (error) {
     return <div className="text-center py-8 text-red-500">Error: {error}</div>;
   }
 
-  const rankedLeaderboardData = calculateRanks(leaderboardData);
-
   return (
     <>
-      <MyNavbar2 navigation={navigation}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen} />
+      <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       <div className="container mx-auto px-4 py-8 mt-40">
         <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Leaderboard</h2>
         <div className="overflow-hidden">
           <table className="w-[98%] mx-auto">
             <tbody className="text-gray-600 text-sm font-light">
-              {rankedLeaderboardData.map((user, index) => (
-                <tr
-                  key={user._id || `${user.rank}-${index}`} // Use a combination of `user.rank` and `index` to ensure uniqueness
-                  className="border-b-[0.1px] first:border-t-[0.1px] border-base-content text-base-content transition duration-300 ease-in-out"
-                >
-                  <td className="px-4 py-3 text-left whitespace-nowrap">
-                    <div className="flex items-center justify-center">
-                      <span className="text-[14px] font-semibold lg:text-[16px]">{user.rank}</span>
-                    </div>
-                  </td>
-                  <td className="lg:py-2 lg:px-6 py-3 text-left">
-                    <div className="flex items-center">
-                      <div className="lg:mr-3 mr-2">
-                        <img
-                          className="lg:w-14 lg:h-14 h-14 w-14 rounded-full"
-                          src={`https://drive.google.com/thumbnail?id=${user.avatar}`} // Assuming the avatar URL is in the `avatar` field
-                          alt={`${user.name}'s avatar`}
-                        />
-                      </div>
-                      <span className="text-[14px] font-semibold lg:text-[14px]">{user.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-6 text-center">
-                    <div className="flex items-center justify-center">
-                      <span className="text-[15px] font-semibold lg:text-[16px]">{user.score}</span> {/* Display user's score */}
-                    </div>
-                  </td>
-                </tr>
+              {rankedLeaderboardData.slice(0, 20).map((user, index) => (
+                <LeaderboardRow 
+                className="last:!border-b-0"
+                  key={user._id || `${user.rank}-${index}`} 
+                  user={user}
+                  highlightUser={user.name === currentUser.username} // Add text-primary class if user is current user
+                />
               ))}
             </tbody>
           </table>
         </div>
       </div>
+      {userRank && (
+        <div className="fixed bottom-0 w-full bg-black border-opacity-20 py-1 text-white flex items-center justify-between border-t-[0.1px] border-white">
+          <div className="container mx-auto px-4">
+            <table className="w-[98%] mx-auto">
+              <tbody>
+                <LeaderboardRow user={userRank} className="first:!border-t-0" isSticky={true} />
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </>
-
   );
 };
 
