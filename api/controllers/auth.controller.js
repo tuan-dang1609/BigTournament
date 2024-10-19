@@ -9,6 +9,8 @@ import TeamRegister from '../models/registergame.model.js'
 import PredictionPickem from '../models/response.model.js';
 import CorrectAnswersSubmit from '../models/correctanswer.model.js';
 import AllUserScore from '../models/alluserscore.model.js';
+import Queue from 'bull';
+const scoreQueue = new Queue('score-processing');
 export const signup = async (req, res, next) => {
   const { riotID, username, password, discordID } = req.body;
   try {
