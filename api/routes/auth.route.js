@@ -1,5 +1,5 @@
 import express from 'express';
-import { signin, signup, signout,ProcessSwissStage ,FindBracketSwiss,getUserPickemScore,AddBracketSwiss, comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
+import { signin, signup, signout,AddBracketSwiss2 ,ProcessSwissStage ,FindBracketSwiss,getUserPickemScore,AddBracketSwiss, comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
@@ -24,6 +24,7 @@ router.post('/comparepredictions', comparePredictions);
 router.post('/leaderboardpickem', leaderboardpickem)
 router.post('/myrankpickem', getUserPickemScore)
 router.post('/addswissstage', AddBracketSwiss)
+router.post('/addswissstage2', AddBracketSwiss2)
 router.post('/findswissstage', FindBracketSwiss)
 router.post('/process-swiss-stage',ProcessSwissStage )
 router.post('/registerAOV', async (req, res) => {

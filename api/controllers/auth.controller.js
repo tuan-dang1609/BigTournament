@@ -16,19 +16,30 @@ const scoreQueue = new Queue('score-processing');
 let shuffledOnce = false;  // Đảm bảo chỉ xáo 1 lần duy nhất
 
 // Hàm chính xử lý Swiss Stage
+// ProcessSwissStage only once per round
 export const ProcessSwissStage = async (req, res) => {
   try {
-    const matches = await StaticTeam.find({ round: '0-0' });
+    // Find all matches in the current round (e.g., "0-0")
+    const round00Matches = await StaticTeam.find({ round: '0-0' });
 
-    if (!matches.length) {
+    if (!round00Matches.length) {
       return res.status(404).json({ message: 'No matches found in round 0-0' });
+    }
+
+    // Kiểm tra xem đã có dữ liệu cho các vòng 1-0 và 0-1 chưa
+    const round10Matches = await StaticTeam.find({ round: '1-0' });
+    const round01Matches = await StaticTeam.find({ round: '0-1' });
+
+    if (round10Matches.length > 0 || round01Matches.length > 0) {
+      // Nếu đã có dữ liệu cho các vòng này, không cần xử lý lại Swiss stage
+      return res.status(200).json({ message: 'Swiss stage already processed for this round' });
     }
 
     const winners = [];
     const losers = [];
 
-    // Phân loại đội thắng và thua dựa trên điểm số
-    matches.forEach(match => {
+    // Sort winners and losers based on score
+    round00Matches.forEach(match => {
       if (match.scoreA > match.scoreB) {
         winners.push(match.teamA);
         losers.push(match.teamB);
@@ -36,27 +47,18 @@ export const ProcessSwissStage = async (req, res) => {
         winners.push(match.teamB);
         losers.push(match.teamA);
       }
+      // Skip matches where teams have tied
     });
 
-    if (!shuffledOnce) {
-      shuffleArray(winners);
-      shuffleArray(losers);
-      shuffledOnce = true;
-    }
+    // Shuffle the teams once if it hasn't been shuffled
+    shuffleArray(winners);
+    shuffleArray(losers);
 
+    // Create matchups for 1-0 and 0-1 rounds
     const winnerMatches = createSwissPairs(winners, '1-0');
     const loserMatches = createSwissPairs(losers, '0-1');
 
-    // Kiểm tra dữ liệu trước khi gọi AddBracketSwiss
-    winnerMatches.forEach(match => {
-      console.log("Winner Match:", match);  // In ra để kiểm tra
-    });
-
-    loserMatches.forEach(match => {
-      console.log("Loser Match:", match);  // In ra để kiểm tra
-    });
-
-    // Lưu các trận đấu
+    // Save matches using AddBracketSwiss
     await Promise.all(winnerMatches.map(match => AddBracketSwiss(match)));
     await Promise.all(loserMatches.map(match => AddBracketSwiss(match)));
 
@@ -67,7 +69,7 @@ export const ProcessSwissStage = async (req, res) => {
   }
 };
 
-// Hàm xáo trộn mảng
+// Utility function to shuffle the teams array
 const shuffleArray = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -75,7 +77,7 @@ const shuffleArray = (array) => {
   }
 };
 
-// Hàm tạo cặp đấu từ danh sách đội đã xáo trộn
+// Utility function to create pairs from a shuffled list of teams
 const createSwissPairs = (teams, round) => {
   const matches = [];
   for (let i = 0; i < teams.length; i += 2) {
@@ -83,9 +85,9 @@ const createSwissPairs = (teams, round) => {
       const matchID = `match_${round}_${i / 2}`;
       matches.push({
         teamA: teams[i],
-        scoreA: 0,  // Điểm mặc định, có thể cập nhật sau
+        scoreA: 0,  // Default score, can be updated later
         teamB: teams[i + 1],
-        scoreB: 0,  // Điểm mặc định, có thể cập nhật sau
+        scoreB: 0,  // Default score, can be updated later
         matchID,
         round
       });
@@ -93,6 +95,7 @@ const createSwissPairs = (teams, round) => {
   }
   return matches;
 };
+
 
 export const AddBracketSwiss = async (match) => {
   const { teamA, scoreA, teamB, scoreB, matchID, round } = match;  // Truyền trực tiếp từ match object
@@ -119,7 +122,25 @@ export const AddBracketSwiss = async (match) => {
     throw new Error('Failed to create team');
   }
 };
+export const AddBracketSwiss2 = async (req, res) => {
+  const { teamA, scoreA, teamB, scoreB, matchID, round } = req.body;
 
+  const newTeam = new StaticTeam({
+    teamA,
+    scoreA,
+    teamB,
+    scoreB,
+    matchID,
+    round
+  });
+
+  try {
+    await newTeam.save();
+    res.status(201).json(newTeam);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create team' });
+  }
+};
 export const FindBracketSwiss = async (req, res) => {
   try {
     const teams = await StaticTeam.find(); 
