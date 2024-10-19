@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import helmet from 'helmet'; // Import helmet để tăng cường bảo mật
 import userRoutes from './routes/user.route.js';
 import authRoutes from './routes/auth.route.js';
 import cookieParser from 'cookie-parser';
@@ -8,22 +9,22 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import axios from 'axios';
-import NodeCache from 'node-cache'; // Caching in memory
-import rateLimit from 'express-rate-limit'; // Rate limiting to avoid overload
-import { Server } from 'socket.io'; // WebSocket for real-time data
-import compression from 'compression'; // Gzip compression
-import Queue from 'bull'; // Bull for background processing
+import NodeCache from 'node-cache';
+import rateLimit from 'express-rate-limit';
+import { Server } from 'socket.io';
+import compression from 'compression';
+import Queue from 'bull';
 
 dotenv.config();
 
-// Connection Pooling với MongoDB cùng tối ưu hóa
+// Kết nối MongoDB với các cài đặt connection pooling
 mongoose
   .connect(process.env.MONGO, {
-    maxPoolSize: 400,       // Tối đa 400 kết nối để tránh quá tải
-    minPoolSize: 10,        // Tối thiểu 10 kết nối luôn sẵn sàng
-    maxIdleTimeMS: 15000,   // Đóng các kết nối không sử dụng sau 15 giây
-    waitQueueTimeoutMS: 10000, // Thời gian chờ tối đa cho kết nối là 10 giây
-    socketTimeoutMS: 60000,    // Thời gian tối đa giữ kết nối mở, nếu không có phản hồi thì đóng
+    maxPoolSize: 400,
+    minPoolSize: 10,
+    maxIdleTimeMS: 15000,
+    waitQueueTimeoutMS: 10000,
+    socketTimeoutMS: 60000,
   })
   .then(() => {
     console.log('Connected to MongoDB with optimized connection pooling');
@@ -32,32 +33,52 @@ mongoose
     console.log(err);
   });
 
-// Use import.meta.url to get the __dirname equivalent
+// Sử dụng import.meta.url để lấy __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const cache = new NodeCache({ stdTTL: 300, checkperiod: 320 }); // Cache TTL = 5 phút
 
-const scoreQueue = new Queue('score-processing'); // Bull for background processing
+// Cài đặt bảo mật với Helmet
+app.use(helmet()); // Kích hoạt toàn bộ các bảo mật của Helmet
+app.use(helmet.hidePoweredBy()); // Ẩn header X-Powered-By để che giấu việc đang sử dụng Express
+app.use(helmet.frameguard({ action: 'deny' })); // Bảo vệ chống clickjacking
+app.use(helmet.xssFilter()); // Kích hoạt bộ lọc XSS
+app.use(helmet.noSniff()); // Ngăn chặn MIME sniffing
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'trusted-cdn.com'], // Thay thế 'trusted-cdn.com' bằng nguồn tin cậy
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  })
+); // Cấu hình CSP
+
+// Tin tưởng proxy (đặc biệt là khi triển khai trên Vercel hoặc các dịch vụ tương tự)
+app.set('trust proxy', 1);
+
+const cache = new NodeCache({ stdTTL: 300, checkperiod: 320 });
+const scoreQueue = new Queue('score-processing'); // Bull để xử lý tác vụ nền
 
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
-app.use(compression()); // Bật gzip compression để giảm kích thước phản hồi
+app.use(compression()); // Gzip để giảm kích thước phản hồi
 
 // Giới hạn số lượng yêu cầu mỗi IP để tránh quá tải
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 phút
-  max: 1000,                 // Giới hạn mỗi IP gửi 1000 yêu cầu
-  message: "Too many requests from this IP, please try again later"
+  windowMs: 15 * 60 * 1000, // 15 phút
+  max: 1000, // Giới hạn mỗi IP gửi 1000 yêu cầu
+  message: 'Too many requests from this IP, please try again later',
 });
 app.use('/api/', limiter);
 
-// Serve static files from the 'client' directory
+// Serve các tệp tĩnh từ thư mục 'client'
 app.use(express.static(path.join(__dirname, '..', 'client')));
 
-// API lấy dữ liệu trận đấu với NodeCache và tối ưu hóa truy vấn lean()
+// API lấy dữ liệu trận đấu với NodeCache
 app.get('/api/match/:region/:matchid', async (req, res) => {
   const { region, matchid } = req.params;
   const cacheKey = `${region}-${matchid}`;
@@ -70,20 +91,19 @@ app.get('/api/match/:region/:matchid', async (req, res) => {
   }
 
   try {
-    // Make the request to the external API using axios
+    // Yêu cầu đến API ngoài
     const response = await axios.get(`https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`, {
       headers: {
-        'Authorization': apiKey
-      }
+        Authorization: apiKey,
+      },
     });
 
     // Lưu vào NodeCache với TTL là 5 phút
     cache.set(cacheKey, response.data, 300);
 
-    // Send the data back to the frontend
+    // Gửi dữ liệu trả về frontend
     res.json(response.data);
   } catch (err) {
-    // Handle any errors from the API request
     res.status(err.response?.status || 500).json({
       success: false,
       message: err.message,
@@ -94,13 +114,13 @@ app.get('/api/match/:region/:matchid', async (req, res) => {
 
 // API lấy nhiều trận đấu với batch requests và pagination
 app.get('/api/matches', async (req, res) => {
-  const { page = 1, limit = 10, matchids } = req.query;  // Mặc định là trang 1, 10 kết quả mỗi trang
+  const { page = 1, limit = 10, matchids } = req.query;
 
   try {
     const matches = await MatchModel.find({ matchid: { $in: matchids.split(',') } })
       .limit(limit * 1)
       .skip((page - 1) * limit)
-      .lean() // Tối ưu hóa với lean để trả về đối tượng nhẹ hơn
+      .lean()
       .exec();
 
     const count = await MatchModel.countDocuments();
@@ -108,7 +128,7 @@ app.get('/api/matches', async (req, res) => {
     res.json({
       matches,
       totalPages: Math.ceil(count / limit),
-      currentPage: page
+      currentPage: page,
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -123,8 +143,6 @@ const server = app.listen(process.env.PORT || 3000, () => {
 const io = new Server(server);
 io.on('connection', (socket) => {
   console.log('a user connected');
-
-  // Gửi dữ liệu thời gian thực cho client
   socket.emit('match update', { matchId: '1234', status: 'ongoing' });
 
   socket.on('disconnect', () => {
@@ -132,17 +150,14 @@ io.on('connection', (socket) => {
   });
 });
 
-
-
 // Xử lý tính toán điểm trong hàng đợi Bull
 scoreQueue.process(async (job) => {
   const { userId, predictions } = job.data;
-  // Xử lý tính toán điểm cho dự đoán
   console.log(`Processing score for user ${userId}`);
-  // ... Xử lý logic tính điểm ...
+  // Logic xử lý tính toán điểm
 });
 
-// Fallback route to serve the frontend application
+// Route dự phòng để phục vụ ứng dụng frontend
 app.get('*', (req, res) => {
   const filePath = path.join(__dirname, '..', 'client', 'index.html');
   res.sendFile(filePath, (err) => {
@@ -156,11 +171,11 @@ app.get('*', (req, res) => {
   });
 });
 
-// Routes for user and auth APIs
+// Routes cho API user và auth
 app.use('/api/user', userRoutes);
 app.use('/api/auth', authRoutes);
 
-// Error handling middleware
+// Middleware xử lý lỗi
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
@@ -171,7 +186,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Giám sát sức khỏe kết nối MongoDB
+// Giám sát kết nối MongoDB
 setInterval(async () => {
   try {
     await mongoose.connection.db.admin().ping();
