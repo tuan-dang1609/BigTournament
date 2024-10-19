@@ -18,11 +18,10 @@ let shuffledOnce = false;  // Đảm bảo chỉ xáo 1 lần duy nhất
 // Hàm chính xử lý Swiss Stage
 export const ProcessSwissStage = async (req, res) => {
   try {
-    // Lấy tất cả các trận đấu trong round hiện tại (ví dụ: "0-0")
     const matches = await StaticTeam.find({ round: '0-0' });
 
     if (!matches.length) {
-      return res.status(404).json({ message: 'Không tìm thấy trận đấu nào trong round 0-0' });
+      return res.status(404).json({ message: 'No matches found in round 0-0' });
     }
 
     const winners = [];
@@ -37,28 +36,34 @@ export const ProcessSwissStage = async (req, res) => {
         winners.push(match.teamB);
         losers.push(match.teamA);
       }
-      // Bỏ qua nếu 2 đội hòa nhau
     });
 
-    // Xáo các đội nếu chưa xáo lần nào
     if (!shuffledOnce) {
       shuffleArray(winners);
       shuffleArray(losers);
-      shuffledOnce = true;  // Đánh dấu là đã xáo
+      shuffledOnce = true;
     }
 
-    // Tạo cặp đấu cho các nhánh 1-0 và 0-1
     const winnerMatches = createSwissPairs(winners, '1-0');
     const loserMatches = createSwissPairs(losers, '0-1');
 
-    // Lưu trận đấu vào cơ sở dữ liệu bằng AddBracketSwiss
+    // Kiểm tra dữ liệu trước khi gọi AddBracketSwiss
+    winnerMatches.forEach(match => {
+      console.log("Winner Match:", match);  // In ra để kiểm tra
+    });
+
+    loserMatches.forEach(match => {
+      console.log("Loser Match:", match);  // In ra để kiểm tra
+    });
+
+    // Lưu các trận đấu
     await Promise.all(winnerMatches.map(match => AddBracketSwiss(match)));
     await Promise.all(loserMatches.map(match => AddBracketSwiss(match)));
 
-    res.status(200).json({ message: 'Xử lý Swiss stage thành công', winnerMatches, loserMatches });
+    res.status(200).json({ message: 'Swiss stage processed successfully', winnerMatches, loserMatches });
   } catch (error) {
-    console.error('Lỗi khi xử lý Swiss stage:', error);
-    res.status(500).json({ error: 'Không thể xử lý Swiss stage' });
+    console.error('Error processing Swiss stage:', error);
+    res.status(500).json({ error: 'Failed to process Swiss stage' });
   }
 };
 
@@ -89,8 +94,13 @@ const createSwissPairs = (teams, round) => {
   return matches;
 };
 
-export const AddBracketSwiss = async (req, res) => {
-  const { teamA, scoreA, teamB, scoreB, matchID, round } = req.body;
+export const AddBracketSwiss = async (match) => {
+  const { teamA, scoreA, teamB, scoreB, matchID, round } = match;  // Truyền trực tiếp từ match object
+
+  if (!teamA || !teamB) {
+    console.error('Missing team data:', match);  // In ra lỗi nếu thiếu dữ liệu
+    throw new Error('Missing team data');
+  }
 
   const newTeam = new StaticTeam({
     teamA,
@@ -103,9 +113,10 @@ export const AddBracketSwiss = async (req, res) => {
 
   try {
     await newTeam.save();
-    res.status(201).json(newTeam);
+    return newTeam;
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create team' });
+    console.error('Failed to create team:', error);
+    throw new Error('Failed to create team');
   }
 };
 
