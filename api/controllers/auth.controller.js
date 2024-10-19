@@ -12,6 +12,83 @@ import AllUserScore from '../models/alluserscore.model.js';
 import Queue from 'bull';
 import StaticTeam from '../models/bracket.model.js';
 const scoreQueue = new Queue('score-processing');
+
+let shuffledOnce = false;  // Đảm bảo chỉ xáo 1 lần duy nhất
+
+// Hàm chính xử lý Swiss Stage
+export const ProcessSwissStage = async (req, res) => {
+  try {
+    // Lấy tất cả các trận đấu trong round hiện tại (ví dụ: "0-0")
+    const matches = await StaticTeam.find({ round: '0-0' });
+
+    if (!matches.length) {
+      return res.status(404).json({ message: 'Không tìm thấy trận đấu nào trong round 0-0' });
+    }
+
+    const winners = [];
+    const losers = [];
+
+    // Phân loại đội thắng và thua dựa trên điểm số
+    matches.forEach(match => {
+      if (match.scoreA > match.scoreB) {
+        winners.push(match.teamA);
+        losers.push(match.teamB);
+      } else if (match.scoreA < match.scoreB) {
+        winners.push(match.teamB);
+        losers.push(match.teamA);
+      }
+      // Bỏ qua nếu 2 đội hòa nhau
+    });
+
+    // Xáo các đội nếu chưa xáo lần nào
+    if (!shuffledOnce) {
+      shuffleArray(winners);
+      shuffleArray(losers);
+      shuffledOnce = true;  // Đánh dấu là đã xáo
+    }
+
+    // Tạo cặp đấu cho các nhánh 1-0 và 0-1
+    const winnerMatches = createSwissPairs(winners, '1-0');
+    const loserMatches = createSwissPairs(losers, '0-1');
+
+    // Lưu trận đấu vào cơ sở dữ liệu bằng AddBracketSwiss
+    await Promise.all(winnerMatches.map(match => AddBracketSwiss(match)));
+    await Promise.all(loserMatches.map(match => AddBracketSwiss(match)));
+
+    res.status(200).json({ message: 'Xử lý Swiss stage thành công', winnerMatches, loserMatches });
+  } catch (error) {
+    console.error('Lỗi khi xử lý Swiss stage:', error);
+    res.status(500).json({ error: 'Không thể xử lý Swiss stage' });
+  }
+};
+
+// Hàm xáo trộn mảng
+const shuffleArray = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+};
+
+// Hàm tạo cặp đấu từ danh sách đội đã xáo trộn
+const createSwissPairs = (teams, round) => {
+  const matches = [];
+  for (let i = 0; i < teams.length; i += 2) {
+    if (teams[i + 1]) {
+      const matchID = `match_${round}_${i / 2}`;
+      matches.push({
+        teamA: teams[i],
+        scoreA: 0,  // Điểm mặc định, có thể cập nhật sau
+        teamB: teams[i + 1],
+        scoreB: 0,  // Điểm mặc định, có thể cập nhật sau
+        matchID,
+        round
+      });
+    }
+  }
+  return matches;
+};
+
 export const AddBracketSwiss = async (req, res) => {
   const { teamA, scoreA, teamB, scoreB, matchID, round } = req.body;
 
@@ -31,6 +108,7 @@ export const AddBracketSwiss = async (req, res) => {
     res.status(500).json({ error: 'Failed to create team' });
   }
 };
+
 export const FindBracketSwiss = async (req, res) => {
   try {
     const teams = await StaticTeam.find(); 
