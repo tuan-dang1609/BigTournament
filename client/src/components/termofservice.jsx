@@ -8,7 +8,7 @@ const TermsOfService = () => {
         <p><strong>Ngày Hiệu Lực:</strong> 15 tháng 10, 2024</p>
 
         <p>
-          Chào mừng bạn đến với [TênỨngDụng] ("ứng dụng", "chúng tôi", "của chúng tôi"). Bằng việc truy cập và sử dụng ứng dụng của chúng tôi, 
+          Chào mừng bạn đến với App ghi nhận data giải đấu Esport Dong Chuyen Nghiep ("ứng dụng", "chúng tôi", "của chúng tôi"). Bằng việc truy cập và sử dụng ứng dụng của chúng tôi, 
           bạn đồng ý tuân theo các Điều Khoản Dịch Vụ dưới đây. Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng không sử dụng ứng dụng.
         </p>
 
