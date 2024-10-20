@@ -28,7 +28,7 @@ const RuleBook = () => {
 
             <Section
                 title="II. Thời Gian Trước Trận Đấu"
-                content={<>Thời gian các bạn phải vào discord trước 10 phút trận đấu bắt đầu để công bằng hơn các bạn phải có mặt trong discord <a className='text-primary' href="https://discord.gg/fFXxUNvj" ><strong>THPT Phú Nhuận</strong></a> để chúng mình dễ kiểm soát được là ai đang chơi trong trận đó. Trường hợp các bạn <strong>THẬT SỰ</strong> bận một việc gì đó phải báo cho admin discord trước 12h trưa hôm diễn ra thi đấu để delay các trận đấu 10-15 phút.</>}
+                content={<>Thời gian các bạn phải vào discord trước 10 phút trận đấu bắt đầu để công bằng hơn các bạn phải có mặt trong discord <a className='text-primary' href="https://discord.gg/fFXxUNvj" ><strong>THPT Phú Nhuận</strong></a> để chúng mình dễ kiểm soát được là ai đang chơi trong trận đó. Trường hợp các bạn <strong>THẬT SỰ</strong> bận một việc gì đó phải báo cho admin discord trước 12h trưa (giờ Việt Nam) hôm diễn ra thi đấu để delay các trận đấu 10-15 phút.</>}
                 rules={[
                     "Mỗi đội có 1 quyền delay trận đấu.",
                     "Phần thời gian dời lịch chúng mình sẽ không giải quyết những trường hợp XIN thay đổi lịch đã được đặt để các bạn thi đấu nên vui lòng các bạn sắp xếp thời gian phù hợp nhé.",
