@@ -10,6 +10,7 @@ import PredictionPickem from '../models/response.model.js';
 import CorrectAnswersSubmit from '../models/correctanswer.model.js';
 import AllUserScore from '../models/alluserscore.model.js';
 import Queue from 'bull';
+import mongoose from 'mongoose';
 const scoreQueue = new Queue('score-processing');
 
 
@@ -263,8 +264,6 @@ export const submitPrediction = async (req, res) => {
   }
 };
 
-
-
 export const leaderboardpickem = async (req, res) => {
   try {
     // Fetch all leaderboard data with a high limit to override potential default limits
@@ -277,8 +276,10 @@ export const leaderboardpickem = async (req, res) => {
     // Create an array to hold the enriched leaderboard data
     const enrichedLeaderboard = await Promise.all(
       leaderboardEntries.map(async (entry) => {
-        // Fetch the corresponding user data using the correct userID field
-        const user = await User.findOne({ userID: entry.userID }).lean(); // Use lean() to fetch plain objects
+        // Fetch the corresponding user data
+        const user = await User.findOne({ _id: entry.userID }).lean(); // Fetch user by _id
+
+        // Check if user exists
         if (user) {
           return {
             name: user.username,           // User's name
@@ -286,6 +287,7 @@ export const leaderboardpickem = async (req, res) => {
             score: entry.totalScore        // User's score
           };
         } else {
+          // If user doesn't exist, return the userID as fallback
           return {
             name: entry.userID,             // Use userID as fallback for name
             avatar: "1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L",  // Default avatar
