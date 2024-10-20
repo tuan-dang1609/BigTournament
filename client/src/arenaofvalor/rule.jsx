@@ -174,10 +174,10 @@ const Conclusion = ({ content, note }) => {
     return (
         <div className="mt-10 text-center">
             <h2 className="text-2xl font-semibold text-secondary">Kết Luận</h2>
-            <p className="text-lg text-base-content mt-4">{content}</p>
+            <p className="text-lg text-base-content font-semibold mt-4">{content}</p>
             <div className="mt-10 text-left">
                 <h3 className="text-xl font-semibold text-error italic">Ghi Chú</h3>
-                <p className="text-[16px] text-base-content mt-2">
+                <p className="text-[16px] text-base-content mt-2 font-semibold">
                     (1) {note}
                 </p>
             </div>
