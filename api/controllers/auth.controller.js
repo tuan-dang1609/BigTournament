@@ -266,9 +266,12 @@ export const submitCorrectAnswer = async (req, res) => {
 
     // Recalculate the score for each user based on the updated correct answers
     const pointSystem = {
-      3: 5,   // Question 3 is worth 5 points per correct answer
-      4: 20,  // Question 4 is worth 20 points per correct answer
-      5: 8    // Question 5 is worth 8 points per correct answer
+      1:10,
+      2:10,
+      3:10,
+      4: 7,   // Question 3 is worth 5 points per correct answer
+      4: 15,  // Question 4 is worth 20 points per correct answer
+      5: 9    // Question 5 is worth 8 points per correct answer
     };
 
     for (const prediction of allPredictions) {
