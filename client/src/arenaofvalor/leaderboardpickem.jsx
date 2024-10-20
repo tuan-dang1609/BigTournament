@@ -4,7 +4,16 @@ import MyNavbar2 from "../components/Navbar2";
 
 // Reusable table row component
 const LeaderboardRow = ({ user, className, isSticky = false, highlightUser = false }) => {
+  useEffect(() => {
+    const scrollToTop = () => {
+        document.documentElement.scrollTop = 0;
+        setLoading(false);
+    };
+    setTimeout(scrollToTop, 0);
+
+}, []);
   return (
+    
     <tr
       className={`border-b-[0.1px] ${className} first:border-t-[0.1px] border-opacity-20 ${
         isSticky ? "border-white text-white" : "border-base-content text-base-content"
