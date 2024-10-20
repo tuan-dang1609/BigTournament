@@ -65,7 +65,7 @@ const RuleBook = () => {
                     "Mỗi trận đấu sẽ được quyền tạm ngưng vì vấn đề kỹ thuật (trường hợp ngoại lệ: wifi bị hư hỏng vì mưa, vịt vào nhà :D, … và những tình huống oái ăm khác) nếu có bằng chứng thuyết phục sau khi đã khắc phục hậu quả nếu không thì chúng mình sẽ xử lý thua cuộc sau khi trận đấu kết thúc.",
                 ]}
                 smallerrules={[
-                    "Trong trường hợp này thì vấn đề về máy móc(pin, hết bộ nhớ, máy móc bị reset, ….) sẽ không được giải quyết và xử lý thua cuộc sau trận vì lý do câu giờ",
+                    "Trong trường hợp này thì vấn đề về máy móc (pin, hết bộ nhớ, máy móc bị reset, ….) sẽ không được giải quyết và xử lý thua cuộc sau trận vì lý do câu giờ",
                     "Trường hợp các bạn bị mất wifi vui lòng dự phòng 3G/4G trước trận để nhanh chóng khắc phục tình trạng, chúng mình sẽ không giải quyết đợi đến khi wifi được khắc phục xong mới bắt đầu trận đấu."
                 ]}
             />
