@@ -49,9 +49,12 @@ export const comparePredictions = async (req, res) => {
 
     // Point system based on questionId
     const pointSystem = {
-      3: 5,   // Question 3 is worth 5 points per correct answer
-      4: 20,  // Question 4 is worth 20 points per correct answer
-      5: 8    // Question 5 is worth 8 points per correct answer
+      1:10,
+      2:10,
+      3:10,
+      4: 7,   // Question 3 is worth 5 points per correct answer
+      4: 15,  // Question 4 is worth 20 points per correct answer
+      5: 9    // Question 5 is worth 8 points per correct answer
     };
 
     // Iterate over the user's predictions
@@ -102,6 +105,108 @@ export const comparePredictions = async (req, res) => {
       totalPossibleChoices,
       totalPoints,
       detailedResults
+    });
+  } catch (error) {
+    console.error('Error comparing predictions:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+export const comparePredictionmultiple = async (req, res) => {
+  try {
+    const { userIds } = req.body;  // Expecting userIds as an array in the request body
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: 'Please provide an array of userIds.' });
+    }
+
+    const results = [];
+
+    // Loop through each userId
+    for (const userId of userIds) {
+      // Fetch the user's predictions by userId
+      const userPrediction = await PredictionPickem.findOne({ userId });
+      if (!userPrediction) {
+        results.push({ userId, message: 'User prediction not found' });
+        continue;  // Skip to the next userId
+      }
+
+      // Fetch the correct answers
+      const correctAnswers = await CorrectAnswersSubmit.findOne();
+      if (!correctAnswers) {
+        return res.status(404).json({ message: 'Correct answers not found' });
+      }
+
+      // Initialize counters
+      let totalCorrectChoices = 0;
+      let totalPossibleChoices = 0;
+      let totalPoints = 0;
+      let detailedResults = [];
+
+      // Point system based on questionId
+      const pointSystem = {
+        1: 10,
+        2: 10,
+        3: 10,
+        4: 15,  
+        5: 9    
+      };
+
+      // Iterate over the user's predictions
+      userPrediction.answers.forEach((userAnswer) => {
+        // Find the corresponding correct answer for the same questionId
+        const correctAnswer = correctAnswers.answers.find(
+          (ans) => ans.questionId === userAnswer.questionId
+        );
+
+        if (correctAnswer) {
+          // Count how many teams the user got right
+          let correctChoicesForQuestion = 0;
+          correctAnswer.correctTeams.forEach((correctTeam) => {
+            if (userAnswer.selectedTeams.includes(correctTeam)) {
+              correctChoicesForQuestion += 1;
+            }
+          });
+
+          // Calculate points for this question
+          const pointsForQuestion = correctChoicesForQuestion * (pointSystem[userAnswer.questionId] || 0);
+          totalPoints += pointsForQuestion;
+
+          // Add detailed result for the question
+          detailedResults.push({
+            questionId: userAnswer.questionId,
+            correctChoices: correctChoicesForQuestion,
+            totalChoices: correctAnswer.correctTeams.length,
+            pointsForQuestion
+          });
+
+          // Increment the total counts
+          totalCorrectChoices += correctChoicesForQuestion;
+          totalPossibleChoices += correctAnswer.correctTeams.length;
+        }
+      });
+
+      // Save the total score to AllUserScore collection
+      await AllUserScore.findOneAndUpdate(
+        { userID: userId },  // Find by userId
+        { userID: userId, totalScore: totalPoints },  // Update or set the totalScore
+        { upsert: true, new: true }  // Create a new document if not found, return the updated document
+      );
+
+      // Push result for this userId
+      results.push({
+        userId,
+        message: `User got ${totalCorrectChoices} out of ${totalPossibleChoices} choices correct and earned ${totalPoints} points.`,
+        totalCorrectChoices,
+        totalPossibleChoices,
+        totalPoints,
+        detailedResults
+      });
+    }
+
+    // Return all results
+    res.status(200).json({
+      message: 'Comparison completed successfully for all users.',
+      results
     });
   } catch (error) {
     console.error('Error comparing predictions:', error);
@@ -162,15 +267,18 @@ export const submitPrediction = async (req, res) => {
 
 export const leaderboardpickem = async (req, res) => {
   try {
-    // Fetch the leaderboard data sorted by totalScore
+    // Fetch all leaderboard data with a high limit to override potential default limits
     const leaderboardEntries = await AllUserScore.find({})
       .sort({ totalScore: -1 })  // Sort by totalScore in descending order
+
+    // Log the number of results returned from the query
+    console.log('Number of leaderboard entries:', leaderboardEntries.length);
 
     // Create an array to hold the enriched leaderboard data
     const enrichedLeaderboard = await Promise.all(
       leaderboardEntries.map(async (entry) => {
         // Fetch the corresponding user data
-        const user = await User.findOne({ _id: entry.userID });
+        const user = await User.findOne({ _id: entry.userID }).lean(); // Use lean() to fetch plain objects
         if (user) {
           return {
             name: user.username,           // User's name
@@ -187,19 +295,18 @@ export const leaderboardpickem = async (req, res) => {
       })
     );
 
-    // Filter out any null values (in case any user wasn't found)
-    const filteredLeaderboard = enrichedLeaderboard.filter(entry => entry !== null);
-
     // Send the enriched leaderboard data as the response
     res.status(200).json({
       message: 'Leaderboard fetched successfully!',
-      leaderboard: filteredLeaderboard
+      leaderboard: enrichedLeaderboard
     });
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
 export const getUserPickemScore = async (req, res) => {
   try {
     const { userID } = req.body; // Assuming you're sending the userId in the request body
