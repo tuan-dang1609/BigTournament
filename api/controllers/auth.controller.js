@@ -269,7 +269,7 @@ export const leaderboardpickem = async (req, res) => {
   try {
     // Fetch all leaderboard data with a high limit to override potential default limits
     const leaderboardEntries = await AllUserScore.find({})
-      .sort({ totalScore: -1 })  // Sort by totalScore in descending order
+      .sort({ totalScore: -1 }); // Sort by totalScore in descending order
 
     // Log the number of results returned from the query
     console.log('Number of leaderboard entries:', leaderboardEntries.length);
@@ -277,8 +277,8 @@ export const leaderboardpickem = async (req, res) => {
     // Create an array to hold the enriched leaderboard data
     const enrichedLeaderboard = await Promise.all(
       leaderboardEntries.map(async (entry) => {
-        // Fetch the corresponding user data
-        const user = await User.findOne({ _id: entry.userID }).lean(); // Use lean() to fetch plain objects
+        // Fetch the corresponding user data using the correct userID field
+        const user = await User.findOne({ userID: entry.userID }).lean(); // Use lean() to fetch plain objects
         if (user) {
           return {
             name: user.username,           // User's name
