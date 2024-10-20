@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import helmet from 'helmet'; // Import helmet để tăng cường bảo mật
+import helmet from 'helmet'; 
 import userRoutes from './routes/user.route.js';
 import authRoutes from './routes/auth.route.js';
 import cookieParser from 'cookie-parser';
@@ -14,10 +14,11 @@ import rateLimit from 'express-rate-limit';
 import { Server } from 'socket.io';
 import compression from 'compression';
 import Queue from 'bull';
+import Redis from 'ioredis'; // Import Redis
 
 dotenv.config();
 
-// Kết nối MongoDB với các cài đặt connection pooling
+// MongoDB connection with connection pooling settings
 mongoose
   .connect(process.env.MONGO, {
     maxPoolSize: 400,
@@ -33,75 +34,84 @@ mongoose
     console.log(err);
   });
 
-// Sử dụng import.meta.url để lấy __dirname
+// Using import.meta.url to get __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Cài đặt bảo mật với Helmet
-app.use(helmet()); // Kích hoạt toàn bộ các bảo mật của Helmet
-app.use(helmet.hidePoweredBy()); // Ẩn header X-Powered-By để che giấu việc đang sử dụng Express
-app.use(helmet.frameguard({ action: 'deny' })); // Bảo vệ chống clickjacking
-app.use(helmet.xssFilter()); // Kích hoạt bộ lọc XSS
-app.use(helmet.noSniff()); // Ngăn chặn MIME sniffing
+// Helmet security configuration
+app.use(helmet());
+app.use(helmet.hidePoweredBy());
+app.use(helmet.frameguard({ action: 'deny' }));
+app.use(helmet.xssFilter());
+app.use(helmet.noSniff());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'trusted-cdn.com'], // Thay thế 'trusted-cdn.com' bằng nguồn tin cậy
+      scriptSrc: ["'self'", "'unsafe-inline'", 'trusted-cdn.com'], 
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
     },
   })
-); // Cấu hình CSP
+);
 
-// Tin tưởng proxy (đặc biệt là khi triển khai trên Vercel hoặc các dịch vụ tương tự)
 app.set('trust proxy', 1);
 
 const cache = new NodeCache({ stdTTL: 300, checkperiod: 320 });
-const scoreQueue = new Queue('score-processing'); // Bull để xử lý tác vụ nền
+
+// Redis configuration for Bull queue
+const redisOptions = {
+  maxRetriesPerRequest: null,  // Disable retry limit entirely
+  connectTimeout: 10000,       // 10-second connection timeout
+  retryStrategy(times) {
+    const delay = Math.min(times * 50, 2000); // Exponential backoff with max delay of 2 seconds
+    return delay;
+  },
+};
+
+// Pass redisOptions to Bull queue
+const scoreQueue = new Queue('score-processing', {
+  redis: redisOptions,
+});
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
-app.use(compression()); // Gzip để giảm kích thước phản hồi
+app.use(compression());
 
-// Giới hạn số lượng yêu cầu mỗi IP để tránh quá tải
+// Rate limiter
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 phút
-  max: 1000, // Giới hạn mỗi IP gửi 1000 yêu cầu
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
   message: 'Too many requests from this IP, please try again later',
 });
 app.use('/api/', limiter);
 
-// Serve các tệp tĩnh từ thư mục 'client'
+// Serve static files
 app.use(express.static(path.join(__dirname, '..', 'client')));
 
-// API lấy dữ liệu trận đấu với NodeCache
+// API to get match data with NodeCache
 app.get('/api/match/:region/:matchid', async (req, res) => {
   const { region, matchid } = req.params;
   const cacheKey = `${region}-${matchid}`;
   const apiKey = process.env.API_KEY_VALORANT;
 
-  // Kiểm tra cache trước
   const cachedData = cache.get(cacheKey);
   if (cachedData) {
     return res.json(cachedData);
   }
 
   try {
-    // Yêu cầu đến API ngoài
     const response = await axios.get(`https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`, {
       headers: {
         Authorization: apiKey,
       },
     });
 
-    // Lưu vào NodeCache với TTL là 5 phút
     cache.set(cacheKey, response.data, 300);
-
-    // Gửi dữ liệu trả về frontend
     res.json(response.data);
   } catch (err) {
     res.status(err.response?.status || 500).json({
@@ -112,7 +122,6 @@ app.get('/api/match/:region/:matchid', async (req, res) => {
   }
 });
 
-// API lấy nhiều trận đấu với batch requests và pagination
 app.get('/api/matches', async (req, res) => {
   const { page = 1, limit = 10, matchids } = req.query;
 
@@ -135,7 +144,6 @@ app.get('/api/matches', async (req, res) => {
   }
 });
 
-// WebSocket để cập nhật dữ liệu thời gian thực
 const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server listening on port ${process.env.PORT || 3000}`);
 });
@@ -150,14 +158,14 @@ io.on('connection', (socket) => {
   });
 });
 
-// Xử lý tính toán điểm trong hàng đợi Bull
-scoreQueue.process(async (job) => {
+// Bull queue for background score processing with limited concurrency
+scoreQueue.process(5, async (job) => {
   const { userId, predictions } = job.data;
   console.log(`Processing score for user ${userId}`);
-  // Logic xử lý tính toán điểm
+  // Score calculation logic
 });
 
-// Route dự phòng để phục vụ ứng dụng frontend
+// Serve frontend
 app.get('*', (req, res) => {
   const filePath = path.join(__dirname, '..', 'client', 'index.html');
   res.sendFile(filePath, (err) => {
@@ -171,11 +179,9 @@ app.get('*', (req, res) => {
   });
 });
 
-// Routes cho API user và auth
 app.use('/api/user', userRoutes);
 app.use('/api/auth', authRoutes);
 
-// Middleware xử lý lỗi
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
@@ -186,7 +192,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Giám sát kết nối MongoDB
 setInterval(async () => {
   try {
     await mongoose.connection.db.admin().ping();
@@ -194,4 +199,4 @@ setInterval(async () => {
   } catch (err) {
     console.error('MongoDB connection issue:', err);
   }
-}, 60000); // Kiểm tra mỗi 60 giây
+}, 60000);

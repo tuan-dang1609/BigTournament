@@ -111,42 +111,53 @@ export const comparePredictions = async (req, res) => {
 
 export const submitPrediction = async (req, res) => {
   try {
-    const { userId, answers } = req.body;
+    const data = req.body;
 
-    // Validate request body
-    if (!userId || !answers || !Array.isArray(answers)) {
-      return res.status(400).json({ error: 'Invalid input. Please provide userId and answers.' });
+    // Check if the request body is an array (multiple predictions) or a single object (single prediction)
+    const predictions = Array.isArray(data) ? data : [data]; // Ensure predictions is always an array
+
+    // Validate each prediction object
+    for (let prediction of predictions) {
+      const { userId, answers } = prediction;
+
+      if (!userId || !answers || !Array.isArray(answers)) {
+        return res.status(400).json({ error: 'Invalid input. Please provide userId and answers.' });
+      }
+
+      // Find the user's prediction or create new one
+      const existingPrediction = await PredictionPickem.findOne({ userId });
+
+      if (existingPrediction) {
+        answers.forEach((newAnswer) => {
+          const existingAnswerIndex = existingPrediction.answers.findIndex(
+            (answer) => answer.questionId === newAnswer.questionId
+          );
+          if (existingAnswerIndex !== -1) {
+            // Update existing answer
+            existingPrediction.answers[existingAnswerIndex].selectedTeams = newAnswer.selectedTeams;
+          } else {
+            // Add new answer
+            existingPrediction.answers.push(newAnswer);
+          }
+        });
+        await existingPrediction.save();
+      } else {
+        // Create a new prediction document if none exists
+        const newPrediction = new PredictionPickem({ userId, answers });
+        await newPrediction.save();
+      }
+
+      // Push the task to Bull queue for background score processing
+      scoreQueue.add({ userId, answers });
     }
 
-    // Find the user's prediction or create new one
-    const existingPrediction = await PredictionPickem.findOne({ userId });
-    
-    if (existingPrediction) {
-      answers.forEach((newAnswer) => {
-        const existingAnswerIndex = existingPrediction.answers.findIndex(
-          (answer) => answer.questionId === newAnswer.questionId
-        );
-        if (existingAnswerIndex !== -1) {
-          existingPrediction.answers[existingAnswerIndex].selectedTeams = newAnswer.selectedTeams;
-        } else {
-          existingPrediction.answers.push(newAnswer);
-        }
-      });
-      await existingPrediction.save();
-    } else {
-      const newPrediction = new PredictionPickem({ userId, answers });
-      await newPrediction.save();
-    }
-
-    // After saving, push the task to Bull queue for background processing
-    scoreQueue.add({ userId, answers });
-
-    res.status(200).json({ success: true, message: 'Prediction submitted and processing in the background.' });
+    res.status(200).json({ success: true, message: 'Predictions submitted and processing in the background.' });
   } catch (error) {
     console.error('Error submitting prediction:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 export const leaderboardpickem = async (req, res) => {
@@ -167,7 +178,11 @@ export const leaderboardpickem = async (req, res) => {
             score: entry.totalScore        // User's score
           };
         } else {
-          return null;  // Handle case where user is not found (optional)
+          return {
+            name: entry.userID,             // Use userID as fallback for name
+            avatar: "1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L",  // Default avatar
+            score: entry.totalScore         // User's score
+          };
         }
       })
     );
