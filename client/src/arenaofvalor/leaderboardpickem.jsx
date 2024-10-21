@@ -171,7 +171,7 @@ const LeaderboardComponent = () => {
   }, [leaderboardData, currentUser]);
   const TierRewardsTable = ({ userScore, tierScores }) => {
     const tiers = [
-      { name: 'Perfect Picks', score: maxScore, reward: 'Danh hiệu Perfect Pick + TBD', highlight: userScore === maxScore,color: 'yellow'},
+      { name: 'Perfect Picks', score: maxScore, reward: 'Danh hiệu Perfect Pick + TBD', highlight: userScore === maxScore,color: '#D4AF37'},
       { name: 'S', score: tierScores.sTierScore, top: "Top 5%", reward: 'Danh hiệu Tier S + TBD', highlight: userScore >= tierScores.sTierScore && userScore < maxScore, color: '#ff9800' },
       { name: 'A', score: tierScores.aTierScore, top: "Top 20%", reward: 'Danh hiệu Tier A', highlight: userScore >= tierScores.aTierScore && userScore < tierScores.sTierScore, color: '#CC52CE' },
       { name: 'B', score: tierScores.bTierScore, top: "Top 40%", reward: '', highlight: userScore >= tierScores.bTierScore && userScore < tierScores.aTierScore, color: '#00bcd4' },
@@ -266,7 +266,6 @@ const LeaderboardComponent = () => {
 
     // Function to determine the color of the line based on the score (points)
     const getPointColor = (point) => {
-      if (point == maxScore) return 'yellow'; 
       if (point >= sTierScore) return '#ff9800'; // S Tier (orange)
       if (point >= aTierScore) return '#CC52CE'; // A Tier (pink)
       if (point >= bTierScore) return '#00bcd4'; // B Tier (cyan)
@@ -537,7 +536,7 @@ const LeaderboardComponent = () => {
             highlightUser={true}
             tierColor={
               userRank.score == maxScore
-                ? 'yellow'
+                ? '#D4AF37'
               :userRank.score >= tierScores.sTierScore
                 ? '#ff9800' // S Tier
                 : userRank.score >= tierScores.aTierScore
