@@ -19,7 +19,8 @@ const pointSystem = {
   3: 10,
   4: 15,  // Question 4 is worth 15 points per correct answer
   5: 7,    // Question 5 is worth 9 points per correct answer
-  6: 9
+  6: 9,
+  10:10
 };
 export const signup = async (req, res, next) => {
   const { riotID, username, password, discordID } = req.body;
