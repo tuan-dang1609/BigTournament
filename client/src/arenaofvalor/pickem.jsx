@@ -31,7 +31,7 @@ const PickemChallenge = () => {
   const navigationAll1 = {
     aov: [
       { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },
-      { name: "Đoán tổng thể", href: "/arenaofvalor/pickem", current: location.pathname === "/arenaofvalor/pickem" },
+      { name: "Đoán tổng thể", href: "/arenaofvalor/pickemall", current: location.pathname === "/arenaofvalor/pickemall" },
       { name: "Bảng xếp hạng", href: "/arenaofvalor/pickem/leaderboard", current: location.pathname === "/arenaofvalor/pickem/leaderboard" },
 
     ]
