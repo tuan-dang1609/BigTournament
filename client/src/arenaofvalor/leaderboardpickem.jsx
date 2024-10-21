@@ -18,6 +18,7 @@ const LeaderboardComponent = () => {
   const [error, setError] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userRank, setUserRank] = useState(null);
+  const [maxScore, SetMaxScore] = useState(null)
   const [points, setPoints] = useState([]);
   const [counts, setCounts] = useState([]);
 
@@ -44,14 +45,19 @@ const LeaderboardComponent = () => {
 
   const getNavigation = () => navigationAll1.aov;
 
-  const LeaderboardRow = ({ user, className, isSticky = false, highlightUser = false }) => (
+  const LeaderboardRow = ({ user, className, isSticky = false, highlightUser = false, tierColor }) => (
     <tr
-      className={`border-b-[0.1px] ${className} first:border-t-[0.1px] border-opacity-20 ${isSticky ? "border-white text-white" : "border-base-content text-base-content"} transition duration-300 ease-in-out`}
-      style={isSticky ? { height: "60px" } : {}}
+      className={`border-b-[0.1px] ${className} first:border-t-[0.1px] border-opacity-20 ${
+        isSticky ? "border-white text-white" : "border-base-content text-base-content"
+      } transition duration-300 ease-in-out`}
+      style={highlightUser ? { color: tierColor } : {}}
     >
-      <td className={`px-4 py-3 text-left whitespace-nowrap w-[10%] ${isSticky ? '' : 'first:border-0'}`}>
+      <td className={`px-4 py-3 text-left w-[10%] ${isSticky ? '' : 'first:border-0'}`}>
         <div className="flex items-center justify-center">
-          <span className={`text-[12px] font-semibold md:text-[14px] ${highlightUser ? 'text-primary' : ''}`}>
+          <span
+            className={`text-[12px] font-semibold md:text-[14px] ${highlightUser ? '' : ''}`} // Remove text-primary
+            style={highlightUser ? { color: tierColor } : {}}
+          >
             {user.rank}
           </span>
         </div>
@@ -65,20 +71,27 @@ const LeaderboardComponent = () => {
               alt={`${user.name}'s avatar`}
             />
           </div>
-          <span className={`text-[12px] font-semibold md:text-[14px] ${highlightUser ? 'text-primary' : ''}`}>
+          <span
+            className={`text-[12px] font-semibold md:text-[14px] ${highlightUser ? 'text-primary' : ''}`} // Remove text-primary
+            style={highlightUser ? { color: tierColor } : {}}
+          >
             {user.name}
           </span>
         </div>
       </td>
       <td className="py-3 px-6 text-center lg:w-[25%] w-[32%]">
         <div className="flex items-center justify-center">
-          <span className={`text-[12px] font-semibold md:text-[16px] ${highlightUser ? 'text-primary' : ''}`}>
+          <span
+            className={`text-[12px] font-semibold md:text-[16px] ${highlightUser ? 'text-primary' : ''}`} // Remove text-primary
+            style={highlightUser ? { color: tierColor } : {}}
+          >
             {user.score} PTS
           </span>
         </div>
       </td>
     </tr>
   );
+  
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -106,7 +119,32 @@ const LeaderboardComponent = () => {
 
     fetchLeaderboard();
   }, []);
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/maxscore', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
 
+        const result = await response.json();
+
+        if (response.ok) {
+          SetMaxScore(result.totalMaxPoints)
+        } else {
+          throw new Error(result.message || 'Error fetching leaderboard');
+        }
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
   useEffect(() => {
     if (leaderboardData.length > 0) {
       const calculateRanks = (data) => {
@@ -134,7 +172,40 @@ const LeaderboardComponent = () => {
       }
     }
   }, [leaderboardData, currentUser]);
-
+  const TierRewardsTable = ({ userScore, tierScores }) => {
+    const tiers = [
+      { name: 'Perfect Picks', score: maxScore, reward: 'Danh hiệu Perfect Pick + TBD', highlight: false },
+      { name: 'S', score: tierScores.sTierScore,top:"Top 5%", reward: 'Danh hiệu Tier S + TBD', highlight: userScore >= tierScores.sTierScore, color: '#ff9800' },
+      { name: 'A', score: tierScores.aTierScore,top:"Top 20%", reward: 'Danh hiệu Tier A', highlight: userScore >= tierScores.aTierScore && userScore < tierScores.sTierScore, color: '#CC52CE' },
+      { name: 'B', score: tierScores.bTierScore,top:"Top 40%", reward: '', highlight: userScore >= tierScores.bTierScore && userScore < tierScores.aTierScore, color: '#00bcd4' },
+      { name: 'C', score: tierScores.cTierScore,top:"Top 70%", reward: '', highlight: userScore >= tierScores.cTierScore && userScore < tierScores.bTierScore, color: '#4caf50' },
+      
+    ];
+  
+    return (
+      <div className="w-full lg:w-full mx-auto mb-8">
+  <h3 className="text-2xl font-bold text-base-content mb-4 text-center">End of Event Tier Rewards</h3>
+  <table className="xl:w-[100%] w-[95%] mx-auto text-left border-collapse border-base-content">
+    <tbody>
+      {tiers.map((tier, index) => (
+        <tr
+          key={index}
+          className={`border-b-2 border-base-content px-4 ${
+            tier.highlight ? 'font-semibold' : ''
+          }`}
+          style={{ color: tier.highlight ? tier.color : 'inherit' ,borderBottomColor:tier.highlight ? tier.color : 'rgba(128, 128, 128, 0.18)'}}
+        >
+          <td className="border-base-content px-4 py-3 w-[1px] md:w-[20%]">{tier.name}</td> {/* Thay đổi kích thước dựa trên màn hình */}
+          <td className="border-base-content px-4 py-3">{tier.top}</td>
+          <td className="border-base-content px-4 py-3">{tier.score} PTS</td>
+          <td className="border-base-content px-4 py-3 text-right">{tier.reward}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+    );
+  };
   useEffect(() => {
     if (rankedLeaderboardData.length > 0) {
       const sortedData = [...rankedLeaderboardData].sort((a, b) => b.score - a.score);
@@ -200,7 +271,7 @@ const LeaderboardComponent = () => {
     // Function to determine the color of the line based on the score (points)
     const getPointColor = (point) => {
       if (point >= sTierScore) return '#ff9800'; // S Tier (orange)
-      if (point >= aTierScore) return '#e91e63'; // A Tier (pink)
+      if (point >= aTierScore) return '#CC52CE'; // A Tier (pink)
       if (point >= bTierScore) return '#00bcd4'; // B Tier (cyan)
       if (point >= cTierScore) return '#4caf50'; // C Tier (green)
       return '#6A5ACD'; // D Tier (white for no tier)
@@ -237,7 +308,7 @@ const LeaderboardComponent = () => {
           hidden: false, // Ensure it shows in the legend
         },
         {
-          label: 'C Tier',
+          label: 'Tier C',
           borderColor: '#4caf50',
           backgroundColor: 'rgba(255, 255, 255, 0)',
           pointRadius: 0,
@@ -247,7 +318,7 @@ const LeaderboardComponent = () => {
           hidden: false, // Ensure it shows in the legend
         },
         {
-          label: 'B Tier',
+          label: 'Tier B',
           borderColor: '#00bcd4',
           backgroundColor: 'rgba(255, 255, 255, 0)',
           pointRadius: 0,
@@ -257,8 +328,8 @@ const LeaderboardComponent = () => {
           hidden: false, // Ensure it shows in the legend
         },
         {
-          label: 'A Tier',
-          borderColor: '#e91e63',
+          label: 'Tier A',
+          borderColor: '#CC52CE',
           backgroundColor: 'rgba(255, 255, 255, 0)',
           pointRadius: 0,
           borderWidth: 2,
@@ -268,7 +339,7 @@ const LeaderboardComponent = () => {
           hidden: false, // Ensure it shows in the legend
         },
         {
-          label: 'S Tier',
+          label: 'Tier S',
           borderColor: '#ff9800',
           backgroundColor: 'rgba(255, 255, 255, 0)',
           pointRadius: 0,
@@ -320,14 +391,14 @@ const LeaderboardComponent = () => {
             type: 'line',
             xMin: tierScores.aTierIndex,
             xMax: tierScores.aTierIndex,
-            borderColor: '#e91e63',
+            borderColor: '#CC52CE',
             borderWidth: 2,
             borderDash: [10, 5], // Dashed line for A tier
             label: {
               content: 'A Tier',
               enabled: true,
               position: 'end',
-              color: '#e91e63',
+              color: '#CC52CE',
               backgroundColor: 'rgba(233, 30, 99, 0.5)',
               padding: 4,
               font: {
@@ -379,28 +450,38 @@ const LeaderboardComponent = () => {
     scales: {
       x: {
         ticks: {
-          color: "#6A5ACD", // Update X-axis tick color
+          color: "rgba(128, 128, 128,1)", // Màu trắng cho các nhãn tick trên trục X
           callback: function (value) {
-            // Only show ticks at the tier boundary indices
-            if (value === tierScores.sTierIndex || value === tierScores.aTierIndex || value === tierScores.bTierIndex || value === tierScores.cTierIndex) {
-              return points[value]; // Show only the tier boundary labels
+            // Chỉ hiển thị các nhãn tại các chỉ mục tier boundary
+            if (
+              value === tierScores.sTierIndex ||
+              value === tierScores.aTierIndex ||
+              value === tierScores.bTierIndex ||
+              value === tierScores.cTierIndex
+            ) {
+              return points[value]; // Hiển thị nhãn chỉ tại các điểm chỉ mục
             }
-            return ''; // Hide all other labels
+            return ''; // Ẩn tất cả các nhãn khác
           },
         },
         grid: {
-          display: false, // Hide grid lines
+          display: false, // Không hiển thị các đường grid
         },
         title: {
           display: true,
-          text: 'Points',
-          color: "#6A5ACD", // Update X-axis title color
+          text: 'Points', // Tiêu đề trục X
+          color: "rgba(128, 128, 128,1)", // Màu trắng cho tiêu đề trục X
         },
+        border: {
+          color: "rgba(128, 128, 128,1)", // Màu trắng cho đường trục X
+        },
+        display: true, // Hiển thị trục X
       },
       y: {
-        display: false, // Hide the y-axis
+        display: false, // Ẩn trục Y
       },
-    },
+    }
+    
   };
   if (loading) {
     return (
@@ -420,16 +501,17 @@ const LeaderboardComponent = () => {
   return (
     <>
       <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-      <div className="container mx-auto px-4 py-8 mt-40">
+      <div className="container mx-auto px-4 py-8 mt-40 ">
         <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Leaderboard</h2>
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto flex xl:flex-row xl:gap-9 lg:gap-5 flex-col lg:mb-10">
           <div className="bg-base-100 w-full rounded-lg">
             {points.length > 0 && (
-              <div className="lg:w-[80%] w-full lg:h-[320px] h-[250px] mx-auto">
+              <div className="xl:w-[100%] lg:w-[98%] w-[98%] lg:h-[320px] h-[250px] mt-7 mx-auto">
                 <Line data={prepareChartData()} options={{ ...chartOptions, maintainAspectRatio: false }} />
               </div>
             )}
           </div>
+          <TierRewardsTable userScore={userRank ? userRank.score : 0} tierScores={tierScores} />
         </div>
         <div className="overflow-hidden">
           <table className="w-[98%] mx-auto">
@@ -447,16 +529,32 @@ const LeaderboardComponent = () => {
         </div>
       </div>
       {userRank && (
-        <div className="fixed bottom-0 w-full bg-black border-opacity-20 py-1 text-white flex items-center justify-between border-t-[0.1px] border-white">
-          <div className="container mx-auto px-4">
-            <table className="w-[98%] mx-auto">
-              <tbody>
-                <LeaderboardRow user={userRank} className="first:!border-t-0" isSticky={true} />
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+  <div className="fixed bottom-0 w-full bg-black border-opacity-20 py-1 text-white flex items-center justify-between border-t-[0.1px] border-white">
+    <div className="container mx-auto px-4">
+      <table className="w-[98%] mx-auto">
+        <tbody>
+          <LeaderboardRow
+            user={userRank}
+            className="first:!border-t-0"
+            isSticky={true}
+            highlightUser={true}
+            tierColor={
+              userRank.score >= tierScores.sTierScore
+                ? '#ff9800' // S Tier
+                : userRank.score >= tierScores.aTierScore
+                ? '#CC52CE' // A Tier
+                : userRank.score >= tierScores.bTierScore
+                ? '#00bcd4' // B Tier
+                : userRank.score >= tierScores.cTierScore
+                ? '#4caf50' // C Tier
+                : '#6A5ACD' // D Tier (below C tier)
+            }
+          />
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
     </>
   );
 };

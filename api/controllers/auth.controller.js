@@ -13,7 +13,14 @@ import Queue from 'bull';
 import mongoose from 'mongoose';
 const scoreQueue = new Queue('score-processing');
 
-
+const pointSystem = {
+  1: 10,
+  2: 10,
+  3: 10,
+  4: 15,  // Question 4 is worth 15 points per correct answer
+  5: 7,    // Question 5 is worth 9 points per correct answer
+  6: 9
+};
 export const signup = async (req, res, next) => {
   const { riotID, username, password, discordID } = req.body;
   try {
@@ -24,6 +31,37 @@ export const signup = async (req, res, next) => {
     res.status(201).json({ message: 'Tạo tài khoản thành công' });
   } catch (error) {
     return next(errorHandler(500, 'Tạo tài khoản thất bại'));
+  }
+};
+export const calculateMaxPoints = async (req, res) => {
+  try {
+    // Fetch the correct answers
+    const correctAnswers = await CorrectAnswersSubmit.findOne();
+    if (!correctAnswers) {
+      return res.status(404).json({ message: 'Correct answers not found' });
+    }
+
+    // Initialize total points counter
+    let totalMaxPoints = 0;
+
+    // Point system based on questionId
+    
+
+    // Iterate over all correct answers and calculate the maximum points
+    correctAnswers.answers.forEach((correctAnswer) => {
+      // Calculate points for this question based on the number of correct teams
+      const pointsForQuestion = correctAnswer.correctTeams.length * (pointSystem[correctAnswer.questionId] || 0);
+      totalMaxPoints += pointsForQuestion;
+    });
+
+    // Return the total maximum points
+    res.status(200).json({
+      message: `The maximum possible points if all answers are correct is ${totalMaxPoints}.`,
+      totalMaxPoints
+    });
+  } catch (error) {
+    console.error('Error calculating maximum points:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 export const comparePredictions = async (req, res) => {
@@ -49,14 +87,7 @@ export const comparePredictions = async (req, res) => {
     let detailedResults = [];
 
     // Point system based on questionId
-    const pointSystem = {
-      1:10,
-      2:10,
-      3:10,
-      4: 7,   // Question 3 is worth 5 points per correct answer
-      4: 15,  // Question 4 is worth 20 points per correct answer
-      5: 9    // Question 5 is worth 8 points per correct answer
-    };
+    
 
     // Iterate over the user's predictions
     userPrediction.answers.forEach((userAnswer) => {
@@ -144,13 +175,7 @@ export const comparePredictionmultiple = async (req, res) => {
       let detailedResults = [];
 
       // Point system based on questionId
-      const pointSystem = {
-        1: 10,
-        2: 10,
-        3: 10,
-        4: 15,  
-        5: 9    
-      };
+
 
       // Iterate over the user's predictions
       userPrediction.answers.forEach((userAnswer) => {
@@ -388,14 +413,7 @@ export const submitCorrectAnswer = async (req, res) => {
     const allPredictions = await PredictionPickem.find();
 
     // Recalculate the score for each user based on the updated correct answers
-    const pointSystem = {
-      1:10,
-      2:10,
-      3:10,
-      4: 7,   // Question 3 is worth 5 points per correct answer
-      4: 15,  // Question 4 is worth 20 points per correct answer
-      5: 9    // Question 5 is worth 8 points per correct answer
-    };
+
 
     for (const prediction of allPredictions) {
       let totalPoints = 0;
