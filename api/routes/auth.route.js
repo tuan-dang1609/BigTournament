@@ -1,5 +1,5 @@
 import express from 'express';
-import { signin, signup, signout,comparePredictionmultiple,calculateMaxPoints,getUserPickemScore,comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
+import { signin, signup, signout,getResultPerQuestion,comparePredictionmultiple,calculateMaxPoints,getUserPickemScore,comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
@@ -23,6 +23,7 @@ router.post('/addcorrectanswer', submitCorrectAnswer)
 router.post('/comparepredictions', comparePredictions);
 router.post('/leaderboardpickem', leaderboardpickem)
 router.post('/scoreformanyids', comparePredictionmultiple)
+router.post('/getCorrectAnswers', getResultPerQuestion)
 router.post('/maxscore',calculateMaxPoints)
 router.post('/myrankpickem', getUserPickemScore)
 router.post('/registerAOV', async (req, res) => {

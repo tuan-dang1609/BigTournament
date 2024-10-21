@@ -452,6 +452,71 @@ export const submitCorrectAnswer = async (req, res) => {
   }
 };
 
+export const getResultPerQuestion = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    // Validate input
+    if (!userId) {
+      return res.status(400).json({ error: 'Please provide a valid userId.' });
+    }
+
+    // Fetch the user's predictions
+    const userPrediction = await PredictionPickem.findOne({ userId });
+    if (!userPrediction) {
+      return res.status(404).json({ message: 'User prediction not found.' });
+    }
+
+    // Fetch the correct answers
+    const correctAnswers = await CorrectAnswersSubmit.findOne();
+    if (!correctAnswers) {
+      return res.status(404).json({ message: 'Correct answers not found.' });
+    }
+
+    // Initialize an array to store detailed results for each question
+    const detailedResults = [];
+
+    // Iterate over each question in the user's predictions
+    userPrediction.answers.forEach((userAnswer) => {
+      // Find the correct answer for the question
+      const correctAnswer = correctAnswers.answers.find(
+        (ans) => ans.questionId === userAnswer.questionId
+      );
+
+      if (correctAnswer) {
+        let correctChoicesForQuestion = 0;
+
+        // Count how many correct teams the user selected
+        correctAnswer.correctTeams.forEach((correctTeam) => {
+          if (userAnswer.selectedTeams.includes(correctTeam)) {
+            correctChoicesForQuestion += 1;
+          }
+        });
+
+        // Calculate points for this question
+        const pointsForQuestion = correctChoicesForQuestion * (pointSystem[userAnswer.questionId] || 0);
+
+        // Push the result for this question to the detailedResults array
+        detailedResults.push({
+          questionId: userAnswer.questionId,
+          correctChoices: correctChoicesForQuestion,
+          totalChoices: correctAnswer.correctTeams.length,
+          pointsForQuestion,
+          isCorrect: correctChoicesForQuestion === correctAnswer.correctTeams.length
+        });
+      }
+    });
+
+    // Return the detailed results
+    res.status(200).json({
+      message: 'Results fetched successfully.',
+      detailedResults
+    });
+  } catch (error) {
+    console.error('Error fetching results:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 export const finduserPrediction = async (req, res) => {
   try {

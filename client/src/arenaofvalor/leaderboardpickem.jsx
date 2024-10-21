@@ -181,7 +181,7 @@ const LeaderboardComponent = () => {
     return (
       <div className="w-full lg:w-full mx-auto mb-8">
         <h3 className="text-2xl font-bold text-base-content mb-4 text-center">Phần thưởng các Bậc</h3>
-        <table className="xl:w-[100%] w-[95%] mx-auto text-left border-collapse border-base-content">
+        <table className="w-[95%] mx-auto text-left border-collapse border-base-content">
           <tbody>
             {tiers.map((tier, index) => (
               <tr
@@ -500,10 +500,10 @@ const LeaderboardComponent = () => {
       <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       <div className="container mx-auto px-4 py-8 mt-40 ">
         <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Bảng xếp hạng Pick'em Challenge</h2>
-        <div className="container mx-auto flex xl:flex-row xl:gap-8 lg:gap-5 flex-col lg:mb-10">
+        <div className="container mx-auto flex xl:flex-row xl:gap-2 lg:gap-5 flex-col lg:mb-10">
           <div className="bg-base-100 w-full rounded-lg">
             {points.length > 0 && (
-              <div className="xl:w-[99%] w-[98%] lg:h-[320px] h-[250px] mt-7 mx-auto">
+              <div className="xl:w-[100%] w-[98%] lg:h-[320px] h-[250px] mt-7 mx-auto">
                 <Line data={prepareChartData()} options={{ ...chartOptions, maintainAspectRatio: false }} />
               </div>
             )}
