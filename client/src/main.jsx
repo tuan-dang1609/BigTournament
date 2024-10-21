@@ -64,7 +64,7 @@ if (rootElement) {
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
                 <Route path='/arenaofvalor/pickem/leaderboard' element={<LeaderboardComponent />} />
                 <Route path='/profile' element={<Profile />} />
-                <Route path='/arenaofvalor/pickem' element={<PickemChallenge />} />
+                <Route path='/arenaofvalor/pickem/pickemall' element={<PickemChallenge />} />
               </Route>
             </Routes>
             <Footer />
