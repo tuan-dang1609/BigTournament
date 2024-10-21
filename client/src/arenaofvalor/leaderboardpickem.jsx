@@ -55,7 +55,7 @@ const LeaderboardComponent = () => {
       <td className={`px-4 py-3 text-left w-[10%] ${isSticky ? '' : 'first:border-0'}`}>
         <div className="flex items-center justify-center">
           <span
-            className={`text-[12px] font-semibold md:text-[14px] ${highlightUser ? '' : ''}`} // Remove text-primary
+            className={`text-[12px] font-semibold md:text-[14px] ${highlightUser ? 'text-primary' : ''}`} // Remove text-primary
             style={highlightUser ? { color: tierColor } : {}}
           >
             {user.rank}
@@ -94,56 +94,53 @@ const LeaderboardComponent = () => {
   
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/leaderboardpickem', {
+        setLoading(true); // Bắt đầu trạng thái loading
+  
+        // Fetch leaderboard data
+        const leaderboardResponse = fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/leaderboardpickem', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           }
         });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          setLeaderboardData(result.leaderboard);
-        } else {
-          throw new Error(result.message || 'Error fetching leaderboard');
-        }
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLeaderboard();
-  }, []);
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/maxscore', {
+  
+        // Fetch max score
+        const maxScoreResponse = fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/maxscore', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           }
         });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          SetMaxScore(result.totalMaxPoints)
+  
+        // Đợi cả hai API cùng trả về
+        const [leaderboardResult, maxScoreResult] = await Promise.all([
+          leaderboardResponse.then(res => res.json()),
+          maxScoreResponse.then(res => res.json())
+        ]);
+  
+        // Xử lý kết quả từ API
+        if (leaderboardResult.leaderboard) {
+          setLeaderboardData(leaderboardResult.leaderboard);
         } else {
-          throw new Error(result.message || 'Error fetching leaderboard');
+          throw new Error(leaderboardResult.message || 'Error fetching leaderboard');
         }
+  
+        if (maxScoreResult.totalMaxPoints) {
+          SetMaxScore(maxScoreResult.totalMaxPoints);
+        } else {
+          throw new Error(maxScoreResult.message || 'Error fetching max score');
+        }
+  
       } catch (error) {
-        setError(error.message);
+        setError(error.message); // Xử lý lỗi
       } finally {
-        setLoading(false);
+        setLoading(false); // Dừng trạng thái loading khi tất cả API hoàn thành
       }
     };
-
-    fetchLeaderboard();
+  
+    fetchData();
   }, []);
   useEffect(() => {
     if (leaderboardData.length > 0) {
@@ -175,37 +172,36 @@ const LeaderboardComponent = () => {
   const TierRewardsTable = ({ userScore, tierScores }) => {
     const tiers = [
       { name: 'Perfect Picks', score: maxScore, reward: 'Danh hiệu Perfect Pick + TBD', highlight: false },
-      { name: 'S', score: tierScores.sTierScore,top:"Top 5%", reward: 'Danh hiệu Tier S + TBD', highlight: userScore >= tierScores.sTierScore, color: '#ff9800' },
-      { name: 'A', score: tierScores.aTierScore,top:"Top 20%", reward: 'Danh hiệu Tier A', highlight: userScore >= tierScores.aTierScore && userScore < tierScores.sTierScore, color: '#CC52CE' },
-      { name: 'B', score: tierScores.bTierScore,top:"Top 40%", reward: '', highlight: userScore >= tierScores.bTierScore && userScore < tierScores.aTierScore, color: '#00bcd4' },
-      { name: 'C', score: tierScores.cTierScore,top:"Top 70%", reward: '', highlight: userScore >= tierScores.cTierScore && userScore < tierScores.bTierScore, color: '#4caf50' },
-      
+      { name: 'S', score: tierScores.sTierScore, top: "Top 5%", reward: 'Danh hiệu Tier S + TBD', highlight: userScore >= tierScores.sTierScore, color: '#ff9800' },
+      { name: 'A', score: tierScores.aTierScore, top: "Top 20%", reward: 'Danh hiệu Tier A', highlight: userScore >= tierScores.aTierScore && userScore < tierScores.sTierScore, color: '#CC52CE' },
+      { name: 'B', score: tierScores.bTierScore, top: "Top 40%", reward: '', highlight: userScore >= tierScores.bTierScore && userScore < tierScores.aTierScore, color: '#00bcd4' },
+      { name: 'C', score: tierScores.cTierScore, top: "Top 70%", reward: '', highlight: userScore >= tierScores.cTierScore && userScore < tierScores.bTierScore, color: '#4caf50' },
     ];
   
     return (
       <div className="w-full lg:w-full mx-auto mb-8">
-  <h3 className="text-2xl font-bold text-base-content mb-4 text-center">End of Event Tier Rewards</h3>
-  <table className="xl:w-[100%] w-[95%] mx-auto text-left border-collapse border-base-content">
-    <tbody>
-      {tiers.map((tier, index) => (
-        <tr
-          key={index}
-          className={`border-b-2 border-base-content px-4 ${
-            tier.highlight ? 'font-semibold' : ''
-          }`}
-          style={{ color: tier.highlight ? tier.color : 'inherit' ,borderBottomColor:tier.highlight ? tier.color : 'rgba(128, 128, 128, 0.18)'}}
-        >
-          <td className="border-base-content px-4 py-3 w-[1px] md:w-[20%]">{tier.name}</td> {/* Thay đổi kích thước dựa trên màn hình */}
-          <td className="border-base-content px-4 py-3">{tier.top}</td>
-          <td className="border-base-content px-4 py-3">{tier.score} PTS</td>
-          <td className="border-base-content px-4 py-3 text-right">{tier.reward}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+        <h3 className="text-2xl font-bold text-base-content mb-4 text-center">Phần thưởng các Bậc</h3>
+        <table className="xl:w-[100%] w-[95%] mx-auto text-left border-collapse border-base-content">
+          <tbody>
+            {tiers.map((tier, index) => (
+              <tr
+                key={index}
+                className={`border-b-2 border-base-content px-4 ${tier.highlight ? 'font-semibold' : ''}`}
+                style={{ color: tier.highlight ? tier.color : 'inherit', borderBottomColor: tier.highlight ? tier.color : 'rgba(128, 128, 128, 0.18)' }}
+              >
+                {/* Remove extra spaces between tags */}
+                <td className="border-base-content xl:px-4 px-1 py-3 w-[1px] md:w-[20%]">{tier.name}</td>
+                <td className="border-base-content px-4 py-3">{tier.top}</td>
+                <td className="border-base-content px-4 py-3">{tier.score} PTS</td>
+                <td className="border-base-content px-4 py-3 text-right">{tier.reward}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
+  
   useEffect(() => {
     if (rankedLeaderboardData.length > 0) {
       const sortedData = [...rankedLeaderboardData].sort((a, b) => b.score - a.score);
@@ -358,7 +354,7 @@ const LeaderboardComponent = () => {
       legend: {
         labels: {
           filter: (legendItem) => legendItem.text !== 'Number of Users',
-          color: "#6A5ACD", // Update legend text color
+          color: "rgba(128, 128, 128,1)", // Update legend text color
           usePointStyle: true,
         },
         onClick: (e) => { }, // Disable the default legend click behavior
@@ -502,11 +498,11 @@ const LeaderboardComponent = () => {
     <>
       <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       <div className="container mx-auto px-4 py-8 mt-40 ">
-        <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Leaderboard</h2>
-        <div className="container mx-auto flex xl:flex-row xl:gap-9 lg:gap-5 flex-col lg:mb-10">
+        <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Bảng xếp hạng Pick'em Challenge</h2>
+        <div className="container mx-auto flex xl:flex-row xl:gap-8 lg:gap-5 flex-col lg:mb-10">
           <div className="bg-base-100 w-full rounded-lg">
             {points.length > 0 && (
-              <div className="xl:w-[100%] lg:w-[98%] w-[98%] lg:h-[320px] h-[250px] mt-7 mx-auto">
+              <div className="xl:w-[99%] w-[98%] lg:h-[320px] h-[250px] mt-7 mx-auto">
                 <Line data={prepareChartData()} options={{ ...chartOptions, maintainAspectRatio: false }} />
               </div>
             )}
