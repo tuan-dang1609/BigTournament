@@ -10,7 +10,6 @@ import PredictionPickem from '../models/response.model.js';
 import CorrectAnswersSubmit from '../models/correctanswer.model.js';
 import AllUserScore from '../models/alluserscore.model.js';
 import Queue from 'bull';
-import mongoose from 'mongoose';
 const scoreQueue = new Queue('score-processing');
 
 const pointSystem = {
@@ -87,15 +86,7 @@ export const comparePredictions = async (req, res) => {
     let totalPoints = 0;
     let detailedResults = [];
 
-    // Point system based on questionId
-    const pointSystem = {
-      1: 10,
-      2: 10,
-      3: 10,
-      4: 15,
-      5: 7,
-      6: 9
-    };
+
 
     // Iterate over the user's predictions
     userPrediction.answers.forEach((userAnswer) => {
