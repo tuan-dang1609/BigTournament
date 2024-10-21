@@ -294,7 +294,7 @@ export const leaderboardpickem = async (req, res) => {
   try {
     // Fetch all leaderboard data with a high limit to override potential default limits
     const leaderboardEntries = await AllUserScore.find({})
-      .sort({ totalScore: -1 }); // Sort by totalScore in descending order
+      .sort({ totalScore: -1, updatedAt: 1 }); // Sort by totalScore in descending order
 
     // Log the number of results returned from the query
     console.log('Number of leaderboard entries:', leaderboardEntries.length);

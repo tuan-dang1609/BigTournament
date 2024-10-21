@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { FaExclamationCircle } from "react-icons/fa";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheck, faX } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import MyNavbar2 from "../components/Navbar2";
-import Modal from 'react-modal';
+import Modal from "react-modal";
 
 const PickemChallenge = () => {
   const { currentUser } = useSelector((state) => state.user);
@@ -17,6 +19,11 @@ const PickemChallenge = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [tempSelection, setTempSelection] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); // New search state
+  const [detailedResults, setDetailedResults] = useState([]);
+  const [globalCountdown, setGlobalCountdown] = useState(""); // Single countdown for global lock time
+
+  // Global lock time: 22/10 at 2:00 AM (local timezone)
+  const globalLockTime = new Date("2024-10-22T01:00:00");
 
   useEffect(() => {
     const scrollToTop = () => {
@@ -25,7 +32,6 @@ const PickemChallenge = () => {
     };
     setTimeout(scrollToTop, 0);
     document.title = "Pick'em theo toàn giải";
-
   }, []);
 
   const navigationAll1 = {
@@ -33,8 +39,7 @@ const PickemChallenge = () => {
       { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },
       { name: "Đoán tổng thể", href: "/arenaofvalor/pickem/pickemall", current: location.pathname === "/arenaofvalor/pickem/pickemall" },
       { name: "Bảng xếp hạng", href: "/arenaofvalor/pickem/leaderboard", current: location.pathname === "/arenaofvalor/pickem/leaderboard" },
-
-    ]
+    ],
   };
 
   const getNavigation = () => navigationAll1.aov;
@@ -44,17 +49,19 @@ const PickemChallenge = () => {
     const fetchQuestionsAndPredictions = async () => {
       setLoading(true);
       try {
-        const questionResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/getquestions', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }
+        const questionResponse = await fetch("https://dongchuyennghiep-backend.vercel.app/api/auth/getquestions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
         });
         const questionResult = await questionResponse.json();
-        const filteredQuestions = questionResult.data.filter(q => q.type === 'multiple');
+        const filteredQuestions = questionResult.data.filter((q) => q.type === "multiple");
         setQuestions(filteredQuestions);
 
         if (!currentUser?._id) return;
-        const predictionResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUser._id })
+        const predictionResponse = await fetch("https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: currentUser._id }),
         });
         const predictionResult = await predictionResponse.json();
         const answers = predictionResult.data?.answers.reduce((acc, curr) => {
@@ -62,14 +69,49 @@ const PickemChallenge = () => {
           return acc;
         }, {});
         setPredictions(answers || {});
+        const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUser._id })
+        });
+
+        const scoreResult = await scoreResponse.json();
+        setDetailedResults(scoreResult.detailedResults);
+        setLoading(false)
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
       }
     };
     currentUser && fetchQuestionsAndPredictions();
   }, [currentUser]);
+
+  // Single global countdown
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const timeDiff = globalLockTime - now;
+
+      if (timeDiff <= 0) {
+        setGlobalCountdown("Đã hết thời gian. Bạn không thể lựa chọn nữa");
+      } else {
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
+        const seconds = Math.floor((timeDiff / 1000) % 60);
+        setGlobalCountdown(
+          `Lựa chọn sẽ khóa trong ${days.toString().padStart(2, "0")}d ${hours
+            .toString()
+            .padStart(2, "0")}h ${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`
+        );
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value.toLowerCase());
+  };
 
   const openModal = (question) => {
     setCurrentQuestion(question);
@@ -100,32 +142,31 @@ const PickemChallenge = () => {
       try {
         const data = {
           userId: currentUser._id,
-          answers: [{
-            questionId: currentQuestion.id,
-            selectedTeams: tempSelection,
-          }],
+          answers: [
+            {
+              questionId: currentQuestion.id,
+              selectedTeams: tempSelection,
+            },
+          ],
         };
-        // Automatically submit this question when the selection is confirmed
-        const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/submitPrediction', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+        const response = await fetch("https://dongchuyennghiep-backend.vercel.app/api/auth/submitPrediction", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
         });
-  
-        // Check if submission was successful
+
         if (response.ok) {
-          // Fetch the updated score if the submission was successful
-          const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: currentUser._id })
+          const scoreResponse = await fetch("https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: currentUser._id }),
           });
-  
-          // Parse the response and update the total score
+
           const scoreResult = await scoreResponse.json();
+          setDetailedResults(scoreResult.detailedResults);
           setTotalScore(scoreResult.totalPoints || 0);
         } else {
-          console.error('Error submitting selection:', await response.text());
+          console.error("Error submitting selection:", await response.text());
         }
       } catch (error) {
         console.error("Error submitting selection:", error);
@@ -134,20 +175,48 @@ const PickemChallenge = () => {
     closeModal(); // Close modal after submitting
   };
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value.toLowerCase());
+  const getResultIcon = (questionId) => {
+    const result = detailedResults.find((res) => res.questionId === questionId);
+
+    if (result && result.totalChoices === 0) {
+      return null;
+    }
+
+    if (result && result.isTrue) {
+      return (
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-center bg-green-500 rounded-full p-2 w-8 h-8">
+            <FontAwesomeIcon icon={faCheck} color="white" />
+          </div>
+          <div className="bg-gray-600 rounded-md px-2 py-1">
+            <span className="text-white">+{result.pointsForQuestion}</span>
+          </div>
+        </div>
+      );
+    } else if (result && result.totalChoices > 0) {
+      return (
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-center bg-red-500 rounded-full p-2 w-8 h-8">
+            <FontAwesomeIcon icon={faX} color="white" />
+          </div>
+          <div className="bg-gray-600 rounded-md px-2 py-1">
+            <span className="text-white">+0</span>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
   };
 
-  const filteredOptions = currentQuestion?.options.filter(option =>
+  const filteredOptions = currentQuestion?.options.filter((option) =>
     option.name.toLowerCase().includes(searchQuery)
   );
 
   if (loading) {
     return (
       <>
-        <MyNavbar2 navigation={navigation}
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen} />
+        <MyNavbar2 navigation={navigation} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         <div className="flex justify-center items-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
@@ -158,23 +227,37 @@ const PickemChallenge = () => {
   return (
     <>
       <MyNavbar2 navigation={navigation} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-
       <div className="min-h-screen mt-40 mb-20 px-4 sm:px-10 lg:px-8">
-        <form className="lg:p-6 p-1 space-y-6">
-          {questions.map((question) => (
-            <div key={question.id} className="space-y-4">
-              <h3 className="text-lg font-semibold">{question.question}</h3>
-              <div className="mx-1">
+        {/* Single countdown display */}
+        <span className="block text-center text-[20px] text-error font-semibold mt-8 my-5">{globalCountdown}</span>
+
+        <form className="lg:p-2 p-1">
+          {questions.map((question) => {
+            const now = new Date();
+            const isLocked = now >= globalLockTime; // Use global lock time
+
+            return (
+              <div key={question.id} className="mt-8">
+                <h3 className="lg:text-lg text-[17px] font-semibold flex lg:flex-row flex-col lg:items-center gap-x-5 my-2">
+                  {question.question}
+                  {getResultIcon(question.id)}
+                </h3>
                 <div
-                  className="bg-white gap-x-6 border-2 border-gray-300 rounded-lg lg:p-4 py-4 flex items-center justify-center cursor-pointer"
-                  onClick={() => openModal(question)}
+                  className={`mx-1 bg-white gap-x-6 border-2 border-gray-300 rounded-lg lg:p-4 py-4 flex items-center justify-center ${
+                    isLocked ? "opacity-100" : "cursor-pointer"
+                  }`}
+                  onClick={() => !isLocked && openModal(question)}
+                  disabled={isLocked}
                 >
                   {predictions[question.id]?.length > 0 ? (
                     <div className="px-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-5 gap-2 w-full">
                       {predictions[question.id]?.map((team) => {
                         const selectedTeam = question.options.find((option) => option.name === team);
                         return (
-                          <div key={team} className="w-full rounded-lg lg:h-48 h-32 flex flex-col items-center justify-center bg-gradient-to-r from-secondary to-accent text-white bg-gray-200 border-2 border-accent">
+                          <div
+                            key={team}
+                            className="w-full rounded-lg lg:h-48 h-32 flex flex-col items-center justify-center bg-gradient-to-r from-secondary to-accent text-white bg-gray-200 border-2 border-accent"
+                          >
                             {selectedTeam?.logo && (
                               <img
                                 src={`https://drive.google.com/thumbnail?id=${selectedTeam.logo}`}
@@ -194,14 +277,8 @@ const PickemChallenge = () => {
                   )}
                 </div>
               </div>
-              {errors[question.id] && (
-                <p className="text-red-500 text-sm flex items-center">
-                  <FaExclamationCircle className="mr-1" />
-                  {errors[question.id]}
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </form>
       </div>
 
@@ -216,7 +293,6 @@ const PickemChallenge = () => {
       >
         <h2 className="text-lg font-semibold mb-4">{currentQuestion?.question}</h2>
 
-        {/* Search Bar */}
         <input
           type="text"
           value={searchQuery}
@@ -232,7 +308,11 @@ const PickemChallenge = () => {
               type="button"
               onClick={() => handleTeamSelection(option)}
               className={`p-2 rounded-lg text-sm flex flex-col items-center justify-center 
-          ${tempSelection.includes(option.name) ? "bg-gradient-to-r from-secondary to-accent text-white" : "bg-gray-200 text-gray-800 border-2 border-accent"}`}
+              ${
+                tempSelection.includes(option.name)
+                  ? "bg-gradient-to-r from-secondary to-accent text-white"
+                  : "bg-gray-200 text-gray-800 border-2 border-accent"
+              }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               disabled={
@@ -240,7 +320,13 @@ const PickemChallenge = () => {
                 !tempSelection.includes(option.name)
               }
             >
-              {option.logo && <img src={`https://drive.google.com/thumbnail?id=${option.logo}`} alt={option.name} className="w-16 h-16 sm:h-20 sm:w-20 mb-2" />}
+              {option.logo && (
+                <img
+                  src={`https://drive.google.com/thumbnail?id=${option.logo}`}
+                  alt={option.name}
+                  className="w-16 h-16 sm:h-20 sm:w-20 mb-2"
+                />
+              )}
               <p className="sm:text-[14.5px] text-[12px] pb-2 font-semibold">{option.name}</p>
             </motion.button>
           ))}
