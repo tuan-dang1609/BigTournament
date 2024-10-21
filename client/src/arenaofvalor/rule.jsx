@@ -35,9 +35,18 @@ const RuleBook = () => {
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td className="border border-primary px-4 py-2 text-center">500.000 VND</td>
-                                        <td className="border border-primary px-4 py-2 text-center">300.000 VND</td>
-                                        <td className="border border-primary px-4 py-2 text-center">200.000 VND</td>
+                                        <td className="border border-primary px-4 py-2 text-center">
+                                            <span className="hidden lg:inline">500.000 VND</span>
+                                            <span className="lg:hidden inline">500K VND</span>
+                                        </td>
+                                        <td className="border border-primary px-4 py-2 text-center">
+                                            <span className="hidden lg:inline">300.000 VND</span>
+                                            <span className="lg:hidden inline">300K VND</span>
+                                        </td>
+                                        <td className="border border-primary px-4 py-2 text-center">
+                                            <span className="hidden lg:inline">200.000 VND</span>
+                                            <span className="lg:hidden inline">200K VND</span>
+                                        </td>
                                         <td className="border border-primary px-4 py-2 text-center">TBD</td>
                                     </tr>
                                 </tbody>
@@ -99,8 +108,8 @@ const RuleBook = () => {
                 title="V. Địa điểm thi đấu"
                 content={
                     <>
-                       <p>Tất cả các trận đấu thuộc khuôn khổ <strong> GIẢI LIÊN QUÂN MOBILE GIỮA CÁC LỚP TRƯỜNG THPT PHÚ NHUẬN: SEASON 2</strong> sẽ được tổ chức theo hình thức online.
-                       </p>
+                        <p>Tất cả các trận đấu thuộc khuôn khổ <strong> GIẢI LIÊN QUÂN MOBILE GIỮA CÁC LỚP TRƯỜNG THPT PHÚ NHUẬN: SEASON 2</strong> sẽ được tổ chức theo hình thức online.
+                        </p>
                     </>
                 }
             />
@@ -137,7 +146,7 @@ const RuleBook = () => {
                     "Gửi báo cáo cho cơ quan thẩm quyền nếu vi phạm ngoài trường THPT Phú Nhuận.",
                 ]}
             />
-           
+
 
             <Conclusion
                 content="Cảm ơn các bạn đã đọc luật và chúc các bạn có một mùa giải thành công!! Graaaaa"
