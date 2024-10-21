@@ -87,7 +87,14 @@ export const comparePredictions = async (req, res) => {
     let detailedResults = [];
 
     // Point system based on questionId
-    
+    const pointSystem = {
+      1: 10,
+      2: 10,
+      3: 10,
+      4: 15,
+      5: 7,
+      6: 9
+    };
 
     // Iterate over the user's predictions
     userPrediction.answers.forEach((userAnswer) => {
@@ -109,12 +116,13 @@ export const comparePredictions = async (req, res) => {
         const pointsForQuestion = correctChoicesForQuestion * (pointSystem[userAnswer.questionId] || 0);
         totalPoints += pointsForQuestion;
 
-        // Add detailed result for the question
+        // Add detailed result for the question, including isTrue
         detailedResults.push({
           questionId: userAnswer.questionId,
           correctChoices: correctChoicesForQuestion,
           totalChoices: correctAnswer.correctTeams.length,
-          pointsForQuestion
+          pointsForQuestion,
+          isTrue: correctChoicesForQuestion > 0  // Check if user got at least one correct choice
         });
 
         // Increment the total counts
@@ -143,6 +151,7 @@ export const comparePredictions = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 export const comparePredictionmultiple = async (req, res) => {
   try {
     const { userIds } = req.body;  // Expecting userIds as an array in the request body
