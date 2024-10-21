@@ -10,6 +10,7 @@ const optionSchema = new Schema({
 
 // Define questionSchema for each question
 const questionSchema = new Schema({
+  timelock:{type:String},
   id: { type: Number, required: true },  // No unique: true constraint
   question: { type: String, required: true },
   maxChoose: { type: Number, required: true },

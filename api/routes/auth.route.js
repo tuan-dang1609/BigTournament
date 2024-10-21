@@ -113,7 +113,7 @@ router.post('/upsertquestions', async (req, res) => {
         }
 
         for (const question of questions) {
-            if (!question.id || !question.question || !question.maxChoose || !question.type || !question.options || !Array.isArray(question.options)) {
+            if (!question.id || !question.question || !question.maxChoose|| !question.timelock  || !question.type || !question.options || !Array.isArray(question.options)) {
                 return res.status(400).json({
                     error: 'Invalid input. Please provide all required fields (id, question, maxChoose, type, and options).'
                 });
@@ -121,7 +121,8 @@ router.post('/upsertquestions', async (req, res) => {
             // Upsert the question: Update if it exists, otherwise insert a new one
             await QuestionPickem.findOneAndUpdate(
                 { id: question.id }, // Search by question id
-                { 
+                {   
+                    timelock: question.timelock,
                     question: question.question, 
                     maxChoose: question.maxChoose, 
                     type: question.type, 

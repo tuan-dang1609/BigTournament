@@ -53,7 +53,7 @@ const WelcomePage = () => {
                     <p className="animate__animated animate__fadeIn text-xl md:text-xl mb-8 animate-fade-in-up">
                        Được vận hành bởi Dong Chuyen Nghiep
                     </p>
-                    <Link to="/arenaofvalor/pickemmatch">
+                    <Link to="/arenaofvalor/pickem/pickemmatch">
                         <button className="animate__animated animate__fadeInUp bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent text-white font-bold py-4 px-10 rounded-full text-xl transform hover:scale-105 shadow-lg">
                             Chơi ngay
                         </button>
