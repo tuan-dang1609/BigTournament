@@ -466,7 +466,7 @@ const LeaderboardComponent = () => {
         },
         title: {
           display: true,
-          text: 'Points', // Tiêu đề trục X
+          text: 'Điểm', // Tiêu đề trục X
           color: "rgba(128, 128, 128,1)", // Màu trắng cho tiêu đề trục X
         },
         border: {
