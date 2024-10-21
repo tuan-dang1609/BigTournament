@@ -248,8 +248,8 @@ const PickemChallenge = () => {
 
         {tempSelection.length === currentQuestion?.maxChoose && (
           <div className="mt-6 flex justify-end">
-            <button onClick={confirmSelection} className="bg-blue-600 text-white p-2 rounded-lg">
-              Confirm & Submit
+            <button onClick={confirmSelection} className="bg-accent text-white px-2 py-3 rounded-lg">
+              Xác nhận & Gửi
             </button>
           </div>
         )}

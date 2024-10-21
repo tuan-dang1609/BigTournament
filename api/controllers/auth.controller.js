@@ -276,8 +276,8 @@ export const leaderboardpickem = async (req, res) => {
     // Create an array to hold the enriched leaderboard data
     const enrichedLeaderboard = await Promise.all(
       leaderboardEntries.map(async (entry) => {
-        // Fetch the corresponding user data
-        const user = await User.findOne({ _id: entry.userID }).lean(); // Fetch user by _id
+        // Fetch the corresponding user data using userID as a string
+        const user = await User.findOne({ _id: entry.userID }).lean(); // Fetch user by string userID
 
         // Check if user exists
         if (user) {
@@ -307,7 +307,6 @@ export const leaderboardpickem = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 export const getUserPickemScore = async (req, res) => {
   try {

@@ -18,8 +18,16 @@ const LeaderboardComponent = () => {
   const [error, setError] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userRank, setUserRank] = useState(null);
-  const [points, setPoints] = useState([]);  // Points for the x-axis
-  const [counts, setCounts] = useState([]);  // Counts for the y-axis
+  const [points, setPoints] = useState([]);
+  const [counts, setCounts] = useState([]);
+
+  // State to store tier scores
+  const [tierScores, setTierScores] = useState({
+    sTierScore: 0,
+    aTierScore: 0,
+    bTierScore: 0,
+    cTierScore: 0
+  });
 
   useEffect(() => {
     document.documentElement.scrollTop = 0;
@@ -141,38 +149,74 @@ const LeaderboardComponent = () => {
 
       setPoints(pointsData);
       setCounts(countsData);
+
+      // Calculate tier scores based on percentile
+      const totalUsers = rankedLeaderboardData.length;
+
+      const getPercentileScore = (percentile) => {
+        const index = Math.floor((percentile / 100) * totalUsers);
+        return rankedLeaderboardData[index]?.score || 0;
+      };
+
+      const sTierScore = getPercentileScore(5);  // Top 5%
+      const aTierScore = getPercentileScore(20); // Top 20%
+      const bTierScore = getPercentileScore(40); // Top 40%
+      const cTierScore = getPercentileScore(70); // Top 70%
+
+      // Map tier scores to the closest index on the X-axis
+      const getClosestIndex = (score) => {
+        let closestIndex = pointsData.findIndex(point => point >= score);
+        return closestIndex !== -1 ? closestIndex : pointsData.length - 1;
+      };
+
+      const sTierIndex = getClosestIndex(sTierScore);
+      const aTierIndex = getClosestIndex(aTierScore);
+      const bTierIndex = getClosestIndex(bTierScore);
+      const cTierIndex = getClosestIndex(cTierScore);
+
+      // Set the tier scores correctly in state
+      setTierScores({
+        sTierScore,
+        aTierScore,
+        bTierScore,
+        cTierScore,
+        sTierIndex,
+        aTierIndex,
+        bTierIndex,
+        cTierIndex
+      });
+
+      // Log for debugging
+      console.log({ sTierScore, aTierScore, bTierScore, cTierScore });
+      console.log({ sTierIndex, aTierIndex, bTierIndex, cTierIndex });
     }
   }, [rankedLeaderboardData]);
 
   const prepareChartData = () => {
+    const { sTierScore, aTierScore, bTierScore, cTierScore } = tierScores; // Get tier scores from state
     const userScore = userRank ? userRank.score : null;
     const userScoreIndex = points.indexOf(userScore);
 
-    // Function to get the color for a specific point based on its position (tier)
+    // Function to determine the color of the line based on the score (points)
     const getPointColor = (point) => {
-      const totalPoints = Math.max(...points);
-      const tierIndex = Math.floor((point / totalPoints) * 5); // Divide into 5 tiers
-      switch (tierIndex) {
-        case 0: return '#ffffff'; // No Tier
-        case 1: return '#4caf50'; // C Tier
-        case 2: return '#00bcd4'; // B Tier
-        case 3: return '#e91e63'; // A Tier
-        case 4: return '#ff9800'; // S Tier
-        default: return '#f39c12'; // Default color for safety
-      }
+      if (point >= sTierScore) return '#ff9800'; // S Tier (orange)
+      if (point >= aTierScore) return '#e91e63'; // A Tier (pink)
+      if (point >= bTierScore) return '#00bcd4'; // B Tier (cyan)
+      if (point >= cTierScore) return '#4caf50'; // C Tier (green)
+      return '#6A5ACD'; // D Tier (white for no tier)
     };
 
     return {
       labels: points,
       datasets: [
         {
-          label: 'Number of Users', // Main dataset for the line, but we will hide it in the legend
+          label: 'Number of Users',
           data: counts,
-          borderColor: points.map(point => getPointColor(point)), // Dynamic line color based on point
+          borderColor: '#556B2F', // Default border color
           fill: false,
           borderWidth: 2,
           pointBackgroundColor: points.map((point, index) =>
-            index === userScoreIndex ? 'white' : '' // Highlight the user's score with a purple dot
+            index === userScoreIndex ? '#6A5ACD' : '' // Highlight the user's score with a white dot
           ),
           pointRadius: points.map((point, index) =>
             index === userScoreIndex ? 6 : 0 // Larger dot for the current user
@@ -183,19 +227,21 @@ const LeaderboardComponent = () => {
         },
         // Dummy datasets for showing legend labels only
         {
-          label: 'No Tier',
-          borderColor: '#ffffff',
-          backgroundColor: '#ffffff',
+          label: 'Tier D',
+          borderColor: '#6A5ACD',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
           pointRadius: 0,
           data: [], // No actual data, just for legend
           fill: false,
+          borderWidth: 2,
           hidden: false, // Ensure it shows in the legend
         },
         {
           label: 'C Tier',
           borderColor: '#4caf50',
-          backgroundColor: '#4caf50',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
           pointRadius: 0,
+          borderWidth: 2,
           data: [], // No actual data, just for legend
           fill: false,
           hidden: false, // Ensure it shows in the legend
@@ -203,17 +249,20 @@ const LeaderboardComponent = () => {
         {
           label: 'B Tier',
           borderColor: '#00bcd4',
-          backgroundColor: '#00bcd4',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
           pointRadius: 0,
+          borderWidth: 2,
           data: [], // No actual data, just for legend
           fill: false,
-          hidden: false, // Ensure it shows in the legen
+          hidden: false, // Ensure it shows in the legend
         },
         {
           label: 'A Tier',
           borderColor: '#e91e63',
-          backgroundColor: '#e91e63',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
           pointRadius: 0,
+          borderWidth: 2,
+          borderWidth: 2,
           data: [], // No actual data, just for legend
           fill: false,
           hidden: false, // Ensure it shows in the legend
@@ -221,8 +270,9 @@ const LeaderboardComponent = () => {
         {
           label: 'S Tier',
           borderColor: '#ff9800',
-          backgroundColor: '#ff9800',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
           pointRadius: 0,
+          borderWidth: 2,
           data: [], // No actual data, just for legend
           fill: false,
           hidden: false, // Ensure it shows in the legend
@@ -231,69 +281,97 @@ const LeaderboardComponent = () => {
     };
   };
 
-  // Chart options with specific control over the legend
   const chartOptions = {
     responsive: true,
     plugins: {
       legend: {
         labels: {
-          filter: function (legendItem, chartData) {
-            return legendItem.text !== 'Number of Users'; // Prevent 'Number of Users' from showing
-          },
-          color: '#ffffff', // White labels for the dark background
+          filter: (legendItem) => legendItem.text !== 'Number of Users',
+          color: "#6A5ACD", // Update legend text color
           usePointStyle: true,
         },
-        onClick: (e) => {}, // Disable the default behavior of clicking on a legend
+        onClick: (e) => { }, // Disable the default legend click behavior
       },
       tooltip: {
-        enabled: false, // This will turn off tooltips
+        enabled: false, // Disable tooltips
       },
       annotation: {
         annotations: {
-          // Line for the start of No Tier
-          noTierLine: {
-            type: 'line',
-            xMin: 10,
-            xMax: 10,
-            borderColor: '#ffffff',
-            borderWidth: 2,
-            borderDash: [6, 6],
-          },
-          // Line for the start of C Tier
-          cTierLine: {
-            type: 'line',
-            xMin: 24,
-            xMax: 24,
-            borderColor: '#4caf50',
-            borderWidth: 2,
-            borderDash: [6, 6],
-          },
-          // Line for the start of B Tier
-          bTierLine: {
-            type: 'line',
-            xMin: 39,
-            xMax: 39,
-            borderColor: '#00bcd4',
-            borderWidth: 2,
-            borderDash: [6, 6],
-          },
-          // Line for the start of A Tier
-          aTierLine: {
-            type: 'line',
-            xMin: 53,
-            xMax: 53,
-            borderColor: '#e91e63',
-            borderWidth: 2,
-            borderDash: [6, 6],
-          },
-          // Line for the start of S Tier
           sTierLine: {
             type: 'line',
-            xMin: 84,
-            xMax: 84,
+            xMin: tierScores.sTierIndex,  // Use the calculated index
+            xMax: tierScores.sTierIndex,
             borderColor: '#ff9800',
             borderWidth: 2,
-            borderDash: [6, 6],
+            borderDash: [10, 5], // Dashed line for S tier
+            label: {
+              content: 'S Tier',
+              enabled: true,
+              position: 'end',
+              color: '#ff9800',
+              backgroundColor: 'rgba(255, 152, 0, 0.5)',
+              padding: 4,
+              font: {
+                size: 12,
+              },
+            },
+          },
+          aTierLine: {
+            type: 'line',
+            xMin: tierScores.aTierIndex,
+            xMax: tierScores.aTierIndex,
+            borderColor: '#e91e63',
+            borderWidth: 2,
+            borderDash: [10, 5], // Dashed line for A tier
+            label: {
+              content: 'A Tier',
+              enabled: true,
+              position: 'end',
+              color: '#e91e63',
+              backgroundColor: 'rgba(233, 30, 99, 0.5)',
+              padding: 4,
+              font: {
+                size: 12,
+              },
+            },
+          },
+          bTierLine: {
+            type: 'line',
+            xMin: tierScores.bTierIndex,
+            xMax: tierScores.bTierIndex,
+            borderColor: '#00bcd4',
+            borderWidth: 2,
+            borderDash: [10, 5], // Dashed line for B tier
+            label: {
+              content: 'B Tier',
+              enabled: true,
+              position: 'end',
+              color: '#00bcd4',
+              backgroundColor: 'rgba(0, 188, 212, 0.5)',
+              padding: 4,
+              font: {
+                size: 12,
+              },
+            },
+          },
+          cTierLine: {
+            type: 'line',
+            xMin: tierScores.cTierIndex,
+            xMax: tierScores.cTierIndex,
+            borderColor: '#4caf50',
+            borderWidth: 2,
+            borderDash: [10, 5], // Dashed line for C tier
+            label: {
+              content: 'C Tier',
+              enabled: true,
+              position: 'end',
+              color: '#4caf50',
+              backgroundColor: 'rgba(76, 175, 80, 0.5)',
+              padding: 4,
+              font: {
+                size: 12,
+              },
+            },
           },
         },
       },
@@ -301,13 +379,14 @@ const LeaderboardComponent = () => {
     scales: {
       x: {
         ticks: {
-          color: 'rgba(255, 255, 255, 0.4)', // White color with 0.4 opacity
-          callback: function (value, index, values) {
-            // Define custom ticks for 0, 20, 40, 60, 80
-            return [0, 20, 40, 60, 80, 100].includes(value) ? value : null;
+          color: "#6A5ACD", // Update X-axis tick color
+          callback: function (value) {
+            // Only show ticks at the tier boundary indices
+            if (value === tierScores.sTierIndex || value === tierScores.aTierIndex || value === tierScores.bTierIndex || value === tierScores.cTierIndex) {
+              return points[value]; // Show only the tier boundary labels
+            }
+            return ''; // Hide all other labels
           },
-          min: 0, // Minimum value on the x-axis
-          max: 100, // Maximum value on the x-axis
         },
         grid: {
           display: false, // Hide grid lines
@@ -315,19 +394,14 @@ const LeaderboardComponent = () => {
         title: {
           display: true,
           text: 'Points',
-          color: '#ffffff',
+          color: "#6A5ACD", // Update X-axis title color
         },
       },
       y: {
-        display: false, // Hide y-axis
+        display: false, // Hide the y-axis
       },
     },
   };
-
-
-
-  // In your component's render
-
   if (loading) {
     return (
       <>
@@ -346,13 +420,12 @@ const LeaderboardComponent = () => {
   return (
     <>
       <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-
       <div className="container mx-auto px-4 py-8 mt-40">
         <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Leaderboard</h2>
         <div className="container mx-auto px-4 py-8">
           <div className="bg-base-100 w-full rounded-lg">
             {points.length > 0 && (
-              <div className="w-full h-[200px]"> {/* Set width to 100% and height to 300px */}
+              <div className="lg:w-[80%] w-full lg:h-[320px] h-[250px] mx-auto">
                 <Line data={prepareChartData()} options={{ ...chartOptions, maintainAspectRatio: false }} />
               </div>
             )}
@@ -366,7 +439,7 @@ const LeaderboardComponent = () => {
                   className="last:!border-b-0"
                   key={user._id || `${user.rank}-${index}`}
                   user={user}
-                  highlightUser={user.name === currentUser.username} // Add text-primary class if user is current user
+                  highlightUser={user.name === currentUser.username}
                 />
               ))}
             </tbody>
@@ -389,3 +462,4 @@ const LeaderboardComponent = () => {
 };
 
 export default LeaderboardComponent;
+
