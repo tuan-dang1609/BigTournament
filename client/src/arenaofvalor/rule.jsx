@@ -27,9 +27,17 @@ const RuleBook = () => {
                             <table className="table-auto border-collapse border border-primary w-full">
                                 <thead>
                                     <tr>
-                                        <th className="border border-primary px-4 py-2 text-center">HẠNG 1</th>
-                                        <th className="border border-primary px-4 py-2 text-center">HẠNG 2</th>
-                                        <th className="border border-primary px-4 py-2 text-center">HẠNG 3</th>
+                                        <th className="border border-primary px-4 py-2 text-center">
+                                        <span className="hidden lg:inline">Hạng 1</span>
+                                        <span className="lg:hidden inline">1ST</span>
+                                        </th>
+                                        <th className="border border-primary px-4 py-2 text-center">
+                                        <span className="hidden lg:inline">Hạng 2</span>
+                                        <span className="lg:hidden inline">2ND</span>
+                                        </th>
+                                        <th className="border border-primary px-4 py-2 text-center">
+                                        <span className="hidden lg:inline">Hạng 3</span>
+                                        <span className="lg:hidden inline">3RD</span></th>
                                         <th className="border border-primary px-4 py-2 text-center">Pick'em</th>
                                     </tr>
                                 </thead>
