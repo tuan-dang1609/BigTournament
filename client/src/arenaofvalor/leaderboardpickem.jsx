@@ -196,9 +196,9 @@ const LeaderboardComponent = () => {
     ];
   
     return (
-      <div className="w-full lg:w-full mx-auto mb-8">
+      <div className="mx-auto mb-8 lg:w-[92%] w-full">
         <h3 className="text-2xl font-bold text-base-content mb-4 text-center">Phần thưởng các Bậc</h3>
-        <table className="w-[95%] mx-auto text-left border-collapse border-base-content">
+        <table className=" mx-auto text-left border-collapse border-base-content w-[98%]">
           <tbody>
             {tiers.map((tier, index) => (
               <tr
