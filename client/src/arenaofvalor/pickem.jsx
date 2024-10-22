@@ -23,7 +23,7 @@ const PickemChallenge = () => {
   const [globalCountdown, setGlobalCountdown] = useState(""); // Single countdown for global lock time
 
   // Global lock time: 22/10 at 2:00 AM (local timezone)
-  const globalLockTime = new Date("2024-10-22T19:00:00");
+  const globalLockTime = new Date("2024-10-23T18:30:00");
 
   useEffect(() => {
     const scrollToTop = () => {
@@ -63,6 +63,10 @@ const PickemChallenge = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: currentUser._id }),
         });
+        if (predictionResponse.status === 404) {
+          setLoading(false);
+          return; // Không tiếp tục chạy khi lỗi 404
+        }
         const predictionResult = await predictionResponse.json();
         const answers = predictionResult.data?.answers.reduce((acc, curr) => {
           acc[curr.questionId] = curr.selectedTeams;
@@ -79,7 +83,7 @@ const PickemChallenge = () => {
         setDetailedResults(scoreResult.detailedResults);
         setLoading(false)
       } catch (error) {
-        console.error("Error fetching data:", error);
+        
       }
     };
     currentUser && fetchQuestionsAndPredictions();
@@ -166,18 +170,23 @@ const PickemChallenge = () => {
           setDetailedResults(scoreResult.detailedResults);
           setTotalScore(scoreResult.totalPoints || 0);
         } else {
-          console.error("Error submitting selection:", await response.text());
+          
         }
       } catch (error) {
-        console.error("Error submitting selection:", error);
+        
       }
     }
     closeModal(); // Close modal after submitting
   };
 
   const getResultIcon = (questionId) => {
+    if (!detailedResults) {
+      return null; // Nếu detailedResults không tồn tại, trả về null
+  }
     const result = detailedResults.find((res) => res.questionId === questionId);
-
+    if (result === null) {
+      return ; // Trường hợp result là null thì bỏ qua
+    }
     if (result && result.totalChoices === 0) {
       return null;
     }

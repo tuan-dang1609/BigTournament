@@ -57,15 +57,6 @@ const PickemChallenge = () => {
 
         const teamsData = await teamsResponse.json();
         setUserRegister(teamsData);
-        const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUser._id })
-        });
-
-        const scoreResult = await scoreResponse.json();
-        setDetailedResults(scoreResult.detailedResults); // Update the detailed results with comparison data
-        // Fetch questions
         const questionsResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/getquestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -74,6 +65,25 @@ const PickemChallenge = () => {
         const questionsData = await questionsResponse.json();
         const filteredQuestions = questionsData.data.filter(q => q.type === 'team');
         setQuestions(filteredQuestions);
+        const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUser._id })
+        });
+  
+        if (scoreResponse.status === 404) {
+          setLoading(false);
+          return; // Không tiếp tục chạy khi lỗi 404
+        }
+
+        const scoreResult = await scoreResponse.json();
+        if (!scoreResult) {
+          return null;
+        } else {
+          setDetailedResults(scoreResult.detailedResults);
+        }
+  
+       
         setLoading(false);
         // Sau khi teams và questions đã được fetch xong, tiếp tục fetch checkuserprediction
         if (currentUser?._id) {
@@ -135,7 +145,7 @@ const PickemChallenge = () => {
           const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
           const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
           const seconds = Math.floor((timeDiff / 1000) % 60);
-          newCountdowns[question.id] = `Khóa lựa chọn trong ${days.toString().padStart(2, '0')}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+          newCountdowns[question.id] = `Khóa lựa chọn sau ${days.toString().padStart(2, '0')}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
         }
       });
 
@@ -173,14 +183,13 @@ const PickemChallenge = () => {
           body: JSON.stringify({ userId: currentUser._id })
         });
         const scoreResult = await scoreResponse.json();
-        setSubmitStatus(`Prediction for question ${questionId} submitted successfully!`);
         setDetailedResults(scoreResult.detailedResults); // Update the detailed results
       } else {
         const result = await response.json();
         setSubmitStatus(`Error: ${result.error}`);
       }
     } catch (error) {
-      setSubmitStatus("Error submitting predictions.");
+     
     }
   };
 
@@ -210,9 +219,17 @@ const PickemChallenge = () => {
   };
 
   const getResultIcon = (questionId) => {
-    const result = detailedResults.find(res => res.questionId === questionId);
+    // Kiểm tra nếu detailedResults là undefined hoặc null
+    if (!detailedResults) {
+        return null; // Nếu detailedResults không tồn tại, trả về null
+    }
 
-    // Kiểm tra điều kiện correctChoices = 0
+    const result = detailedResults.find((res) => res.questionId === questionId);
+    
+    if (result === null) {
+      return null; // Trường hợp result là null thì bỏ qua
+    }
+    
     if (result && result.totalChoices === 0) {
       return null;
     }
@@ -242,7 +259,7 @@ const PickemChallenge = () => {
     }
 
     return null;
-  };
+};
 
   if (loading) {
     return (
@@ -269,7 +286,7 @@ const PickemChallenge = () => {
               return (
                 <div key={question.id} className="mb-8">
                   {/* Câu hỏi và timelock */}
-                  <h3 className="text-lg font-semibold mb-4 flex flex-row gap-x-4 items-center">
+                  <h3 className="text-lg font-semibold mb-4 flex lg:flex-row flex-col gap-x-4 items-center">
                     {question.question}
                     {getResultIcon(question.id) ? (
                       getResultIcon(question.id)
