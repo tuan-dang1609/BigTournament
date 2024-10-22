@@ -90,7 +90,7 @@ const PickemChallenge = () => {
   // Single global countdown
   useEffect(() => {
     // Thời gian khóa dựa trên giờ Helsinki cố định
-    const dateInHelsinki = new Date("2024-10-22T18:16:00.000+03:00");
+    const dateInHelsinki = new Date("2024-10-22T18:16:00.000+02:00");
 
     const interval = setInterval(() => {
       const now = new Date(); // Lấy thời gian hiện tại của người dùng
