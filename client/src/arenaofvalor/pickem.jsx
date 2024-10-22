@@ -99,7 +99,7 @@ const PickemChallenge = () => {
         const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
         const seconds = Math.floor((timeDiff / 1000) % 60);
         setGlobalCountdown(
-          `Lựa chọn sẽ khóa trong ${days.toString().padStart(2, "0")}d ${hours
+          `Lựa chọn sẽ khóa trong ${days.toString().padStart(1, "0")}d ${hours
             .toString()
             .padStart(2, "0")}h ${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`
         );
