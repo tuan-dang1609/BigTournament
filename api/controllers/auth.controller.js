@@ -16,6 +16,7 @@ const pointSystem = {
   1: 10,
   2: 10,
   3: 10,
+  9: 10,
   4: 15,  // Question 4 is worth 15 points per correct answer
   5: 7,    // Question 5 is worth 9 points per correct answer
   6: 9,
