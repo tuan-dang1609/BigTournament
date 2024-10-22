@@ -32,7 +32,11 @@ const LeaderboardComponent = () => {
   });
 
   useEffect(() => {
-    document.documentElement.scrollTop = 0;
+    const scrollToTop = () => {
+      document.documentElement.scrollTop = 0;
+      setLoading(false);
+  };
+  setTimeout(scrollToTop, 0);
     document.title = "Bảng xếp hạng Dự đoán";
   }, []);
 
