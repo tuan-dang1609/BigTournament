@@ -216,6 +216,7 @@ const LeaderboardComponent = () => {
       setPoints(pointsData);
       setCounts(countsData);
 
+      // Calculate tier scores based on percentile
       const totalUsers = rankedLeaderboardData.length;
 
       const getPercentileScore = (percentile) => {
@@ -223,12 +224,37 @@ const LeaderboardComponent = () => {
         return rankedLeaderboardData[index]?.score || 0;
       };
 
-      const sTierScore = getPercentileScore(5);
-      const aTierScore = getPercentileScore(20);
-      const bTierScore = getPercentileScore(40);
-      const cTierScore = getPercentileScore(70);
+      const sTierScore = getPercentileScore(5);  // Top 5%
+      const aTierScore = getPercentileScore(20); // Top 20%
+      const bTierScore = getPercentileScore(40); // Top 40%
+      const cTierScore = getPercentileScore(70); // Top 70%
 
-      setTierScores({ sTierScore, aTierScore, bTierScore, cTierScore });
+      // Map tier scores to the closest index on the X-axis
+      const getClosestIndex = (score) => {
+        let closestIndex = pointsData.findIndex(point => point >= score);
+        return closestIndex !== -1 ? closestIndex : pointsData.length - 1;
+      };
+
+      const sTierIndex = getClosestIndex(sTierScore);
+      const aTierIndex = getClosestIndex(aTierScore);
+      const bTierIndex = getClosestIndex(bTierScore);
+      const cTierIndex = getClosestIndex(cTierScore);
+
+      // Set the tier scores correctly in state
+      setTierScores({
+        sTierScore,
+        aTierScore,
+        bTierScore,
+        cTierScore,
+        sTierIndex,
+        aTierIndex,
+        bTierIndex,
+        cTierIndex
+      });
+
+      // Log for debugging
+      console.log({ sTierScore, aTierScore, bTierScore, cTierScore });
+      console.log({ sTierIndex, aTierIndex, bTierIndex, cTierIndex });
     }
   }, [rankedLeaderboardData]);
 
@@ -264,6 +290,58 @@ const LeaderboardComponent = () => {
             borderColor: (ctx) => getPointColor(points[ctx.p0DataIndex]),
           },
         },
+        // Dummy datasets for showing legend labels only
+        {
+          label: 'Tier D',
+          borderColor: '#6A5ACD',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
+          pointRadius: 0,
+          data: [], // No actual data, just for legend
+          fill: false,
+          borderWidth: 2,
+          hidden: false, // Ensure it shows in the legend
+        },
+        {
+          label: 'Tier C',
+          borderColor: '#4caf50',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
+          pointRadius: 0,
+          borderWidth: 2,
+          data: [], // No actual data, just for legend
+          fill: false,
+          hidden: false, // Ensure it shows in the legend
+        },
+        {
+          label: 'Tier B',
+          borderColor: '#00bcd4',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
+          pointRadius: 0,
+          borderWidth: 2,
+          data: [], // No actual data, just for legend
+          fill: false,
+          hidden: false, // Ensure it shows in the legend
+        },
+        {
+          label: 'Tier A',
+          borderColor: '#CC52CE',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
+          pointRadius: 0,
+          borderWidth: 2,
+          borderWidth: 2,
+          data: [], // No actual data, just for legend
+          fill: false,
+          hidden: false, // Ensure it shows in the legend
+        },
+        {
+          label: 'Tier S',
+          borderColor: '#ff9800',
+          backgroundColor: 'rgba(255, 255, 255, 0)',
+          pointRadius: 0,
+          borderWidth: 2,
+          data: [], // No actual data, just for legend
+          fill: false,
+          hidden: false, // Ensure it shows in the legend
+        },
       ],
     };
   };
@@ -279,7 +357,89 @@ const LeaderboardComponent = () => {
         },
         onClick: (e) => {},
       },
-      tooltip: { enabled: false },
+      tooltip: {
+        enabled: false, // Disable tooltips
+      },
+      annotation: {
+        annotations: {
+          sTierLine: {
+            type: 'line',
+            xMin: tierScores.sTierIndex,  // Use the calculated index
+            xMax: tierScores.sTierIndex,
+            borderColor: '#ff9800',
+            borderWidth: 2,
+            borderDash: [10, 5], // Dashed line for S tier
+            label: {
+              content: 'S Tier',
+              enabled: true,
+              position: 'end',
+              color: '#ff9800',
+              backgroundColor: 'rgba(255, 152, 0, 0.5)',
+              padding: 4,
+              font: {
+                size: 12,
+              },
+            },
+          },
+          aTierLine: {
+            type: 'line',
+            xMin: tierScores.aTierIndex,
+            xMax: tierScores.aTierIndex,
+            borderColor: '#CC52CE',
+            borderWidth: 2,
+            borderDash: [10, 5], // Dashed line for A tier
+            label: {
+              content: 'A Tier',
+              enabled: true,
+              position: 'end',
+              color: '#CC52CE',
+              backgroundColor: 'rgba(233, 30, 99, 0.5)',
+              padding: 4,
+              font: {
+                size: 12,
+              },
+            },
+          },
+          bTierLine: {
+            type: 'line',
+            xMin: tierScores.bTierIndex,
+            xMax: tierScores.bTierIndex,
+            borderColor: '#00bcd4',
+            borderWidth: 2,
+            borderDash: [10, 5], // Dashed line for B tier
+            label: {
+              content: 'B Tier',
+              enabled: true,
+              position: 'end',
+              color: '#00bcd4',
+              backgroundColor: 'rgba(0, 188, 212, 0.5)',
+              padding: 4,
+              font: {
+                size: 12,
+              },
+            },
+          },
+          cTierLine: {
+            type: 'line',
+            xMin: tierScores.cTierIndex,
+            xMax: tierScores.cTierIndex,
+            borderColor: '#4caf50',
+            borderWidth: 2,
+            borderDash: [10, 5], // Dashed line for C tier
+            label: {
+              content: 'C Tier',
+              enabled: true,
+              position: 'end',
+              color: '#4caf50',
+              backgroundColor: 'rgba(76, 175, 80, 0.5)',
+              padding: 4,
+              font: {
+                size: 12,
+              },
+            },
+          },
+        },
+      },
     },
     scales: {
       x: {
@@ -297,12 +457,24 @@ const LeaderboardComponent = () => {
             return '';
           },
         },
-        grid: { display: false },
-        title: { display: true, text: 'Điểm', color: "rgba(128, 128, 128,1)" },
-        border: { color: "rgba(128, 128, 128,1)" },
+        grid: {
+          display: false, // Không hiển thị các đường grid
+        },
+        title: {
+          display: true,
+          text: 'Điểm', // Tiêu đề trục X
+          color: "rgba(128, 128, 128,1)", // Màu trắng cho tiêu đề trục X
+        },
+        border: {
+          color: "rgba(128, 128, 128,1)", // Màu trắng cho đường trục X
+        },
+        display: true, // Hiển thị trục X
       },
-      y: { display: false },
+      y: {
+        display: false, // Ẩn trục Y
     },
+    }
+    
   };
 
   if (loading) {
