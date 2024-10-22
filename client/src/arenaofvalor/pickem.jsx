@@ -23,7 +23,7 @@ const PickemChallenge = () => {
   const [globalCountdown, setGlobalCountdown] = useState(""); // Single countdown for global lock time
 
   // Global lock time: 22/10 at 2:00 AM (local timezone)
-  const globalLockTime = new Date("2024-10-23T19:00:00");
+  const globalLockTime = new Date("2024-10-22T19:00:00");
 
   useEffect(() => {
     const scrollToTop = () => {
