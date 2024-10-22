@@ -20,11 +20,9 @@ const PickemChallenge = () => {
   const [tempSelection, setTempSelection] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); // New search state
   const [detailedResults, setDetailedResults] = useState([]);
-  const [globalCountdown, setGlobalCountdown] = useState(""); // Single countdown for global lock time
-
+  const [isLocked, setIsLocked] = useState(false);
+  const [globalCountdown, setGlobalCountdown] = useState(""); // Countdown cho thời gian khóa toàn cầu
   // Global lock time: 22/10 at 2:00 AM (local timezone)
-  const globalLockTime = new Date("2024-10-23T18:30:00");
-
   useEffect(() => {
     const scrollToTop = () => {
       document.documentElement.scrollTop = 0;
@@ -91,26 +89,32 @@ const PickemChallenge = () => {
 
   // Single global countdown
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const timeDiff = globalLockTime - now;
+    // Thời gian khóa dựa trên giờ Helsinki cố định
+    const dateInHelsinki = new Date("2024-10-22T18:16:00.000+03:00");
 
+    const interval = setInterval(() => {
+      const now = new Date(); // Lấy thời gian hiện tại của người dùng
+      const timeDiff = dateInHelsinki - now; // Tính toán sự khác biệt
+
+      // Kiểm tra nếu đã hết thời gian (khóa)
       if (timeDiff <= 0) {
+        setIsLocked(true); // Nếu hết thời gian, khóa lựa chọn
         setGlobalCountdown("Đã hết thời gian. Bạn không thể lựa chọn nữa");
       } else {
+        setIsLocked(false); // Nếu chưa hết thời gian, không khóa
         const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
         const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
         const seconds = Math.floor((timeDiff / 1000) % 60);
         setGlobalCountdown(
-          `Lựa chọn sẽ khóa trong ${days.toString().padStart(1, "0")}d ${hours
+          `Lựa chọn sẽ khóa trong ${days.toString().padStart(2, "0")}d ${hours
             .toString()
             .padStart(2, "0")}h ${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`
         );
       }
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
   }, []);
 
   const handleSearchChange = (e) => {
@@ -242,8 +246,6 @@ const PickemChallenge = () => {
 
         <form className="lg:p-2 p-1">
           {questions.map((question) => {
-            const now = new Date();
-            const isLocked = now >= globalLockTime; // Use global lock time
 
             return (
               <div key={question.id} className="mt-8">
