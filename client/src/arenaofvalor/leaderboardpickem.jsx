@@ -21,6 +21,7 @@ const LeaderboardComponent = () => {
   const [maxScore, SetMaxScore] = useState(null)
   const [points, setPoints] = useState([]);
   const [counts, setCounts] = useState([]);
+  const [scoretop1,setScoreTop1] = useState(null)
 
   // State to store tier scores
   const [tierScores, setTierScores] = useState({
@@ -120,6 +121,16 @@ const LeaderboardComponent = () => {
           maxScoreResponse.then(res => res.json())
         ]);
   
+        // Extract scoretop1 from the leaderboard data
+        if (leaderboardResult.leaderboard && leaderboardResult.leaderboard.length > 0) {
+          const scoretop1 = leaderboardResult.leaderboard[0].score;
+          console.log('Top 1 Score:', scoretop1);
+          // You can now set scoretop1 to state or use it however you need
+          setScoreTop1(scoretop1); // Assuming you have a state for scoretop1
+        } else {
+          console.log('Leaderboard is empty');
+        }
+  
         // Xử lý kết quả từ API
         if (leaderboardResult.leaderboard) {
           setLeaderboardData(leaderboardResult.leaderboard);
@@ -142,6 +153,7 @@ const LeaderboardComponent = () => {
   
     fetchData();
   }, []);
+  
   useEffect(() => {
     if (leaderboardData.length > 0) {
       const calculateRanks = (data) => {
@@ -171,8 +183,9 @@ const LeaderboardComponent = () => {
   }, [leaderboardData, currentUser]);
   const TierRewardsTable = ({ userScore, tierScores }) => {
     const tiers = [
-      { name: 'Perfect Picks', score: maxScore, reward: 'Danh hiệu Perfect Pick + TBD', highlight: userScore === maxScore,color: '#D4AF37'},
-      { name: 'S', score: tierScores.sTierScore, top: "Top 5%", reward: 'Danh hiệu Tier S + TBD', highlight: userScore >= tierScores.sTierScore && userScore < maxScore, color: '#ff9800' },
+      { name: 'Perfect Picks', score: maxScore, reward: 'Perfecto + TBD', highlight: userScore === maxScore,color: '#D4AF37'},
+      { name: 'Hạng 1', score: scoretop1, reward: 'Danh hiệu 1ST + TBD', highlight: userScore === scoretop1,color: '#C0A240'},
+      { name: 'S', score: tierScores.sTierScore, top: "Top 5%", reward: 'Danh hiệu Tier S', highlight: userScore >= tierScores.sTierScore && userScore < maxScore&& userScore < scoretop1, color: '#ff9800' },
       { name: 'A', score: tierScores.aTierScore, top: "Top 20%", reward: 'Danh hiệu Tier A', highlight: userScore >= tierScores.aTierScore && userScore < tierScores.sTierScore, color: '#CC52CE' },
       { name: 'B', score: tierScores.bTierScore, top: "Top 40%", reward: '', highlight: userScore >= tierScores.bTierScore && userScore < tierScores.aTierScore, color: '#00bcd4' },
       { name: 'C', score: tierScores.cTierScore, top: "Top 70%", reward: '', highlight: userScore >= tierScores.cTierScore && userScore < tierScores.bTierScore, color: '#4caf50' },
@@ -190,10 +203,10 @@ const LeaderboardComponent = () => {
                 style={{ color: tier.highlight ? tier.color : 'inherit', borderBottomColor: tier.highlight ? tier.color : 'rgba(128, 128, 128, 0.18)' }}
               >
                 {/* Remove extra spaces between tags */}
-                <td className="border-base-content xl:px-4 px-1 py-3 w-[1px] md:w-[20%]">{tier.name}</td>
-                <td className="border-base-content px-4 py-3">{tier.top}</td>
-                <td className="border-base-content px-4 py-3">{tier.score} PTS</td>
-                <td className="border-base-content px-4 py-3 text-right">{tier.reward}</td>
+                <td className="border-base-content xl:px-4 px-1 py-3 w-[80px] md:w-[20%] lg:text-[16px] text-[12px]">{tier.name}</td>
+                <td className="border-base-content lg:px-5 px-2 py-3 lg:text-[16px] text-[12px]">{tier.top}</td>
+                <td className="border-base-content lg:px-5 px-2 py-3 lg:text-[16px] text-[12px]">{tier.score} PTS</td>
+                <td className="border-base-content lg:px-5 px-2 py-3 text-right lg:text-[16px] text-[12px]">{tier.reward}</td>
               </tr>
             ))}
           </tbody>
@@ -496,9 +509,9 @@ const LeaderboardComponent = () => {
       <div className="container mx-auto px-4 py-8 mt-40 ">
         <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Bảng xếp hạng Pick'em Challenge</h2>
         <div className="container mx-auto flex xl:flex-row xl:gap-2 lg:gap-5 flex-col lg:mb-10">
-          <div className="bg-base-100 w-full rounded-lg">
+          <div className="bg-base-100 w-full rounded-lg lg:my-0 my-5">
             {points.length > 0 && (
-              <div className="xl:w-[100%] w-[98%] lg:h-[320px] h-[250px] mt-7 mx-auto">
+              <div className="xl:w-[100%] w-[98%] lg:h-[320px] h-[250px] mt-16 mx-auto">
                 <Line data={prepareChartData()} options={{ ...chartOptions, maintainAspectRatio: false }} />
               </div>
             )}
