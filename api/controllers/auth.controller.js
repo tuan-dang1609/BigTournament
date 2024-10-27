@@ -10,6 +10,8 @@ import PredictionPickem from '../models/response.model.js';
 import CorrectAnswersSubmit from '../models/correctanswer.model.js';
 import AllUserScore from '../models/alluserscore.model.js';
 import Queue from 'bull';
+import TeamHOF from '../models/teamhof.model.js'
+import LeagueHOF from '../models/league.model.js';
 const scoreQueue = new Queue('score-processing');
 
 const pointSystem = {
@@ -32,6 +34,46 @@ export const signup = async (req, res, next) => {
     res.status(201).json({ message: 'Tạo tài khoản thành công' });
   } catch (error) {
     return next(errorHandler(500, 'Tạo tài khoản thất bại'));
+  }
+};
+export const teamHOF = async (req, res, next) => {
+  try {
+    const { name, logo, color, players, league } = req.body;
+    const newTeam = new TeamHOF({game, name, logo, color, players, league });
+
+    await newTeam.save();
+    res.status(201).json({ message: "Team added successfully", team: newTeam });
+  } catch (error) {
+    res.status(400).json({ message: "Error adding team", error: error.message });
+  }
+};
+export const leagueHOF = async (req, res, next) => {
+  try {
+    const { id, name, color, borderColor, textColor } = req.body;
+    const newLeague = new LeagueHOF({ id, name, color, borderColor, textColor });
+
+    await newLeague.save();
+    res.status(201).json({ message: "Thêm giải đấu thành công", league: newLeague });
+  } catch (error) {
+    res.status(400).json({ message: "Lỗi khi thêm giải đấu", error: error.message });
+  }
+};
+export const findleagueHOF = async (req, res, next) => {
+  try {
+    const leagues = await LeagueHOF.find();
+    res.status(200).json(leagues);
+  } catch (error) {
+    res.status(400).json({ message: "Lỗi khi lấy danh sách giải đấu", error: error.message });
+  }
+};
+export const findteamHOF = async (req, res, next) => {
+  const { league } = req.params;
+
+  try {
+    const teams = await TeamHOF.find({ league });
+    res.status(200).json(teams);
+  } catch (error) {
+    res.status(400).json({ message: "Error fetching teams", error: error.message });
   }
 };
 export const calculateMaxPoints = async (req, res) => {

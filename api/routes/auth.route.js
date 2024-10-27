@@ -1,5 +1,5 @@
 import express from 'express';
-import { signin, signup, signout,getCorrectAnswers,comparePredictionmultiple,calculateMaxPoints,getUserPickemScore,comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
+import { signin, signup,teamHOF,leagueHOF,findleagueHOF,findteamHOF, signout,getCorrectAnswers,comparePredictionmultiple,calculateMaxPoints,getUserPickemScore,comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
@@ -25,6 +25,10 @@ router.post('/leaderboardpickem', leaderboardpickem)
 router.post('/scoreformanyids', comparePredictionmultiple)
 router.post('/getCorrectAnswers', getCorrectAnswers)
 router.post('/maxscore',calculateMaxPoints)
+router.post('/teamHOF', teamHOF)
+router.post('/teams/:league', findteamHOF)
+router.post('/leagues/list', findleagueHOF)
+router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
 router.post('/registerAOV', async (req, res) => {
     try {

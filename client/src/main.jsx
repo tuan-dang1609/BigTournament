@@ -30,6 +30,7 @@ import PickemChallengeMatch from './arenaofvalor/pickemmatch.jsx';
 import TournamentBracketAOV from './arenaofvalor/bracket.jsx'
 import PrivacyPolicy from './components/privacypolicy.jsx';
 import TermsOfService from './components/termofservice.jsx';
+import HallOfFame from './arenaofvalor/halloffame.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -59,6 +60,7 @@ if (rootElement) {
               <Route path='/arenaofvalor/swisstage' element={<TournamentBracketAOV />} />
               <Route path='/privacy' element={<PrivacyPolicy />} />
               <Route path='/tos' element={<TermsOfService />} />
+              <Route path='/arenaofvalor/halloffame' element={<HallOfFame />} />
               <Route element={<PrivateRoute />}>
               <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
