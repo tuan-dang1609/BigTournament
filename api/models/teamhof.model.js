@@ -8,7 +8,7 @@ const playerSchema = new mongoose.Schema({
 const teamSchema = new mongoose.Schema({
   game:{type:String,required:true},
   name: { type: String, required: true },
-  logo: { type: String, required: true },
+  logo: { type: String, required: true,default:"1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L" },
   color: { type: String, required: true },
   players: [playerSchema],
   league: { type: String, required: true},
