@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
     updateUserStart,
     updateUserSuccess,
@@ -93,6 +93,7 @@ export default function Profile() {
                     <input type="text" onChange={handleChange} defaultValue={currentUser.profilePicture} id='profilePicture' placeholder="URL Avatar" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
                     <input type="text" onChange={handleChange} defaultValue={currentUser.riotID} id='riotID' placeholder="Riot ID" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
                     <input type="text" onChange={handleChange} defaultValue={currentUser.discordID} id='discordID' placeholder="Discord ID" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
+                    <input type="text" onChange={handleChange} defaultValue={currentUser.nickname} id='nickname' placeholder="Nickname" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
                     <input type="text" onChange={handleChange} defaultValue={currentUser.username} id='username' placeholder="Username" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
                     <input type="password" onChange={handleChange} id='password' placeholder="Password" className="p-3 my-[6px] rounded-lg border-primary border-[1.5px]" />
                     <button className="btn mt-3 bg-primary hover:bg-neutral text-white"> {loading ? 'Loading...' : 'Update'}</button>
