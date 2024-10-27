@@ -2,19 +2,19 @@ import React, { useState, useEffect } from "react";
 import { FaTrophy } from "react-icons/fa";
 import { IoMdAlert } from "react-icons/io";
 import { MdArrowBack } from "react-icons/md";
-import axios from "axios"; // Thêm axios để gọi API
+import axios from "axios";
 
-const TeamPage = () => {
-    const [selectedLeague, setSelectedLeague] = useState("pro");
+const TeamPageHOF = () => {
+    const [selectedLeague, setSelectedLeague] = useState("season1");
     const [leagues, setLeagues] = useState([]);
-    const [teamsData, setTeamsData] = useState({});
+    const [teamsData, setTeamsData] = useState([]);
     const [error, setError] = useState(null);
 
     // Lấy danh sách leagues từ API khi component được render lần đầu
     useEffect(() => {
         const fetchLeagues = async () => {
             try {
-                const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/leagues/list"); // Đảm bảo đường dẫn phù hợp với backend của bạn
+                const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/leagues/list");
                 setLeagues(response.data);
             } catch (err) {
                 setError("Không thể tải danh sách giải đấu.");
@@ -24,12 +24,18 @@ const TeamPage = () => {
         fetchLeagues();
     }, []);
 
-    // Lấy dữ liệu teams dựa trên selectedLeague
+    // Lấy dữ liệu teams dựa trên selectedLeague và lọc theo game
     useEffect(() => {
         const fetchTeams = async () => {
             try {
                 const response = await axios.post(`https://dongchuyennghiep-backend.vercel.app/api/auth/teams/${selectedLeague}`);
-                setTeamsData({ [selectedLeague]: response.data });
+                
+                // Lọc chỉ các đội thuộc trò chơi "Arena Of Valor" và sắp xếp theo rank
+                const arenaTeams = response.data
+                    .filter(team => team.game === "Arena Of Valor")
+                    .sort((a, b) => a.rank - b.rank); // Sắp xếp theo thứ tự tăng dần của rank
+
+                setTeamsData(arenaTeams);
             } catch (err) {
                 setError("Không thể tải dữ liệu đội. Vui lòng thử lại sau.");
             }
@@ -47,7 +53,7 @@ const TeamPage = () => {
         </div>
     );
 
-    const TeamCard = ({ team, rank }) => (
+    const TeamCard = ({ team }) => (
         <div
             className="p-6 mb-10 transition-all duration-300 w-full mx-auto max-w-[100%]"
             role="article"
@@ -56,31 +62,31 @@ const TeamPage = () => {
             <div className="flex flex-col space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                        {rank <= 3 && (
+                        {team.rank <= 3 && (
                             <div className="relative mr-4">
-                                <FaTrophy className={`text-2xl ${rank === 1 ? "text-yellow-400" : rank === 2 ? "text-gray-400" : "text-orange-400"}`} />
-                                <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-white rounded-full text-xs font-bold px-1">{rank}</span>
+                                <FaTrophy className={`text-2xl ${team.rank === 1 ? "text-yellow-400" : team.rank === 2 ? "text-gray-400" : "text-orange-400"}`} />
+                                <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-white text-black rounded-full text-xs font-bold px-1">{team.rank}</span>
                             </div>
                         )}
                         <img
-                            src={team.logo}
+                            src={`https://drive.google.com/thumbnail?id=${team.logo}`}
                             alt={`${team.name} logo`}
-                            className="w-20 h-20 rounded-full object-cover"
+                            className="w-20 h-20  object-cover"
                         />
                         <h3 className="text-2xl font-bold">{team.name}</h3>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-3">
-                    {team.players.map((player, index) => (
+                    {team.players.map((player) => (
                         <div
-                            key={index}
+                            key={player._id}
                             className="flex flex-col items-center rounded-lg p-3 transition-all duration-300 hover:bg-secondary w-full"
                             role="listitem"
                             aria-label={`Player ${player.name}`}
                         >
                             <img
-                                src={player.avatar}
+                                src={`https://drive.google.com/thumbnail?id=${player.avatar}`}
                                 alt={player.name}
                                 className="w-20 h-20 rounded-full object-cover"
                             />
@@ -95,7 +101,7 @@ const TeamPage = () => {
     return (
         <div className="flex min-h-screen bg-base-100 mt-16">
             {/* Sidebar */}
-            <div className="fixed w-[20%] h-screen bg-base-100 shadow-xl hidden md:block overflow-y-auto">
+            <div className="fixed w-[20%] h-screen bg-base-100 shadow-xl hidden xl:block overflow-y-auto">
                 <div className="mt-8">
                     <h2 className="text-2xl font-bold mb-6 text-center">Leagues</h2>
                     <div className="flex flex-col space-y-3">
@@ -106,7 +112,7 @@ const TeamPage = () => {
                                 className={`p-4 rounded-lg font-semibold transition-all duration-300 text-left ${selectedLeague === league.id ? league.color : ""}`}
                                 aria-pressed={selectedLeague === league.id}
                             >
-                                {league.name}
+                                <span className="text-white">{league.name}</span>
                             </button>
                         ))}
                     </div>
@@ -135,13 +141,11 @@ const TeamPage = () => {
 
                     <div className="space-y-4">
                         {error && <ErrorMessage />}
-                        {teamsData[selectedLeague] ? (
-                            teamsData[selectedLeague].map((team, index) => (
-                                <React.Fragment key={team.id}>
-                                    <TeamCard team={team} rank={index + 1} />
-                                    {index < teamsData[selectedLeague].length - 1 && (
-                                        <div className="border-t border-gray-300 my-6"></div> // Divider line
-                                    )}
+                        {teamsData.length > 0 ? (
+                            teamsData.map((team) => (
+                                <React.Fragment key={team._id}>
+                                    <TeamCard team={team} />
+                                    <div key={`divider-${team._id}`} className="border-t border-gray-300 my-6 last:border-none"></div>
                                 </React.Fragment>
                             ))
                         ) : (
@@ -154,4 +158,4 @@ const TeamPage = () => {
     );
 };
 
-export default TeamPage;
+export default TeamPageHOF;
