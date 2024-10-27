@@ -48,7 +48,7 @@ export const teamHOF = async (req, res, next) => {
     // Tạo các hoạt động `upsert` cho từng đội
     const operations = teams.map((team) => ({
       updateOne: {
-        filter: { name: team.name, game: team.game }, // Điều kiện xác định đội đã tồn tại
+        filter: { name: team.name, game: team.game ,league: team.league}, // Điều kiện xác định đội đã tồn tại
         update: { $set: team },
         upsert: true // Thêm mới nếu không tồn tại
       }
