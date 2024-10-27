@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
-import { SiRiotgames,SiDiscord } from "react-icons/si";
+import { SiRiotgames, SiDiscord } from "react-icons/si";
 import { Link, useNavigate } from 'react-router-dom';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
-    discordID:"",
+    discordID: "",
     riotID: "",
+    nickname: "",
     username: "",
     password: "",
     retypePassword: "",
@@ -51,6 +52,13 @@ const SignupPage = () => {
           delete newErrors.riotID;
         }
         break;
+      case "nickname":
+        if (!value.trim()) {
+          newErrors.nickname = "Phải nhập Nickname";
+        } else {
+          delete newErrors.nickname;
+        }
+        break;
       case "username":
         if (!value.trim()) {
           newErrors.username = "Phải nhập tên người dùng";
@@ -91,26 +99,26 @@ const SignupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     let newErrors = {};
-  
+
     // Validate all fields before submission
     Object.keys(formData).forEach((key) => {
       validateField(key, formData[key]); // Validate each field and update errors
     });
-  
+
     // After validation, get the latest errors state
     newErrors = { ...errors };
-  
+
     // If any error exists, prevent submission and display error message
     if (Object.keys(newErrors).length > 0 || !formData.password) {
       setErrorMessage("Please fix the errors before submitting.");
       setErrors(newErrors); // Update the errors state to display the latest errors
       return;
     }
-  
+
     try {
       setLoading(true);
       setErrorMessage("");
-  
+
       const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/signup', {
         method: 'POST',
         headers: {
@@ -118,22 +126,22 @@ const SignupPage = () => {
         },
         body: JSON.stringify(formData),
       });
-  
+
       const data = await res.json();
       setLoading(false);
-  
+
       if (data.success === false) {
         setErrorMessage(data.message || "Something went wrong!");
         return;
       }
-  
+
       setSignupSuccess(true);
     } catch (error) {
       setLoading(false);
       setErrorMessage("An error occurred. Please try again.");
     }
   };
-  
+
 
   const togglePasswordVisibility = (field) => {
     if (field === "password") {
@@ -193,7 +201,7 @@ const SignupPage = () => {
                 name="riotID"
                 id="riotID"
                 className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.riotID ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                placeholder="Enter your Riot ID"
+                placeholder="Nhập Riot ID của bạn"
                 value={formData.riotID}
                 onChange={handleChange}
                 aria-invalid={errors.riotID ? "true" : "false"}
@@ -206,7 +214,7 @@ const SignupPage = () => {
               </p>
             )}
           </div>
-                      {/* Discord ID Input */}
+          {/* Discord ID Input */}
           <div>
             <label htmlFor="discordID" className="block text-sm font-medium text-gray-700">
               Username Discord
@@ -220,7 +228,7 @@ const SignupPage = () => {
                 name="discordID"
                 id="discordID"
                 className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.discordID ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                placeholder="Enter your Discord ID"
+                placeholder="Nhập Discord ID của bạn"
                 value={formData.discordID}
                 onChange={handleChange}
                 aria-invalid={errors.discordID ? "true" : "false"}
@@ -230,6 +238,33 @@ const SignupPage = () => {
             {errors.discordID && (
               <p className="mt-2 text-sm text-red-600" id="riotID-error">
                 {errors.discordID}
+              </p>
+            )}
+          </div>
+          {/* Nickname Input */}
+          <div>
+            <label htmlFor="nickname" className="block text-sm font-medium text-gray-700">
+              Nickname
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaUser className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                type="text"
+                name="nickname"
+                id="nickname"
+                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.nickname ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                placeholder="Nhập Nickname của bạn"
+                value={formData.nickname}
+                onChange={handleChange}
+                aria-invalid={errors.nickname ? "true" : "false"}
+                aria-describedby="nickname-error"
+              />
+            </div>
+            {errors.nickname && (
+              <p className="mt-2 text-sm text-red-600" id="riotID-error">
+                {errors.nickname}
               </p>
             )}
           </div>
@@ -247,7 +282,7 @@ const SignupPage = () => {
                 name="username"
                 id="username"
                 className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.username ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                placeholder="Choose a username"
+                placeholder="Điền username"
                 value={formData.username}
                 onChange={handleChange}
                 aria-invalid={errors.username ? "true" : "false"}
@@ -267,7 +302,7 @@ const SignupPage = () => {
           {/* Password Input */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
+              Mật Khẩu
             </label>
             <div className="mt-1 relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -278,7 +313,7 @@ const SignupPage = () => {
                 name="password"
                 id="password"
                 className={`bg-white text-black block w-full pl-10 pr-10 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                placeholder="Enter your password"
+                placeholder="Nhập mật khẩu"
                 value={formData.password}
                 onChange={handleChange}
                 aria-invalid={errors.password ? "true" : "false"}
@@ -305,7 +340,7 @@ const SignupPage = () => {
           {/* Retype Password Input */}
           <div>
             <label htmlFor="retypePassword" className="block text-sm font-medium text-gray-700">
-              Retype Password
+              Nhập lại mật khẩu
             </label>
             <div className="mt-1 relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -316,7 +351,7 @@ const SignupPage = () => {
                 name="retypePassword"
                 id="retypePassword"
                 className={`bg-white text-black block w-full pl-10 pr-10 py-2 border ${errors.retypePassword ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                placeholder="Retype your password"
+                placeholder="Nhập lại mật khẩu"
                 value={formData.retypePassword}
                 onChange={handleChange}
                 aria-invalid={errors.retypePassword ? "true" : "false"}
@@ -347,7 +382,7 @@ const SignupPage = () => {
               disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
             >
-              {loading ? 'Loading...' : 'Sign Up'}
+              {loading ? 'Loading...' : 'Đăng ký'}
             </button>
           </div>
 
@@ -359,9 +394,9 @@ const SignupPage = () => {
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          Already have an account?{" "}
+          Đã có tài khoản?{" "}
           <Link to="/signin" className="font-medium text-indigo-600 hover:text-indigo-500">
-            Sign in
+            Đăng nhập
           </Link>
         </p>
       </div>

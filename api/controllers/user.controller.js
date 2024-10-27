@@ -23,7 +23,7 @@ export const updateUser = async (req, res, next) => {
         $set: {
           riotID:req.body.riotID,
           username: req.body.username,
-         
+          nickname:req.body.nickname,
           password: req.body.password,
           profilePicture: req.body.profilePicture,
         },
