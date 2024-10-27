@@ -10,7 +10,13 @@ const TeamPageHOF = () => {
     const [teamsData, setTeamsData] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true); // State để kiểm soát loader
-    
+    useEffect(() => {
+        const scrollToTop = () => {
+          document.documentElement.scrollTop = 0;
+          setLoading(false);
+        };
+        setTimeout(scrollToTop, 0);
+      }, []);
     // Lấy danh sách leagues từ API khi component được render lần đầu
     useEffect(() => {
         document.title = "Sảnh danh vọng Valorant";
@@ -132,7 +138,7 @@ const TeamPageHOF = () => {
                                         className={`p-4 rounded-lg font-semibold transition-all duration-300 text-left ${selectedLeague === league.id ? league.color : ""}`}
                                         aria-pressed={selectedLeague === league.id}
                                     >
-                                        <span className="text-white">{league.name}</span>
+                                        <span>{league.name}</span>
                                     </button>
                                 ))}
                             </div>

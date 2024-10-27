@@ -102,12 +102,45 @@ export const findteamHOF = async (req, res, next) => {
   const { league } = req.params;
 
   try {
+    // Tìm tất cả các đội trong giải đấu được chỉ định
     const teams = await TeamHOF.find({ league });
-    res.status(200).json(teams);
+
+    // Kiểm tra từng người chơi trong mỗi đội
+    const enrichedTeams = await Promise.all(
+      teams.map(async (team) => {
+        // Kiểm tra từng thành viên trong đội
+        const enrichedPlayers = await Promise.all(
+          team.players.map(async (player) => {
+            // Tìm người dùng theo riotID trùng với tên thành viên
+            const user = await User.findOne({ riotID: player.name });
+
+            if (user) {
+              // Trả về dữ liệu người dùng nếu tìm thấy
+              return {
+                name: user.riotID,
+                avatar: user.profilePicture
+              };
+            }
+
+            // Nếu không tìm thấy người dùng, trả về dữ liệu mặc định của player
+            return player;
+          })
+        );
+
+        // Trả về dữ liệu đội với danh sách thành viên đã cập nhật
+        return {
+          ...team.toObject(), // Sử dụng toObject() để chuyển đổi tài liệu thành đối tượng JavaScript
+          players: enrichedPlayers,
+        };
+      })
+    );
+
+    res.status(200).json(enrichedTeams);
   } catch (error) {
     res.status(400).json({ message: "Error fetching teams", error: error.message });
   }
 };
+
 export const calculateMaxPoints = async (req, res) => {
   try {
     // Fetch the correct answers
