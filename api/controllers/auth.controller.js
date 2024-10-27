@@ -117,7 +117,7 @@ export const findteamHOF = async (req, res, next) => {
             if (user) {
               // Trả về dữ liệu người dùng nếu tìm thấy
               return {
-                name: user.riotID,
+                name: user.username,
                 avatar: user.profilePicture
               };
             }
