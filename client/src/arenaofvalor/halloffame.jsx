@@ -13,7 +13,7 @@ const TeamPageHOF = () => {
 
     // Lấy danh sách leagues từ API khi component được render lần đầu
     useEffect(() => {
-        document.title = "Hall Of Fame";
+        document.title = "Sảnh danh vọng Liên Quân";
         const fetchLeagues = async () => {
             try {
                 const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/leagues/list");
@@ -150,7 +150,7 @@ const TeamPageHOF = () => {
                     {/* Main Content */}
                     <div className="lg:w-[80%] py-12 px-4 sm:px-6 lg:px-8 lg:mt-0 md:mt-10 lg:ml-[20%] w-full">
                         <div className="max-w-[1400px] mx-auto">
-                            <h1 className="text-4xl font-bold text-center mb-12 mt-16 md:mt-0">Team Hall of Fame</h1>
+                            <h1 className="text-4xl font-bold text-center mb-12 mt-16 md:mt-0">Sảnh danh vọng các đội</h1>
 
                             <div className="space-y-4">
                                 {error && <ErrorMessage />}
