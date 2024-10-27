@@ -10,14 +10,7 @@ const TeamPageHOF = () => {
     const [teamsData, setTeamsData] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true); // State để kiểm soát loader
-    useEffect(() => {
-        const scrollToTop = () => {
-          document.documentElement.scrollTop = 0;
-          setLoading(false);
-        };
-        setTimeout(scrollToTop, 0);
-
-      }, []);
+    
     // Lấy danh sách leagues từ API khi component được render lần đầu
     useEffect(() => {
         document.title = "Sảnh danh vọng Liên Quân";
@@ -59,7 +52,14 @@ const TeamPageHOF = () => {
             fetchTeams();
         }
     }, [selectedLeague]);
+    useEffect(() => {
+        const scrollToTop = () => {
+          document.documentElement.scrollTop = 0;
+          setLoading(false);
+        };
+        setTimeout(scrollToTop, 0);
 
+      }, []);
     const ErrorMessage = () => (
         <div className="flex items-center justify-center p-4 bg-red-100 rounded-lg" role="alert">
             <IoMdAlert className="text-red-500 text-xl mr-2" />
