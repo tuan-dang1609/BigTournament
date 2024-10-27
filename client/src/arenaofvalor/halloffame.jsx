@@ -15,12 +15,15 @@ const TeamPageHOF = () => {
         const fetchLeagues = async () => {
             try {
                 const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/leagues/list");
-                setLeagues(response.data);
+    
+                // Lọc danh sách giải đấu dựa trên điều kiện "Arena Of Valor"
+                const filteredLeagues = response.data.filter(league => league.game === "Arena Of Valor");
+                setLeagues(filteredLeagues);
             } catch (err) {
                 setError("Không thể tải danh sách giải đấu.");
             }
         };
-
+    
         fetchLeagues();
     }, []);
 
