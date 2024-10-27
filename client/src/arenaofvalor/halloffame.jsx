@@ -9,10 +9,11 @@ const TeamPageHOF = () => {
     const [leagues, setLeagues] = useState([]);
     const [teamsData, setTeamsData] = useState([]);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true); // State để kiểm soát loader
 
     // Lấy danh sách leagues từ API khi component được render lần đầu
     useEffect(() => {
-        document.title="Hall Of Fame"
+        document.title = "Hall Of Fame";
         const fetchLeagues = async () => {
             try {
                 const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/leagues/list");
@@ -42,6 +43,8 @@ const TeamPageHOF = () => {
                 setTeamsData(arenaTeams);
             } catch (err) {
                 setError("Không thể tải dữ liệu đội. Vui lòng thử lại sau.");
+            } finally {
+                setLoading(false); // Đánh dấu đã hoàn tất load khi API thứ hai hoàn thành
             }
         };
 
@@ -104,60 +107,68 @@ const TeamPageHOF = () => {
 
     return (
         <div className="flex min-h-screen bg-base-100 mt-16">
-            {/* Sidebar */}
-            <div className="fixed w-[20%] h-screen bg-base-100 shadow-xl hidden xl:block overflow-y-auto">
-                <div className="mt-8">
-                    <h2 className="text-2xl font-bold mb-6 text-center">Leagues</h2>
-                    <div className="flex flex-col space-y-3">
-                        {leagues.map((league) => (
-                            <button
-                                key={league.id}
-                                onClick={() => setSelectedLeague(league.id)}
-                                className={`p-4 rounded-lg font-semibold transition-all duration-300 text-left ${selectedLeague === league.id ? league.color : ""}`}
-                                aria-pressed={selectedLeague === league.id}
-                            >
-                                <span className="text-white">{league.name}</span>
-                            </button>
-                        ))}
-                    </div>
+            {loading ? ( // Hiển thị loader khi đang tải dữ liệu
+                <div className="flex justify-center items-center min-h-screen w-full">
+                    <span className="loading loading-dots loading-lg text-primary"></span>
                 </div>
-            </div>
-
-            {/* Mobile Header */}
-            <div className="lg:hidden w-full bg-base-100 shadow-lg p-4 fixed top-0 mt-[70px] z-10">
-                <select
-                    value={selectedLeague}
-                    onChange={(e) => setSelectedLeague(e.target.value)}
-                    className="w-full p-2 border-2 border-gray-200 rounded-lg"
-                >
-                    {leagues.map((league) => (
-                        <option key={league.id} value={league.id}>
-                            {league.name}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            {/* Main Content */}
-            <div className="lg:w-[80%] py-12 px-4 sm:px-6 lg:px-8 lg:mt-0 md:mt-10 lg:ml-[20%] w-full">
-                <div className="max-w-[1400px] mx-auto">
-                    <h1 className="text-4xl font-bold text-center mb-12 mt-16 md:mt-0">Team Hall of Fame</h1>
-
-                    <div className="space-y-4">
-                        {error && <ErrorMessage />}
-                        {teamsData.length > 0 ? (
-                            teamsData.map((team) => (
-                                <React.Fragment key={team._id}>
-                                    <TeamCard team={team} />
-                                    <div key={`divider-${team._id}`} className="border-t border-gray-300 my-6 last:border-none"></div>
-                                </React.Fragment>
-                            ))
-                        ) : (
-                            !error && <p className="text-center">Đang tải dữ liệu...</p>
-                        )}
+            ) : (
+                <>
+                    {/* Sidebar */}
+                    <div className="fixed w-[20%] h-screen bg-base-100 shadow-xl hidden xl:block overflow-y-auto">
+                        <div className="mt-8">
+                            <h2 className="text-2xl font-bold mb-6 text-center">Các mùa</h2>
+                            <div className="flex flex-col space-y-3">
+                                {leagues.map((league) => (
+                                    <button
+                                        key={league.id}
+                                        onClick={() => setSelectedLeague(league.id)}
+                                        className={`p-4 rounded-lg font-semibold transition-all duration-300 text-left ${selectedLeague === league.id ? league.color : ""}`}
+                                        aria-pressed={selectedLeague === league.id}
+                                    >
+                                        <span className="text-white">{league.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+
+                    {/* Mobile Header */}
+                    <div className="lg:hidden w-full bg-base-100 shadow-lg p-4 fixed top-0 mt-[70px] z-10">
+                        <select
+                            value={selectedLeague}
+                            onChange={(e) => setSelectedLeague(e.target.value)}
+                            className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                        >
+                            {leagues.map((league) => (
+                                <option key={league.id} value={league.id}>
+                                    {league.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="lg:w-[80%] py-12 px-4 sm:px-6 lg:px-8 lg:mt-0 md:mt-10 lg:ml-[20%] w-full">
+                        <div className="max-w-[1400px] mx-auto">
+                            <h1 className="text-4xl font-bold text-center mb-12 mt-16 md:mt-0">Team Hall of Fame</h1>
+
+                            <div className="space-y-4">
+                                {error && <ErrorMessage />}
+                                {teamsData.length > 0 ? (
+                                    teamsData.map((team) => (
+                                        <React.Fragment key={team._id}>
+                                            <TeamCard team={team} />
+                                            <div key={`divider-${team._id}`} className="border-t border-gray-300 my-6 last:border-none"></div>
+                                        </React.Fragment>
+                                    ))
+                                ) : (
+                                    !error && <p className="text-center">Đang tải dữ liệu...</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

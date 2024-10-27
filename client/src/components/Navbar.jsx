@@ -53,6 +53,7 @@ export default function Example() {
         href: "/arenaofvalor/pickem/welcome", 
         current: ["/arenaofvalor/pickem/welcome", "/arenaofvalor/pickem", "/arenaofvalor/pickem/leaderboard","/arenaofvalor/pickem/pickemmatch"].includes(location.pathname)
       },
+      { name: "HOF", href: "/arenaofvalor/halloffame", current: location.pathname === "/arenaofvalor/halloffame" },
       { name: "Luật lệ", href: "/arenaofvalor/luatle", current: location.pathname === "/arenaofvalor/luatle" },
     ]
 ,    
