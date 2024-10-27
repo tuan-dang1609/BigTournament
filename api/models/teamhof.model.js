@@ -11,7 +11,7 @@ const teamSchema = new mongoose.Schema({
   logo: { type: String, required: true },
   color: { type: String, required: true },
   players: [playerSchema],
-  league: { type: String, required: true, enum: ["pro", "elite", "challenger"] },
+  league: { type: String, required: true},
 });
 
 const TeamHOF = mongoose.model("TeamHOF", teamSchema,"TeamHOF");
