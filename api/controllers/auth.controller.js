@@ -112,7 +112,7 @@ export const findteamHOF = async (req, res, next) => {
         const enrichedPlayers = await Promise.all(
           team.players.map(async (player) => {
             // Tìm người dùng theo riotID trùng với tên thành viên
-            const user = await User.findOne({ riotID: player.name });
+            const user = await User.findOne({ username: player.name });
 
             if (user) {
               // Trả về dữ liệu người dùng nếu tìm thấy
