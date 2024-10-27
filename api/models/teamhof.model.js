@@ -7,6 +7,7 @@ const playerSchema = new mongoose.Schema({
 
 const teamSchema = new mongoose.Schema({
   game:{type:String,required:true},
+  rank:{type:Number},
   name: { type: String, required: true },
   logo: { type: String, required: true },
   color: { type: String, required: true },
