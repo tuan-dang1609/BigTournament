@@ -13,7 +13,7 @@ const TeamPageHOF = () => {
     
     // Lấy danh sách leagues từ API khi component được render lần đầu
     useEffect(() => {
-        document.title = "Sảnh danh vọng Liên Quân";
+        document.title = "Sảnh danh vọng Valorant";
         const fetchLeagues = async () => {
             try {
                 const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/leagues/list");
