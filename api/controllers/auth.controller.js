@@ -65,15 +65,31 @@ export const teamHOF = async (req, res, next) => {
 
 export const leagueHOF = async (req, res, next) => {
   try {
-    const { id, name, color, borderColor, textColor } = req.body;
-    const newLeague = new LeagueHOF({ id, name, color, borderColor, textColor });
+    const leagues = req.body;
 
-    await newLeague.save();
-    res.status(201).json({ message: "Thêm giải đấu thành công", league: newLeague });
+    // Kiểm tra nếu `leagues` không phải là mảng, trả về lỗi
+    if (!Array.isArray(leagues)) {
+      return res.status(400).json({ message: "Data must be an array of leagues" });
+    }
+
+    // Tạo các hoạt động `upsert` cho từng giải đấu
+    const operations = leagues.map((league) => ({
+      updateOne: {
+        filter: { id: league.id }, // Điều kiện xác định giải đấu đã tồn tại
+        update: { $set: league },
+        upsert: true // Thêm mới nếu không tồn tại
+      }
+    }));
+
+    // Thực hiện `bulkWrite` với các hoạt động `upsert`
+    const result = await LeagueHOF.bulkWrite(operations);
+
+    res.status(201).json({ message: "Leagues added or updated successfully", result });
   } catch (error) {
-    res.status(400).json({ message: "Lỗi khi thêm giải đấu", error: error.message });
+    res.status(400).json({ message: "Error adding or updating leagues", error: error.message });
   }
 };
+
 export const findleagueHOF = async (req, res, next) => {
   try {
     const leagues = await LeagueHOF.find();
