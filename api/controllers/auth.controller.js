@@ -38,13 +38,19 @@ export const signup = async (req, res, next) => {
 };
 export const teamHOF = async (req, res, next) => {
   try {
-    const { game,name, logo, color, players, league } = req.body;
-    const newTeam = new TeamHOF({game, name, logo, color, players, league });
+    const teams = req.body; // `req.body` là mảng các đội
 
-    await newTeam.save();
-    res.status(201).json({ message: "Team added successfully", team: newTeam });
+    // Kiểm tra nếu `teams` không phải là mảng, trả về lỗi
+    if (!Array.isArray(teams)) {
+      return res.status(400).json({ message: "Data must be an array of teams" });
+    }
+
+    // Thêm tất cả các đội bằng cách dùng `insertMany`
+    const newTeams = await TeamHOF.insertMany(teams);
+    
+    res.status(201).json({ message: "Teams added successfully", teams: newTeams });
   } catch (error) {
-    res.status(400).json({ message: "Error adding team", error: error.message });
+    res.status(400).json({ message: "Error adding teams", error: error.message });
   }
 };
 export const leagueHOF = async (req, res, next) => {
