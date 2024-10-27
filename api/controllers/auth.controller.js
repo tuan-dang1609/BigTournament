@@ -38,7 +38,7 @@ export const signup = async (req, res, next) => {
 };
 export const teamHOF = async (req, res, next) => {
   try {
-    const { name, logo, color, players, league } = req.body;
+    const { game,name, logo, color, players, league } = req.body;
     const newTeam = new TeamHOF({game, name, logo, color, players, league });
 
     await newTeam.save();
