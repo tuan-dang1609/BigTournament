@@ -12,6 +12,7 @@ const TeamPageHOF = () => {
 
     // Lấy danh sách leagues từ API khi component được render lần đầu
     useEffect(() => {
+        document.title="Hall Of Fame"
         const fetchLeagues = async () => {
             try {
                 const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/leagues/list");
