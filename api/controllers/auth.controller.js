@@ -38,21 +38,31 @@ export const signup = async (req, res, next) => {
 };
 export const teamHOF = async (req, res, next) => {
   try {
-    const teams = req.body; // `req.body` là mảng các đội
+    const teams = req.body;
 
     // Kiểm tra nếu `teams` không phải là mảng, trả về lỗi
     if (!Array.isArray(teams)) {
       return res.status(400).json({ message: "Data must be an array of teams" });
     }
 
-    // Thêm tất cả các đội bằng cách dùng `insertMany`
-    const newTeams = await TeamHOF.insertMany(teams);
+    // Tạo các hoạt động `upsert` cho từng đội
+    const operations = teams.map((team) => ({
+      updateOne: {
+        filter: { name: team.name, game: team.game }, // Điều kiện xác định đội đã tồn tại
+        update: { $set: team },
+        upsert: true // Thêm mới nếu không tồn tại
+      }
+    }));
+
+    // Thực hiện `bulkWrite` với các hoạt động `upsert`
+    const result = await TeamHOF.bulkWrite(operations);
     
-    res.status(201).json({ message: "Teams added successfully", teams: newTeams });
+    res.status(201).json({ message: "Teams added or updated successfully", result });
   } catch (error) {
-    res.status(400).json({ message: "Error adding teams", error: error.message });
+    res.status(400).json({ message: "Error adding or updating teams", error: error.message });
   }
 };
+
 export const leagueHOF = async (req, res, next) => {
   try {
     const { id, name, color, borderColor, textColor } = req.body;
