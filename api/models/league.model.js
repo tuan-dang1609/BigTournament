@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const leagueSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
+  id: { type: String, required: true},
   name: { type: String, required: true },
   color: { type: String, required: true },
   game:{type:String,required:true},
