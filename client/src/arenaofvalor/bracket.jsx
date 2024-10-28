@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
+import axios from "axios";
 const TournamentBracketAOV = () => {
   const [teams, setTeams] = useState([[], [], [], []]);
   const [loading, setLoading] = useState(true);
@@ -34,24 +34,19 @@ const TournamentBracketAOV = () => {
 
   const fetchGames = async () => {
     try {
-      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setMatchId(data);
+        // Gửi yêu cầu POST với điều kiện lọc ngay trong body để backend chỉ trả về dữ liệu cần thiết
+        const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid", {
+            filter: {
+                game: "Arena Of Valor"
+            }
+        });
+        
+        // Thiết lập dữ liệu cho state
+        setMatchId(response.data);
     } catch (error) {
-      console.error("Failed to fetch games:", error);
+        console.error("Failed to fetch games:", error);
     }
-  };
-
+};
   useEffect(() => {
     fetchTeams();
     fetchGames();

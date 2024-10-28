@@ -625,7 +625,7 @@ export const addAllGame = async (req,res,next) => {
 
 export const addMatchID = async (req, res, next) => {
   try {
-    const { matchid, teamA, teamB, round,Match} = req.body;
+    const { matchid, teamA, teamB, round,Match,game} = req.body;
 
     // Check if the required fields are provided
     if (!matchid || !teamA || !teamB || !round||!Match) {
@@ -633,7 +633,7 @@ export const addMatchID = async (req, res, next) => {
     }
 
     // Find if the matchid already exists
-    let match = await MatchID.findOne({ matchid });
+    let match = await MatchID.findOne({ matchid,teamA,teamB,Match,round,game });
 
     if (match) {
       // Update the existing match details
@@ -645,7 +645,7 @@ export const addMatchID = async (req, res, next) => {
       return res.status(200).json({ message: "MatchID updated successfully" });
     } else {
       // Create a new match ID entry
-      const newMatchId = new MatchID({ matchid, teamA, teamB, round,Match});
+      const newMatchId = new MatchID({ matchid, teamA, teamB, round,Match,game});
       await newMatchId.save();
       return res.status(201).json({ message: "MatchID added successfully" });
     }
