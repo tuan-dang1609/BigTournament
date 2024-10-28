@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,7 +16,10 @@ function LoginForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation(); // To capture the previous link
+  useEffect(()=>{
+    document.title="Đăng nhập"
 
+  },[])
   // Check if there's a 'from' location or default to home ('/')
   const from = location.state?.from?.pathname || '/';
 

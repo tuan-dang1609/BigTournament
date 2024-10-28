@@ -22,7 +22,10 @@ const SignupPage = () => {
   const [countdown, setCountdown] = useState(4); // Initialize countdown state
 
   const navigate = useNavigate();
+  useEffect(()=>{
+    document.title="Đăng ký tài khoản"
 
+  },[])
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });

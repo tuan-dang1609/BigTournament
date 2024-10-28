@@ -105,8 +105,8 @@ const ProfileUpdateForm = () => {
 
     return (
         <div className="min-h-screen bg-base-100 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-xl w-full mx-auto space-y-8 bg-white p-8 mt-9 rounded-xl shadow-lg transform transition-all hover:scale-[1.01]">
-                <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Cập nhật thông tin tài khoản</h2>
+            <div className="max-w-xl w-full mx-auto space-y-8 bg-white p-8 mt-10 rounded-xl shadow-lg transform transition-all hover:scale-[1.01]">
+                <h2 className="mt-1 text-center text-3xl font-bold text-gray-900">Cập nhật thông tin tài khoản</h2>
 
                 {isSubmitted && (
                     <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
