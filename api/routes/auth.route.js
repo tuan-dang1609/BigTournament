@@ -3,6 +3,7 @@ import { signin, signup,teamHOF,leagueHOF,findleagueHOF,findteamHOF, signout,get
 import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
+import Match from '../models/match.model.js';
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -30,6 +31,59 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
+
+// Route để thêm mới trận đấu
+router.post('/addmatchdetail', async (req, res) => {
+    try {
+        const match = new Match(req.body); // Lấy dữ liệu từ body request
+        await match.save();
+        res.status(201).json({ message: "Match added successfully", match });
+    } catch (error) {
+        console.error(error);
+        res.status(400).json({ error: "Failed to add match" });
+    }
+});
+router.post('/fetchmatchAOV/:idmatch', async (req, res) => {
+    const { idmatch } = req.params; // Lấy `idmatch` từ body của request
+
+    if (!idmatch) {
+        return res.status(400).json({ error: "idmatch is required" });
+    }
+
+    try {
+        const match = await Match.findOne({ idmatch });
+        if (!match) {
+            return res.status(404).json({ error: "Match not found" });
+        }
+        res.status(200).json(match);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to fetch match" });
+    }
+});
+// Route để cập nhật thông tin trận đấu
+router.post('/updateMatch', async (req, res) => {
+    const { idmatch } = req.body; // Giả sử chúng ta sử dụng `idmatch` làm điều kiện cập nhật
+    try {
+        const updatedMatch = await Match.findOneAndUpdate(
+            { idmatch },
+            req.body, // Dữ liệu mới từ request
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedMatch) {
+            return res.status(404).json({ error: "Match not found" });
+        }
+
+        res.status(200).json({ message: "Match updated successfully", updatedMatch });
+    } catch (error) {
+        console.error(error);
+        res.status(400).json({ error: "Failed to update match" });
+    }
+});
+
+
+
 router.post('/registerAOV', async (req, res) => {
     try {
         const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID,color } = req.body;

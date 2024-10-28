@@ -8,41 +8,54 @@ const TournamentBracketAOV = () => {
 
   const fetchTeams = async () => {
     try {
-      const response = await fetch(
-        'https://docs.google.com/spreadsheets/d/1s2Lyk37v-hZcg7-_ag8S1Jq3uaeRR8u-oG0zviSc26E/gviz/tq?sheet=Swiss Stage&range=A1:M11'
-      );
+        // Fetch dữ liệu từ Google Sheets
+        const response = await fetch('https://docs.google.com/spreadsheets/d/1ZGF4cPHRmKL5BSzgAMtUD2WWYrB-Dpx8Q_gFha5T0dY/gviz/tq?sheet=Swiss Stage&range=A1:M11');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const text = await response.text();
+        const json = JSON.parse(text.substring(47, text.length - 2));
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const text = await response.text();
-      const json = JSON.parse(text.substring(47, text.length - 2));
+        // Fetch dữ liệu logo của các đội từ backend
+        const teamResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamAOV', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        if (!teamResponse.ok) throw new Error(`HTTP error! status: ${teamResponse.status}`);
+        const teamData = await teamResponse.json();
 
-      const columns = [0, 3, 6, 9];
-      const updatedTeams = columns.map((col) =>
-        json.table.rows.map(row => ({
-          name: row.c[col + 1]?.v || "Unknown",
-          icon: `https://drive.google.com/thumbnail?id=${row.c[col]?.v}` || "🏅",
-          score: row.c[col + 2]?.v || 0
-        }))
-      );
-      setTeams(updatedTeams);
+        // Lấy logo của mỗi đội từ dữ liệu của Google Sheets
+        const columns = [0, 3, 6, 9];
+        const updatedTeams = columns.map((col) =>
+            json.table.rows.map(row => {
+                const teamName = row.c[col + 1]?.v || "Unknown";
+                const team = teamData.find(t => t.teamName === teamName);
+
+                return {
+                    name: teamName,
+                    icon: team ? `https://drive.google.com/thumbnail?id=${team.logoUrl}` : "🏅",
+                    score: row.c[col + 2]?.v || 0
+                };
+            })
+        );
+        
+        setTeams(updatedTeams); // Cập nhật state với danh sách đội đã được cập nhật icon
     } catch (error) {
-      console.error("Failed to fetch teams:", error);
+        console.error("Failed to fetch teams:", error);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
+
 
   const fetchGames = async () => {
     try {
-        // Gửi yêu cầu POST với điều kiện lọc ngay trong body để backend chỉ trả về dữ liệu cần thiết
-        const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid", {
-            filter: {
-                game: "Arena Of Valor"
-            }
-        });
+        const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid");
         
-        // Thiết lập dữ liệu cho state
-        setMatchId(response.data);
+        // Lọc dữ liệu nhận được dựa trên điều kiện game: "Arena Of Valor"
+        const filteredGames = response.data.filter(game => game.game === "Arena Of Valor");
+        
+        setMatchId(filteredGames); // Cập nhật state với danh sách đã lọc
     } catch (error) {
         console.error("Failed to fetch games:", error);
     }
@@ -50,6 +63,8 @@ const TournamentBracketAOV = () => {
   useEffect(() => {
     fetchTeams();
     fetchGames();
+
+    
   }, []);
 
   const getMatchLink = (team1, team2) => {
@@ -62,7 +77,7 @@ const TournamentBracketAOV = () => {
     );
 
     if (match) {
-      return `/valorant/match/${match.round}/${match.Match}`;
+      return `/arenaofvalor/match/${match.round}/${match.Match}`;
     } else {
       return "#";
     }

@@ -25,7 +25,8 @@ export default function MatchStat() {
                 },
                 body: JSON.stringify({
                     round: round,
-                    Match: Match
+                    Match: Match,
+                    game:"Arena Of Valor"
                 })
             });
 
@@ -48,7 +49,7 @@ export default function MatchStat() {
         if (matchid.length > 0) {
             Promise.all(
                 matchid.map(id =>
-                    fetch(`https://dongchuyennghiep-backend.vercel.app/api/match/${region}/${id}`)
+                    fetch(`https://dongchuyennghiep-backend.vercel.app/api/auth/fetchmatchAOV/${id}`)
                         .then(res => {
                             if (!res.ok) {
                                 throw new Error(`HTTP error! status: ${res.status}`);

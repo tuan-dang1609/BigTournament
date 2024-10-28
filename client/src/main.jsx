@@ -32,6 +32,7 @@ import PrivacyPolicy from './components/privacypolicy.jsx';
 import TermsOfService from './components/termofservice.jsx';
 import HallOfFameAOV from './arenaofvalor/halloffame.jsx';
 import HallOfFameValo from './valorant/halloffame.jsx'
+import MatchStatAOV from './arenaofvalor/statmatch.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -59,6 +60,7 @@ if (rootElement) {
               <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
               <Route path='/arenaofvalor/pickem/welcome' element={<WelcomePage />} />
               <Route path='/arenaofvalor/swisstage' element={<TournamentBracketAOV />} />
+              <Route path='/arenaofvalor/match/:round/:Match' element={<MatchStatAOV />} />
               <Route path='/privacy' element={<PrivacyPolicy />} />
               <Route path='/tos' element={<TermsOfService />} />
               <Route path='/arenaofvalor/halloffame' element={<HallOfFameAOV />} />

@@ -2,15 +2,12 @@ import mongoose from 'mongoose';
 
 const agentSchema = new mongoose.Schema(
   {
-    Agent: {
-      type: String,
-      
-    },
+    
     IGN: {
       type: String,
       
     },
-    ACS: {
+    point: {
       type: String,
       
     },
@@ -25,31 +22,7 @@ const agentSchema = new mongoose.Schema(
     A: {
       type: String,
       
-    },
-    KD: {
-      type: String,
-      
-    },
-    ADR: {
-      type: String,
-      
-    },
-    HS: {
-      type: String,
-      
-    },
-    KAST: {
-      type: String,
-      
-    },
-    FK: {
-      type: String,
-      
-    },
-    MK: {
-      type: String,
-      
-    },
+    }
   },
   { _id: false } // Prevents creation of an `_id` field in subdocuments
 );
@@ -65,28 +38,11 @@ const teamInfoSchema = new mongoose.Schema(
   { _id: false } // Prevents creation of an `_id` field in subdocuments
 );
 
-export const teamSchema = new mongoose.Schema(
-  {
-    logoURL: {
-      type: String,
-      required: true,
-    },
-    teamname: {
-      type: String,
-      required: true,
-    },
-  },
-  { _id: false } // Prevents creation of an `_id` field in subdocuments
-);
+
 
 const mapSchema = new mongoose.Schema(
   {
-    name: {
-      type: String
-    },
-    pick: {
-      type: String,
-    },
+
     infoTeamleft: {
       type: teamInfoSchema,
 
@@ -121,19 +77,7 @@ const matchSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    stage:{
-      type:String,
-      required: true
-    },
-    teamleft: {
-      type: teamSchema,
-      required: true,
-    },
-    teamright: {
-      type: teamSchema,
-      required: true,
-    },
-    maps: [mapSchema],
+    info: [mapSchema],
     scoreteamA: {
       type: Number,
       default: 0,
@@ -142,6 +86,14 @@ const matchSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    teamA:{
+      type:String,
+      required:true
+    },
+    teamB:{
+      type:String,
+      required:true
+    }
   },
   { timestamps: true }
 );
