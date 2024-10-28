@@ -266,7 +266,7 @@ const SignupPage = () => {
               />
             </div>
             {errors.nickname && (
-              <p className="mt-2 text-sm text-red-600" id="riotID-error">
+              <p className="mt-2 text-sm text-red-600" id="nickname-error">
                 {errors.nickname}
               </p>
             )}

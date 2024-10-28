@@ -28,14 +28,16 @@ export const signup = async (req, res, next) => {
   const { riotID, username, password, discordID } = req.body;
   try {
     const hashedPassword = bcryptjs.hashSync(password, 10);
-    const newUser = new User({ nickname,riotID, username, discordID, password: hashedPassword });
+    const newUser = new User({ nickname, riotID, username, discordID, password: hashedPassword });
 
     await newUser.save();
     res.status(201).json({ message: 'Tạo tài khoản thành công' });
   } catch (error) {
-    return res.status(500).json({message:error})
+    console.error('Error creating account:', error.message); // Log the error message
+    return next(errorHandler(500, `Tạo tài khoản thất bại: ${error.message}`)); // Show error message in response
   }
 };
+
 export const teamHOF = async (req, res, next) => {
   try {
     const teams = req.body;
