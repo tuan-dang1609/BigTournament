@@ -5,7 +5,8 @@ const allgameSchema = new mongoose.Schema({
     teamA: { type: String, required: true },
     teamB: { type: String, required: true },
     round: { type: String, required: true },
-    Match: { type: String }
+    Match: { type: String },
+    game:{type: String,required:true,default:"Valorant"}
 });
 
 
