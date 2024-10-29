@@ -11,6 +11,7 @@ export default function MatchStat() {
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [teamALogo, setTeamALogo] = useState('');
+    const [loading, setLoading] = useState(true);
     const [teamBLogo, setTeamBLogo] = useState('');
     const [teamABgColor, setTeamABgColor] = useState('');
     const [teamBBgColor, setTeamBBgColor] = useState('');
@@ -36,7 +37,7 @@ export default function MatchStat() {
             return [];
         }
     };
-
+    
     const fetchTeamLogos = async () => {
         try {
             const teamResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamAOV', {
@@ -112,7 +113,7 @@ export default function MatchStat() {
         setAllPlayersTeamA(Array.from(teamAPlayers));
         setAllPlayersTeamB(Array.from(teamBPlayers));
     };
-
+    
     useEffect(() => {
         fetchMatchData();
     }, [round, Match]);
@@ -120,12 +121,19 @@ export default function MatchStat() {
     useEffect(() => {
         if (matchData) {
             fetchTeamLogos();
+            
         }
     }, [matchData]);
-
+   
     useEffect(() => {
         if (matchData2 && matchData2[0] && matchData2[0].info) {
             fetchAllPlayers(matchData2[0].info);
+            const scrollToTop = () => {
+                document.documentElement.scrollTop = 0;
+                setLoading(true);
+              };
+              setTimeout(scrollToTop, 0);
+              document.title = `${matchData2[0].group} | ${matchData2[0].teamA} vs ${matchData2[0].teamB}`;
         }
     }, [matchData2]);
 
