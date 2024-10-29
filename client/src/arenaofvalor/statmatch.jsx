@@ -1,22 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import MatchResult from "./match";
+import FeatureRichTable from "./match.jsx";
 
 export default function MatchStat() {
     const { round, Match } = useParams();
-    const [matchid, setMatchid] = useState([]);
+    const [matchData, setMatchData] = useState(null);
+    const [matchData2, setMatchData2] = useState(null);
     const [mapData, setMapData] = useState({});
-    const [matchInfo, setMatchInfo] = useState([]);
-    const [error, setError] = useState(null);
-    const [numRound, setNumRound] = useState(null);
-    const [kill, setAllKill] = useState([]);
-    const [score, setScore] = useState([]);
-    const [time, setTime] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
     const [selectedMap, setSelectedMap] = useState(null);
-    const region = 'ap';
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const fetchGames = async () => {
+    const fetchMatchData = async () => {
         try {
             const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findmatchid', {
                 method: 'POST',
@@ -26,7 +21,7 @@ export default function MatchStat() {
                 body: JSON.stringify({
                     round: round,
                     Match: Match,
-                    game:"Arena Of Valor"
+                    game: "Arena Of Valor"
                 })
             });
 
@@ -35,72 +30,83 @@ export default function MatchStat() {
             }
 
             const data = await response.json();
-            setMatchid(data.matchid);
+            setMatchData(data);
+
+            if (data.matchid && data.matchid.length > 0) {
+                fetchMatchDetails(data.matchid);
+            } else {
+                setIsLoading(false);
+            }
+
         } catch (error) {
-            console.error("Failed to fetch game:", error);
+            setError(`Failed to fetch match data: ${error.message}`);
+            console.error("Error details:", error);
+            setIsLoading(false);
+        }
+    };
+
+    const fetchMatchDetails = async (matchIds) => {
+        try {
+            const results = await Promise.all(
+                matchIds.map(id =>
+                    fetch(`https://dongchuyennghiep-backend.vercel.app/api/auth/fetchmatchAOV/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        return res.json();
+                    })
+                    .catch(err => {
+                        console.error(`Error fetching match data for ID ${id}:`, err);
+                        return null;
+                    })
+                )
+            );
+    
+            const validResults = results.filter(result => result !== null);
+            if (validResults.length > 0) {
+                setMatchData2(validResults)
+                setMapData(validResults); // Lưu cả 3 trận đấu vào mapData
+                setSelectedMap(validResults[0].info[0]); // Chọn bản đồ đầu tiên mặc định
+            }
+    
+            setIsLoading(false);
+        } catch (error) {
+            setError(`Failed to fetch match details: ${error.message}`);
+            console.error("Error details:", error);
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchGames();
+        fetchMatchData();
     }, [round, Match]);
-
     useEffect(() => {
-        if (matchid.length > 0) {
-            Promise.all(
-                matchid.map(id =>
-                    fetch(`https://dongchuyennghiep-backend.vercel.app/api/auth/fetchmatchAOV/${id}`)
-                        .then(res => {
-                            if (!res.ok) {
-                                throw new Error(`HTTP error! status: ${res.status}`);
-                            }
-                            return res.json();
-                        })
-                        .then(data => ({
-                            id,
-                            data: data.data
-                        }))
-                        .catch(err => {
-                            return null;
-                        })
-                )
-            ).then(results => {
-                const validResults = results.filter(result => result !== null);
-                if (validResults.length > 0) {
-                    const groupedData = validResults.reduce((acc, result) => {
-                        const mapName = result.data.metadata.map.name;
-                        if (!acc[mapName]) {
-                            acc[mapName] = [];
-                        }
-                        acc[mapName].push(result.data);
-                        return acc;
-                    }, {});
-
-                    setMapData(groupedData);
-                    setSelectedMap(Object.keys(groupedData)[0]); // Set the first map as the default
-                    setIsLoading(false);
-                }
-            }).catch(err => {
-                setError(err.message);
-                setIsLoading(false);
-            });
-        }
-    }, [region, matchid]);
+        fetchMatchData();
+    }, [round, Match]);
+    
 
     const formatTime = (utcTime) => {
+        if (!utcTime) return "Invalid date";
         const date = new Date(utcTime);
+        if (isNaN(date.getTime())) return "Invalid date";
+
         const options = {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false
         };
         const time = new Intl.DateTimeFormat('en-US', options).format(date);
-
         const day = date.getDate();
         const month = date.toLocaleString('en-US', { month: 'short' });
         const year = date.getFullYear();
         const daySuffix = getDaySuffix(day);
-
         return `${time} - ${day}${daySuffix} ${month} ${year}`;
     };
 
@@ -114,81 +120,29 @@ export default function MatchStat() {
         }
     };
 
-    const renderMapTabs = () => (
-        <div className="flex items-center justify-between bg-[#362431] p-2 mb-2">
-            <span className="text-white text-[11px] font-bold mr-4">MATCH STATS</span>
-            <div className="flex gap-2">
-                {Object.keys(mapData).map((mapName) => (
-                    <button
-                        key={mapName}
-                        onClick={() => setSelectedMap(mapName)}
-                        className={`px-4 py-2 text-[11px] font-bold rounded ${selectedMap === mapName ? 'bg-white text-black' : 'bg-[#4A374A] text-white'}`}
-                    >
-                        {mapName.toUpperCase()}
-                    </button>
-                ))}
+    const renderMapTabs = () => {
+
+    
+        return (
+            <div className="flex items-center justify-between bg-[#362431] p-2 mb-1">
+                <span className="text-white text-[11px] font-bold mr-4">MATCH STATS</span>
+                <div className="flex gap-2">
+                    {mapData[0].info.map((map, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setSelectedMap(map)} // Chọn trận đấu hiện tại
+                            className={`px-4 py-2 text-[11px] font-bold rounded ${selectedMap === map ? 'bg-white text-black' : 'bg-[#4A374A] text-white'}`}
+                        >
+                            Trận {index + 1}
+                        </button>
+                    ))}
+                </div>
             </div>
-        </div>
-    );
-
-    useEffect(() => {
-        if (selectedMap) {
-            const selectedMatchData = mapData[selectedMap] || [];
-
-            const players = selectedMatchData.flatMap(match => match.players) || [];
-            const kills = selectedMatchData.flatMap(match => match.kills) || [];
-            const rounds = selectedMatchData.reduce((sum, match) => sum + match.rounds.length, 0);
-            const teams = selectedMatchData.flatMap(match => match.teams);
-            const time = selectedMatchData.length > 0 ? formatTime(selectedMatchData[0].metadata.started_at) : null;
-
-            setNumRound(rounds);
-            setScore(teams);
-            setTime(time);
-            calculateFKAndMK(players, kills);
-        }
-    }, [selectedMap, mapData]);
-
-    const calculateFKAndMK = (players, kills) => {
-        const fkMap = {};
-        const mkMap = {};
-
-        players.forEach(player => {
-            fkMap[player.puuid] = 0;
-            mkMap[player.puuid] = 0;
-        });
-
-        const roundKillCount = {};
-
-        kills.forEach(killEvent => {
-            const { killer, round } = killEvent;
-
-            if (!roundKillCount[round]) {
-                roundKillCount[round] = {};
-                fkMap[killer.puuid] += 1;
-            }
-
-            if (!roundKillCount[round][killer.puuid]) {
-                roundKillCount[round][killer.puuid] = 0;
-            }
-            roundKillCount[round][killer.puuid] += 1;
-
-            if (roundKillCount[round][killer.puuid] === 3) {
-                mkMap[killer.puuid] += 1;
-            }
-        });
-
-        const updatedMatchInfo = players.map(player => ({
-            ...player,
-            fk: fkMap[player.puuid] || 0,
-            mk: mkMap[player.puuid] || 0,
-        }));
-
-        setMatchInfo(updatedMatchInfo);
+        );
     };
-
-    const selectedData = selectedMap ? matchInfo : [];
-    const selectedKills = selectedMap ? kill : [];
-    const selectedTeams = selectedMap ? score : [];
+    
+    
+    
 
     if (isLoading) {
         return (
@@ -198,11 +152,17 @@ export default function MatchStat() {
         );
     }
 
+    if (error) {
+        return <div className="text-center text-red-500 mt-40">{error}</div>;
+    }
+
+    // Lấy dữ liệu từ phần tử đầu tiên của `matchData2` nếu nó là một mảng
+    const { teamA, teamB, scoreteamA, scoreteamB, timestartmatch, league, type ,group} = matchData2?.[0] || {};
+    
     return (
         <>
-            
             <div className="matchstat">
-                <div className="scoreboard-title">
+                <div className="scoreboard-title mt-5 mx-0 my-1">
                     <div className="scoreboard w-full">
                         <div className="team teamleft w-full flex items-center">
                             <div className="logo">
@@ -212,32 +172,28 @@ export default function MatchStat() {
                                     alt="Team Left Logo"
                                 />
                             </div>
-                            <div className="teamname">Hysteric</div>
+                            <div className="teamname">{teamA}</div>
                         </div>
                         <div className="score-and-time">
                             <div className="score bg-[#362431]">
-                                {selectedTeams && selectedTeams.length > 0 && (
-                                    <span
-                                        className={`scoreA ${selectedTeams[0].rounds.won > selectedTeams[1].rounds.won ? 'green-win' : 'red-lose'}`}
-                                        id='score-left'
-                                    >
-                                        {selectedTeams[0].rounds.won}
-                                    </span>
-                                )}
+                                <span
+                                    className={`scoreA ${scoreteamA > scoreteamB ? 'green-win' : 'red-lose'}`}
+                                    id='score-left'
+                                >
+                                    {scoreteamA}
+                                </span>
                             </div>
                             <div className="time text-sm uppercase bg-[#362431] text-white">
                                 <span>Fin</span>
-                                <span>{time}</span>
+                                <span>{formatTime(timestartmatch)}</span>
                             </div>
                             <div className="score bg-[#362431]">
-                                {selectedTeams && selectedTeams.length > 1 && (
-                                    <span
-                                        className={`scoreA ${selectedTeams[0].rounds.won < selectedTeams[1].rounds.won ? 'green-win' : 'red-lose'}`}
-                                        id='score-right'
-                                    >
-                                        {selectedTeams[1].rounds.won}
-                                    </span>
-                                )}
+                                <span
+                                    className={`scoreA ${scoreteamA < scoreteamB ? 'green-win' : 'red-lose'}`}
+                                    id='score-right'
+                                >
+                                    {scoreteamB}
+                                </span>
                             </div>
                         </div>
                         <div className="team teamright w-full flex items-center">
@@ -248,17 +204,21 @@ export default function MatchStat() {
                                     alt="Team Right Logo"
                                 />
                             </div>
-                            <div className="teamname">Paper Shark</div>
+                            <div className="teamname">{teamB}</div>
                         </div>
                     </div>
                     <div className='title bg-[#362431]'>
-                        <span className='league all-title'>Valorant DCN Split 2</span>
-                        <span className='group all-title text-white'>Nhánh 0-0 ● BO1</span>
+                        <span className='league all-title'>{league}</span>
+                        <span className='group all-title text-white'>{group} ● {type}</span>
                     </div>
                 </div>
                 {renderMapTabs()}
                 <div>
-                    <MatchResult matchInfo={selectedData} numRound={numRound} kill={selectedKills} error={error} />
+                    <FeatureRichTable 
+                        matchInfo={selectedMap?.infoTeamleft?.data || []} 
+                        opponentInfo={selectedMap?.infoTeamright?.data || []} 
+                        error={error} 
+                    />
                 </div>
             </div>
         </>

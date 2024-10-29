@@ -22,6 +22,9 @@ const agentSchema = new mongoose.Schema(
     A: {
       type: String,
       
+    },
+    Gold:{
+      type:String
     }
   },
   { _id: false } // Prevents creation of an `_id` field in subdocuments

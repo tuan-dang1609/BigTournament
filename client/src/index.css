@@ -21,9 +21,7 @@
     margin: 100px auto 40px ;
     width: 95%;
 }
-.scoreboard-title{
-    margin: 1.25rem 0;
-}                                       
+                                   
 div.scoreboard{
     display: flex;
     flex-direction: row;
@@ -321,7 +319,6 @@ table.player-stats-table td:first-child span {
     justify-content: center;
     align-items: center;
     gap: .35rem 0;
-
     border-radius: 4px;
 }
 div.title span.league{
