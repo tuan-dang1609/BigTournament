@@ -36,18 +36,18 @@ router.post('/fetchplayerprofiles', async (req, res) => {
     try {
         const { players } = req.body; // Lấy danh sách các IGN từ request body
         const playerProfiles = await Promise.all(players.map(async (player) => {
-            const user = await User.findOne({ riotID: player });
+            const user = await User.findOne({ garenaaccount: player });
 
             if (user) {
                 return {
-                    name: user.nickname,
+                    name: user.garenaaccount,
                     avatar: user.profilePicture,
                 };
             }
             // Trả về thông tin mặc định nếu không tìm thấy người dùng
             return {
                 name: player,
-                avatar: 'default-avatar.png', // Đường dẫn hoặc URL đến hình ảnh mặc định
+                avatar: '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L', // Đường dẫn hoặc URL đến hình ảnh mặc định
             };
         }));
 

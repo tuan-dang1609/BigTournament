@@ -171,7 +171,9 @@ const ProfileUpdateForm = () => {
                                 </div>
                             </div>
 
-                            <div>
+                            
+                        </div>
+                        <div>
                                 <label htmlFor="discordId" className="block text-sm font-medium text-gray-700">Tên trong Discord</label>
                                 <div className="relative flex items-center">
                                     <FaDiscord className="absolute left-0 pl-3 pointer-events-none h-8 w-8 text-gray-400" aria-hidden="true" />
@@ -186,8 +188,6 @@ const ProfileUpdateForm = () => {
                                     />
                                 </div>
                             </div>
-                        </div>
-
                         {/* Nickname Field */}
                         <div>
                             <label htmlFor="nickname" className="block text-sm font-medium text-gray-700">Nickname</label>
