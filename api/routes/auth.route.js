@@ -4,6 +4,7 @@ import QuestionPickem from '../models/question.model.js';
 import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
 import Match from '../models/match.model.js';
+import User from '../models/user.model.js';
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -31,7 +32,31 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
+router.post('/fetchplayerprofiles', async (req, res) => {
+    try {
+        const { players } = req.body; // Lấy danh sách các IGN từ request body
+        const playerProfiles = await Promise.all(players.map(async (player) => {
+            const user = await User.findOne({ riotID: player });
 
+            if (user) {
+                return {
+                    name: user.nickname,
+                    avatar: user.profilePicture,
+                };
+            }
+            // Trả về thông tin mặc định nếu không tìm thấy người dùng
+            return {
+                name: player,
+                avatar: 'default-avatar.png', // Đường dẫn hoặc URL đến hình ảnh mặc định
+            };
+        }));
+
+        res.status(200).json(playerProfiles);
+    } catch (error) {
+        console.error('Error fetching player profiles:', error);
+        res.status(500).json({ error: 'Failed to fetch player profiles' });
+    }
+});
 // Route để thêm mới trận đấu
 router.post('/addmatchdetail', async (req, res) => {
     try {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaDiscord, FaGamepad, FaUser } from "react-icons/fa";
 import { SiRiotgames } from "react-icons/si";
 import { MdLock } from "react-icons/md";
+import garenaLogo from '../image/AOVLogo.png';
 import {
     updateUserStart,
     updateUserSuccess,
@@ -13,6 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 const ProfileUpdateForm = () => {
     const [formData, setFormData] = useState({
         avatar: "",
+        garenaaccount: "",
         riotId: "",
         discordId: "",
         nickname: "",
@@ -28,11 +30,12 @@ const ProfileUpdateForm = () => {
     const { currentUser } = useSelector((state) => state.user);
 
     useEffect(() => {
-        document.title="Cập nhật tài khoản"
+        document.title = "Cập nhật tài khoản"
         if (currentUser) {
             setFormData({
                 avatar: currentUser.profilePicture || "",
                 riotId: currentUser.riotID || "",
+                garenaaccount: currentUser.garenaaccount || "",
                 discordId: currentUser.discordID || "",
                 nickname: currentUser.nickname || "",
                 email: currentUser.email || "",
@@ -146,6 +149,23 @@ const ProfileUpdateForm = () => {
                                         className="appearance-none bg-white rounded-md block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                         placeholder="Your Riot ID"
                                         value={formData.riotId}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label htmlFor="garenaaccount" className="block text-sm font-medium text-gray-700">Tên trong game Liên Quân Mobile</label>
+                                <div className="relative flex items-center">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <img src={garenaLogo} className="h-5 w-5" alt="Garena Logo" aria-hidden="true" />
+                                    </div>
+                                    <input
+                                        id="garenaaccount"
+                                        name="garenaaccount"
+                                        type="text"
+                                        className="appearance-none bg-white rounded-md block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        placeholder="Tên trong game Liên Quân Mobile"
+                                        value={formData.garenaaccount}
                                         onChange={handleChange}
                                     />
                                 </div>

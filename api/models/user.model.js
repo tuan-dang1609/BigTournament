@@ -12,6 +12,12 @@ const userSchema = new mongoose.Schema(
       unique: true,
       default:""
     },
+    garenaaccount:{
+      type:String,
+      required: true,
+      unique:true,
+      default:"TBD"
+    },
     riotID:{
       type:String,
       unique: true,

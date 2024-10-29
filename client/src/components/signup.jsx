@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { SiRiotgames, SiDiscord } from "react-icons/si";
 import { Link, useNavigate } from 'react-router-dom';
-
+import garenaLogo from '../image/AOVLogo.png';
 const SignupPage = () => {
   const [formData, setFormData] = useState({
     discordID: "",
@@ -10,6 +10,7 @@ const SignupPage = () => {
     nickname: "",
     username: "",
     password: "",
+    garenaaccount: "",
     retypePassword: "",
   });
 
@@ -22,10 +23,10 @@ const SignupPage = () => {
   const [countdown, setCountdown] = useState(4); // Initialize countdown state
 
   const navigate = useNavigate();
-  useEffect(()=>{
-    document.title="Đăng ký tài khoản"
+  useEffect(() => {
+    document.title = "Đăng ký tài khoản"
 
-  },[])
+  }, [])
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -67,6 +68,13 @@ const SignupPage = () => {
           newErrors.username = "Phải nhập tên người dùng";
         } else {
           delete newErrors.username;
+        }
+        break;
+      case "garenaaccount":
+        if (!value.trim()) {
+          newErrors.garenaaccount = "Phải nhập tên acc Garena";
+        } else {
+          delete newErrors.garenaaccount;
         }
         break;
       case "password":
@@ -186,7 +194,7 @@ const SignupPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center mt-16">
+    <div className="min-h-screen flex items-center justify-center mt-20 mb-10">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Create an Account</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -209,6 +217,32 @@ const SignupPage = () => {
                 onChange={handleChange}
                 aria-invalid={errors.riotID ? "true" : "false"}
                 aria-describedby="riotID-error"
+              />
+            </div>
+            {errors.riotID && (
+              <p className="mt-2 text-sm text-red-600" id="riotID-error">
+                {errors.riotID}
+              </p>
+            )}
+          </div>
+          <div>
+            <label htmlFor="garenaaccount" className="block text-sm font-medium text-gray-700">
+              Tên trong game Liên Quân Mobile
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <img src={garenaLogo} className="h-5 w-5" alt="Garena Logo" aria-hidden="true" />
+              </div>
+              <input
+                type="text"
+                name="garenaaccount"
+                id="garenaaccount"
+                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.garenaaccount ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                placeholder="Nhập Garena ID của bạn"
+                value={formData.garenaaccount}
+                onChange={handleChange}
+                aria-invalid={errors.garenaaccount ? "true" : "false"}
+                aria-describedby="garenaaccount-error"
               />
             </div>
             {errors.riotID && (

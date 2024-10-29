@@ -1,5 +1,4 @@
 import User from '../models/user.model.js';
-import { errorHandler } from '../utils/error.js';
 import bcryptjs from 'bcryptjs';
 
 export const test = (req, res) => {
@@ -24,6 +23,7 @@ export const updateUser = async (req, res, next) => {
           riotID:req.body.riotID,
           username: req.body.username,
           nickname:req.body.nickname,
+          garenaaccount:req.body.garenaaccount,
           password: req.body.password,
           profilePicture: req.body.profilePicture,
         },
