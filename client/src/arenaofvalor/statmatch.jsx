@@ -18,7 +18,8 @@ export default function MatchStat() {
     const [allPlayersTeamB, setAllPlayersTeamB] = useState([]);
     const [teamAProfiles, setTeamAProfiles] = useState([]);
     const [teamBProfiles, setTeamBProfiles] = useState([]);
-
+    const [teamAGold, setTeamAGold] = useState(0);
+    const [teamBGold, setTeamBGold] = useState(0);
     const fetchPlayerProfiles = async (playerIGNs) => {
         try {
             const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/fetchplayerprofiles', {
@@ -189,7 +190,48 @@ export default function MatchStat() {
             default: return 'th';
         }
     };
+    useEffect(() => {
+        if (selectedMap?.infoTeamleft?.data) {
+            const totalGoldA = selectedMap.infoTeamleft.data.reduce((sum, player) => sum + (parseFloat(player.Gold) || 0), 0);
+            const totalGoldB = selectedMap.infoTeamright.data.reduce((sum, player) => sum + (parseFloat(player.Gold) || 0), 0);
+            setTeamAGold(totalGoldA);
+            setTeamBGold(totalGoldB);
+        }
+    }, [selectedMap]);
 
+    const totalGold = teamAGold + teamBGold;
+    const teamAWidth = totalGold > 0 ? (teamAGold / totalGold) * 100 : 50;
+    const teamBWidth = totalGold > 0 ? (teamBGold / totalGold) * 100 : 50;
+
+    const renderGoldRatioBar = () => (
+        <div className="w-full flex items-center justify-between mt-3 mb-3">
+            <div className="w-full rounded-lg overflow-hidden flex" style={{ height: '40px' }}>
+                {/* Phần của Team A */}
+                <div
+                    className="h-full text-white text-center flex items-center justify-center font-semibold transition-all duration-500 opacity-80"
+                    style={{
+                        width: `${teamAWidth}%`,
+                        backgroundColor: hexToRgba(teamABgColor, 0.55) || 'rgba(0, 0, 255, 0.2)', // màu xanh với độ mờ
+                    }}
+                >
+                    {teamAGold}
+                </div>
+                
+                {/* Phần của Team B */}
+                <div
+                    className="h-full text-white text-center flex items-center justify-center font-semibold transition-all duration-500 opacity-80"
+                    style={{
+                        width: `${teamBWidth}%`,
+                        backgroundColor: hexToRgba(teamBBgColor, 0.55) || 'rgba(255, 0, 0, 0.2)', // màu đỏ với độ mờ
+                    }}
+                >
+                    {teamBGold}
+                </div>
+            </div>
+        </div>
+    );
+    
+    
     const formatTime = (utcTime) => {
         if (!utcTime) return "Invalid date";
         const date = new Date(utcTime);
@@ -287,33 +329,36 @@ export default function MatchStat() {
             </div>
 
             {/* Display all players with profiles */}
-            <div className='flex flex-row mt-2 gap-x-2 w-full'>
-                <div className="team-members p-4 w-[50%]">
-                    <h3 className="text-lg font-bold">Thành viên của {teamA}</h3>
-                    <div className="grid mt-2" style={{ gridTemplateColumns: `repeat(${allPlayersTeamA.length}, minmax(0, 1fr))` }}>
+            <div className='flex lg:flex-row flex-col mt-2 gap-x-4 w-full mb-4'>
+                <div className="team-members p-4 lg:w-[50%] w-full border-r-2 border-base-content">
+                    <h3 className="text-lg font-bold mb-2">Thành viên của {teamA}</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-3 gap-y-1">
                         {teamAProfiles.map((player, index) => (
                             <div key={index} className="flex flex-col items-center justify-center">
-                                <img src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`} alt={player.name} className="w-14 h-14 rounded-full mb-1" />
-                                <p className="text-sm">{player.name || player}</p>
+                                <img src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`} alt={player.name} className="w-20 h-20 rounded-full mb-2" />
+                                <p className="text-[12.5px]">{player.name || player}</p>
                             </div>
                         ))}
                     </div>
                 </div>
-                <div className="team-members p-4 w-[50%]">
-                    <h3 className="text-lg font-bold">Thành viên của {teamB}</h3>
-                    <div className="grid mt-2" style={{ gridTemplateColumns: `repeat(${allPlayersTeamB.length}, minmax(0, 1fr))` }}>
+
+
+                <div className="team-members p-4 lg:w-[50%] w-full">
+                    <h3 className="text-lg font-bold mb-2">Thành viên của {teamB}</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-3 gap-y-1">
                         {teamBProfiles.map((player, index) => (
                             <div key={index} className="flex flex-col items-center justify-center">
-                                <img src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`} alt={player.name} className="w-14 h-14 rounded-full mb-1" />
-                                <p className="text-sm">{player.name || player}</p>
+                                <img src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`} alt={player.name} className="w-20 h-20 rounded-full mb-2" />
+                                <p className="text-[12.5px]">{player.name || player}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {renderMapTabs()}
 
+            {renderMapTabs()}
+            {renderGoldRatioBar()}
             <FeatureRichTable matchInfo={selectedMap?.infoTeamleft?.data || []} opponentInfo={selectedMap?.infoTeamright?.data || []} error={error} />
         </div>
     );

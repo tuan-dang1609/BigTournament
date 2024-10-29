@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 
 function FeatureRichTable({ matchInfo, opponentInfo, error }) {
-  const leftTeamData = matchInfo || [];
-  const rightTeamData = opponentInfo || [];
+  const leftTeamData = [...(matchInfo || [])].sort((a, b) => (parseFloat(b.point) || 0) - (parseFloat(a.point) || 0));
+  const rightTeamData = [...(opponentInfo || [])].sort((a, b) => (parseFloat(b.point) || 0) - (parseFloat(a.point) || 0));
 
   const columns = [
     { key: "IGN", label: "Người chơi" },
@@ -11,7 +11,7 @@ function FeatureRichTable({ matchInfo, opponentInfo, error }) {
     { key: "D", label: "D" },
     { key: "A", label: "A" },
     { key: "K/D", label: "K/D" },
-    { key: "KP", label: "KP" }, // Thêm cột KAST%
+    { key: "KP", label: "KP" },
     { key: "Gold", label: "🪙" }
   ];
 
@@ -51,10 +51,9 @@ function FeatureRichTable({ matchInfo, opponentInfo, error }) {
             const K = parseFloat(row.K) || 0;
             const A = parseFloat(row.A) || 0;
 
-            // Tính KAST% cho từng người chơi
-            const kastPercentage =teamStats.totalK > 0
-            ? ((K + A) * 100 / teamStats.totalK).toFixed(1)
-            : "N/A";
+            const kastPercentage = teamStats.totalK > 0
+              ? ((K + A) * 100 / teamStats.totalK).toFixed(1)
+              : "N/A";
 
             return (
               <tr key={rowIndex} className={`hover:bg-${teamColor}-100 transition-colors`}>
@@ -66,7 +65,7 @@ function FeatureRichTable({ matchInfo, opponentInfo, error }) {
                     const deaths = parseFloat(row.D);
                     cellData = deaths === 0 ? kills : (kills / deaths).toFixed(1);
                   } else if (column.key === "KP") {
-                    cellData = `${kastPercentage}%`; // Hiển thị KAST%
+                    cellData = `${kastPercentage}%`;
                   } else {
                     cellData = row[column.key] || "N/A";
                   }
