@@ -45,7 +45,10 @@ router.post('/fetchplayerprofiles', async (req, res) => {
                 };
             }
             // Trả về thông tin mặc định nếu không tìm thấy người dùng
-           
+            return {
+                name: player,
+                avatar: '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L', // Đường dẫn hoặc URL đến hình ảnh mặc định
+            };
         }));
 
         res.status(200).json(playerProfiles);
