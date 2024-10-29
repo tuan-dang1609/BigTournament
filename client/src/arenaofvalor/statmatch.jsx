@@ -95,7 +95,7 @@ export default function MatchStat() {
         }
     };
 
-    const fetchAllPlayers = async (info) => {
+    const fetchAllPlayers = (info) => {
         const teamAPlayers = new Set();
         const teamBPlayers = new Set();
 
@@ -108,17 +108,8 @@ export default function MatchStat() {
             }
         });
 
-        const teamAList = Array.from(teamAPlayers);
-        const teamBList = Array.from(teamBPlayers);
-
-        setAllPlayersTeamA(teamAList);
-        setAllPlayersTeamB(teamBList);
-
-        const teamAProfiles = await fetchPlayerProfiles(teamAList);
-        const teamBProfiles = await fetchPlayerProfiles(teamBList);
-
-        setTeamAProfiles(teamAProfiles);
-        setTeamBProfiles(teamBProfiles);
+        setAllPlayersTeamA(Array.from(teamAPlayers));
+        setAllPlayersTeamB(Array.from(teamBPlayers));
     };
 
     useEffect(() => {
@@ -136,6 +127,18 @@ export default function MatchStat() {
             fetchAllPlayers(matchData2[0].info);
         }
     }, [matchData2]);
+
+    useEffect(() => {
+        if (allPlayersTeamA.length > 0) {
+            fetchPlayerProfiles(allPlayersTeamA).then(profiles => setTeamAProfiles(profiles));
+        }
+    }, [allPlayersTeamA]);
+
+    useEffect(() => {
+        if (allPlayersTeamB.length > 0) {
+            fetchPlayerProfiles(allPlayersTeamB).then(profiles => setTeamBProfiles(profiles));
+        }
+    }, [allPlayersTeamB]);
 
     const fetchMatchDetails = async (matchIds) => {
         try {
@@ -176,6 +179,7 @@ export default function MatchStat() {
             setIsLoading(false);
         }
     };
+
     const getDaySuffix = (day) => {
         if (day > 3 && day < 21) return 'th';
         switch (day % 10) {
@@ -185,6 +189,7 @@ export default function MatchStat() {
             default: return 'th';
         }
     };
+
     const formatTime = (utcTime) => {
         if (!utcTime) return "Invalid date";
         const date = new Date(utcTime);
@@ -288,7 +293,7 @@ export default function MatchStat() {
                     <div className="grid mt-2" style={{ gridTemplateColumns: `repeat(${allPlayersTeamA.length}, minmax(0, 1fr))` }}>
                         {teamAProfiles.map((player, index) => (
                             <div key={index} className="flex flex-col items-center justify-center">
-                              <img  src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`} alt={player.name} className="w-14 h-14 rounded-full mb-1" />
+                                <img src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`} alt={player.name} className="w-14 h-14 rounded-full mb-1" />
                                 <p className="text-sm">{player.name || player}</p>
                             </div>
                         ))}
