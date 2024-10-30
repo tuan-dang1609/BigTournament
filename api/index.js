@@ -143,6 +143,17 @@ app.get('/api/matches', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+app.get('/api/account/:puuid', async (req, res) => {
+  const { puuid } = req.params;
+  const apiKey = process.env.TFT_KEY;
+  try {
+      const response = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}?api_key=${apiKey}`);
+      const data = await response.json();
+      res.json(data);
+  } catch (error) {
+      res.status(500).json({ error: 'Error fetching data from Riot API' });
+  }
+});
 
 const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server listening on port ${process.env.PORT || 3000}`);

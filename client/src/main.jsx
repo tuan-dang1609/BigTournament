@@ -33,6 +33,7 @@ import TermsOfService from './components/termofservice.jsx';
 import HallOfFameAOV from './arenaofvalor/halloffame.jsx';
 import HallOfFameValo from './valorant/halloffame.jsx'
 import MatchStatAOV from './arenaofvalor/statmatch.jsx'
+import TFT from './tft/tftmatch.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -65,6 +66,7 @@ if (rootElement) {
               <Route path='/tos' element={<TermsOfService />} />
               <Route path='/arenaofvalor/halloffame' element={<HallOfFameAOV />} />
               <Route path='/valorant/halloffame' element={<HallOfFameValo />} />
+              <Route path='/tft/match' element={<TFT />} />
               <Route element={<PrivateRoute />}>
               <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
