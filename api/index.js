@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import helmet from 'helmet'; 
+import helmet from 'helmet';
 import userRoutes from './routes/user.route.js';
 import authRoutes from './routes/auth.route.js';
 import cookieParser from 'cookie-parser';
@@ -18,7 +18,8 @@ import Redis from 'ioredis'; // Import Redis
 
 dotenv.config();
 const apiKey = process.env.TFT_KEY;
-// MongoDB connection with connection pooling settings
+
+// MongoDB connection
 mongoose
   .connect(process.env.MONGO, {
     maxPoolSize: 400,
@@ -40,6 +41,11 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Cấu hình CORS để cho phép truy cập từ nguồn cụ thể
+app.use(cors({
+  origin: 'http://localhost:5173' // Cho phép localhost:5173 truy cập
+}));
+
 // Helmet security configuration
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
@@ -50,7 +56,7 @@ app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'trusted-cdn.com'], 
+      scriptSrc: ["'self'", "'unsafe-inline'", 'trusted-cdn.com'],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
     },
@@ -63,10 +69,10 @@ const cache = new NodeCache({ stdTTL: 300, checkperiod: 320 });
 
 // Redis configuration for Bull queue
 const redisOptions = {
-  maxRetriesPerRequest: null,  // Disable retry limit entirely
-  connectTimeout: 10000,       // 10-second connection timeout
+  maxRetriesPerRequest: null,
+  connectTimeout: 10000,
   retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000); // Exponential backoff with max delay of 2 seconds
+    const delay = Math.min(times * 50, 2000);
     return delay;
   },
 };
@@ -76,7 +82,6 @@ const scoreQueue = new Queue('score-processing', {
   redis: redisOptions,
 });
 
-app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
@@ -143,28 +148,33 @@ app.get('/api/matches', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-router.get('/tft/match/:matchId', async (req, res) => {
+
+app.get('/api/tft/match/:matchId', async (req, res) => {
   const { matchId } = req.params;
 
   try {
-      const response = await axios.get(`https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}`, {
-          headers: { 'X-Riot-Token': apiKey }
-      });
-      res.json(response.data);
+    const response = await axios.get(`https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}`, {
+      headers: { 'X-Riot-Token': apiKey }
+    });
+
+    // Thêm Access-Control-Allow-Origin vào header
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    res.json(response.data);
   } catch (error) {
-      console.error('Error fetching match data:', error.message);
-      res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+    console.error('Error fetching match data:', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
   }
 });
+
 app.get('/api/account/:puuid', async (req, res) => {
   try {
     const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${req.params.puuid}`, {
         headers: { 'X-Riot-Token': apiKey }
     });
     res.json(response.data);
-} catch (error) {
+  } catch (error) {
     res.status(500).json({ error: 'Failed to fetch account data' });
-}
+  }
 });
 
 const server = app.listen(process.env.PORT || 3000, () => {
