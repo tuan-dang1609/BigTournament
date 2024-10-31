@@ -46,7 +46,13 @@ const MatchData = () => {
                 // Fetch account data by calling the backend API for each participant's puuid
                 const puuidArray = Object.values(puuidMap);
                 const accountPromises = puuidArray.map(async (participant) => {
-                    const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/account/${participant.puuid}`);
+                    const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/account`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ puuid: participant.puuid }) // Truyền `puuid` qua body
+                    });
                     if (!response.ok) {
                         throw new Error('Failed to fetch account data');
                     }
