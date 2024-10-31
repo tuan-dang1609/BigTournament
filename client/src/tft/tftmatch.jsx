@@ -9,7 +9,10 @@ const MatchData = () => {
     const matchIds = ['VN2_625876667'];
 
     const getPoints = (placement) => {
-        return placement >= 1 && placement <= 8 ? 9 - placement : 0;
+        if (placement >= 1 && placement <= 8) {
+            return 9 - placement;
+        }
+        return 0;
     };
 
     useEffect(() => {
@@ -18,18 +21,18 @@ const MatchData = () => {
                 setLoading(true);
                 
                 // Lấy thông tin trận đấu từ backend
-                const matchResponses = await Promise.all(
-                    matchIds.map(async (matchId) => {
-                        const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/tft/match/${matchId}`);
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                );
+                const promises = matchIds.map(async (matchId) => {
+                    const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/tft/match/${matchId}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                });
+
+                const data = await Promise.all(promises);
 
                 const puuidMap = {};
-                matchResponses.forEach((matchData, matchIndex) => {
+                data.forEach((matchData, matchIndex) => {
                     matchData.info.participants.forEach(participant => {
                         const { puuid, placement } = participant;
                         if (!puuidMap[puuid]) {
@@ -42,7 +45,7 @@ const MatchData = () => {
 
                 // Gửi một yêu cầu duy nhất để lấy thông tin tài khoản cho tất cả các `puuid`
                 const puuidArray = Object.values(puuidMap).map(participant => participant.puuid);
-                const accountResponse = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/accounts`, {
+                const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/accounts`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -50,18 +53,16 @@ const MatchData = () => {
                     body: JSON.stringify({ puuids: puuidArray }) // Truyền mảng `puuids` qua body
                 });
 
-                if (!accountResponse.ok) {
+                if (!response.ok) {
                     throw new Error('Failed to fetch account data');
                 }
 
-                const accountDataArray = await accountResponse.json();
-                const accountDataWithTags = Object.values(puuidMap).map((participant) => {
-                    const accountData = accountDataArray.find(acc => acc.puuid === participant.puuid);
-                    return {
-                        ...participant,
-                        gameNameTag: accountData ? `${accountData.gameName}#${accountData.tagLine}` : 'N/A'
-                    };
-                });
+                const accountDataArray = await response.json();
+                const accountDataWithTags = Object.values(puuidMap).map((participant, index) => ({
+                    ...participant,
+                    gameNameTag: `${accountDataArray[index].gameName}#${accountDataArray[index].tagLine}`,
+                    totalPoints: participant.points.reduce((acc, curr) => acc + curr, 0) // Tính tổng điểm
+                }));
 
                 setPuuidData(accountDataWithTags);
             } catch (error) {
@@ -105,6 +106,7 @@ const MatchData = () => {
                         {matchIds.map((_, index) => (
                             <th key={index}>Trận {index + 1}</th>
                         ))}
+                        <th>Tổng điểm</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -118,6 +120,7 @@ const MatchData = () => {
                                         (row.points[matchIndex] || 0)}
                                 </td>
                             ))}
+                            <td>{row.totalPoints}</td> {/* Cột tổng điểm */}
                         </tr>
                     ))}
                 </tbody>

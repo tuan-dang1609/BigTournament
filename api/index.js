@@ -170,20 +170,21 @@ app.post('/api/accounts', async (req, res) => {
   const { puuids } = req.body;
 
   try {
-    // Giải mã `puuids` từ Base64 về gốc trước khi sử dụng
-    const decodedPuuids = puuids.map(encodedPuuid => atob(encodedPuuid));
-
-    // Tạo một mảng các promises để fetch dữ liệu cho từng `puuid` đã giải mã
-    const accountPromises = decodedPuuids.map(async (puuid) => {
+    // Tạo một mảng các promises để fetch dữ liệu cho từng puuid
+    const accountPromises = puuids.map(async (puuid) => {
       const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`, {
         headers: { 'X-Riot-Token': apiKey }
       });
 
+      // Trả về dữ liệu mà không chứa `puuid`
       const { puuid: _, ...accountData } = response.data;
       return accountData;
     });
 
+    // Chờ tất cả các requests hoàn tất
     const accountDataArray = await Promise.all(accountPromises);
+
+    // Trả về dữ liệu đã xử lý cho client
     res.json(accountDataArray);
   } catch (error) {
     console.error('Error fetching account data:', error.message);
