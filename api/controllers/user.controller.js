@@ -23,7 +23,7 @@ export const updateUser = async (req, res, next) => {
       updateFields.password = bcryptjs.hashSync(req.body.password, 10);
     }
 
-    console.log("Updating user with fields:", updateFields); // Kiểm tra dữ liệu đầu vào
+    console.log("Update fields:", updateFields); // Kiểm tra các trường sẽ được cập nhật
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
@@ -35,20 +35,15 @@ export const updateUser = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    console.log("Updated user:", updatedUser); // Kiểm tra dữ liệu sau khi cập nhật
+    console.log("Updated user in database:", updatedUser); // Kiểm tra dữ liệu sau khi cập nhật
 
     const { password, ...rest } = updatedUser._doc;
     res.status(200).json({ success: true, ...rest });
   } catch (error) {
-    console.error("Error updating user:", error); // Log lỗi
+    console.error("Error updating user:", error); // Log lỗi nếu xảy ra
     next(error);
   }
 };
-
-
-
-// delete user
-
 
 export const deleteUser = async (req, res, next) => {
   try {
