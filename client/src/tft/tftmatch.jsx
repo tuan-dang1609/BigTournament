@@ -16,6 +16,7 @@ const MatchData = () => {
     };
 
     useEffect(() => {
+        document.title = "Bảng xếp hạng TFT"
         const fetchAllMatches = async () => {
             try {
                 setLoading(true);
