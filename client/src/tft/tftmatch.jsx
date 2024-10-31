@@ -7,7 +7,7 @@ const MatchData = () => {
     const [showPlayers, setShowPlayers] = useState(true);
 
     const matchIds = ['VN2_625876667', 'VN2_623274428', 'VN2_619818603'];
-    const apiKey = 'RGAPI-7b899223-ca3c-455f-98e7-a1d996bfda55';
+    const apiKey = 'RGAPI-5afcd015-bdc5-4a6c-a59d-6dfabd9e3f19';
 
     const getPoints = (placement) => {
         if (placement >= 1 && placement <= 8) {
@@ -45,7 +45,10 @@ const MatchData = () => {
                 // Chuyển đổi puuid thành gameName#tagLine
                 const puuidArray = Object.values(puuidMap);
                 const accountPromises = puuidArray.map(async (participant) => {
-                    const response = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${participant.puuid}?api_key=${apiKey}`);
+                    const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/account/${participant.puuid}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
                     const accountData = await response.json();
                     return { ...participant, gameNameTag: `${accountData.gameName}#${accountData.tagLine}` };
                 });

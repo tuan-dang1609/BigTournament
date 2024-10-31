@@ -144,15 +144,16 @@ app.get('/api/matches', async (req, res) => {
   }
 });
 app.get('/api/account/:puuid', async (req, res) => {
-  const { puuid } = req.params;
   const apiKey = process.env.TFT_KEY;
+
   try {
-      const response = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}?api_key=${apiKey}`);
-      const data = await response.json();
-      res.json(data);
-  } catch (error) {
-      res.status(500).json({ error: 'Error fetching data from Riot API' });
-  }
+    const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${req.params.puuid}`, {
+        headers: { 'X-Riot-Token': apiKey }
+    });
+    res.json(response.data);
+} catch (error) {
+    res.status(500).json({ error: 'Failed to fetch account data' });
+}
 });
 
 const server = app.listen(process.env.PORT || 3000, () => {
