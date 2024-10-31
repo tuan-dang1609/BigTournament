@@ -7,7 +7,6 @@ const MatchData = () => {
     const [showPlayers, setShowPlayers] = useState(true);
 
     const matchIds = ['VN2_625876667'];
-  
 
     const getPoints = (placement) => {
         if (placement >= 1 && placement <= 8) {
@@ -20,7 +19,8 @@ const MatchData = () => {
         const fetchAllMatches = async () => {
             try {
                 setLoading(true);
-                // Replace Riot API call with your backend API route
+                
+                // Lấy thông tin trận đấu từ backend
                 const promises = matchIds.map(async (matchId) => {
                     const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/tft/match/${matchId}`);
                     if (!response.ok) {
@@ -28,9 +28,9 @@ const MatchData = () => {
                     }
                     return response.json();
                 });
-    
+
                 const data = await Promise.all(promises);
-    
+
                 const puuidMap = {};
                 data.forEach((matchData, matchIndex) => {
                     matchData.info.participants.forEach(participant => {
@@ -42,33 +42,35 @@ const MatchData = () => {
                         puuidMap[puuid].points[matchIndex] = getPoints(placement);
                     });
                 });
-    
-                // Fetch account data by calling the backend API for each participant's puuid
-                const puuidArray = Object.values(puuidMap);
-                const accountPromises = puuidArray.map(async (participant) => {
-                    const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/account`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ puuid: participant.puuid }) // Truyền `puuid` qua body
-                    });
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch account data');
-                    }
-                    const accountData = await response.json();
-                    return { ...participant, gameNameTag: `${accountData.gameName}#${accountData.tagLine}` };
+
+                // Gửi một yêu cầu duy nhất để lấy thông tin tài khoản cho tất cả các `puuid`
+                const puuidArray = Object.values(puuidMap).map(participant => participant.puuid);
+                const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/accounts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ puuids: puuidArray }) // Truyền mảng `puuids` qua body
                 });
-    
-                const accountData = await Promise.all(accountPromises);
-                setPuuidData(accountData);
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch account data');
+                }
+
+                const accountDataArray = await response.json();
+                const accountDataWithTags = Object.values(puuidMap).map((participant, index) => ({
+                    ...participant,
+                    gameNameTag: `${accountDataArray[index].gameName}#${accountDataArray[index].tagLine}`
+                }));
+
+                setPuuidData(accountDataWithTags);
             } catch (error) {
                 setError(error.message);
             } finally {
                 setLoading(false);
             }
         };
-    
+
         fetchAllMatches();
     }, []);
 

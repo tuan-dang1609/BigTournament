@@ -166,16 +166,26 @@ app.get('/api/tft/match/:matchId', async (req, res) => {
   }
 });
 
-app.post('/api/account', async (req, res) => {
-  const { puuid } = req.body;
+app.post('/api/accounts', async (req, res) => {
+  const { puuids } = req.body;
 
   try {
-    const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`, {
-      headers: { 'X-Riot-Token': apiKey }
+    // Tạo một mảng các promises để fetch dữ liệu cho từng puuid
+    const accountPromises = puuids.map(async (puuid) => {
+      const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`, {
+        headers: { 'X-Riot-Token': apiKey }
+      });
+
+      // Trả về dữ liệu mà không chứa `puuid`
+      const { puuid: _, ...accountData } = response.data;
+      return accountData;
     });
 
-    const { puuid: _, ...maskedData } = response.data; // Loại bỏ `puuid`
-    res.json(maskedData);
+    // Chờ tất cả các requests hoàn tất
+    const accountDataArray = await Promise.all(accountPromises);
+
+    // Trả về dữ liệu đã xử lý cho client
+    res.json(accountDataArray);
   } catch (error) {
     console.error('Error fetching account data:', error.message);
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch account data' });
