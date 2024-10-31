@@ -84,7 +84,7 @@ const MatchData = () => {
     if (error) return <p>Error: {error}</p>;
 
     return (
-        <div className='mt-20  mx-auto max-w-screen-2xl'>
+        <div className='mt-20 mx-auto lg:w-[90%]'>
             <div className='flex lg:flex-row flex-col lg:gap-x-2'>
             <h1>Matches Data</h1>
             <div className="flex items-center mb-4">
@@ -111,7 +111,7 @@ const MatchData = () => {
             <table border="1" cellPadding="10" cellSpacing="0" className='text-center w-full'>
                 <thead>
                     <tr>
-                        <th>Rank Tổng</th>
+                        <th></th>
                         <th>Game Name</th>
                         {matchIds.map((_, index) => (
                             <th key={index}>Trận {index + 1}</th>
