@@ -48,12 +48,11 @@ const ProfileUpdateForm = () => {
 
     const validateField = (name, value) => {
         let fieldErrors = {};
-        if (name === "newPassword" && value.length < 8) {
+        if (name === "newPassword" && value && value.length < 8) {
             fieldErrors[name] = "New password must be at least 8 characters long";
-        } else if (name === "confirmNewPassword" && value !== formData.newPassword) {
+        } else if (name === "confirmNewPassword" && value && value !== formData.newPassword) {
             fieldErrors[name] = "Passwords do not match";
         } else {
-            // Remove the error if validation passes
             fieldErrors[name] = "";
         }
         return fieldErrors;
@@ -76,18 +75,25 @@ const ProfileUpdateForm = () => {
             formErrors = { ...formErrors, ...fieldErrors };
         });
 
-        // Remove empty errors (passed validations)
         const cleanedErrors = Object.fromEntries(
             Object.entries(formErrors).filter(([_, v]) => v)
         );
 
         if (Object.keys(cleanedErrors).length === 0) {
+            const updatedFormData = { ...formData };
+
+            // Remove password fields if they are empty
+            if (!updatedFormData.newPassword) {
+                delete updatedFormData.newPassword;
+                delete updatedFormData.confirmNewPassword;
+            }
+
             dispatch(updateUserStart());
             try {
                 const res = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/user/update/${currentUser._id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData),
+                    body: JSON.stringify(updatedFormData),
                 });
                 const data = await res.json();
                 if (data.success === false) {
