@@ -10,32 +10,32 @@ export const test = (req, res) => {
 // update user
 
 export const updateUser = async (req, res, next) => {
-
   try {
+    const updateFields = {
+      discordID: req.body.discordID,
+      riotID: req.body.riotID,
+      nickname: req.body.nickname,
+      garenaaccount: req.body.garenaaccount,
+      profilePicture: req.body.profilePicture,
+    };
+
     if (req.body.password) {
-      req.body.password = bcryptjs.hashSync(req.body.password, 10);
+      updateFields.password = bcryptjs.hashSync(req.body.password, 10);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
-      {
-        $set: {
-          riotID:req.body.riotID,
-          username: req.body.username,
-          nickname:req.body.nickname,
-          garenaaccount:req.body.garenaaccount,
-          password: req.body.password,
-          profilePicture: req.body.profilePicture,
-        },
-      },
+      { $set: updateFields },
       { new: true }
     );
+
     const { password, ...rest } = updatedUser._doc;
     res.status(200).json(rest);
   } catch (error) {
     next(error);
   }
 };
+
 
 
 // delete user
