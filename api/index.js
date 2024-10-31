@@ -170,24 +170,21 @@ app.get('/api/account/:puuid', async (req, res) => {
   const { puuid } = req.params;
 
   try {
-    // Gọi API Riot với puuid đầy đủ
+    // Gọi API Riot với `puuid` đầy đủ
     const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`, {
       headers: { 'X-Riot-Token': apiKey }
     });
 
-    // Chỉ trả về 5 ký tự đầu của puuid trong phản hồi
-    const maskedData = {
-      ...response.data,
-      puuid: response.data.puuid.substring(0, 5) // Chỉ gửi 5 ký tự đầu của puuid
-    };
+    // Tạo bản sao của dữ liệu nhưng loại bỏ `puuid`
+    const { puuid: _, ...maskedData } = response.data; // Loại bỏ `puuid`
 
+    // Gửi dữ liệu đã loại bỏ `puuid` về phía client
     res.json(maskedData);
   } catch (error) {
     console.error('Error fetching account data:', error.message);
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch account data' });
   }
 });
-
 
 const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server listening on port ${process.env.PORT || 3000}`);
