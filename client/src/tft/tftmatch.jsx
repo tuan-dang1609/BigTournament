@@ -86,7 +86,6 @@ const MatchData = () => {
     return (
         <div className='mt-20 mx-auto lg:w-[90%]'>
             <div className='flex lg:flex-row flex-col lg:gap-x-2'>
-            <h1>Matches Data</h1>
             <div className="flex items-center mb-4">
                 <label className="relative inline-block w-14 h-8">
                     <input
