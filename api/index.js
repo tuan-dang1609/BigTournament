@@ -17,7 +17,7 @@ import Queue from 'bull';
 import Redis from 'ioredis'; // Import Redis
 
 dotenv.config();
-
+const apiKey = process.env.TFT_KEY;
 // MongoDB connection with connection pooling settings
 mongoose
   .connect(process.env.MONGO, {
@@ -143,9 +143,20 @@ app.get('/api/matches', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-app.get('/api/account/:puuid', async (req, res) => {
-  const apiKey = "RGAPI-5afcd015-bdc5-4a6c-a59d-6dfabd9e3f19";
+router.get('/tft/match/:matchId', async (req, res) => {
+  const { matchId } = req.params;
 
+  try {
+      const response = await axios.get(`https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}`, {
+          headers: { 'X-Riot-Token': apiKey }
+      });
+      res.json(response.data);
+  } catch (error) {
+      console.error('Error fetching match data:', error.message);
+      res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+  }
+});
+app.get('/api/account/:puuid', async (req, res) => {
   try {
     const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${req.params.puuid}`, {
         headers: { 'X-Riot-Token': apiKey }
