@@ -6,7 +6,7 @@ const MatchData = () => {
     const [error, setError] = useState(null);
     const [showPlayers, setShowPlayers] = useState(true);
 
-    const matchIds = ['VN2_628737890','VN2_628709191'];
+    const matchIds = ['VN2_628709191','VN2_628737890'];
 
     const getPoints = (placement) => {
         if (placement >= 1 && placement <= 8) {
@@ -84,7 +84,8 @@ const MatchData = () => {
     if (error) return <p>Error: {error}</p>;
 
     return (
-        <div className='mt-20'>
+        <div className='mt-20  mx-auto max-w-screen-2xl'>
+            <div className='flex lg:flex-row flex-col lg:gap-x-2'>
             <h1>Matches Data</h1>
             <div className="flex items-center mb-4">
                 <label className="relative inline-block w-14 h-8">
@@ -95,7 +96,7 @@ const MatchData = () => {
                         className="sr-only"
                     />
                     <div
-                        className={`block bg-gray-300 w-14 h-8 rounded-full ${showPlayers ? 'bg-green-500' : 'bg-gray-300'} transition duration-300 ease-in-out`}
+                        className={`block bg-gray-300 w-14 h-8 rounded-full ${showPlayers ? 'bg-green-500' : 'bg-green-500'} transition duration-300 ease-in-out`}
                     ></div>
                     <div
                         className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${showPlayers ? 'transform translate-x-6' : ''}`}
@@ -104,7 +105,10 @@ const MatchData = () => {
                 <span className="ml-2">{showPlayers ? 'Hiển thị Placement' : 'Hiển thị Điểm'}</span>
             </div>
 
-            <table border="1" cellPadding="10" cellSpacing="0">
+            </div>
+            
+
+            <table border="1" cellPadding="10" cellSpacing="0" className='text-center w-full'>
                 <thead>
                     <tr>
                         <th>Rank Tổng</th>
@@ -119,7 +123,7 @@ const MatchData = () => {
                     {puuidData.map((row, index) => (
                         <tr key={index}>
                             <td>{index + 1}</td> {/* Rank tổng dựa trên index sau khi sắp xếp */}
-                            <td>{row.gameNameTag || 'N/A'}</td>
+                            <td className='text-left'>{row.gameNameTag || 'N/A'}</td>
                             {matchIds.map((_, matchIndex) => (
                                 <td key={matchIndex}>
                                     {showPlayers ? 
