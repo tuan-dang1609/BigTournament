@@ -50,7 +50,7 @@ export default function Profile() {
             }
             dispatch(updateUserSuccess(data));
             // Pass success message to the homepage
-            navigate('/', { state: { success: true } });
+            navigate('/arenaofvalor', { state: { success: true } });
         } catch (error) {
             dispatch(updateUserFailure(error));
         }
