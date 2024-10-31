@@ -144,7 +144,7 @@ app.get('/api/matches', async (req, res) => {
   }
 });
 app.get('/api/account/:puuid', async (req, res) => {
-  const apiKey = process.env.TFT_KEY;
+  const apiKey = "RGAPI-5afcd015-bdc5-4a6c-a59d-6dfabd9e3f19";
 
   try {
     const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${req.params.puuid}`, {
