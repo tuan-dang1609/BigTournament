@@ -149,6 +149,23 @@ app.get('/api/matches', async (req, res) => {
   }
 });
 
+app.get('/api/tft/match/:matchId', async (req, res) => {
+  const { matchId } = req.params;
+
+  try {
+    const response = await axios.get(`https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}`, {
+      headers: { 'X-Riot-Token': apiKey }
+    });
+
+    // Thêm Access-Control-Allow-Origin vào header
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching match data:', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+  }
+});
+
 app.get('/api/account/:puuid', async (req, res) => {
   const { puuid } = req.params;
 
@@ -171,16 +188,6 @@ app.get('/api/account/:puuid', async (req, res) => {
   }
 });
 
-app.get('/api/account/:puuid', async (req, res) => {
-  try {
-    const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${req.params.puuid}`, {
-        headers: { 'X-Riot-Token': apiKey }
-    });
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch account data' });
-  }
-});
 
 const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server listening on port ${process.env.PORT || 3000}`);
