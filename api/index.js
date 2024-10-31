@@ -157,20 +157,25 @@ app.get('/api/tft/match/:matchId', async (req, res) => {
       headers: { 'X-Riot-Token': apiKey }
     });
 
-    // Xử lý dữ liệu trước khi trả về, cắt chuỗi puuid
-    const processedData = response.data.info.participants.map(participant => {
-      return {
-        ...participant,
-        puuid: participant.puuid.substring(0, 5) // Chỉ lấy 5 ký tự đầu
-      };
-    });
+    // Giữ dữ liệu gốc nhưng tạo bản sao với puuid chỉ còn 5 ký tự đầu
+    const maskedData = {
+      ...response.data,
+      info: {
+        ...response.data.info,
+        participants: response.data.info.participants.map(participant => ({
+          ...participant,
+          puuid: participant.puuid.substring(0, 5) // Chỉ trả về 5 ký tự đầu của puuid
+        }))
+      }
+    };
 
-    res.json({ ...response.data, info: { ...response.data.info, participants: processedData } });
+    res.json(maskedData);
   } catch (error) {
     console.error('Error fetching match data:', error.message);
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
   }
 });
+
 
 app.get('/api/account/:puuid', async (req, res) => {
   try {
