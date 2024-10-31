@@ -157,9 +157,15 @@ app.get('/api/tft/match/:matchId', async (req, res) => {
       headers: { 'X-Riot-Token': apiKey }
     });
 
-    // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
-    res.json(response.data);
+    // Xử lý dữ liệu trước khi trả về, cắt chuỗi puuid
+    const processedData = response.data.info.participants.map(participant => {
+      return {
+        ...participant,
+        puuid: participant.puuid.substring(0, 5) // Chỉ lấy 5 ký tự đầu
+      };
+    });
+
+    res.json({ ...response.data, info: { ...response.data.info, participants: processedData } });
   } catch (error) {
     console.error('Error fetching match data:', error.message);
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
