@@ -6,7 +6,7 @@ const MatchData = () => {
     const [error, setError] = useState(null);
     const [showPlayers, setShowPlayers] = useState(true);
 
-    const matchIds = ['VN2_625876667'];
+    const matchIds = ['VN2_628737890','VN2_628709191'];
 
     const getPoints = (placement) => {
         if (placement >= 1 && placement <= 8) {
@@ -102,6 +102,7 @@ const MatchData = () => {
             <table border="1" cellPadding="10" cellSpacing="0">
                 <thead>
                     <tr>
+                        <th>Rank Tổng</th>
                         <th>Game Name</th>
                         {matchIds.map((_, index) => (
                             <th key={index}>Trận {index + 1}</th>
@@ -112,6 +113,7 @@ const MatchData = () => {
                 <tbody>
                     {puuidData.map((row, index) => (
                         <tr key={index}>
+                            <td>{index + 1}</td> {/* Rank tổng dựa trên index */}
                             <td>{row.gameNameTag || 'N/A'}</td>
                             {matchIds.map((_, matchIndex) => (
                                 <td key={matchIndex}>
