@@ -6,8 +6,8 @@ const MatchData = () => {
     const [error, setError] = useState(null);
     const [showPlayers, setShowPlayers] = useState(true);
 
-    const matchIds = ['VN2_625876667', 'VN2_623274428', 'VN2_619818603'];
-    const apiKey = 'RGAPI-5afcd015-bdc5-4a6c-a59d-6dfabd9e3f19';
+    const matchIds = ['VN2_625876667'];
+  
 
     const getPoints = (placement) => {
         if (placement >= 1 && placement <= 8) {
@@ -20,16 +20,17 @@ const MatchData = () => {
         const fetchAllMatches = async () => {
             try {
                 setLoading(true);
+                // Replace Riot API call with your backend API route
                 const promises = matchIds.map(async (matchId) => {
-                    const response = await fetch(`https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}?api_key=${apiKey}`);
+                    const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/tft/match/${matchId}`);
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
                     return response.json();
                 });
-
+    
                 const data = await Promise.all(promises);
-
+    
                 const puuidMap = {};
                 data.forEach((matchData, matchIndex) => {
                     matchData.info.participants.forEach(participant => {
@@ -41,18 +42,18 @@ const MatchData = () => {
                         puuidMap[puuid].points[matchIndex] = getPoints(placement);
                     });
                 });
-
-                // Chuyển đổi puuid thành gameName#tagLine
+    
+                // Fetch account data by calling the backend API for each participant's puuid
                 const puuidArray = Object.values(puuidMap);
                 const accountPromises = puuidArray.map(async (participant) => {
                     const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/account/${participant.puuid}`);
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error('Failed to fetch account data');
                     }
                     const accountData = await response.json();
                     return { ...participant, gameNameTag: `${accountData.gameName}#${accountData.tagLine}` };
                 });
-
+    
                 const accountData = await Promise.all(accountPromises);
                 setPuuidData(accountData);
             } catch (error) {
@@ -61,12 +62,9 @@ const MatchData = () => {
                 setLoading(false);
             }
         };
-
+    
         fetchAllMatches();
     }, []);
-
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error}</p>;
 
     return (
         <div className='mt-20'>
