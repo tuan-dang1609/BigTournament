@@ -43,9 +43,9 @@ const app = express();
 
 // Cấu hình CORS để cho phép truy cập từ nguồn cụ thể
 app.use(cors({
-  origin: 'http://localhost:5173' // Cho phép localhost:5173 truy cập
+  origin: ['http://localhost:5173', 'https://dongchuyennghiep.vercel.app'], // Cho phép nhiều nguồn gốc
+  credentials: true // Nếu bạn cần truyền cookie giữa các nguồn gốc
 }));
-
 // Helmet security configuration
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
