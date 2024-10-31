@@ -58,11 +58,16 @@ const MatchData = () => {
                 }
 
                 const accountDataArray = await response.json();
-                const accountDataWithTags = Object.values(puuidMap).map((participant, index) => ({
+                
+                // Thêm thông tin gameNameTag và tính tổng điểm
+                let accountDataWithTags = Object.values(puuidMap).map((participant, index) => ({
                     ...participant,
                     gameNameTag: `${accountDataArray[index].gameName}#${accountDataArray[index].tagLine}`,
                     totalPoints: participant.points.reduce((acc, curr) => acc + curr, 0) // Tính tổng điểm
                 }));
+
+                // Sắp xếp theo tổng điểm giảm dần
+                accountDataWithTags.sort((a, b) => b.totalPoints - a.totalPoints);
 
                 setPuuidData(accountDataWithTags);
             } catch (error) {
@@ -113,7 +118,7 @@ const MatchData = () => {
                 <tbody>
                     {puuidData.map((row, index) => (
                         <tr key={index}>
-                            <td>{index + 1}</td> {/* Rank tổng dựa trên index */}
+                            <td>{index + 1}</td> {/* Rank tổng dựa trên index sau khi sắp xếp */}
                             <td>{row.gameNameTag || 'N/A'}</td>
                             {matchIds.map((_, matchIndex) => (
                                 <td key={matchIndex}>
