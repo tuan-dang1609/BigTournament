@@ -77,7 +77,7 @@ export default function Profile() {
 
     return (
         <div className="max-w-7xl mt-16 mx-auto w-full">
-            <div className="max-w-md px-2 sm:px-6 mx-auto mb-5">
+            <div className="max-w-xl px-2 sm:px-6 mx-auto mb-5">
                 <p className="text-3xl font-bold text-center mb-3">Profile</p>
                 <form className="flex flex-col" onSubmit={handleSubmit}>
                     <img src={`https://drive.google.com/thumbnail?id=${currentUser.profilePicture}`} className="h-28 w-28 rounded-full mx-auto mb-2" alt="Profile" />
