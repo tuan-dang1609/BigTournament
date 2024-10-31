@@ -247,7 +247,7 @@ export default function Example() {
                               "block px-4 py-2 text-sm w-full text-left"
                             )}
                           >
-                            Your Profile
+                            Cập nhật thông tin cá nhân
                           </Link>
                         )}
                       </MenuItem>
@@ -260,7 +260,7 @@ export default function Example() {
                               "block px-4 py-2 text-sm w-full text-left"
                             )}
                           >
-                            Sign out
+                            Đăng xuất
                           </button>
                         )}
                       </MenuItem>
