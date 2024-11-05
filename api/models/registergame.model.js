@@ -45,17 +45,6 @@ const teamSchema = new mongoose.Schema({
         type: Map,
         of: [String],
         required: true,
-        validate: {
-            validator: function(value) {
-                for (let members of value.values()) {
-                    if (members.some(member => !member.trim())) {
-                        return false;
-                    }
-                }
-                return true;
-            },
-            message: 'All member fields must be filled'
-        }
     }
 }, { timestamps: true });
 

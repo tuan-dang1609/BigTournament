@@ -13,10 +13,7 @@ const TeamRegistrationForm = () => {
         discordID: currentUser.discordID,
         usernameregister: currentUser,
         teamName: "",
-        shortName: "",
         classTeam: "",
-        logoUrl: "",
-        color: "",
         games: [],
         gameMembers: {}
     });
@@ -51,12 +48,15 @@ const TeamRegistrationForm = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
+                const requestBody = JSON.stringify({ usernameregister: currentUser });
+                console.log("Request Body:", requestBody); // Log the body content
                 const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterTFT', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ usernameregister: currentUser })
+                    body: requestBody
+                   
                 });
 
                 if (!response.ok) {
@@ -188,7 +188,7 @@ const TeamRegistrationForm = () => {
         e.preventDefault();
 
         let tempErrors = { ...errors };
-        const formFields = ["teamName", "shortName", "classTeam", "logoUrl", "games", "gameMembers"];
+        const formFields = ["teamName","classTeam", "games", "gameMembers"];
         formFields.forEach((field) => validateField(field, formData[field]));
 
         if (Object.keys(tempErrors).length > 0) {
@@ -204,10 +204,7 @@ const TeamRegistrationForm = () => {
 
             setFormData({
                 teamName: "",
-                shortName: "",
                 classTeam: "",
-                logoUrl: "",
-                color: "",
                 games: [],
                 gameMembers: {}
             });
