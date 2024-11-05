@@ -11,7 +11,7 @@ const TeamRegistrationForm = () => {
     const { currentUser } = useSelector((state) => state.user);
     const [formData, setFormData] = useState({
         discordID: currentUser.discordID,
-        usernameregister: currentUser.username,
+        usernameregister: currentUser._id,
         teamName: "",
         shortName: "",
         logoUrl: "",
@@ -276,16 +276,16 @@ const TeamRegistrationForm = () => {
                         <img src={`https://drive.google.com/thumbnail?id=${userRegister.logoUrl}`} className="w-28 h-28 mb-5" />
                         <p className=" text-gray-600">Tên đội: {userRegister.teamName}</p>
                         <p className=" text-gray-600">Tên viết tắt: {userRegister.shortName}</p>
-                        <p className=" text-gray-600">
-                            Thành viên Teamfight Tactics:
-
+                        <p className=" text-gray-600">Lớp: {userRegister.classTeam}</p>
+                        <div className="text-gray-600">
+                            <p>Thành viên Teamfight Tactics:</p>
                             {userRegister.gameMembers["Teamfight Tactics"].map((member, index) => (
-                                <p key={index} className="text-center text-gray-600">
-                                    <strong>Thành viên {index + 1}:</strong> {member}
-                                </p>
+                                <div key={index} className="text-center text-gray-600">
+                                    <strong>Thành viên {index + 1}:</strong> <span>{member}</span>
+                                </div>
                             ))}
+                        </div>
 
-                        </p>
                     </div>
                 </div>
             </>

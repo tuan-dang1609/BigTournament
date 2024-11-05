@@ -11,7 +11,7 @@ const TeamRegistrationForm = () => {
     const { currentUser } = useSelector((state) => state.user);
     const [formData, setFormData] = useState({
         discordID: currentUser.discordID,
-        usernameregister: currentUser.username,
+        usernameregister: currentUser._id,
         teamName: "",
         shortName: "",
         classTeam: "",
@@ -32,7 +32,7 @@ const TeamRegistrationForm = () => {
     const driverObj = driver({
         showProgress: true,
         steps: [
-            {popover: { title: 'Chào mừng', description: 'Chào mừng bạn tới form đăng ký giải đấu Liên Quân giữa các lớp THPT Phú Nhuận. Mình sẽ hướng dẫn chi tiết cách điền nhé.' } },
+            { popover: { title: 'Chào mừng', description: 'Chào mừng bạn tới form đăng ký giải đấu Liên Quân giữa các lớp THPT Phú Nhuận. Mình sẽ hướng dẫn chi tiết cách điền nhé.' } },
             { element: '#teamName', popover: { title: 'Tên đội', description: 'Hãy nhập tên đội của bạn, tối đa là 15 ký tự. Lưu ý là không được đặt tên đội phản cảm, thiếu văn minh nhé.' } },
             { element: '#shortName', popover: { title: 'Tên viết tắt của đội', description: 'Hãy nhập tên viết tắt đội bạn, tối đa là 5 ký tự. Lưu ý là tên viết tắt đội phải không mang hàm ý xấu hay thiếu văn minh nhé' } },
             { element: '#classTeam', popover: { title: 'Lớp', description: 'Hãy nhập lớp bạn đang học. Cú pháp: xAy, trong đó x là 10,11,12 và y là thứ tự lớp trong khối. Lưu ý nếu là 1 lớp có 2 đội trở lên phải báo cho admin.' } },
@@ -43,8 +43,8 @@ const TeamRegistrationForm = () => {
             { element: '#addmember', popover: { title: 'Thêm thành viên', description: 'Bạn có thể add thêm tối đa 2 thành viên.' } },
             { element: '#removemember', popover: { title: 'Xóa thành viên', description: 'Bạn có thể xóa nếu như lỡ ấn thêm nhiều thành viên. Lưu ý nút này chỉ xuất hiện khi có 6 hoặc 7 người.' } },
             { element: '#submitTeam', popover: { title: 'Nộp đội', description: 'Khi bạn đã điền đúng theo yêu cầu, bạn sẽ nộp được. Sau khi nộp, các bạn có thể kiểm tra đội mình bằng cách lướt xuống mục các đội tham dự ở trang chủ nhé.' } },
-            {popover: { title: 'Kết thúc', description: 'Như vậy là mình đã hướng dẫn các bạn cách điền form rồi nhé. Tụi mình sẽ chỉ giải đáp nếu có 2 đội trở lên trong 1 lớp đăng ký hay có lỗi (Bug) trong quá trình đăng ký. Hạn chót đã được thông báo ở Announcement Discord. Hẹn gặp lại các bạn ở giải đấu nhé!' } },
-        ]   
+            { popover: { title: 'Kết thúc', description: 'Như vậy là mình đã hướng dẫn các bạn cách điền form rồi nhé. Tụi mình sẽ chỉ giải đáp nếu có 2 đội trở lên trong 1 lớp đăng ký hay có lỗi (Bug) trong quá trình đăng ký. Hạn chót đã được thông báo ở Announcement Discord. Hẹn gặp lại các bạn ở giải đấu nhé!' } },
+        ]
     });
 
 
@@ -61,7 +61,7 @@ const TeamRegistrationForm = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ usernameregister: currentUser._id})
+                    body: JSON.stringify({ usernameregister: currentUser._id })
                 });
 
                 if (!response.ok) {
@@ -284,16 +284,15 @@ const TeamRegistrationForm = () => {
                         <p className=" text-gray-600">Tên đội: {userRegister.teamName}</p>
                         <p className=" text-gray-600">Tên viết tắt: {userRegister.shortName}</p>
                         <p className=" text-gray-600">Lớp: {userRegister.classTeam}</p>
-                        <p className=" text-gray-600">
-                            Thành viên Liên Quân Mobile:
-
+                        <div className="text-gray-600">
+                            <p>Thành viên Liên Quân Mobile:</p>
                             {userRegister.gameMembers["Liên Quân Mobile"].map((member, index) => (
-                                <p key={index} className="text-center text-gray-600">
-                                    <strong>Thành viên {index + 1}:</strong> {member}
-                                </p>
+                                <div key={index} className="text-center text-gray-600">
+                                    <strong>Thành viên {index + 1}:</strong> <span>{member}</span>
+                                </div>
                             ))}
+                        </div>
 
-                        </p>
                     </div>
                 </div>
             </>
@@ -458,7 +457,7 @@ const TeamRegistrationForm = () => {
                                             <div key={index} className="flex items-center space-x-2 mb-2">
                                                 <input
                                                     type="text"
-                                                    
+
                                                     value={member}
                                                     onChange={(e) => handleMemberChange(game, index, e.target.value)}
                                                     className="px-4 py-2 !text-base-content border focus:ring-gray-500 focus:border-primary w-full sm:text-sm border-gray-300 rounded-md focus:outline-none "
@@ -467,7 +466,7 @@ const TeamRegistrationForm = () => {
 
                                                 {(game === "League Of Legends" || game === "Valorant" || game === "Liên Quân Mobile") && formData.gameMembers[game].length > 5 && (
                                                     <motion.button
-                                                    id="removemember"
+                                                        id="removemember"
                                                         type="button"
                                                         whileHover={{ scale: 1.1 }}
                                                         whileTap={{ scale: 0.9 }}
