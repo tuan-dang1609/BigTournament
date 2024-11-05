@@ -54,12 +54,14 @@ const TeamRegistrationForm = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
+                const bodyjson=JSON.stringify({ usernameregister: currentUser.username})
+                console.log(bodyjson);
                 const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterTFT', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ usernameregister: currentUser.username})
+                    body: bodyjson
                 });
 
                 if (!response.ok) {
@@ -468,16 +470,7 @@ const TeamRegistrationForm = () => {
                                             </div>
                                         ))}
 
-                                        <motion.button
-                                            id="addmember"
-                                            type="button"
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => addMember(game)}
-                                            className="bg-green-500 text-white px-4 py-2 rounded-md flex items-center justify-center mt-2"
-                                        >
-                                            <FaUserPlus className="mr-2" /> Thêm thành viên cho đội
-                                        </motion.button>
+                                        
                                     </div>
                                 ))}
 

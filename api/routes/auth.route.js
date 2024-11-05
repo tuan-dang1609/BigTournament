@@ -161,7 +161,7 @@ router.post('/checkregisterTFT', async (req, res) => {
     try {
         const { usernameregister } = req.body;
         const game = ["Teamfight Tactics"];
-        const existingTeam = await TeamRegister.findOne({ usernameregister,game });
+        const existingTeam = await TeamRegister.findOne({ usernameregister});
 
         if (existingTeam) {
             // Nếu tìm thấy đội, trả lại thông tin đội
