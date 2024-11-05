@@ -23,7 +23,6 @@ const teamSchema = new mongoose.Schema({
     },
     classTeam: {
         type: String,
-        required: true,
         trim: true,
     },
     color: {
