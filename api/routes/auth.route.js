@@ -112,18 +112,8 @@ router.post('/updateMatch', async (req, res) => {
 router.post('/register', async (req, res) => {
     try {
         const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID,color } = req.body;
-
-
-
         // Check if any member is already registered in another team
         const existingTeam = await TeamRegister.findOne({ gameMembers: { $in: gameMembers } });
-
-        if (existingTeam) {
-            // Find the conflicting member(s)
-            const conflictingMembers = existingTeam.gameMembers.filter(member => gameMembers.includes(member));
-            return res.status(400).json({ message: `${conflictingMembers.join(', ')} đã được đăng ký ở đội khác` });
-        }
-
         const newTeam = new TeamRegister({
             discordID,
             usernameregister,
