@@ -61,7 +61,7 @@ const TeamRegistrationForm = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ usernameregister: currentUser.username})
+                    body: JSON.stringify({ usernameregister: currentUser._id})
                 });
 
                 if (!response.ok) {

@@ -54,7 +54,7 @@ const TeamRegistrationForm = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const bodyjson=JSON.stringify({ usernameregister: currentUser.username})
+                const bodyjson=JSON.stringify({ usernameregister: currentUser._id})
                 console.log(bodyjson);
                 const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterTFT', {
                     method: 'POST',
