@@ -42,7 +42,7 @@ const app = express();
 // Cấu hình CORS để cho phép truy cập từ nguồn cụ thể
 app.use(
   cors({
-    origin: '*', // Tạm thời cho phép tất cả các nguồn gốc
+    origin: ['http://localhost:5173', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true

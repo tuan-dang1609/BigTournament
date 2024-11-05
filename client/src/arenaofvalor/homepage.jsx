@@ -55,15 +55,19 @@ const CompetitionPage = () => {
                         'Content-Type': 'application/json',
                     }
                 });
-
+        
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+        
                 const data = await response.json();
-                setTeams(data); // Save the fetched teams
+        
+                // Lọc dữ liệu để chỉ giữ lại các đội có "Liên Quân Mobile" trong games
+                const filteredTeams = data.filter(team => team.games && team.games.includes("Liên Quân Mobile"));
+        
+                setTeams(filteredTeams); // Lưu lại các đội đã lọc vào state
             } catch (error) {
-
+                console.error("Error fetching teams:", error);
             } finally {
                 setLoading(false);
             }

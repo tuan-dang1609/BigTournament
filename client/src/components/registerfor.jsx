@@ -116,13 +116,7 @@ const TeamRegistrationForm = () => {
                     delete newErrors.games;
                 }
                 break;
-            case "gameMembers":
-                if (Object.values(value).some((members) => members.some((member) => !member.trim()))) {
-                    newErrors.gameMembers = "All member fields must be filled";
-                } else {
-                    delete newErrors.gameMembers;
-                }
-                break;
+            
             default:
                 break;
         }
@@ -133,42 +127,33 @@ const TeamRegistrationForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const formFields = ["teamName", "shortName", "classTeam", "logoUrl", "games", "gameMembers"];
-        let valid = true;
-
-        formFields.forEach((field) => {
-            validateField(field, formData[field]);
-            if (errors[field]) {
-                valid = false;
-            }
-        });
-
-        if (valid && Object.keys(errors).length === 0) {
-            try {
-                const response = await axios.post('https://dongchuyennghiep-backend.vercel.app/api/auth/register', formData);
-                setSubmitStatus({ success: true, message: "Team registered successfully!" });
-                setSignupSuccess(true);
-
-                setFormData({
-                    teamName: "",
-                    shortName: "",
-                    classTeam: "",
-                    logoUrl: "",
-                    games: [],
-                    gameMembers: {}
-                });
-                setErrors({});
-            } catch (error) {
-                if (error.response && error.response.data) {
-                    setSubmitStatus({ success: false, message: error.response.data.message || "Submission failed." });
-                } else {
-                    setSubmitStatus({ success: false, message: "An unexpected error occurred." });
-                }
-            }
-        } else {
-            setSubmitStatus({ success: false, message: "Please fix the errors in the form." });
+    
+        let tempErrors = { ...errors };
+        const formFields = ["teamName", "classTeam", "games", "gameMembers"];
+        formFields.forEach((field) => validateField(field, formData[field]));
+    
+    
+        // Thêm console.log để kiểm tra dữ liệu trước khi gửi
+        console.log("Submitting form data:", formData);
+    
+        try {
+            const response = await axios.post('https://dongchuyennghiep-backend.vercel.app/api/auth/register', formData);
+            setSubmitStatus({ success: true, message: "Team registered successfully!" });
+            setSignupSuccess(true);
+    
+            // Reset form data sau khi đăng ký thành công
+            setFormData({
+                teamName: "",
+                classTeam: "",
+                games: [],
+                gameMembers: {}
+            });
+            setErrors({});
+        } catch (error) {
+            setSubmitStatus({ success: false, message: error.response?.data?.message || error.message || "An unexpected error occurred." });
         }
     };
+    
 
     if (signupSuccess) {
         return (
