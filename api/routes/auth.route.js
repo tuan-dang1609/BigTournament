@@ -142,15 +142,18 @@ router.post('/checkregisterAOV', async (req, res) => {
     try {
         const { usernameregister } = req.body;
         const game = ["Arena Of Valor"];
-        const existingTeam = await TeamRegister.findOne({ usernameregister,game });
+        const existingTeam = await TeamRegister.findOne({ usernameregister, game });
 
         if (existingTeam) {
-            // If the team is found, return the team information
+            // Nếu tìm thấy đội, trả lại thông tin đội
             return res.status(200).json(existingTeam);
         } 
 
+        // Nếu không tìm thấy đội, trả lại lỗi 404
+        return res.status(404).json({ message: 'Team not found' });
+        
     } catch (error) {
-        // Handle server errors
+        // Xử lý lỗi server
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -161,25 +164,12 @@ router.post('/checkregisterTFT', async (req, res) => {
         const existingTeam = await TeamRegister.findOne({ usernameregister,game });
 
         if (existingTeam) {
-            // If the team is found, return the team information
+            // Nếu tìm thấy đội, trả lại thông tin đội
             return res.status(200).json(existingTeam);
         } 
 
-    } catch (error) {
-        // Handle server errors
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-router.post('/checkregisterTFT', async (req, res) => {
-    try {
-        const { usernameregister } = req.body;
-        const game = ["Teamfight Tactics"];
-        const existingTeam = await TeamRegister.findOne({ usernameregister,game });
-
-        if (existingTeam) {
-            // If the team is found, return the team information
-            return res.status(200).json(existingTeam);
-        } 
+        // Nếu không tìm thấy đội, trả lại lỗi 404
+        return res.status(404).json({ message: 'Team not found' });
 
     } catch (error) {
         // Handle server errors
