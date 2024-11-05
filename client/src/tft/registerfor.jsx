@@ -11,9 +11,11 @@ const TeamRegistrationForm = () => {
     const { currentUser } = useSelector((state) => state.user);
     const [formData, setFormData] = useState({
         discordID: currentUser.discordID,
-        usernameregister: currentUser,
+        usernameregister: currentUser.username,
         teamName: "",
-        classTeam: "",
+        shortName: "",
+        logoUrl: "",
+        color: "",
         games: [],
         gameMembers: {}
     });
@@ -30,10 +32,14 @@ const TeamRegistrationForm = () => {
         showProgress: true,
         steps: [
             {popover: { title: 'Chào mừng', description: 'Chào mừng bạn tới form đăng ký giải đấu TFT của Dong Chuyen Nghiep. Mình sẽ hướng dẫn chi tiết cách điền nhé.' } },
-            { element: '#teamName', popover: { title: 'Tên đội', description: 'Hãy nhập tên của bạn.' } },
-            { element: '#classTeam', popover: { title: 'Lớp', description: 'Hãy nhập lớp bạn đang học. Cú pháp: xAy, trong đó x là 10,11,12 và y là thứ tự lớp trong khối.' } },
-            { element: '#gameChoose', popover: { title: 'Chọn game', description: 'Chọn vào game Teamfight Tactics. Click vào để thấy thêm phần điền tên trong game.' } },
-            { element: '#ign', popover: { title: 'Nộp đội', description: 'Như bạn đã thấy là Riot ID của bạn đã tự động điền (các bạn đăng ký tài khoản từ trước). Lưu ý là muốn đổi được thì chỉ có thể ấn vào cập nhật tài khoản để thay đổi Riot ID.' } },
+            { element: '#teamName', popover: { title: 'Tên đội', description: 'Hãy nhập tên đội của bạn, tối đa là 15 ký tự. Lưu ý là không được đặt tên đội phản cảm, thiếu văn minh nhé.' } },
+            { element: '#shortName', popover: { title: 'Tên viết tắt của đội', description: 'Hãy nhập tên viết tắt đội bạn, tối đa là 5 ký tự. Lưu ý là tên viết tắt đội phải không mang hàm ý xấu hay thiếu văn minh nhé' } },
+            { element: '#logoUrl', popover: { title: 'Logo ID', description: 'Ví dụ bạn có link logo: https://drive.google.com/file/d/1_hPEfE40vu TmbCCVUFsVEwMai-B4je3z/view?usp=drive_link thì chỉ cần ghi 1_hPEfE40vuTmbCCVUFsVEwMai-B4je3z là được. Ảnh nhớ để chế độ Công Khai (Public) và có size 256x256 và clear background.' } },
+            { element: '#color', popover: { title: 'Màu chủ đạo của đội', description: 'Chọn màu chủ đạo cho đội bạn.' } },
+            { element: '#gameChoose', popover: { title: 'Chọn game', description: 'Chọn vào game Teamfight Tactics. Click vào để thấy thêm phần điền tên trong game' } },
+            { element: '#ign', popover: { title: 'Nhập IGN', description: 'Điền tên trong game của mỗi thành viên.' } },
+            { element: '#addmember', popover: { title: 'Thêm thành viên', description: 'Bạn có thể add thêm tối đa 2 thành viên.' } },
+            { element: '#removemember', popover: { title: 'Xóa thành viên', description: 'Bạn có thể xóa nếu như lỡ ấn thêm nhiều thành viên. Lưu ý nút này chỉ xuất hiện khi có 2 người.' } },
             { element: '#submitTeam', popover: { title: 'Nộp đội', description: 'Khi bạn đã điền đúng theo yêu cầu, bạn sẽ nộp được. Sau khi nộp, các bạn có thể kiểm tra đội mình bằng cách lướt xuống mục các đội tham dự ở trang chủ nhé.' } },
             {popover: { title: 'Kết thúc', description: 'Như vậy là mình đã hướng dẫn các bạn cách điền form rồi nhé. Tụi mình sẽ chỉ giải đáp nếu có 2 đội trở lên trong 1 lớp đăng ký hay có lỗi (Bug) trong quá trình đăng ký. Hạn chót đã được thông báo ở Announcement Discord. Hẹn gặp lại các bạn ở giải đấu nhé!' } },
         ]   
@@ -48,15 +54,12 @@ const TeamRegistrationForm = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const requestBody = JSON.stringify({ usernameregister: currentUser._id});
-                console.log("Request Body:", requestBody); // Log the body content
                 const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterTFT', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: requestBody
-                   
+                    body: JSON.stringify({ usernameregister: currentUser.username})
                 });
 
                 if (!response.ok) {
@@ -113,7 +116,7 @@ const TeamRegistrationForm = () => {
             delete updatedGameMembers[game];
         } else {
             updatedGames.push(game);
-            updatedGameMembers[game] = (game === "League Of Legends" || game === "Valorant" || game === "Liên Quân Mobile") ? Array(5).fill("") : [""];
+            updatedGameMembers[game] = (game === "League Of Legends" || game === "Valorant" || game === "Teamfight Tactics") ? Array(2).fill("") : [""];
         }
 
         setFormData({ ...formData, games: updatedGames, gameMembers: updatedGameMembers });
@@ -140,6 +143,13 @@ const TeamRegistrationForm = () => {
         setFormData({ ...formData, gameMembers: updatedGameMembers });
     };
 
+    const addMember = (game) => {
+        const updatedGameMembers = { ...formData.gameMembers };
+        if (updatedGameMembers[game].length < 2) {
+            updatedGameMembers[game] = [...updatedGameMembers[game], ""];
+            setFormData({ ...formData, gameMembers: updatedGameMembers });
+        }
+    };
 
     const removeMember = (game, index) => {
         const updatedGameMembers = { ...formData.gameMembers };
@@ -154,21 +164,35 @@ const TeamRegistrationForm = () => {
         switch (name) {
             case "teamName":
                 if (!value.trim()) {
-                    newErrors.teamName = "Bạn phải nhập tên";
+                    newErrors.teamName = "Bạn phải nhập tên đội";
                 } else {
                     delete newErrors.teamName;
                 }
                 break;
-           
-            case "classTeam":
+            case "shortName":
                 if (!value.trim()) {
-                    newErrors.classTeam = "Bạn phải nhập lớp";
+                    newErrors.shortName = "Bạn phải nhập tên viết tắt của đội";
+                } else if (value.length > 5) {
+                    newErrors.shortName = "Tên viết tắt của đội không được quá 5 kí tự";
                 } else {
-                    delete newErrors.classTeam;
+                    delete newErrors.shortName;
                 }
                 break;
             
-           
+            case "logoUrl":
+                if (!value.trim()) {
+                    newErrors.logoUrl = "Bạn phải nhập Logo ID";
+                } else {
+                    delete newErrors.logoUrl;
+                }
+                break;
+            case "color":
+                if (!value.trim()) {
+                    newErrors.color = "Bạn phải nhập màu chủ đạo cho đội của mình";
+                } else {
+                    delete newErrors.color;
+                }
+                break;
             case "games":
                 if (value.length === 0) {
                     newErrors.games = "Hãy chọn ít nhất 1 game";
@@ -176,7 +200,13 @@ const TeamRegistrationForm = () => {
                     delete newErrors.games;
                 }
                 break;
-            
+            case "gameMembers":
+                if (Object.values(value).some((members) => members.some((member) => !member.trim()))) {
+                    newErrors.gameMembers = "Bạn phải nhập tên thành viên sẽ tham gia";
+                } else {
+                    delete newErrors.gameMembers;
+                }
+                break;
             default:
                 break;
         }
@@ -188,7 +218,7 @@ const TeamRegistrationForm = () => {
         e.preventDefault();
 
         let tempErrors = { ...errors };
-        const formFields = ["teamName","classTeam", "games", "gameMembers"];
+        const formFields = ["teamName", "shortName", "logoUrl", "games", "gameMembers"];
         formFields.forEach((field) => validateField(field, formData[field]));
 
         if (Object.keys(tempErrors).length > 0) {
@@ -204,7 +234,9 @@ const TeamRegistrationForm = () => {
 
             setFormData({
                 teamName: "",
-                classTeam: "",
+                shortName: "",
+                logoUrl: "",
+                color: "",
                 games: [],
                 gameMembers: {}
             });
@@ -236,18 +268,18 @@ const TeamRegistrationForm = () => {
             <>
 
                 <div className="min-h-screen flex flex-col sm:mx-96 mx-5 ">
-                    <Link to='/tft' className="!justify-start flex mt-28 font-bold hover:underline text-lg lg:mb-2 mb-1">&lt; Quay lại</Link>
+                    <Link to='/arenaofvalor' className="!justify-start flex mt-28 font-bold hover:underline text-lg lg:mb-2 mb-1">&lt; Quay lại</Link>
                     <div className="bg-white p-8 rounded-lg shadow-md w-full flex justify-center items-center flex-col">
-                        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Bạn đã đăng kí</h2>
-        
-                        <p className=" text-gray-600">Tên người chơi: {userRegister.teamName}</p>
-                        <p className=" text-gray-600">Lớp: {userRegister.classTeam}</p>
+                        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Bạn đã đăng kí đội</h2>
+                        <img src={`https://drive.google.com/thumbnail?id=${userRegister.logoUrl}`} className="w-28 h-28 mb-5" />
+                        <p className=" text-gray-600">Tên đội: {userRegister.teamName}</p>
+                        <p className=" text-gray-600">Tên viết tắt: {userRegister.shortName}</p>
                         <p className=" text-gray-600">
                             Thành viên Teamfight Tactics:
 
                             {userRegister.gameMembers["Teamfight Tactics"].map((member, index) => (
                                 <p key={index} className="text-center text-gray-600">
-                                    <strong>Riot ID:</strong> {member}
+                                    <strong>Thành viên {index + 1}:</strong> {member}
                                 </p>
                             ))}
 
@@ -263,7 +295,7 @@ const TeamRegistrationForm = () => {
             <div className="min-h-screen flex items-center justify-center">
                 <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
                     <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Đăng kí thành công!</h2>
-                    <p className="text-center text-gray-600">Cảm ơn bạn đã đăng kí.</p>
+                    <p className="text-center text-gray-600">Cảm ơn bạn đã đăng kí đội cho lớp.</p>
                     <p className="text-center text-gray-600 mt-4">Tự động chuyển tới trang chủ trong {countdown} giây...</p>
                 </div>
             </div>
@@ -284,7 +316,7 @@ const TeamRegistrationForm = () => {
                         <form onSubmit={handleSubmit} className="divide-y divide-gray-200">
                             <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
                                 <div className="flex flex-col" id="teamName">
-                                    <label className="leading-loose font-semibold text-base-content" htmlFor="teamName">Tên của bạn</label>
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="teamName">Tên đội</label>
                                     <input
                                         type="text"
 
@@ -300,24 +332,73 @@ const TeamRegistrationForm = () => {
                                     )}
                                 </div>
 
-                                <div className="flex flex-col" id="classTeam">
-                                    <label className="leading-loose font-semibold text-base-content" htmlFor="classTeam">Bạn học lớp nào ?</label>
+                                <div className="flex flex-col" id="shortName">
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="shortName">Tên viết tắt của đội</label>
                                     <input
                                         type="text"
-                                        name="classTeam"
-                                        value={formData.classTeam}
+
+                                        name="shortName"
+                                        value={formData.shortName}
                                         onChange={handleInputChange}
                                         className="px-4 py-2 border bg-white focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
-                                        placeholder="Lớp của team bạn đang học"
+                                        placeholder="Tên viết tắt"
+                                        maxLength="5"
                                     />
-                                    {errors.classTeam && (
-                                        <p className="text-red-500 text-xs italic">{errors.classTeam}</p>
+                                    {errors.shortName && (
+                                        <p className="text-red-500 text-xs italic">{errors.shortName}</p>
                                     )}
                                 </div>
 
 
+                                <div className="flex flex-col" id="logoUrl">
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">
+                                        Logo ID của team bạn
+                                    </label>
+                                    <input
+                                        type="text"
+
+                                        name="logoUrl"
+                                        value={formData.logoUrl}
+                                        onChange={handleInputChange}
+                                        className="px-4 py-2 bg-white border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                                        placeholder="Nhập ID của tệp Google Drive"
+                                    />
+                                    <small className="text-base-content mt-1">
+                                        Xem hướng dẫn{" "}
+                                        <Link className="text-primary" to="https://docs.google.com/document/d/1zlei9yIWtSLfukegTeREZd8iwH2EUT1rTECH4F6Ph64/edit?tab=t.0" target="_blank" rel="noopener noreferrer">
+                                            <strong>Tại Đây</strong>
+                                        </Link>.
+                                    </small>
+                                    {errors.logoUrl && (
+                                        <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-col" id="color">
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">
+                                        Chọn màu chủ đạo cho đội của bạn
+                                    </label>
+                                    <input
+                                        type="color"
+
+                                        name="color"
+                                        value={formData.color}
+                                        onChange={handleInputChange}
+                                        className="h-10 border-base-100 w-20"
+                                    />
+                                    <small className="text-base-content mt-1">
+                                        Xem hướng dẫn{" "}
+                                        <Link className="text-primary" to="https://docs.google.com/document/d/1zlei9yIWtSLfukegTeREZd8iwH2EUT1rTECH4F6Ph64/edit?tab=t.0" target="_blank" rel="noopener noreferrer">
+                                            <strong>Tại Đây</strong>
+                                        </Link>.
+                                    </small>
+                                    {errors.logoUrl && (
+                                        <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
+                                    )}
+                                </div>
+
                                 <div className="flex flex-col" id="gameChoose">
-                                    <label className="leading-loose font-semibold text-base-content">Chọn game mà bạn sẽ tham gia</label>
+                                    <label className="leading-loose font-semibold text-base-content">Chọn game mà đội bạn sẽ tham gia</label>
                                     <div className="flex flex-wrap gap-2">
                                         {gameOptions.map((game) => (
                                             <motion.button
@@ -342,15 +423,22 @@ const TeamRegistrationForm = () => {
 
                                 {formData.games.map((game) => (
                                     <div key={game} className="flex flex-col mt-4" id="ign">
-                                        <label className="leading-loose text-base-content font-bold">Tên trong game {game} của bạn</label>
-                                       
+                                        <label className="leading-loose text-base-content font-bold">Tên trong game {game} của các thành viên</label>
+                                        <small className="text-base-content mt-1">
+                                            Mình khuyên phần này các bạn nên đọc{" "}
+                                            <Link className="text-primary" to="https://docs.google.com/document/d/1zlei9yIWtSLfukegTeREZd8iwH2EUT1rTECH4F6Ph64/edit?tab=t.6823b1wcmvmd" target="_blank" rel="noopener noreferrer">
+                                                <strong>lưu ý</strong>
+                                            </Link>.
+                                        </small>
                                         {formData.gameMembers[game].map((member, index) => (
                                             <div key={index} className="flex items-center space-x-2 mb-2">
                                                 <input
                                                     type="text"
-                                                    value={currentUser.riotID}
+                                                    
+                                                    value={member}
                                                     onChange={(e) => handleMemberChange(game, index, e.target.value)}
                                                     className="px-4 py-2 !text-base-content border focus:ring-gray-500 focus:border-primary w-full sm:text-sm border-gray-300 rounded-md focus:outline-none "
+                                                    placeholder={`Username của thành viên ${index + 1}`}
                                                 />
 
                                                 {(game === "League Of Legends" || game === "Valorant" || game === "Liên Quân Mobile") && formData.gameMembers[game].length > 5 && (
@@ -366,7 +454,7 @@ const TeamRegistrationForm = () => {
                                                     </motion.button>
                                                 )}
 
-                                                {!(game === "League Of Legends" || game === "Valorant" || game === "Liên Quân Mobile") && formData.gameMembers[game].length > 1 && (
+                                                {!(game === "League Of Legends" || game === "Valorant" || game === "Liên Quân Mobile") && formData.gameMembers[game].length > 3 && (
                                                     <motion.button
                                                         type="button"
                                                         whileHover={{ scale: 1.1 }}
@@ -380,7 +468,16 @@ const TeamRegistrationForm = () => {
                                             </div>
                                         ))}
 
-                                    
+                                        <motion.button
+                                            id="addmember"
+                                            type="button"
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => addMember(game)}
+                                            className="bg-green-500 text-white px-4 py-2 rounded-md flex items-center justify-center mt-2"
+                                        >
+                                            <FaUserPlus className="mr-2" /> Thêm thành viên cho đội
+                                        </motion.button>
                                     </div>
                                 ))}
 
@@ -396,7 +493,7 @@ const TeamRegistrationForm = () => {
                                     whileTap={{ scale: 0.95 }}
                                     className="bg-gradient-to-r from-secondary to-accent hover:from-secondary hover:to-accent text-white flex justify-center items-center w-full px-4 py-3 rounded-md focus:outline-none"
                                 >
-                                    Đăng kí
+                                    Đăng kí đội
                                 </motion.button>
                             </div>
                         </form>

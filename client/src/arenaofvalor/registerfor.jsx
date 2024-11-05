@@ -11,7 +11,7 @@ const TeamRegistrationForm = () => {
     const { currentUser } = useSelector((state) => state.user);
     const [formData, setFormData] = useState({
         discordID: currentUser.discordID,
-        usernameregister: currentUser,
+        usernameregister: currentUser.username,
         teamName: "",
         shortName: "",
         classTeam: "",
@@ -61,7 +61,7 @@ const TeamRegistrationForm = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ usernameregister: currentUser })
+                    body: JSON.stringify({ usernameregister: currentUser.username})
                 });
 
                 if (!response.ok) {

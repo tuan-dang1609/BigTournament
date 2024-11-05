@@ -169,7 +169,7 @@ router.post('/checkregisterTFT', async (req, res) => {
         } 
 
         // Nếu không tìm thấy đội, trả lại lỗi 404
-        return res.status(404).json({ message: 'Team not found' });
+        return res.status(404).json({ message: 'Team not found' }); 
 
     } catch (error) {
         // Handle server errors
