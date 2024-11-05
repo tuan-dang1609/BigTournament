@@ -14,8 +14,6 @@ import rateLimit from 'express-rate-limit';
 import { Server } from 'socket.io';
 import compression from 'compression';
 import Queue from 'bull';
-import atob from 'atob';
-
 dotenv.config();
 const apiKey = process.env.TFT_KEY;
 

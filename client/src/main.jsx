@@ -34,6 +34,7 @@ import HallOfFameAOV from './arenaofvalor/halloffame.jsx';
 import HallOfFameValo from './valorant/halloffame.jsx'
 import MatchStatAOV from './arenaofvalor/statmatch.jsx'
 import TFT from './tft/tftmatch.jsx'
+import TFTRegister from './tft/registerfor.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -70,6 +71,7 @@ if (rootElement) {
               <Route element={<PrivateRoute />}>
               <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
+                <Route path='/tft/register' element={<TFTRegister />} />
                 <Route path='/arenaofvalor/pickem/leaderboard' element={<LeaderboardComponent />} />
                 <Route path='/profile' element={<Profile />} />
                 <Route path='/arenaofvalor/pickem/pickemall' element={<PickemChallenge />} />

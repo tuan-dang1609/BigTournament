@@ -12,13 +12,11 @@ const teamSchema = new mongoose.Schema({
     },
     teamName: {
         type: String,
-        required: true,
         trim: true,
         unique:true,
     },
     shortName: {
         type: String,
-        required: true,
         unique:true,
         trim: true,
         maxlength: 5
@@ -30,13 +28,11 @@ const teamSchema = new mongoose.Schema({
     },
     color: {
         type: String,
-        required: true,
         trim: true,
     }
     ,
     logoUrl: {
         type: String,
-        required: true,
         trim: true,
         unique:true,
     },

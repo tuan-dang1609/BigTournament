@@ -109,7 +109,7 @@ router.post('/updateMatch', async (req, res) => {
 
 
 
-router.post('/registerAOV', async (req, res) => {
+router.post('/register', async (req, res) => {
     try {
         const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID,color } = req.body;
 
@@ -153,8 +153,40 @@ router.post('/registerAOV', async (req, res) => {
 router.post('/checkregisterAOV', async (req, res) => {
     try {
         const { usernameregister } = req.body;
+        const game = ["Arena Of Valor"];
+        const existingTeam = await TeamRegister.findOne({ usernameregister,game });
 
-        const existingTeam = await TeamRegister.findOne({ usernameregister });
+        if (existingTeam) {
+            // If the team is found, return the team information
+            return res.status(200).json(existingTeam);
+        } 
+
+    } catch (error) {
+        // Handle server errors
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+router.post('/checkregisterTFT', async (req, res) => {
+    try {
+        const { usernameregister } = req.body;
+        const game = ["Teamfight Tactics"];
+        const existingTeam = await TeamRegister.findOne({ usernameregister,game });
+
+        if (existingTeam) {
+            // If the team is found, return the team information
+            return res.status(200).json(existingTeam);
+        } 
+
+    } catch (error) {
+        // Handle server errors
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+router.post('/checkregisterTFT', async (req, res) => {
+    try {
+        const { usernameregister } = req.body;
+        const game = ["Teamfight Tactics"];
+        const existingTeam = await TeamRegister.findOne({ usernameregister,game });
 
         if (existingTeam) {
             // If the team is found, return the team information
