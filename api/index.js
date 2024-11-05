@@ -42,10 +42,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Cấu hình CORS để cho phép truy cập từ nguồn cụ thể
-app.use(cors({
-  origin: ['http://localhost:5173', 'https://dongchuyennghiep.vercel.app'], // Cho phép nhiều nguồn gốc
-  credentials: true // Nếu bạn cần truyền cookie giữa các nguồn gốc
-}));
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'https://dongchuyennghiep.vercel.app'], // Allow these origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
+    credentials: true // Allow cookies to be sent
+  })
+);
 // Helmet security configuration
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
