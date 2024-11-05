@@ -42,10 +42,10 @@ const app = express();
 // Cấu hình CORS để cho phép truy cập từ nguồn cụ thể
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'https://dongchuyennghiep.vercel.app'], // Allow these origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow specific HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
-    credentials: true // Allow cookies to be sent
+    origin: '*', // Tạm thời cho phép tất cả các nguồn gốc
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
   })
 );
 // Helmet security configuration

@@ -113,9 +113,7 @@ router.post('/register', async (req, res) => {
     try {
         const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID,color } = req.body;
 
-        if (!teamName || !shortName || !classTeam || !logoUrl || !games || !gameMembers||!color) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
+
 
         // Check if any member is already registered in another team
         const existingTeam = await TeamRegister.findOne({ gameMembers: { $in: gameMembers } });
