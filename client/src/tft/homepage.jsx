@@ -42,7 +42,7 @@ const CompetitionPage = () => {
             setLoading(false);
         };
         setTimeout(scrollToTop, 0);
-        document.title = "Giải Liên Quân Mobile DCN";
+        document.title = "Giải Teamfight Tactics DCN";
 
     }, []);
 
