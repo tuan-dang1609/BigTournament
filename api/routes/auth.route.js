@@ -159,24 +159,24 @@ router.post('/checkregisterAOV', async (req, res) => {
 });
 router.post('/checkregisterTFT', async (req, res) => {
     try {
-        const { usernameregister, playerName } = req.body; // Lấy tên người chơi cần kiểm tra từ yêu cầu
+        const { usernameregister, riotID } = req.body;
         const game = "Teamfight Tactics";
-        const existingTeam = await TeamRegister.findOne({ usernameregister, games: { $in: [game] } });
+
+        // Tìm kiếm đội dựa trên `usernameregister`, `riotID` và `games`
+        const existingTeam = await TeamRegister.findOne({
+            usernameregister,
+            games: { $in: [game] },
+            "gameMembers.Teamfight Tactics": { $in: [riotID] } // Kiểm tra xem `riotID` có nằm trong danh sách `gameMembers` không
+        });
 
         if (existingTeam) {
-            // Lấy danh sách thành viên của trò chơi "Teamfight Tactics" trong gameMembers
-            const gameMembers = existingTeam.gameMembers.get(game);
-
-            // Kiểm tra xem `playerName` có nằm trong danh sách thành viên hay không
-            if (gameMembers && gameMembers.includes(playerName)) {
-                // Nếu tìm thấy tên trong danh sách thành viên, trả lại thông tin đội
-                return res.status(200).json(existingTeam);
-            }
-
-        }
+            // Nếu tìm thấy đội, trả lại thông tin đội
+            return res.status(200).json(existingTeam);
+        } 
 
         // Nếu không tìm thấy đội, trả lại lỗi 404
-        return res.status(404).json({ message: 'Team not found' });
+        return res.status(404).json({ message: 'Team not found' }); 
+
     } catch (error) {
         // Xử lý lỗi server
         res.status(500).json({ message: 'Server error' });
