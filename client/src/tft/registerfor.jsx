@@ -53,14 +53,8 @@ const TeamRegistrationForm = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                // Chuyển usernameregister và riotID thành JSON
-                const bodyjson = JSON.stringify({
-                    usernameregister: currentUser._id,
-                    riotID: currentUser.riotID
-                });
-        
-                console.log(bodyjson); // Log ra để kiểm tra dữ liệu gửi đi
-        
+                const bodyjson=JSON.stringify({ usernameregister: currentUser._id})
+                console.log(bodyjson);
                 const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterTFT', {
                     method: 'POST',
                     headers: {
@@ -74,12 +68,12 @@ const TeamRegistrationForm = () => {
                 }
         
                 const data = await response.json();
-                setUserRegister(data); // Lưu thông tin đăng ký của người dùng
+                setUserRegister(data); // Save the fetched user registration info
             } catch (error) {
-                console.error("Error fetching team data:", error); // Log lỗi ra console
+
             } finally {
-                setLoading(false); // Đặt loading về false sau khi kiểm tra xong
-                setCheckingRegistration(false); // Hoàn thành kiểm tra đăng ký
+                setLoading(false); // Set loading to false once the check is complete
+                setCheckingRegistration(false); // Checking registration is done
             }
         };
 

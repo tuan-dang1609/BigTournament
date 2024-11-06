@@ -159,15 +159,9 @@ router.post('/checkregisterAOV', async (req, res) => {
 });
 router.post('/checkregisterTFT', async (req, res) => {
     try {
-        const { usernameregister, riotID } = req.body;
+        const { usernameregister } = req.body;
         const game = "Teamfight Tactics";
-
-        // Tìm kiếm đội dựa trên `usernameregister`, `riotID` và `games`
-        const existingTeam = await TeamRegister.findOne({
-            usernameregister,
-            games: { $in: [game] },
-            "gameMembers.Teamfight Tactics": { $in: [riotID] } // Kiểm tra xem `riotID` có nằm trong danh sách `gameMembers` không
-        });
+        const existingTeam = await TeamRegister.findOne({ usernameregister, games: { $in: [game] } });
 
         if (existingTeam) {
             // Nếu tìm thấy đội, trả lại thông tin đội
