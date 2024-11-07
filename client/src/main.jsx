@@ -36,6 +36,7 @@ import MatchStatAOV from './arenaofvalor/statmatch.jsx'
 import TFT from './tft/tftmatch.jsx'
 import TFTRegister from './tft/registerfor.jsx';
 import TFThompage from './tft/homepage.jsx'
+import LiveGameDataLOL from './leagueoflegend/hudgame.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -70,6 +71,7 @@ if (rootElement) {
               <Route path='/arenaofvalor/halloffame' element={<HallOfFameAOV />} />
               <Route path='/valorant/halloffame' element={<HallOfFameValo />} />
               <Route path='/tft/match' element={<TFT />} />
+              <Route path='/lol/hudgame' element={<LiveGameDataLOL />} />
               <Route element={<PrivateRoute />}>
               <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />

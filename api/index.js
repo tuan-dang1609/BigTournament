@@ -96,7 +96,18 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later',
 });
 app.use('/api/', limiter);
-
+app.get('/api/livegame', async (req, res) => {
+  try {
+      const response = await axios.get('https://127.0.0.1:2999/liveclientdata/allgamedata', {
+          // You may need to ignore self-signed certificates if it's a local service.
+          httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
+      });
+      res.json(response.data);
+  } catch (error) {
+      console.error('Error fetching live game data:', error.message);
+      res.status(error.response?.status || 500).json({ error: 'Failed to fetch live game data' });
+  }
+});
 // Serve static files
 app.use(express.static(path.join(__dirname, '..', 'client')));
 

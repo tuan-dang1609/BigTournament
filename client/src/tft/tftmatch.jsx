@@ -6,7 +6,7 @@ const MatchData = () => {
     const [error, setError] = useState(null);
     const [showPlayers, setShowPlayers] = useState(true);
 
-    const matchIds = ['VN2_628709191','VN2_628737890'];
+    const matchIds = ['VN2_633813781','VN2_633855378','VN2_633884563'];
 
     const getPoints = (placement) => {
         if (placement >= 1 && placement <= 8) {
