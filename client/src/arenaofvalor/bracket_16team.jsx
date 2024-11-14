@@ -186,10 +186,14 @@ const TournamentBracketAOV16 = () => {
                 Bị loại
             </h2>
             <div className="p-2">
-                {teams[5].slice(8, 16).map((team, index) => (
+                {teams[5].slice(9, 17).map((team, index) => (
                     <div key={index} className="flex items-center justify-between p-2 border-b last:border-b-0">
                         <div className="flex items-center">
-                            <img src={team.icon} alt={team.name || "Team Logo"} className="w-8 h-8 mr-2" />
+                        {team.icon !== "🚫" ? (
+                                <img src={team.icon} className="w-8 h-8 mr-2" />
+                            ) : (
+                                <span className="w-8 h-8 mr-2">{team.icon}</span>
+                            )}
                             <span>{team.name || "Unknown"}</span>
                         </div>
                     </div>
@@ -213,7 +217,7 @@ const TournamentBracketAOV16 = () => {
     </ul>
     <p> Và đó là tất cả những điều chúng mình muốn gửi đến các bạn, chúc các bạn thi đấu tốt nhaaaaaaa.</p>
 </div>
-           <div className="lg:flex justify-end hidden z-50 mr-10 gap-1">
+           <div className="lg:flex justify-end hidden -z-99 mr-10 gap-1">
             <button
                 onClick={handleScrollLeft}
                 type="button"
