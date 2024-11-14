@@ -7,7 +7,7 @@ const LiveGameDataLOL = () => {
         // Hàm fetch dữ liệu từ API
         const fetchGameData = async () => {
             try {
-                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/livegame'); // Replace with your backend URL and port
+                const response = await fetch('http://localhost:3000/api/livegame'); // Proxy backend
                 const data = await response.json();
                 setGameData(data);
             } catch (error) {
@@ -16,14 +16,14 @@ const LiveGameDataLOL = () => {
         };
 
         // Thiết lập để fetch liên tục mỗi 1 giây
-        const interval = setInterval(fetchGameData, 2000);
+        const interval = setInterval(fetchGameData, 1000);
 
         // Clear interval khi component unmount
         return () => clearInterval(interval);
     }, []);
 
     return (
-        <div>
+        <div className='mt-20'>
             <h1>Live Game Data</h1>
             {gameData ? (
                 <pre>{JSON.stringify(gameData, null, 2)}</pre>

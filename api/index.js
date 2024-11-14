@@ -14,6 +14,7 @@ import rateLimit from 'express-rate-limit';
 import { Server } from 'socket.io';
 import compression from 'compression';
 import Queue from 'bull';
+import https from 'https';
 dotenv.config();
 const apiKey = process.env.TFT_KEY;
 
@@ -96,15 +97,19 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later',
 });
 app.use('/api/', limiter);
-app.get('/api/livegame', async (req, res) => {
+
+app.get('/api/livegame', async (req, res) => {  // Thay đổi để lấy riotId từ URL
+
+
   try {
-      const response = await axios.get('https://127.0.0.1:2999/liveclientdata/allgamedata', {
-          // You may need to ignore self-signed certificates if it's a local service.
-          httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
+      // Gọi API với riotId trong URL
+      const response = await axios.get(`https://127.0.0.1:2999/liveclientdata/playerlist`, {
+          httpsAgent: new https.Agent({ rejectUnauthorized: false })
       });
-      res.json(response.data);
+      res.json(response.data);  // Trả dữ liệu về cho frontend
   } catch (error) {
       console.error('Error fetching live game data:', error.message);
+      console.error('Error response data:', error.response?.data);
       res.status(error.response?.status || 500).json({ error: 'Failed to fetch live game data' });
   }
 });

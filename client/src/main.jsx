@@ -37,6 +37,8 @@ import TFT from './tft/tftmatch.jsx'
 import TFTRegister from './tft/registerfor.jsx';
 import TFThompage from './tft/homepage.jsx'
 import LiveGameDataLOL from './leagueoflegend/hudgame.jsx'
+import TournamentBracketLOL from './leagueoflegend/bracket.jsx'
+import TournamentBracketAOV16 from './arenaofvalor/bracket_16team.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -64,7 +66,7 @@ if (rootElement) {
               <Route path='/register' element={<TeamRegistrationForm />} />
               <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
               <Route path='/arenaofvalor/pickem/welcome' element={<WelcomePage />} />
-              <Route path='/arenaofvalor/swisstage' element={<TournamentBracketAOV />} />
+              <Route path='/arenaofvalor/test' element={<TournamentBracketAOV />} />
               <Route path='/arenaofvalor/match/:round/:Match' element={<MatchStatAOV />} />
               <Route path='/privacy' element={<PrivacyPolicy />} />
               <Route path='/tos' element={<TermsOfService />} />
@@ -72,6 +74,7 @@ if (rootElement) {
               <Route path='/valorant/halloffame' element={<HallOfFameValo />} />
               <Route path='/tft/match' element={<TFT />} />
               <Route path='/lol/hudgame' element={<LiveGameDataLOL />} />
+              <Route path='/arenaofvalor/swissstage' element={<TournamentBracketAOV16 />} />
               <Route element={<PrivateRoute />}>
               <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
