@@ -32,6 +32,64 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
+router.post('/upsertquestionsWithDynamicLogo', async (req, res) => {
+    try {
+        const { questions } = req.body;
+
+        if (!Array.isArray(questions)) {
+            return res.status(400).json({ error: 'Invalid input. Please provide an array of questions.' });
+        }
+
+        // Default profile picture if no matching user found
+        const defaultProfilePic = '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L';
+
+        for (const question of questions) {
+            if (!question.id || !question.question || !question.maxChoose || !question.timelock || !question.type) {
+                return res.status(400).json({
+                    error: 'Invalid input. Please provide all required fields (id, question, maxChoose, type, and options).'
+                });
+            }
+
+            // If options are empty, populate them from gameMembers for "Liên Quân Mobile" only
+            const optionsWithDynamicLogo = question.options && question.options.length > 0
+                ? question.options
+                : await TeamRegister.find({ games: "Liên Quân Mobile" }).then(async (teams) =>
+                    Promise.all(
+                        teams.flatMap(async (team) => {
+                            const memberOptions = await Promise.all(
+                                Array.from(team.gameMembers.get("Liên Quân Mobile") || []).map(async (member) => {
+                                    const user = await User.findOne({ garenaaccount: member });
+                                    return {
+                                        name: member, // Use member name from gameMembers
+                                        logo: user ? user.profilePicture : defaultProfilePic // Use profilePicture or default
+                                    };
+                                })
+                            );
+                            return memberOptions;
+                        })
+                    )
+                );
+
+            await QuestionPickem.findOneAndUpdate(
+                { id: question.id },
+                {
+                    timelock: question.timelock,
+                    question: question.question,
+                    maxChoose: question.maxChoose,
+                    type: question.type,
+                    options: optionsWithDynamicLogo.flat() // Flatten the array to include all members as individual options
+                },
+                { upsert: true, new: true }
+            );
+        }
+
+        res.status(201).json({ message: 'Questions added/updated successfully!' });
+    } catch (error) {
+        console.error('Error adding/updating questions:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 router.post('/fetchplayerprofiles', async (req, res) => {
     try {
         const { players } = req.body; // Lấy danh sách các IGN từ request body
@@ -200,28 +258,45 @@ router.post('/upsertquestions', async (req, res) => {
     try {
         const { questions } = req.body;
 
-        // Validate that questions is an array
         if (!Array.isArray(questions)) {
             return res.status(400).json({ error: 'Invalid input. Please provide an array of questions.' });
         }
 
         for (const question of questions) {
-            if (!question.id || !question.question || !question.maxChoose|| !question.timelock  || !question.type || !question.options || !Array.isArray(question.options)) {
+            if (!question.id || !question.question || !question.maxChoose || !question.timelock || !question.type || !question.options) {
                 return res.status(400).json({
                     error: 'Invalid input. Please provide all required fields (id, question, maxChoose, type, and options).'
                 });
             }
-            // Upsert the question: Update if it exists, otherwise insert a new one
+
+            // Check if options is empty and populate it with teams' names and logos for "Liên Quân Mobile" only
+            const optionsWithLogos = question.options.length > 0
+                ? await Promise.all(
+                    question.options.map(async (option) => {
+                        const team = await TeamRegister.findOne({ teamName: option.name });
+                        return {
+                            name: option.name,
+                            logo: team ? team.logoUrl : null // Default to null if no team found
+                        };
+                    })
+                )
+                : await TeamRegister.find({ games: "Liên Quân Mobile" }).then((teams) =>
+                    teams.map((team) => ({
+                        name: team.teamName,
+                        logo: team.logoUrl
+                    }))
+                );
+
             await QuestionPickem.findOneAndUpdate(
-                { id: question.id }, // Search by question id
-                {   
+                { id: question.id },
+                {
                     timelock: question.timelock,
-                    question: question.question, 
-                    maxChoose: question.maxChoose, 
-                    type: question.type, 
-                    options: question.options 
+                    question: question.question,
+                    maxChoose: question.maxChoose,
+                    type: question.type,
+                    options: optionsWithLogos
                 },
-                { upsert: true, new: true } // Upsert: Insert if not found
+                { upsert: true, new: true }
             );
         }
 
