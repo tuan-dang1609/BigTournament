@@ -84,7 +84,7 @@ if (rootElement) {
                 <Route path='/arenaofvalor/pickem/pickemall' element={<PickemChallenge />} />
               </Route>
             </Routes>
-           
+            
           </BrowserRouter>
         </PersistGate>
       </Provider>

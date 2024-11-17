@@ -288,13 +288,14 @@ router.post('/upsertquestions', async (req, res) => {
                 );
 
             await QuestionPickem.findOneAndUpdate(
-                { id: question.id },
+                { id: question.id,category: question.category },
                 {
                     timelock: question.timelock,
                     question: question.question,
                     maxChoose: question.maxChoose,
                     type: question.type,
-                    options: optionsWithLogos
+                    options: optionsWithLogos,
+                    category:question.category
                 },
                 { upsert: true, new: true }
             );

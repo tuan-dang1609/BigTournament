@@ -185,7 +185,12 @@ const PickemChallenge = () => {
     }
     closeModal(); // Close modal after submitting
   };
-
+  const getGridColsClass = (maxChoose) => {
+    if (maxChoose === 8) return 'grid-cols-2 md:grid-cols-4 lg:grid-cols-8';
+    if (maxChoose === 5) return 'grid-cols-2 md:grid-cols-5 lg:grid-cols-5';
+    if (maxChoose === 4) return 'grid-cols-2 md:grid-cols-4 lg:grid-cols-4';
+    return 'grid-cols-2 md:grid-cols-4 lg:grid-cols-3'; // Mặc định là 3 cột cho lg nếu không khớp các điều kiện trên
+  };
   const getResultIcon = (questionId) => {
     if (!detailedResults) {
       return null; // Nếu detailedResults không tồn tại, trả về null
@@ -254,7 +259,7 @@ const PickemChallenge = () => {
     {questionsGroup1.map((question) => (
       <div
         key={question.id}
-        className="mt-8 bg-white border-2 border-gray-300 rounded-lg p-4 flex flex-col justify-between min-h-[200px] cursor-pointer"
+        className="mt-8 text-black bg-white border-2 border-gray-300 rounded-lg p-4 flex flex-col justify-between lg:min-h-[230px] min-h-[200px] cursor-pointer"
         onClick={() => {
           if (!isLocked) {
             openModal(question);
@@ -297,7 +302,7 @@ const PickemChallenge = () => {
     {questionsGroup2.map((question) => (
       <div
         key={question.id}
-        className="mt-8 bg-white border-2 border-gray-300 rounded-lg p-4 flex flex-col justify-between min-h-[200px] cursor-pointer"
+        className="mt-8 text-black bg-white border-2 border-gray-300 rounded-lg p-4 flex flex-col justify-between lg:min-h-[230px] min-h-[200px] cursor-pointer"
         onClick={() => {
           if (!isLocked) {
             openModal(question);
@@ -337,46 +342,48 @@ const PickemChallenge = () => {
 
   {/* Nhóm maxChoose > 2 */}
   <div className="grid grid-cols-1 gap-8">
-    {questionsGroup3.map((question) => (
-      <div
-        key={question.id}
-        className="mt-8 bg-white border-2 border-gray-300 rounded-lg p-4 flex flex-col justify-between min-h-[200px] cursor-pointer"
-        onClick={() => {
-          if (!isLocked) {
-            openModal(question);
-          }
-        }}
-      >
-        <h3 className="text-[15px] font-semibold flex items-center gap-x-5 my-2">
-          {question.question}
-          {getResultIcon(question.id)}
-        </h3>
-        <div className="flex items-center justify-center">
-          {predictions[question.id]?.length > 0 ? (
-            <div className={`px-3 grid lg:grid-cols-${question.maxChoose} md:grid-cols-4 grid-cols-2 gap-x-16 items-center`}>
-              {predictions[question.id].map((team) => {
-                const selectedTeam = question.options.find((option) => option.name === team);
-                return selectedTeam ? (
-                  <div key={team} className="flex flex-col items-center">
-                    {selectedTeam.logo && (
-                      <img
-                        src={`https://drive.google.com/thumbnail?id=${selectedTeam.logo}`}
-                        alt={selectedTeam.name}
-                        className="w-24 h-24"
-                      />
-                    )}
-                    <p className="text-center text-[14px] mt-1 font-semibold">{selectedTeam.name}</p>
-                  </div>
-                ) : null;
-              })}
-            </div>
-          ) : (
-            <p className="text-gray-600">Ấn vào đây để chọn</p>
-          )}
+      {questionsGroup3.map((question) => (
+        <div
+          key={question.id}
+          className="mt-8 text-black bg-white border-2 border-gray-300 rounded-lg p-4 flex flex-col justify-between lg:min-h-[230px] min-h-[200px] cursor-pointer"
+          onClick={() => {
+            if (!isLocked) {
+              openModal(question);
+            }
+          }}
+        >
+          <h3 className="text-[15px] font-semibold flex items-center gap-x-5 my-2">
+            {question.question}
+            {getResultIcon(question.id)}
+          </h3>
+          <div className="flex items-center justify-center">
+            {predictions[question.id]?.length > 0 ? (
+              <div
+                className={`grid ${getGridColsClass(question.maxChoose)} xl:gap-x-16 lg:gap-x-5 gap-x-8 gap-y-8 items-center`}
+              >
+                {predictions[question.id].map((team) => {
+                  const selectedTeam = question.options.find((option) => option.name === team);
+                  return selectedTeam ? (
+                    <div key={team} className="flex flex-col items-center">
+                      {selectedTeam.logo && (
+                        <img
+                          src={`https://drive.google.com/thumbnail?id=${selectedTeam.logo}`}
+                          alt={selectedTeam.name}
+                          className="w-24 h-24"
+                        />
+                      )}
+                      <p className="text-center text-[14px] mt-1 font-semibold">{selectedTeam.name}</p>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-600">Ấn vào đây để chọn</p>
+            )}
+          </div>
         </div>
-      </div>
-    ))}
-  </div>
+      ))}
+    </div>
 </div>
         </form>
       </div>
@@ -390,13 +397,13 @@ const PickemChallenge = () => {
   ariaHideApp={false}
   shouldCloseOnOverlayClick={true} // Cho phép đóng khi nhấp vào vùng ngoài
 >
-  <h2 className="text-lg font-semibold mb-4">{currentQuestion?.question}</h2>
+  <h2 className="text-lg text-black font-semibold mb-4">{currentQuestion?.question}</h2>
 
   <input
     type="text"
     value={searchQuery}
     onChange={handleSearchChange}
-    placeholder="Tìm đội hoặc team"
+    placeholder="Tìm đội hoặc người chơi"
     className="mb-4 p-2 w-full border bg-white text-black border-gray-300 rounded-lg"
   />
 

@@ -501,7 +501,7 @@ const LeaderboardComponent = () => {
       ) : (
         // Nếu dữ liệu đã sẵn sàng, hiển thị nội dung bảng xếp hạng
         leaderboardData.length > 0 && (
-          <div className="container mx-auto px-4 py-8 mt-40">
+          <div className="container mx-auto px-4 py-8 mt-40 mb-14">
             <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Bảng xếp hạng Pick'em Challenge</h2>
             <div className="container mx-auto flex xl:flex-row xl:gap-2 lg:gap-5 flex-col lg:mb-10">
               <div className="bg-base-100 w-full rounded-lg lg:my-0 my-5">
