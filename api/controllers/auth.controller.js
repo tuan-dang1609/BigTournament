@@ -12,6 +12,7 @@ import AllUserScore from '../models/alluserscore.model.js';
 import Queue from 'bull';
 import TeamHOF from '../models/teamhof.model.js'
 import LeagueHOF from '../models/league.model.js';
+import QuestionPickem from '../models/question.model.js';
 const scoreQueue = new Queue('score-processing');
 
 const pointSystem = {
@@ -152,15 +153,19 @@ export const calculateMaxPoints = async (req, res) => {
     // Initialize total points counter
     let totalMaxPoints = 0;
 
-    // Point system based on questionId
-    
-
     // Iterate over all correct answers and calculate the maximum points
-    correctAnswers.answers.forEach((correctAnswer) => {
-      // Calculate points for this question based on the number of correct teams
-      const pointsForQuestion = correctAnswer.correctTeams.length * (pointSystem[correctAnswer.questionId] || 0);
+    for (const correctAnswer of correctAnswers.answers) {
+      // Fetch the question from the QuestionPickem collection to get the maxChoose value
+      const question = await QuestionPickem.findOne({ id: parseInt(correctAnswer.questionId) });
+      if (!question) {
+        console.warn(`Question with ID ${correctAnswer.questionId} not found in QuestionPickem`);
+        continue;
+      }
+
+      // Calculate points for this question based on maxChoose and the point system
+      const pointsForQuestion = Math.min(correctAnswer.correctTeams.length, question.maxChoose) * (pointSystem[correctAnswer.questionId] || 0);
       totalMaxPoints += pointsForQuestion;
-    });
+    }
 
     // Return the total maximum points
     res.status(200).json({
