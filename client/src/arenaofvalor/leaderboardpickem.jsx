@@ -100,43 +100,40 @@ const LeaderboardComponent = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        const leaderboardResponse = fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/leaderboardpickem', {
+  
+        const leaderboardResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/leaderboardpickem', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
         });
-
-        const maxScoreResponse = fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/maxscore', {
+  
+        const maxScoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/maxscore', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
         });
-
-        const [leaderboardResult, maxScoreResult] = await Promise.all([
-          leaderboardResponse.then((res) => res.json()),
-          maxScoreResponse.then((res) => res.json()),
-        ]);
-
+  
+        const leaderboardResult = await leaderboardResponse.json();
+        const maxScoreResult = await maxScoreResponse.json();
+  
         if (leaderboardResult.leaderboard && leaderboardResult.leaderboard.length > 0) {
           const scoretop1 = leaderboardResult.leaderboard[0].score;
           setScoreTop1(scoretop1);
           setLeaderboardData(leaderboardResult.leaderboard);
+        } else {
+          setLeaderboardData([]); // Không có dữ liệu
         }
-
+  
         if (maxScoreResult.totalMaxPoints) {
           SetMaxScore(maxScoreResult.totalMaxPoints);
         }
-
-        setLoading(false);
       } catch (error) {
         setError(error.message);
-        setLoading(false);
-      }
+      } 
     };
-
+  
     fetchData();
   }, []);
 
@@ -476,12 +473,17 @@ const LeaderboardComponent = () => {
     }
     
   };
-
+  useEffect(() => {
+    console.log("Leaderboard data length:", leaderboardData.length);
+  }, [leaderboardData]);
+  
+  console.log("Loading state:", loading);
+  console.log("Leaderboard data:", leaderboardData);
+  
   if (loading) {
+    console.log("Rendering loading spinner...");
     return (
       <>
-        {/* Bạn có thể thử tạm thời loại bỏ MyNavbar2 để kiểm tra */}
-        {/* <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} /> */}
         <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         <div className="flex justify-center items-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
@@ -489,85 +491,54 @@ const LeaderboardComponent = () => {
       </>
     );
   }
-
-  return (
-    <>
-      <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-      
-      {/* Nếu loading hoặc leaderboardData chưa có, hiển thị loading spinner */}
-      {leaderboardData.length === 0 ? (
+  
+  if (!loading && leaderboardData.length === 0) {
+    console.log("Rendering no data message...");
+    return (
+      <>
+        <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         <div className="flex items-center min-h-screen flex-col justify-center align-center w-full text-center text-lg font-semibold text-base-content">
           <img src={Image} className="h-28 w-28 mb-10" alt="Thông báo" />
           <p>Bảng xếp hạng sẽ hiện khi có kết quả của trận đấu đầu tiên. Các bạn vui lòng quay lại sau nhé.</p>
         </div>
-      ) : (
-        // Nếu dữ liệu đã sẵn sàng, hiển thị nội dung bảng xếp hạng
-        leaderboardData.length > 0 && (
-          <div className="container mx-auto px-4 py-8 mt-40 mb-14">
-            <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Bảng xếp hạng Pick'em Challenge</h2>
-            <div className="container mx-auto flex xl:flex-row xl:gap-2 lg:gap-5 flex-col lg:mb-10">
-              <div className="bg-base-100 w-full rounded-lg lg:my-0 my-5">
-                {points.length > 0 && (
-                  <div className="xl:w-[100%] w-[98%] lg:h-[320px] h-[250px] mt-16 mx-auto">
-                    <Line data={prepareChartData()} options={{ ...chartOptions, maintainAspectRatio: false }} />
-                  </div>
-                )}
+      </>
+    );
+  }
+  
+  console.log("Rendering leaderboard...");
+  return (
+    <>
+      <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+      <div className="container mx-auto px-4 py-8 mt-40 mb-14">
+        <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Bảng xếp hạng Pick'em Challenge</h2>
+        <div className="container mx-auto flex xl:flex-row xl:gap-2 lg:gap-5 flex-col lg:mb-10">
+          <div className="bg-base-100 w-full rounded-lg lg:my-0 my-5">
+            {points.length > 0 && (
+              <div className="xl:w-[100%] w-[98%] lg:h-[320px] h-[250px] mt-16 mx-auto">
+                <Line data={prepareChartData()} options={{ ...chartOptions, maintainAspectRatio: false }} />
               </div>
-  
-              {/* Hiển thị TierRewardsTable */}
-              <TierRewardsTable userScore={userRank ? userRank.score : 0} tierScores={tierScores} />
-            </div>
-  
-            <div className="overflow-hidden">
-              <table className="w-[98%] mx-auto">
-                <tbody className="text-gray-600 text-sm font-light">
-                  {rankedLeaderboardData.slice(0, 20).map((user, index) => (
-                    <LeaderboardRow
-                      className="last:!border-b-0"
-                      key={user._id || `${user.rank}-${index}`}
-                      user={user}
-                      highlightUser={user.name === currentUser.username}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            )}
           </div>
-        )
-      )}
-  
-      {/* Hiển thị userRank nếu đã có */}
-      {userRank && (
-        <div className="fixed bottom-0 w-full bg-black border-opacity-20 py-1 text-white flex items-center justify-between border-t-[0.1px] border-white">
-          <div className="container mx-auto px-4">
-            <table className="w-[98%] mx-auto">
-              <tbody>
-                <LeaderboardRow
-                  user={userRank}
-                  className="first:!border-t-0"
-                  isSticky={true}
-                  highlightUser={true}
-                  tierColor={
-                    userRank.score === maxScore
-                      ? '#D4AF37'
-                      : userRank.score >= tierScores.sTierScore
-                      ? '#ff9800' // S Tier
-                      : userRank.score >= tierScores.aTierScore
-                      ? '#CC52CE' // A Tier
-                      : userRank.score >= tierScores.bTierScore
-                      ? '#00bcd4' // B Tier
-                      : userRank.score >= tierScores.cTierScore
-                      ? '#4caf50' // C Tier
-                      : '#6A5ACD' // D Tier (below C tier)
-                  }
-                />
-              </tbody>
-            </table>
-          </div>
+          <TierRewardsTable userScore={userRank ? userRank.score : 0} tierScores={tierScores} />
         </div>
-      )}
+        <div className="overflow-hidden">
+          <table className="w-[98%] mx-auto">
+            <tbody className="text-gray-600 text-sm font-light">
+              {rankedLeaderboardData.slice(0, 20).map((user, index) => (
+                <LeaderboardRow
+                  className="last:!border-b-0"
+                  key={user._id || `${user.rank}-${index}`}
+                  user={user}
+                  highlightUser={user.name === currentUser.username}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </>
   );
 };
+
 
 export default LeaderboardComponent;
