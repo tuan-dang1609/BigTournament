@@ -33,7 +33,7 @@ const LeaderboardComponent = () => {
   useEffect(() => {
     const scrollToTop = () => {
       document.documentElement.scrollTop = 0;
-      setLoading(false);
+    
     };
     setTimeout(scrollToTop, 0);
     document.title = "Bảng xếp hạng Dự đoán";
@@ -131,7 +131,9 @@ const LeaderboardComponent = () => {
         }
       } catch (error) {
         setError(error.message);
-      } 
+      } finally{
+        setLoading(false)
+      }
     };
   
     fetchData();
@@ -473,15 +475,9 @@ const LeaderboardComponent = () => {
     }
     
   };
-  useEffect(() => {
-    console.log("Leaderboard data length:", leaderboardData.length);
-  }, [leaderboardData]);
   
-  console.log("Loading state:", loading);
-  console.log("Leaderboard data:", leaderboardData);
   
   if (loading) {
-    console.log("Rendering loading spinner...");
     return (
       <>
         <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
@@ -493,7 +489,6 @@ const LeaderboardComponent = () => {
   }
   
   if (!loading && leaderboardData.length === 0) {
-    console.log("Rendering no data message...");
     return (
       <>
         <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
@@ -504,8 +499,7 @@ const LeaderboardComponent = () => {
       </>
     );
   }
-  
-  console.log("Rendering leaderboard...");
+
   return (
     <>
       <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
