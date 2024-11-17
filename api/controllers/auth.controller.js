@@ -353,12 +353,12 @@ export const submitPrediction = async (req, res) => {
   try {
     const data = req.body;
 
-    // Check if the request body is an array (multiple predictions) or a single object (single prediction)
-    const predictions = Array.isArray(data) ? data : [data]; // Ensure predictions is always an array
+    // Kiểm tra xem body của request là một mảng (nhiều dự đoán) hay một đối tượng đơn (một dự đoán)
+    const predictions = Array.isArray(data) ? data : [data]; // Đảm bảo predictions luôn là mảng
 
-    let lastUserId = null; // Variable to store the last userId processed
+    let lastUserId = null; // Biến lưu userId của dự đoán cuối cùng được xử lý
 
-    // Validate each prediction object
+    // Xác thực từng đối tượng dự đoán
     for (let prediction of predictions) {
       const { userId, answers } = prediction;
 
@@ -366,37 +366,39 @@ export const submitPrediction = async (req, res) => {
         return res.status(400).json({ error: 'Invalid input. Please provide userId and answers.' });
       }
 
-      lastUserId = userId; // Update the lastUserId variable
+      lastUserId = userId; // Cập nhật biến lastUserId
 
-      // Find the user's prediction or create a new one
+      // Tìm dự đoán của người dùng hoặc tạo mới nếu chưa có
       let existingPrediction = await PredictionPickem.findOne({ userId });
 
       if (existingPrediction) {
-        answers.forEach((newAnswer) => {
-          const existingAnswerIndex = existingPrediction.answers.findIndex(
-            (answer) => answer.questionId === newAnswer.questionId
-          );
+        // Tạo một map để dễ dàng cập nhật hoặc thêm mới dựa trên questionId
+        const answersMap = new Map(existingPrediction.answers.map((answer) => [answer.questionId.toString(), answer]));
 
-          if (existingAnswerIndex !== -1) {
-            // Update existing answer
-            existingPrediction.answers[existingAnswerIndex].selectedTeams = newAnswer.selectedTeams;
+        answers.forEach((newAnswer) => {
+          const questionIdStr = newAnswer.questionId.toString();
+
+          if (answersMap.has(questionIdStr)) {
+            // Nếu đã có câu trả lời với questionId này, cập nhật selectedTeams
+            answersMap.get(questionIdStr).selectedTeams = newAnswer.selectedTeams;
           } else {
-            // Add new answer
+            // Nếu chưa có câu trả lời với questionId này, thêm mới
             existingPrediction.answers.push(newAnswer);
           }
         });
+
         await existingPrediction.save();
       } else {
-        // Create a new prediction document if none exists
+        // Tạo một tài liệu dự đoán mới nếu không tồn tại
         existingPrediction = new PredictionPickem({ userId, answers });
         await existingPrediction.save();
       }
 
-      // Push the task to Bull queue for background score processing
+      // Thêm tác vụ vào Bull queue để xử lý điểm số trong nền
       scoreQueue.add({ userId, answers });
     }
 
-    // Fetch the updated or newly created prediction for the last userId processed and return it in the response
+    // Lấy dự đoán đã cập nhật hoặc mới tạo cho userId cuối cùng được xử lý và trả về nó trong phản hồi
     const updatedPrediction = await PredictionPickem.findOne({ userId: lastUserId });
     res.status(200).json({ success: true, message: 'Predictions submitted and processing in the background.', data: updatedPrediction });
   } catch (error) {
