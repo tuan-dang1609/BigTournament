@@ -11,7 +11,6 @@ const PickemChallenge = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [predictions, setPredictions] = useState({});
   const [questions, setQuestions] = useState([]);
-  const [errors, setErrors] = useState({});
   const [totalScore, setTotalScore] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -93,7 +92,7 @@ const PickemChallenge = () => {
   // Single global countdown
   useEffect(() => {
     // Thời gian khóa dựa trên giờ Helsinki cố định
-    const dateInHelsinki = new Date("2024-12-22T18:16:00.000+02:00");
+    const dateInHelsinki = new Date("2024-12-29T18:16:00.000+02:00");
 
     const interval = setInterval(() => {
       const now = new Date(); // Lấy thời gian hiện tại của người dùng
