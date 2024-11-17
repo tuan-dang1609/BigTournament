@@ -356,6 +356,8 @@ export const submitPrediction = async (req, res) => {
     // Check if the request body is an array (multiple predictions) or a single object (single prediction)
     const predictions = Array.isArray(data) ? data : [data]; // Ensure predictions is always an array
 
+    let lastUserId = null; // Variable to store the last userId processed
+
     // Validate each prediction object
     for (let prediction of predictions) {
       const { userId, answers } = prediction;
@@ -364,14 +366,17 @@ export const submitPrediction = async (req, res) => {
         return res.status(400).json({ error: 'Invalid input. Please provide userId and answers.' });
       }
 
-      // Find the user's prediction or create new one
-      const existingPrediction = await PredictionPickem.findOne({ userId });
+      lastUserId = userId; // Update the lastUserId variable
+
+      // Find the user's prediction or create a new one
+      let existingPrediction = await PredictionPickem.findOne({ userId });
 
       if (existingPrediction) {
         answers.forEach((newAnswer) => {
           const existingAnswerIndex = existingPrediction.answers.findIndex(
             (answer) => answer.questionId === newAnswer.questionId
           );
+
           if (existingAnswerIndex !== -1) {
             // Update existing answer
             existingPrediction.answers[existingAnswerIndex].selectedTeams = newAnswer.selectedTeams;
@@ -383,15 +388,17 @@ export const submitPrediction = async (req, res) => {
         await existingPrediction.save();
       } else {
         // Create a new prediction document if none exists
-        const newPrediction = new PredictionPickem({ userId, answers });
-        await newPrediction.save();
+        existingPrediction = new PredictionPickem({ userId, answers });
+        await existingPrediction.save();
       }
 
       // Push the task to Bull queue for background score processing
       scoreQueue.add({ userId, answers });
     }
 
-    res.status(200).json({ success: true, message: 'Predictions submitted and processing in the background.' });
+    // Fetch the updated or newly created prediction for the last userId processed and return it in the response
+    const updatedPrediction = await PredictionPickem.findOne({ userId: lastUserId });
+    res.status(200).json({ success: true, message: 'Predictions submitted and processing in the background.', data: updatedPrediction });
   } catch (error) {
     console.error('Error submitting prediction:', error);
     res.status(500).json({ error: 'Internal server error' });

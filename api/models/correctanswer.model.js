@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const { Schema, model } = mongoose;
 
 const correctAnswerSchema = new Schema({
-  questionId: { type: Number, required: true },     // Question ID (e.g., 3, 4, 5, etc.)
+  questionId: { type: String, required: true },     // Question ID (e.g., 3, 4, 5, etc.)
   correctTeams: { type: [String], default: [] },    // Correct teams for this question
 });
 
