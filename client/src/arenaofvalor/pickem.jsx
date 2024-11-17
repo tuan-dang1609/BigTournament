@@ -280,7 +280,7 @@ const PickemChallenge = () => {
                       <img
                         src={`https://drive.google.com/thumbnail?id=${selectedTeam.logo}`}
                         alt={selectedTeam.name}
-                        className="w-24 h-24"
+                        className="w-28 h-28"
                       />
                     )}
                     <p className="text-center text-[14px] mt-1 font-semibold">{selectedTeam.name}</p>
@@ -297,7 +297,7 @@ const PickemChallenge = () => {
   </div>
 
   {/* Nhóm maxChoose === 2 */}
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
     {questionsGroup2.map((question) => (
       <div
         key={question.id}
@@ -323,7 +323,7 @@ const PickemChallenge = () => {
                       <img
                         src={`https://drive.google.com/thumbnail?id=${selectedTeam.logo}`}
                         alt={selectedTeam.name}
-                        className="w-24 h-24"
+                        className="w-28 h-28"
                       />
                     )}
                     <p className="text-center text-[14px] mt-1 font-semibold">{selectedTeam.name}</p>
@@ -368,7 +368,7 @@ const PickemChallenge = () => {
                         <img
                           src={`https://drive.google.com/thumbnail?id=${selectedTeam.logo}`}
                           alt={selectedTeam.name}
-                          className="w-24 h-24"
+                          className="lg:w-28 lg:h-28 w-24 h-24"
                         />
                       )}
                       <p className="text-center text-[14px] mt-1 font-semibold">{selectedTeam.name}</p>
@@ -377,7 +377,7 @@ const PickemChallenge = () => {
                 })}
               </div>
             ) : (
-              <p className="text-gray-600">Ấn vào đây để chọn</p>
+              <p className="text-black">Ấn vào đây để chọn</p>
             )}
           </div>
         </div>

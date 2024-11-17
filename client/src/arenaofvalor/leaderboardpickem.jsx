@@ -530,6 +530,36 @@ const LeaderboardComponent = () => {
           </table>
         </div>
       </div>
+      
+      {userRank && (
+        <div className="fixed bottom-0 w-full bg-black border-opacity-20 py-1 text-white flex items-center justify-between border-t-[0.1px] border-white">
+          <div className="container mx-auto px-4">
+            <table className="w-[98%] mx-auto">
+              <tbody>
+                <LeaderboardRow
+                  user={userRank}
+                  className="first:!border-t-0"
+                  isSticky={true}
+                  highlightUser={true}
+                  tierColor={
+                    userRank.score === maxScore
+                      ? '#D4AF37'
+                      : userRank.score >= tierScores.sTierScore
+                      ? '#ff9800'
+                      : userRank.score >= tierScores.aTierScore
+                      ? '#CC52CE'
+                      : userRank.score >= tierScores.bTierScore
+                      ? '#00bcd4'
+                      : userRank.score >= tierScores.cTierScore
+                      ? '#4caf50'
+                      : '#6A5ACD'
+                  }
+                />
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </>
   );
 };
