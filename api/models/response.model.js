@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const { Schema, model } = mongoose;
 
 const questionResponseSchema = new Schema({
-  questionId: { type: Number, required: true },   
+  questionId: { type: String, required: true },   
   selectedTeams: { type: [String], required: true } 
 });
 
