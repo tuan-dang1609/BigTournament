@@ -4,7 +4,7 @@ import MyNavbar2 from "../components/Navbar2";
 import { Line } from 'react-chartjs-2';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import 'chart.js/auto';
-
+import Image from '../image/waiting.png'
 // Register the annotation plugin
 import { Chart } from 'chart.js';
 Chart.register(annotationPlugin);
@@ -482,6 +482,7 @@ const LeaderboardComponent = () => {
       <>
         {/* Bạn có thể thử tạm thời loại bỏ MyNavbar2 để kiểm tra */}
         {/* <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} /> */}
+        <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         <div className="flex justify-center items-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
@@ -492,11 +493,12 @@ const LeaderboardComponent = () => {
   return (
     <>
       <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-  
+      
       {/* Nếu loading hoặc leaderboardData chưa có, hiển thị loading spinner */}
-      {loading || leaderboardData.length === 0 ? (
-        <div className="flex justify-center items-center min-h-screen">
-          <span className="loading loading-dots loading-lg text-primary"></span>
+      {leaderboardData.length === 0 ? (
+        <div className="flex items-center min-h-screen flex-col justify-center align-center w-full text-center text-lg font-semibold text-base-content">
+          <img src={Image} className="h-28 w-28 mb-10" alt="Thông báo" />
+          <p>Bảng xếp hạng sẽ hiện khi có kết quả của trận đấu đầu tiên. Các bạn vui lòng quay lại sau nhé.</p>
         </div>
       ) : (
         // Nếu dữ liệu đã sẵn sàng, hiển thị nội dung bảng xếp hạng
