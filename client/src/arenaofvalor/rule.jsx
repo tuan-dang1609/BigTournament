@@ -132,11 +132,15 @@ const RuleBook = () => {
             />
 
             <Section
-                title="VIII. VẤN ĐỀ THAY NGƯỜI"
+                title="VIII. VẤN ĐỀ KHAI BÁO ĐỘI HÌNH TRƯỚC TRẬN, THAY NGƯỜI, VÀ THAY ĐỔI VỊ TRÍ TRONG TRẬN"
                 content="Mỗi đội có thể tiến hành thay đổi Tuyển thủ sau các ván đấu."
                 rules={[
-                    "Đội tuyển chỉ được phép thay tối đa một Tuyển thủ trong mỗi ván đấu. Tuy nhiên, một Đội tuyển chỉ có thể được phép thay đổi TỐI ĐA là 05 tuyển thủ trong trận đấu BO5 và BO7. Thay đổi Tuyển thủ trong khi thi đấu chỉ có hiệu lực ở trong các lựa chọn sau: Trận BO3, BO5, BO7: Sau ván 1, Đội tuyển có thể tiến hành thay đổi Tuyển thủ dự bị.",
+                    "Các đội thi đấu vui lòng thông báo đội hình trước 12h trưa ngày thi đấu. Các bạn phải khai báo tên người chơi mỗi lane gồm: Đường Trên (Top), Rừng (Jungle), Đường Giữa (Mid), Đường Dưới (ADC và Support) và dự bị nếu có.",
+                    "Đội tuyển chỉ được phép thay tối đa một Tuyển thủ trong mỗi ván đấu. Tuy nhiên, một Đội tuyển chỉ có thể được phép thay đổi TỐI ĐA là 05 tuyển thủ trong trận đấu BO5 và BO7.",
+                    "Thay đổi Tuyển thủ trong khi thi đấu chỉ có hiệu lực ở trong các lựa chọn sau: Trận BO3, BO5, BO7. Sau ván 1, Đội tuyển có thể tiến hành thay đổi Tuyển thủ dự bị. ",
+                    "Lưu ý là khi thay đổi, người chơi dự bị đó phải chơi ĐÚNG vị trí mà người cần thay đã chơi. Ví dụ: Đội A thay người chơi Đường Trên thì người dự bị thay vào PHẢI chơi vị trí Đường Trên chứ không được đi các đường khác.",
                     "Trách nhiệm của đội tuyển trong việc thay người giữa các ván đấu Đội tuyển có trách nhiệm thông báo về yêu cầu thay đổi Tuyển thủ cho BTC và chỉ được coi là thay đổi hợp lệ nếu được BTC chấp thuận chậm nhất 3 phút ngay sau khi nhà chính của ván đấu liền trước đó bị phá hủy. Nếu chậm trễ trong việc thông báo, BTC có quyền không chấp nhận yêu cầu thay đổi này.",
+                    "Một khi ván đầu tiên của trận đó bắt đầu, các team sẽ KHÔNG được thay đổi vị trí thi đấu của mình cho đến khi kết thúc trận đấu. Nên các bạn vui lòng sắp xếp các vị trí kĩ càng trước khi trận đấu bắt đầu nhé.",
                 ]}
             />
 
