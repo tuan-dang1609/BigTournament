@@ -264,7 +264,7 @@ const PickemChallenge = () => {
         <form className="lg:p-2 p-1">
         <div className="space-y-8">
   {/* Nhóm maxChoose === 1 */}
-  <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+  <div className="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-2 lg:grid-cols-4 gap-8">
     {questionsGroup1.map((question) => (
       <div
         key={question.id}
