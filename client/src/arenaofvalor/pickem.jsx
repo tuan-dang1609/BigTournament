@@ -136,13 +136,23 @@ const PickemChallenge = () => {
 
   const handleTeamSelection = (team) => {
     if (!currentQuestion) return;
-
-    const selectedTeams = tempSelection || [];
-    const newSelectedTeams = selectedTeams.includes(team.name)
-      ? selectedTeams.filter((t) => t !== team.name)
-      : [...selectedTeams, team.name];
-    if (newSelectedTeams.length <= currentQuestion.maxChoose) {
-      setTempSelection(newSelectedTeams);
+  
+    // Only for maxChoose === 1
+    if (currentQuestion.maxChoose === 1) {
+      // Directly replace the selection with the new team, allowing switch in one click
+      setTempSelection((prevSelection) =>
+        prevSelection[0] === team.name ? [] : [team.name]
+      );
+    } else {
+      // Original logic for maxChoose > 1
+      const selectedTeams = tempSelection || [];
+      const newSelectedTeams = selectedTeams.includes(team.name)
+        ? selectedTeams.filter((t) => t !== team.name)
+        : [...selectedTeams, team.name];
+  
+      if (newSelectedTeams.length <= currentQuestion.maxChoose) {
+        setTempSelection(newSelectedTeams);
+      }
     }
   };
 
@@ -420,7 +430,8 @@ const PickemChallenge = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         disabled={
-          tempSelection.length >= currentQuestion?.maxChoose &&
+          currentQuestion.maxChoose > 1 && 
+          tempSelection.length >= currentQuestion.maxChoose && 
           !tempSelection.includes(option.name)
         }
       >
