@@ -249,7 +249,7 @@ const PickemChallenge = () => {
       <MyNavbar2 navigation={navigation} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       <div className="min-h-screen mt-40 mb-20 px-4 sm:px-10 lg:px-8">
         {/* Single countdown display */}
-        <span className="block text-center text-[20px] text-error font-semibold mt-8 my-5">{globalCountdown}</span>
+        <span className="block text-center text-[20px] text-error font-semibold mt-8 my-5 italic">{globalCountdown}</span>
 
         <form className="lg:p-2 p-1">
         <div className="space-y-8">
