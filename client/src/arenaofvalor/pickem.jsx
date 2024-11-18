@@ -290,7 +290,7 @@ const PickemChallenge = () => {
                       <img
                         src={`https://drive.google.com/thumbnail?id=${selectedTeam.logo}`}
                         alt={selectedTeam.name}
-                        className="w-28 h-28"
+                        className="sm:w-28 sm:h-28 h-24 w-24"
                       />
                     )}
                     <p className="text-center text-[14px] mt-1 font-semibold">{selectedTeam.name}</p>
@@ -307,7 +307,7 @@ const PickemChallenge = () => {
   </div>
 
   {/* Nhóm maxChoose === 2 */}
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
     {questionsGroup2.map((question) => (
       <div
         key={question.id}
@@ -324,7 +324,7 @@ const PickemChallenge = () => {
         </h3>
         <div className="flex items-center justify-center">
           {predictions[question.id]?.length > 0 ? (
-            <div className={`px-3 grid grid-cols-${question.maxChoose} gap-x-20 items-center`}>
+            <div className={`px-3 grid grid-cols-${question.maxChoose} lg:gap-x-20 sm:gap-x-12 gap-x-10  items-center`}>
               {predictions[question.id].map((team) => {
                 const selectedTeam = question.options.find((option) => option.name === team);
                 return selectedTeam ? (
@@ -333,7 +333,7 @@ const PickemChallenge = () => {
                       <img
                         src={`https://drive.google.com/thumbnail?id=${selectedTeam.logo}`}
                         alt={selectedTeam.name}
-                        className="w-28 h-28"
+                        className="sm:w-28 sm:h-28 h-24 w-24"
                       />
                     )}
                     <p className="text-center text-[14px] mt-1 font-semibold">{selectedTeam.name}</p>
