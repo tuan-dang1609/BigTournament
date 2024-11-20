@@ -39,6 +39,7 @@ import TFThompage from './tft/homepage.jsx'
 import LiveGameDataLOL from './leagueoflegend/hudgame.jsx'
 import TournamentBracketLOL from './leagueoflegend/bracket.jsx'
 import TournamentBracketAOV16 from './arenaofvalor/bracket_16team.jsx'
+import PlayinAOV from './arenaofvalor/bracket.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -66,6 +67,7 @@ if (rootElement) {
               <Route path='/register' element={<TeamRegistrationForm />} />
               <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
               <Route path='/arenaofvalor/pickem/welcome' element={<WelcomePage />} />
+              <Route path='/arenaofvalor/playin' element={<PlayinAOV />} />
               <Route path='/arenaofvalor/test' element={<TournamentBracketAOV />} />
               <Route path='/arenaofvalor/match/:round/:Match' element={<MatchStatAOV />} />
               <Route path='/privacy' element={<PrivacyPolicy />} />

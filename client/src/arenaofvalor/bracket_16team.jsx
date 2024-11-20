@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-
+import Image from '../image/waiting.png'
 const TournamentBracketAOV16 = () => {
     const [teams, setTeams] = useState([[], [], [], [], [], []]);
     const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ const TournamentBracketAOV16 = () => {
 
                     return {
                         name: teamName,
-                        icon: team ? `https://drive.google.com/thumbnail?id=${team.logoUrl}` : "🏅",
+                        icon: team ? `https://drive.google.com/thumbnail?id=${team.logoUrl}` : Image,
                         score: row.c[col + 2]?.v || 0,
                     };
                 })

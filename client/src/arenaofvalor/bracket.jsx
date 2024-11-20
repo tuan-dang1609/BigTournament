@@ -1,70 +1,77 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
-const TournamentBracketAOV = () => {
+import Image from '../image/waiting.png'
+const TournamentBracket = () => {
   const [teams, setTeams] = useState([[], [], [], []]);
   const [loading, setLoading] = useState(true);
   const [idmatch, setMatchId] = useState([]);
-
+  document.title = "Solo Yasuo cuối tuần"
   const fetchTeams = async () => {
     try {
-        // Fetch dữ liệu từ Google Sheets
-        const response = await fetch('https://docs.google.com/spreadsheets/d/1ZGF4cPHRmKL5BSzgAMtUD2WWYrB-Dpx8Q_gFha5T0dY/gviz/tq?sheet=Swiss Stage&range=A1:M11');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const text = await response.text();
-        const json = JSON.parse(text.substring(47, text.length - 2));
+      const response = await fetch(
+        'https://docs.google.com/spreadsheets/d/1ZGF4cPHRmKL5BSzgAMtUD2WWYrB-Dpx8Q_gFha5T0dY/gviz/tq?sheet=Play-in&range=A1:L20'
+      );
 
-        // Fetch dữ liệu logo của các đội từ backend
-        const teamResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamAOV', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        if (!teamResponse.ok) throw new Error(`HTTP error! status: ${teamResponse.status}`);
-        const teamData = await teamResponse.json();
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const text = await response.text();
+      const json = JSON.parse(text.substring(47, text.length - 2));
 
-        // Lấy logo của mỗi đội từ dữ liệu của Google Sheets
-        const columns = [0, 3, 6, 9];
-        const updatedTeams = columns.map((col) =>
-            json.table.rows.map(row => {
-                const teamName = row.c[col + 1]?.v || "Unknown";
-                const team = teamData.find(t => t.teamName === teamName);
+      const teamResponse = await fetch(
+        "https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamAOV",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!teamResponse.ok) throw new Error(`HTTP error! status: ${teamResponse.status}`);
+      const teamData = await teamResponse.json();
 
-                return {
-                    name: teamName,
-                    icon: team ? `https://drive.google.com/thumbnail?id=${team.logoUrl}` : "🏅",
-                    score: row.c[col + 2]?.v || 0
-                };
-            })
-        );
-        
-        setTeams(updatedTeams); // Cập nhật state với danh sách đội đã được cập nhật icon
+      const columns = [0, 3, 6, 9, 12, 15];
+      const updatedTeams = columns.map((col) =>
+        json.table.rows.map((row) => {
+          const teamName = row.c[col + 1]?.v || "Unknown";
+          const team = teamData.find((t) => t.teamName === teamName);
+
+          return {
+            name: teamName,
+            icon: team ? `https://drive.google.com/thumbnail?id=${team.logoUrl}` : Image,
+            score: row.c[col + 2]?.v || 0,
+          };
+        })
+      );
+      setTeams(updatedTeams);
     } catch (error) {
-        console.error("Failed to fetch teams:", error);
+      console.error("Failed to fetch teams:", error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
-
+  };
 
   const fetchGames = async () => {
     try {
-        const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid");
-        
-        // Lọc dữ liệu nhận được dựa trên điều kiện game: "Arena Of Valor"
-        const filteredGames = response.data.filter(game => game.game === "Arena Of Valor");
-        
-        setMatchId(filteredGames); // Cập nhật state với danh sách đã lọc
+      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setMatchId(data);
     } catch (error) {
-        console.error("Failed to fetch games:", error);
+      console.error("Failed to fetch games:", error);
     }
-};
+  };
+
   useEffect(() => {
     fetchTeams();
     fetchGames();
-
-    
   }, []);
 
   const getMatchLink = (team1, team2) => {
@@ -77,7 +84,7 @@ const TournamentBracketAOV = () => {
     );
 
     if (match) {
-      return `/arenaofvalor/match/${match.round}/${match.Match}`;
+      return `/valorant/match/${match.round}/${match.Match}`;
     } else {
       return "#";
     }
@@ -85,24 +92,24 @@ const TournamentBracketAOV = () => {
 
   const roundStyles = {
     "0W-0L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
-  "1W-0L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
-  "1W-1L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
-  "0W-1L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
+    "1W-0L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
+    "1W-1L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
+    "0W-1L": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
     "Advance to play-off": { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" },
   };
 
-  const renderMatchup = (team1, team2, hasMargin = true) => (
+  const renderMatchup = (team1, team2, hasMargin = true, additionalMargin = '') => (
     <Link
       to={getMatchLink(team1, team2)}
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'}`}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'} ${additionalMargin}`}
     >
       {[team1, team2].map((team, index) => (
         <div
           key={index}
-          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white ${index === 0 ? '' : ''}`}
+          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white`}
         >
-          <div className="flex items-center ">
-            <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-9 h-9 mr-4 ml-1" />
+          <div className="flex items-center">
+            <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
             <span className="text-black">{team?.name || 'Unknown'}</span>
           </div>
           <div className="flex items-center justify-center w-14 h-14 bg-[#d9d9d9e5]">
@@ -114,19 +121,56 @@ const TournamentBracketAOV = () => {
       ))}
     </Link>
   );
-  
-  
-  
+  const renderAdvance = (team1, team2, hasMargin = true, additionalMargin = '') => (
+    <Link
+      to={getMatchLink(team1, team2)}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'} ${additionalMargin}`}
+    >
+      {[team1, team2].map((team, index) => (
+        <div
+          key={index}
+          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white lg:first:mb-[268px]`}
+        >
+          <div className="flex items-center h-14">
+            <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
+            <span className="text-black">{team?.name || 'Unknown'}</span>
+          </div>
+
+        </div>
+      ))}
+    </Link>
+  );
+
+  const renderAdvance2 = (team1, team2, hasMargin = true, additionalMargin = '') => (
+    <Link
+      to={getMatchLink(team1, team2)}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'} ${additionalMargin}`}
+    >
+      {[team1, team2].map((team, index) => (
+        <div
+          key={index}
+          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white lg:first:mb-[108px]`}
+        >
+          <div className="flex items-center h-14">
+            <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
+            <span className="text-black">{team?.name || 'Unknown'}</span>
+          </div>
+
+        </div>
+      ))}
+    </Link>
+  );
+
 
   const renderSection = (title, matchups, className = "") => {
-    const styles = roundStyles[title] || { border: "border-gray-300", titleBg: "bg-gray-100" };
+    const styles = roundStyles[title] || { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" };
 
     return (
-      <div className={`flex flex-col ${className} ${styles.border} rounded-lg border-2 overflow-hidden ${title === "1W-1L" ? "lg:mt-32" : ""}`}>
-        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border-b ${styles.border} `}>{title}</h2>
-        <div className="py-2 px-4 bg-[#D9D9D94D]">
+      <div className={`flex flex-col  ${styles.border} overflow-hidden ${title === "1W-1L" ? "lg:mt-5" : ""}`}>
+        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>{title}</h2>
+        <div className="py-2">
           {matchups.map((matchup, index) => (
-            <div key={index}>
+            <div key={index} className={className}>
               {renderMatchup(matchup[0] || {}, matchup[1] || {})}
             </div>
           ))}
@@ -134,107 +178,119 @@ const TournamentBracketAOV = () => {
       </div>
     );
   };
+  const renderAdvanceSection = (title, matchups, className = "") => {
+    const styles = roundStyles[title] || { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" };
 
-  const renderAdvanceSection = () => (
-    <div className="flex flex-col border-2 border-gray-300 rounded-lg overflow-hidden relative">
-      <h2 className="text-lg font-bold p-2 bg-[#D9D9D94D] border-b border-gray-300 ">Advance to play-off</h2>
-      <div className="p-2">
-        {teams[3].slice(0, 4).map((team, index) => (
-          <div key={index} className="flex items-center justify-between p-2 border-b last:border-b-0">
-            <div className="flex items-center">
-              {team.icon !== "🏅" ? (
-                <img src={team.icon} alt={team.name || "Team Logo"} className="w-8 h-8 mr-2" />
-              ) : (
-                <span className="w-8 h-8 mr-2">{team.icon}</span>
-              )}
-              <span>{team.name || "Unknown"}</span>
+    return (
+      <div className={`flex flex-col  ${styles.border} overflow-hidden ${title === "1W-1L" ? "lg:mt-5" : ""}`}>
+        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>{title}</h2>
+        <div className="py-2">
+          {matchups.map((matchup, index) => (
+            <div key={index} className={className}>
+              {renderAdvance(matchup[0] || {}, matchup[1] || {})}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+  const renderAdvanceSection2 = (title, matchups, className = "") => {
+    const styles = roundStyles[title] || { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" };
 
-  const renderEliminateSection = () => (
-    <div className="flex flex-col border-2 border-gray-300 overflow-hidden relative rounded-lg">
-      <h2 className="text-lg font-bold p-2 bg-[#D9D9D94D] border-b border-gray-300 ">Eliminate</h2>
-      <div className="p-2">
-        {teams[3].slice(5, 9).map((team, index) => (
-          <div key={index} className="flex items-center justify-between p-2 border-b  last:border-b-0">
-            <div className="flex items-center">
-              <img src={team.icon} alt={team.name || "Team Logo"} className="w-8 h-8 mr-2" />
-              <span>{team.name || "Unknown"}</span>
+    return (
+      <div className={`flex flex-col  ${styles.border} overflow-hidden ${title === "1W-1L" ? "lg:mt-5" : ""}`}>
+        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>{title}</h2>
+        <div className="py-2">
+          {matchups.map((matchup, index) => (
+            <div key={index} className={className}>
+              {renderAdvance2(matchup[0] || {}, matchup[1] || {})}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="container mx-auto p-4 relative">
-      <h1 className="text-3xl font-bold mb-6">Swiss Stage Tournament Bracket</h1>
+      <h1 className="text-3xl font-bold mb-10 mt-20 text-center">Solo Yasuo</h1>
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
       ) : (
-        <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-4 relative">
-          <div className="w-full lg:w-1/4 relative">
-            {renderSection("0W-0L", [
-              [teams[0][0], teams[0][1]],
-              [teams[0][2], teams[0][3]],
-              [teams[0][4], teams[0][5]],
-              [teams[0][6], teams[0][7]],
-            ])}
-            <div className="hidden lg:block absolute top-[calc(25%+1rem)] left-full h-[2.3px] w-[16px] bg-secondary"></div>
-            <div className="hidden lg:block absolute bottom-[calc(25%+2.5rem)] left-[calc(100%)] h-[2.3px] w-[16px] bg-secondary"></div>
+        <>
+          <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
 
-          </div>
-          <div className="w-full lg:w-1/4 flex flex-col justify-between relative">
-            <div>
-              {renderSection("1W-0L", [
+            <div className="w-full lg:w-1/4 relative">
+              <div>
+                {renderSection("Vòng 1", [
+                  [teams[0][0], teams[0][1]],
+                  [teams[0][2], teams[0][3]],
+                  [teams[0][4], teams[0][5]],
+                  [teams[0][6], teams[0][7]],
+                ], 'lg:!mb-[48px] lg:last:!mb-[0px] lg:first:!mt-[10px]')}
+                <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] lg:w-[20%] bg-secondary"></div>
+                <div className="hidden lg:block absolute top-[calc(7.9rem)] lg:left-[120%] h-[165px] w-[2.3px] bg-secondary"></div>
+                <div className="hidden lg:block absolute top-[18.1rem] left-full h-[2px] lg:w-[20%] bg-secondary"></div>
+                <div className="hidden lg:block absolute top-[13rem] lg:left-[120%]  h-[2px] lg:w-[29.5%] bg-secondary"></div>
+
+                <div className="hidden lg:block absolute top-[28.2rem] left-full h-[2px] lg:w-[20%]  bg-secondary"></div>
+                <div className="hidden lg:block absolute top-[calc(28.2rem)] lg:left-[120%] h-[165px] w-[2.3px] bg-secondary"></div>
+                <div className="hidden lg:block absolute top-[38.4rem] left-full h-[2px] lg:w-[20%]  bg-secondary"></div>
+                <div className="hidden lg:block absolute top-[33.3rem] lg:left-[120%]  h-[2px] lg:w-[29.5%] bg-secondary"></div>
+              </div>
+
+            </div>
+            <div className="w-full lg:w-1/4 relative">
+              {renderSection("Vòng 2", [
                 [teams[1][0], teams[1][1]],
                 [teams[1][2], teams[1][3]],
-              ])}
-              <div className="hidden lg:block absolute top-[5rem] left-full h-[2px] 2xl:w-[109%] xl:w-[110%] lg:w-[113%] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(25%+1rem)] left-full h-[2px] w-[8.25px] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(25%+1rem)] left-[calc(100%+0.4rem)] h-20 w-[1.2px] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(25%+6rem)] left-[calc(100%+0.4rem)] h-[2px] w-[8.5px] bg-secondary"></div>
+              ], 'lg:!mt-[100px] last:!mb-[0px] lg:!mb-[208px]')}
+              <div className="hidden lg:block absolute top-[13.1rem] left-full h-[2px] lg:w-[50%] bg-secondary"></div>
+              <div className="hidden lg:block absolute top-[33.4rem] left-full h-[2px] lg:w-[50%] bg-secondary"></div>
             </div>
-            <div className="mt-8">
-              {renderSection("0W-1L", [
-                [teams[1][5], teams[1][6]],
-                [teams[1][7], teams[1][8]],
-              ])}
-              <div className="hidden lg:block absolute bottom-[calc(25%+1rem)] left-full h-[2px] w-[8px] bg-secondary"></div>
-              <div className="hidden lg:block absolute bottom-[calc(25%+1rem)] left-[calc(100%+0.4rem)] h-20 w-[1.2px] bg-secondary"></div>
-              <div className="hidden lg:block absolute bottom-[calc(25%+6rem)] left-[calc(100%+0.4rem)] h-[2px] w-[10px] bg-secondary"></div>
-              <div className="hidden lg:block absolute bottom-[7rem] left-full h-[2.3px] 2xl:w-[109%] xl:w-[110%] lg:w-[113%] bg-secondary"></div>
-            </div>
-          </div>
+            <div className="w-full lg:w-1/4 relative">
+              {renderAdvanceSection("Đi tiếp", [
+                [teams[2][0], teams[2][1]],
+              ], 'lg:!my-[125px]')}
 
-          <div className="w-full lg:w-1/4 relative">
-            {renderSection("1W-1L", [
-              [teams[2][0], teams[2][1]],
-              [teams[2][2], teams[2][3]],
-            ])}
-            <div className="hidden lg:block absolute top-[calc(45%+1rem)] left-full h-[2.5px] w-[50%] bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[calc(34%+1rem)] left-[calc(149.5%)] h-20 w-[2px] bg-secondary"></div>
-            <div className="hidden lg:block absolute bottom-[calc(35%+5.9rem)] left-full h-[2px] w-[50%] bg-secondary"></div>
-            <div className="hidden lg:block absolute bottom-[calc(35%+.5rem)] left-[149.5%] h-[87px] w-[2px] bg-secondary"></div>
-            
-          </div>
-          <div className="w-full lg:w-1/4 flex flex-col justify-between relative">
-            {renderAdvanceSection()}
-            <div className="mt-8">
-              {renderEliminateSection()}
             </div>
+
           </div>
-        </div>
+          <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
+
+            <div className="w-full lg:w-1/4 relative">
+              <div>
+                {renderSection("Vòng 1", [
+                  [teams[0][9], teams[0][10]],
+                  [teams[0][11], teams[0][12]],
+                ], 'lg:!mb-[48px] lg:last:!mb-[0px] lg:first:!mt-[10px]')}
+                <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] lg:w-[50%]  bg-secondary"></div>
+                <div className="hidden lg:block absolute top-[18.1rem] left-full h-[2px] lg:w-[50%] bg-secondary"></div>
+              </div>
+
+            </div>
+            <div className="w-full lg:w-1/4 relative">
+              {renderSection("Vòng 2", [
+                [teams[1][9], teams[1][10]],
+                [teams[1][11], teams[1][12]],
+              ], 'lg:!mb-[48px] lg:last:!mb-[0px] lg:first:!mt-[10px]')}
+              <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] lg:w-[50%] bg-secondary"></div>
+              <div className="hidden lg:block absolute top-[18.1rem] left-full h-[2px] lg:w-[50%] bg-secondary"></div>
+            </div>
+            <div className="w-full lg:w-1/4 relative">
+              {renderAdvanceSection2("Đi tiếp", [
+                [teams[2][9], teams[2][10]],
+              ], 'lg:!my-[40px]')}
+
+            </div>
+
+          </div>
+        </>
       )}
     </div>
   );
 };
 
-export default TournamentBracketAOV;
+export default TournamentBracket;
