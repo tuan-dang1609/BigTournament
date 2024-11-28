@@ -57,7 +57,7 @@ const TournamentBracketAOV16 = () => {
             document.documentElement.scrollTop = 0;
         };
         setTimeout(scrollToTop, 0);
-        document.title = "Vòng Thụy Sỹ";
+        document.title = "Vòng Thụy Sỹ 1";
 
     }, []);
     const handleScrollLeft = () => {
@@ -203,7 +203,7 @@ const TournamentBracketAOV16 = () => {
     );
     return (
         <div className="relative w-[95%] lg:w-full mx-auto mt-24" id="bracket"  style={{ overflowX: 'scroll' }}>
-            <h1 className="text-3xl font-bold mb-6 text-center">Vòng Thụy Sỹ</h1>
+            <h1 className="text-3xl font-bold mb-6 text-center">Vòng Thụy Sỹ 1</h1>
             <div className="max-w-[900px] justify-center flex flex-col mx-auto">
     <p>Hiii! Xin chào tất cả các bạn, chào mừng các bạn đã đến với vòng đấu Thụy Sĩ, và đây là một số luật lệ tụi mình sẽ có update thêm trong tương lai nhaaaa: </p>
     <ul class="list-disc">
