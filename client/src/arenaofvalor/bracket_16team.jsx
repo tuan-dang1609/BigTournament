@@ -160,7 +160,7 @@ const TournamentBracketAOV16 = () => {
     const renderAdvanceSection = () => (
         <div className="flex flex-col border-2 border-gray-300 rounded-lg overflow-hidden relative">
             <h2 className="text-lg font-bold p-2 bg-[#D9D9D94D] border-b border-gray-300">
-                Tiến tới Play-off
+                Tiến tới vòng 2
             </h2>
             <div className="p-2">
                 {teams[5].slice(0, 8).map((team, index) => (
