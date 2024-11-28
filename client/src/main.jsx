@@ -59,7 +59,7 @@ if (rootElement) {
               <Route path='/allgame' element={<AllGame />} />
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
               <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
-              <Route path="/valorant/vong1" element={<SwissStage />} />
+              <Route path="/valorant/swissstage" element={<SwissStage />} />
               <Route path="/valorant/playoff" element={<PlayoffValo />} />
               <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
               <Route path="/arenaofvalor" element={<HomepageAOV />} />
@@ -76,7 +76,7 @@ if (rootElement) {
               <Route path='/valorant/halloffame' element={<HallOfFameValo />} />
               <Route path='/tft/match' element={<TFT />} />
               <Route path='/lol/hudgame' element={<LiveGameDataLOL />} />
-              <Route path='/arenaofvalor/swissstage' element={<TournamentBracketAOV16 />} />
+              <Route path='/arenaofvalor/vong1' element={<TournamentBracketAOV16 />} />
               <Route element={<PrivateRoute />}>
               <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
                 <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
