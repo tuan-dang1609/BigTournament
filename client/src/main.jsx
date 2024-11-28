@@ -59,7 +59,7 @@ if (rootElement) {
               <Route path='/allgame' element={<AllGame />} />
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
               <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
-              <Route path="/valorant/swissstage" element={<SwissStage />} />
+              <Route path="/valorant/vong1" element={<SwissStage />} />
               <Route path="/valorant/playoff" element={<PlayoffValo />} />
               <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
               <Route path="/arenaofvalor" element={<HomepageAOV />} />
