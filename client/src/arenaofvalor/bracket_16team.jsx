@@ -13,7 +13,7 @@ const TournamentBracketAOV16 = () => {
         
         try {
             const response = await fetch(
-                "https://docs.google.com/spreadsheets/d/1ZGF4cPHRmKL5BSzgAMtUD2WWYrB-Dpx8Q_gFha5T0dY/gviz/tq?sheet=Swiss Stage&range=A1:R20"
+                "https://docs.google.com/spreadsheets/d/1ZGF4cPHRmKL5BSzgAMtUD2WWYrB-Dpx8Q_gFha5T0dY/gviz/tq?sheet=Swiss Stage 1&range=A1:R20"
             );
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const text = await response.text();
