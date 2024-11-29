@@ -43,6 +43,7 @@ const PickemChallenge = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true); // Bắt đầu loading khi fetch dữ liệu
@@ -78,11 +79,6 @@ const PickemChallenge = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: currentUser._id })
         });
-  
-        if (scoreResponse.status === 404) {
-          setLoading(false);
-          return; // Không tiếp tục chạy khi lỗi 404
-        }
 
         const scoreResult = await scoreResponse.json();
         if (!scoreResult) {
@@ -141,27 +137,28 @@ const PickemChallenge = () => {
     const interval = setInterval(() => {
       const now = new Date();
       const newCountdowns = {};
-
+  
       questions.forEach((question) => {
         const lockTime = new Date(question.timelock);
         const timeDiff = lockTime - now;
-
+  
         if (timeDiff <= 0) {
-          newCountdowns[question.id] = "Đã khóa lựa chọn";
+          newCountdowns[`${question.category}-${question.id}`] = "Đã khóa lựa chọn";
         } else {
           const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
           const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
           const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
           const seconds = Math.floor((timeDiff / 1000) % 60);
-          newCountdowns[question.id] = `Khóa lựa chọn sau ${days.toString().padStart(2, '0')}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+          newCountdowns[`${question.category}-${question.id}`] = `Khóa lựa chọn sau ${days.toString().padStart(2, '0')}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
         }
       });
-
+  
       setCountdowns(newCountdowns);
     }, 1000);
-
+  
     return () => clearInterval(interval);
   }, [questions]);
+  
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
     setIsDropdownOpen(false); // Đóng dropdown sau khi chọn
@@ -277,6 +274,7 @@ const PickemChallenge = () => {
 
     return null;
 };  
+
 const formatCategory = (category) => {
   // Format category thành chữ hoa đầu từ, ví dụ: "Day 1"
   return category.replace(/day(\d+)/i, "Day $1");
@@ -358,13 +356,15 @@ return (
           <div key={`${question.category}-${question.id}`} className="mb-8">
             {/* Câu hỏi và timelock */}
             <h3 className="text-lg font-semibold mb-4 flex lg:flex-row flex-col gap-x-4 items-center">
-              {question.question}
-              {getResultIcon(`${question.category}-${question.id}`) ? (
-                getResultIcon(`${question.category}-${question.id}`)
-              ) : (
-                <span className="text-error">{countdowns[`${question.category}-${question.id}`]}</span>
-              )}
-            </h3>
+  {question.question}
+  {getResultIcon(`${question.category}-${question.id}`) ? (
+    getResultIcon(`${question.category}-${question.id}`)
+  ) : (
+    
+      <span className="text-error">{countdowns[`${question.category}-${question.id}`]}</span>
+    
+  )}
+</h3>
             <div className="flex flex-row justify-between items-stretch md:h-32 h-28 lg:gap-3 gap-1 relative">
               {question.options.map((option, index) => {
                 const { logoUrl, color, shortName } = getTeamData(option.name);
