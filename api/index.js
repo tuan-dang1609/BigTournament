@@ -35,7 +35,7 @@ app.get('/auth/riot', (req, res) => {
 app.get('/oauth', function(req, res) {
   const accessCode = req.query.code;
   request.post({
-    url: tokenUrl,
+    url: riotTokenUrl,
     auth: {
       user: riotClientId,
       pass: riotClientSecret
