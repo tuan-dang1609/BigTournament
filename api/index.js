@@ -34,6 +34,15 @@ function generateCodeChallenge(codeVerifier) {
   const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
   return codeChallenge;
 }
+// Cấu hình CORS để cho phép truy cập từ nguồn cụ thể
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  })
+);
 app.use(session({
   secret: process.env.SESSION_SECRET || 'mysecret',  // Đặt một secret key cho session
   resave: false, // Không lưu lại session nếu không thay đổi
@@ -142,15 +151,7 @@ const __dirname = path.dirname(__filename);
 
 
 
-// Cấu hình CORS để cho phép truy cập từ nguồn cụ thể
-app.use(
-  cors({
-    origin: ['http://localhost:5173', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-  })
-);
+
 // Helmet security configuration
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
