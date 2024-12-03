@@ -92,6 +92,9 @@ app.get('/oauth2-callback', (req, res) => {
   // Lấy code_verifier từ session
   const codeVerifier = req.session.codeVerifier;
 
+  if (!codeVerifier) {
+    return res.status(400).send('No code verifier available');
+  }
 
   // Đổi mã code để lấy token
   request.post({
@@ -114,9 +117,7 @@ app.get('/oauth2-callback', (req, res) => {
         refresh_token: payload.refresh_token,
         id_token: payload.id_token
       });
-    } else {
-      res.status(400).send('Failed to get tokens');
-    }
+    } 
   });
 });
 // MongoDB connection
