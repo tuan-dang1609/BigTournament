@@ -1,81 +1,74 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 
-const RSO_Authorization = () => {
-  const [tokens, setTokens] = useState(null); // Để lưu trữ token
-  const [riotID, setRiotID] = useState(null); // Để lưu trữ riotID
-  const [loading, setLoading] = useState(false); // Để hiển thị trạng thái loading
-  const [error, setError] = useState(''); // Để hiển thị lỗi nếu có
+function App_RSO() {
+    const [tokens, setTokens] = useState(null);
+    const [error, setError] = useState(null);
 
-  // Hàm xử lý đăng nhập Riot Games (chuyển hướng người dùng đến trang OAuth của Riot)
-  const handleRiotLogin = () => {
-    window.location.href = 'https://dongchuyennghiep-backend.vercel.app/auth/riot'; // Điều hướng đến backend của bạn (OAuth)
-  };
+    const handleLogin = () => {
+        // Redirect user to backend route for Riot Sign-On
+        window.location.href = 'https://dongchuyennghiep-backend.vercel.app/rso-login';
+    };
 
-  // Hàm xử lý callback từ Riot Games
-  const handleOAuthCallback = async (code) => {
-    setLoading(true);
-    try {
-      // Lấy token từ backend của bạn
-      const response = await axios.get(`https://dongchuyennghiep-backend.vercel.app/oauth2-callback?code=${code}`);
-      const tokensData = response.data;
-      setTokens(tokensData); // Lưu token vào state
+    const fetchTokens = async () => {
+        try {
+            const response = await fetch('https://dongchuyennghiep-backend.vercel.app/oauth2-callback');
+            if (!response.ok) throw new Error('Failed to fetch tokens');
+            const data = await response.json();
+            setTokens(data.tokens);
+        } catch (err) {
+            setError(err.message);
+        }
+    };
 
-      // Sau khi có access token, gọi API của Riot Games để lấy thông tin người chơi
-      const riotResponse = await axios.get('https://na1.api.riotgames.com/tft/summoner/v1/summoners/me', {
-        headers: {
-          Authorization: `Bearer ${tokensData.access_token}`, // Sử dụng access token để gọi API
-        },
-      });
-      setRiotID(riotResponse.data.id); // Lưu riotID vào state
-
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-
-    }
-  };
-  useEffect(()=>{
-    console.log(tokens);
-    
-  },[tokens])
-
-  useEffect(() => {
-    // Lấy "code" từ query string nếu có sau khi người dùng được redirect từ Riot
-    const queryParams = new URLSearchParams(window.location.search);
-    const code = queryParams.get('code');
-
-    if (code) {
-      handleOAuthCallback(code); // Nếu có code thì gọi hàm xử lý callback
-    }
-  }, []);
-
-  return (
-    <div className="App mt-40">
-      <h1>Login with Riot Games</h1>
-
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {/* Nếu chưa có token, hiển thị nút đăng nhập */}
-      {!tokens ? (
-        <button onClick={handleRiotLogin}>Sign In with Riot Games</button>
-      ) : (
-        <div>
-          <h2>Successfully Authenticated</h2>
-          {/* Hiển thị token dưới dạng JSON trong thẻ <pre> */}
-          <pre>{JSON.stringify(tokens, null, 2)}</pre>
-
-          {riotID && (
-            <div>
-              <h3>Riot ID</h3>
-              <p>{riotID}</p>
-            </div>
-          )}
+    return (
+        <div className="mt-40" style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+            <h1>Riot Sign-On Demo</h1>
+            <button
+                onClick={handleLogin}
+                style={{
+                    padding: '10px 20px',
+                    fontSize: '16px',
+                    backgroundColor: '#007bff',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                }}
+            >
+                Login with Riot
+            </button>
+            <button
+                onClick={fetchTokens}
+                style={{
+                    padding: '10px 20px',
+                    fontSize: '16px',
+                    backgroundColor: '#28a745',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    marginLeft: '10px',
+                    cursor: 'pointer',
+                }}
+            >
+                Fetch Tokens
+            </button>
+            {error && <p style={{ color: 'red', marginTop: '20px' }}>{error}</p>}
+            {tokens && (
+                <pre
+                    style={{
+                        background: '#f4f4f4',
+                        padding: '10px',
+                        marginTop: '20px',
+                        border: '1px solid #ddd',
+                        borderRadius: '5px',
+                        overflowX: 'auto',
+                    }}
+                >
+                    {JSON.stringify(tokens, null, 2)}
+                </pre>
+            )}
         </div>
-      )}
-    </div>
-  );
-};
+    );
+}
 
-export default RSO_Authorization;
+export default App_RSO;

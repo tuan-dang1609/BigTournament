@@ -24,59 +24,20 @@ const apiKey = process.env.TFT_KEY;
 
 const riotClientId = process.env.RIOT_CLIENT_ID;
 const riotClientSecret = process.env.RIOT_CLIENT_SECRET;
-const riotRedirectUri = process.env.RIOT_REDIRECT_URI;
-const riotProvider = process.env.RIOT_PROVIDER;
-const riotAuthorizeUrl = `${riotProvider}/authorize`;
-const riotTokenUrl = `${riotProvider}/token`;
-const appBaseUrl = process.env.APP_BASE_URL
-const appCallbackUrl = `${appBaseUrl}/oauth2-callback`;
+const riotRedirectUri = process.env.RIOT_REDIRECT_URI; // Sử dụng giá trị mới từ .env
+const riotAuthorizeUrl = 'https://auth.riotgames.com/authorize';
+const riotTokenUrl = 'https://auth.riotgames.com/token';
+
 
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
+    origin: ['http://localhost:5173','https://28e7-88-86-155-193.ngrok-free.app', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
   })
 );
-app.use(session({
-  secret: 'mysecret',
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production', // Chỉ bật nếu chạy trên HTTPS
-    httpOnly: true,
-    maxAge: 60000 // Thời gian tồn tại của cookie (1 phút, chỉnh theo nhu cầu)
-  }
-}));
 
-function generateCodeChallenge(codeVerifier) {
-  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
-  return codeChallenge;
-}
-
-
-// Các route sử dụng session
-app.get('/auth/riot', (req, res) => {
-  const codeVerifier = crypto.randomBytes(32).toString('base64url');
-  req.session.codeVerifier = codeVerifier;
-  console.log('Stored codeVerifier:', req.session.codeVerifier);
-
-  const redirectUri = `${riotAuthorizeUrl}?redirect_uri=${encodeURIComponent("https://dongchuyennghiep.vercel.app/rsotest")}&client_id=${riotClientId}&response_type=code&scope=openid&code_challenge=${generateCodeChallenge(codeVerifier)}&code_challenge_method=S256`;
-  res.redirect(redirectUri);
-});
-
-app.get('/oauth2-callback', (req, res) => {
-  console.log('Session data:', req.session);
-  const codeVerifier = req.session.codeVerifier;
-
-  if (!codeVerifier) {
-    return res.status(401).send('No codeVerifier provided');
-  }
-  console.log(codeVerifier);
-  
-  res.send('Success');
-});
 
 // MongoDB connection
 mongoose
@@ -98,9 +59,72 @@ mongoose
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Redirect user to Riot Sign-On
+app.get('/rso-login', (req, res) => {
+  const authUrl = `${riotAuthorizeUrl}?response_type=code&client_id=${riotClientId}&redirect_uri=${riotRedirectUri}&scope=openid`;
+  res.redirect(authUrl);
+});
 
+app.get('/oauth2-callback', async (req, res) => {
+  const { code } = req.query;
 
+  if (!code) {
+      return res.status(400).send('Authorization code is missing');
+  }
 
+  try {
+      const response = await axios.post(
+          riotTokenUrl,
+          new URLSearchParams({
+              grant_type: 'authorization_code',
+              code,
+              redirect_uri: riotRedirectUri,
+              client_id: riotClientId,
+              client_secret: riotClientSecret,
+          }),
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
+
+      const tokens = response.data;
+
+      res.json({
+          message: 'Tokens retrieved successfully',
+          tokens,
+      });
+  } catch (error) {
+      console.error('Error exchanging code for tokens:', error.response?.data || error.message);
+      res.status(500).send('Failed to exchange code for tokens');
+  }
+});
+app.post('/oauth2-refresh', async (req, res) => {
+  const { refresh_token } = req.body;
+
+  if (!refresh_token) {
+      return res.status(400).send('Refresh token is missing');
+  }
+
+  try {
+      const response = await axios.post(
+          riotTokenUrl,
+          new URLSearchParams({
+              grant_type: 'refresh_token',
+              refresh_token,
+              client_id: riotClientId,
+              client_secret: riotClientSecret,
+          }),
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
+
+      const newTokens = response.data;
+      res.json({
+          message: 'Tokens refreshed successfully',
+          newTokens,
+      });
+  } catch (error) {
+      console.error('Error refreshing tokens:', error.response?.data || error.message);
+      res.status(500).send('Failed to refresh tokens');
+  }
+});
 // Helmet security configuration
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
