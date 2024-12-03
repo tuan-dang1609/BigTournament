@@ -22,10 +22,12 @@ function App_RSO() {
         try {
             // Lấy mã code từ URL (khi Riot chuyển hướng về frontend với ?code=<authorization_code>)
             const queryParams = new URLSearchParams(window.location.search);
-            const code = queryParams.get('code');
+            
     
-            if (!code) {
+            if (!queryParams) {
                 throw new Error('Authorization code is missing in the URL');
+            }else{
+                console.log(queryParams)
             }
     
             // Gửi mã code tới backend qua POST
