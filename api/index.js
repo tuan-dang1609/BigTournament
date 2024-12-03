@@ -59,7 +59,7 @@ app.get('/auth/riot', (req, res) => {
 
   // Lưu code_verifier vào session
   req.session.codeVerifier = codeVerifier;
-  console.log(req.session.codeVerifier)
+  console.log(codeVerifier)
   // Tạo URL ủy quyền với code_challenge
   const redirectUri = `${riotAuthorizeUrl}?redirect_uri=${encodeURIComponent("https://dongchuyennghiep.vercel.app/rsotest")}&client_id=${riotClientId}&response_type=code&scope=openid&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
