@@ -40,6 +40,7 @@ import LiveGameDataLOL from './leagueoflegend/hudgame.jsx'
 import TournamentBracketLOL from './leagueoflegend/bracket.jsx'
 import TournamentBracketAOV16 from './arenaofvalor/bracket_16team.jsx'
 import PlayinAOV from './arenaofvalor/bracket.jsx'
+import RSO_Authorization from './components/rso.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -52,6 +53,7 @@ if (rootElement) {
           <BrowserRouter>
             <Navbar />
             <Routes>
+              <Route exact path='/rsotest' element={<RSO_Authorization />} />
               <Route exact path='/' element={<Home />} />
               <Route path='/signup' element={<SignUp />} />
               <Route path='/signin' element={<SignIn />} />

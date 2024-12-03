@@ -16,8 +16,98 @@ import compression from 'compression';
 import Queue from 'bull';
 import https from 'https';
 dotenv.config();
+const app = express();
 const apiKey = process.env.TFT_KEY;
 
+const riotClientId = process.env.RIOT_CLIENT_ID;
+const riotClientSecret = process.env.RIOT_CLIENT_SECRET;
+const riotRedirectUri = process.env.RIOT_REDIRECT_URI;
+const riotProvider = process.env.RIOT_PROVIDER;
+const riotAuthorizeUrl = `${riotProvider}/authorize`;
+const riotTokenUrl = `${riotProvider}/token`;
+const appBaseUrl = process.env.APP_BASE_URL
+const appCallbackUrl = `${appBaseUrl}/oauth2-callback`;
+app.get('/auth/riot', (req, res) => {
+  const redirectUri =`${riotAuthorizeUrl}?redirect_uri=${encodeURIComponent('https://dongchuyennghiep.vercel.app/rsotest')}&client_id=${riotClientId}&response_type=code&scope=openid`;;
+  res.redirect(redirectUri);
+});
+app.get('/oauth', function(req, res) {
+  const accessCode = req.query.code;
+  request.post({
+    url: tokenUrl,
+    auth: {
+      user: riotClientId,
+      pass: riotClientSecret
+    },
+    form: {
+      grant_type: "authorization_code",
+      code: accessCode,
+      redirect_uri: appCallbackUrl
+    }
+  }, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      const payload = JSON.parse(body);
+      res.json({
+        access_token: payload.access_token,
+        refresh_token: payload.refresh_token,
+        id_token: payload.id_token
+      });
+    } else {
+      res.status(400).send('Failed to get tokens');
+    }
+  });
+});
+
+// Step 2: Handle the OAuth2 callback
+app.get('/oauth2-callback', (req, res) => {
+  const accessCode = req.query.code;
+
+  // Kiểm tra nếu không có mã code trong query params
+  if (!accessCode) {
+    return res.status(400).send('No authorization code provided');
+  }
+
+  // Bước 3: Đổi mã code để lấy token
+  request.post(
+    {
+      url: tokenUrl,
+      auth: {
+        user: riotClientId,
+        pass: riotClientSecret, // Cài đặt header "Authorization: Basic ..."
+      },
+      form: {
+        grant_type: 'authorization_code',
+        code: accessCode,
+        redirect_uri: appCallbackUrl, // URL redirect phải khớp với URL đã đăng ký
+      },
+    },
+    (error, response, body) => {
+      // Nếu có lỗi hoặc mã trạng thái không phải 200
+      if (error || response.statusCode !== 200) {
+        console.error('Error fetching tokens:', error || body);
+        return res.status(500).send('Failed to exchange code for tokens');
+      }
+
+      try {
+        // Phân tích phản hồi và trả về token
+        const payload = JSON.parse(body);
+
+        // Lưu trữ và hiển thị các token
+        const tokens = {
+          access_token: payload.access_token,
+          refresh_token: payload.refresh_token,
+          id_token: payload.id_token,
+        };
+
+        // Gửi token dưới dạng <pre> để hiển thị dễ đọc
+        res.send(`<pre>${JSON.stringify(tokens, null, 4)}</pre>`);
+      } catch (parseError) {
+        console.error('Error parsing token response:', parseError);
+        return res.status(500).send('Failed to parse token response');
+      }
+    }
+  );
+});
 // MongoDB connection
 mongoose
   .connect(process.env.MONGO, {
@@ -38,7 +128,7 @@ mongoose
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
+
 
 // Cấu hình CORS để cho phép truy cập từ nguồn cụ thể
 app.use(
