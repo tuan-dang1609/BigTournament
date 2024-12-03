@@ -24,7 +24,7 @@ const apiKey = process.env.TFT_KEY;
 
 const riotClientId = process.env.RIOT_CLIENT_ID;
 const riotClientSecret = process.env.RIOT_CLIENT_SECRET;
-const riotRedirectUri = 'https://dongchuyennghiep.vercel.app/tft'; // Sử dụng giá trị mới từ .env
+const riotRedirectUri = 'https://dongchuyennghiep.vercel.app/rsotest'; // Sử dụng giá trị mới từ .env
 const riotAuthorizeUrl = 'https://auth.riotgames.com/authorize';
 const riotTokenUrl = 'https://auth.riotgames.com/token';
 
