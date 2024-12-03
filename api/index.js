@@ -123,6 +123,8 @@ app.get('/oauth2-callback', (req, res) => {
   }, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       const payload = JSON.parse(body);
+      console.log(payload);
+      
       res.json({
         access_token: payload.access_token,
         refresh_token: payload.refresh_token,
