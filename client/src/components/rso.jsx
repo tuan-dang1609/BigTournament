@@ -35,6 +35,10 @@ const RSO_Authorization = () => {
 
     }
   };
+  useEffect(()=>{
+    console.log(tokens);
+    
+  },[tokens])
 
   useEffect(() => {
     // Lấy "code" từ query string nếu có sau khi người dùng được redirect từ Riot
