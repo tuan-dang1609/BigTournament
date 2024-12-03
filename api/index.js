@@ -118,7 +118,7 @@ app.get('/oauth2-callback', (req, res) => {
       grant_type: "authorization_code",
       code: accessCode,
       redirect_uri: riotRedirectUri,
-
+      code_verifier: codeVerifier  // Gửi code_verifier
     }
   }, function (error, response, body) {
     if (response.statusCode == 200) {
