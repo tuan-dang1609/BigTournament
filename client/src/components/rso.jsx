@@ -21,7 +21,7 @@ const RSO_Authorization = () => {
     } catch (err) {
       setLoading(false);
       // Hiển thị thông báo lỗi chi tiết hơn nếu có
-      setError(err.response ? err.response.data : 'Failed to authenticate with Riot Games');
+
     }
   };
 
