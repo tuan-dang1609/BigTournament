@@ -102,7 +102,9 @@ app.get('/oauth2-callback', (req, res) => {
 
   // Lấy code_verifier từ session
   const codeVerifier = req.session.codeVerifier;
-
+  if (!codeVerifier) {
+    return res.status(400).send('No codeVerifier provided');
+  }
 
 
   // Đổi mã code để lấy token
