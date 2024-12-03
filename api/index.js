@@ -59,7 +59,7 @@ app.get('/auth/riot', (req, res) => {
 
   // Lưu code_verifier vào session
   req.session.codeVerifier = codeVerifier;
-  console.log(codeVerifier)
+  console.log(req.session.codeVerifier)
   // Tạo URL ủy quyền với code_challenge
   const redirectUri = `${riotAuthorizeUrl}?redirect_uri=${encodeURIComponent("https://dongchuyennghiep.vercel.app/rsotest")}&client_id=${riotClientId}&response_type=code&scope=openid&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
@@ -95,12 +95,13 @@ app.get('/oauth', function(req, res) {
 // Step 2: Handle the OAuth2 callback
 app.get('/oauth2-callback', (req, res) => {
   const accessCode = req.query.code;
-
+  
   if (!accessCode) {
     return res.status(400).send('No authorization code provided');
   }
 
   // Kiểm tra session và log giá trị codeVerifier
+  console.log('Session data:', req.session);
   const codeVerifier = req.session.codeVerifier;
   console.log('codeVerifier:', codeVerifier); // Thêm log để kiểm tra
 
