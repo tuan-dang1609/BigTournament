@@ -17,6 +17,7 @@ import Queue from 'bull';
 import https from 'https';
 import request from 'request';
 import crypto from 'crypto';
+import session from 'express-session';
 dotenv.config();
 const app = express();
 const apiKey = process.env.TFT_KEY;
@@ -33,7 +34,12 @@ function generateCodeChallenge(codeVerifier) {
   const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
   return codeChallenge;
 }
-
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'mysecret',  // Đặt một secret key cho session
+  resave: false, // Không lưu lại session nếu không thay đổi
+  saveUninitialized: true, // Lưu session mới nếu chưa có gì thay đổi
+  cookie: { secure: false } // Đặt secure: true nếu chạy trên HTTPS
+}));
 // Trong route /auth/riot
 app.get('/auth/riot', (req, res) => {
   // Tạo code_verifier
