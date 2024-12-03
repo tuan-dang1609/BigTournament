@@ -8,7 +8,16 @@ function App_RSO() {
         // Redirect user to backend route for Riot Sign-On
         window.location.href = 'https://dongchuyennghiep-backend.vercel.app/rso-login';
     };
-
+    const clearCodeFromURL = () => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('code');
+        window.history.replaceState(null, '', url.toString());
+    };
+    
+    useEffect(() => {
+        // Xóa code sau khi lấy xong
+        clearCodeFromURL();
+    }, []);
     const fetchTokens = async () => {
         try {
             const response = await fetch('https://dongchuyennghiep-backend.vercel.app/oauth2-callback');

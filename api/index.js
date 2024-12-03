@@ -65,8 +65,8 @@ app.get('/rso-login', (req, res) => {
   res.redirect(authUrl);
 });
 
-app.get('/oauth2-callback', async (req, res) => {
-  const { code } = req.query;
+app.post('/oauth2-callback', async (req, res) => {
+  const { code } = req.body;
 
   if (!code) {
       return res.status(400).send('Authorization code is missing');
@@ -86,7 +86,6 @@ app.get('/oauth2-callback', async (req, res) => {
       );
 
       const tokens = response.data;
-
       res.json({
           message: 'Tokens retrieved successfully',
           tokens,
