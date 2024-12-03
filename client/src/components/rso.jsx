@@ -20,14 +20,34 @@ function App_RSO() {
     }, []);
     const fetchTokens = async () => {
         try {
-            const response = await fetch('https://dongchuyennghiep-backend.vercel.app/oauth2-callback');
-            if (!response.ok) throw new Error('Failed to fetch tokens');
+            // Lấy mã code từ URL (khi Riot chuyển hướng về frontend với ?code=<authorization_code>)
+            const queryParams = new URLSearchParams(window.location.search);
+            const code = queryParams.get('code');
+    
+            if (!code) {
+                throw new Error('Authorization code is missing in the URL');
+            }
+    
+            // Gửi mã code tới backend qua POST
+            const response = await fetch('https://dongchuyennghiep-backend.vercel.app/oauth2-callback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code }), // Gửi mã code trong body
+            });
+    
+            if (!response.ok) {
+                throw new Error('Failed to fetch tokens');
+            }
+    
             const data = await response.json();
-            setTokens(data.tokens);
+            setTokens(data.tokens); // Lưu token trả về từ backend
         } catch (err) {
-            setError(err.message);
+            setError(err.message); // Hiển thị lỗi nếu có
         }
     };
+    
 
     return (
         <div className="mt-40" style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>

@@ -66,13 +66,14 @@ app.get('/rso-login', (req, res) => {
 });
 
 app.post('/oauth2-callback', async (req, res) => {
-  const { code } = req.body;
+  const { code } = req.body; // Lấy mã code từ body của request
 
   if (!code) {
       return res.status(400).send('Authorization code is missing');
   }
 
   try {
+      // Gửi request đến Riot để đổi mã code lấy token
       const response = await axios.post(
           riotTokenUrl,
           new URLSearchParams({
@@ -86,6 +87,8 @@ app.post('/oauth2-callback', async (req, res) => {
       );
 
       const tokens = response.data;
+
+      // Trả token về frontend
       res.json({
           message: 'Tokens retrieved successfully',
           tokens,
