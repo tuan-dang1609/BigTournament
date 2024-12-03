@@ -43,7 +43,11 @@ app.use(session({
   secret: 'mysecret',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'production' } // secure=true nếu chạy trên HTTPS
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // Chỉ bật nếu chạy trên HTTPS
+    httpOnly: true,
+    maxAge: 60000 // Thời gian tồn tại của cookie (1 phút, chỉnh theo nhu cầu)
+  }
 }));
 
 function generateCodeChallenge(codeVerifier) {
@@ -51,92 +55,29 @@ function generateCodeChallenge(codeVerifier) {
   return codeChallenge;
 }
 
-// Trong route /auth/riot
+
+
+// Các route sử dụng session
 app.get('/auth/riot', (req, res) => {
-  // Tạo code_verifier
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
-  const codeChallenge = generateCodeChallenge(codeVerifier);
-
-  // Lưu code_verifier vào session
   req.session.codeVerifier = codeVerifier;
-  console.log(req.session.codeVerifier)
-  // Tạo URL ủy quyền với code_challenge
-  const redirectUri = `${riotAuthorizeUrl}?redirect_uri=${encodeURIComponent("https://dongchuyennghiep.vercel.app/rsotest")}&client_id=${riotClientId}&response_type=code&scope=openid&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+  console.log('Stored codeVerifier:', req.session.codeVerifier);
 
+  const redirectUri = `${riotAuthorizeUrl}?redirect_uri=${encodeURIComponent("https://dongchuyennghiep.vercel.app/rsotest")}&client_id=${riotClientId}&response_type=code&scope=openid&code_challenge=${generateCodeChallenge(codeVerifier)}&code_challenge_method=S256`;
   res.redirect(redirectUri);
 });
-app.get('/oauth', function(req, res) {
-  const accessCode = req.query.code;
-  request.post({
-    url: riotTokenUrl,
-    auth: {
-      user: riotClientId,
-      pass: riotClientSecret
-    },
-    form: {
-      grant_type: "authorization_code",
-      code: accessCode,
-      redirect_uri: appCallbackUrl
-    }
-  }, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      const payload = JSON.parse(body);
-      res.json({
-        access_token: payload.access_token,
-        refresh_token: payload.refresh_token,
-        id_token: payload.id_token
-      });
-    } else {
-      res.status(400).send('Failed to get tokens');
-    }
-  });
-});
 
-// Step 2: Handle the OAuth2 callback
 app.get('/oauth2-callback', (req, res) => {
-  const accessCode = req.query.code;
-  
-  if (!accessCode) {
-    return res.status(400).send('No authorization code provided');
-  }
-
-  // Kiểm tra session và log giá trị codeVerifier
   console.log('Session data:', req.session);
   const codeVerifier = req.session.codeVerifier;
-  console.log('codeVerifier:', codeVerifier); // Thêm log để kiểm tra
 
   if (!codeVerifier) {
     return res.status(401).send('No codeVerifier provided');
   }
 
-  // Đổi mã code để lấy token
-  request.post({
-    url: riotTokenUrl,
-    auth: {
-      user: riotClientId,
-      pass: riotClientSecret
-    },
-    form: {
-      grant_type: "authorization_code",
-      code: accessCode,
-      redirect_uri: riotRedirectUri,
-      code_verifier: codeVerifier  // Gửi code_verifier
-    }
-  }, function (error, response, body) {
-    if (response.statusCode == 200) {
-      const payload = JSON.parse(body);
-      console.log(payload);
-      
-      res.json({
-        access_token: payload.access_token,
-        refresh_token: payload.refresh_token,
-        id_token: payload.id_token
-      });
-    } else {
-      res.status(400).send('Failed to get tokens');
-    }
-  });
+  res.send('Success');
 });
+
 // MongoDB connection
 mongoose
   .connect(process.env.MONGO, {
