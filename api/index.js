@@ -56,7 +56,6 @@ function generateCodeChallenge(codeVerifier) {
 }
 
 
-
 // Các route sử dụng session
 app.get('/auth/riot', (req, res) => {
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
@@ -74,7 +73,8 @@ app.get('/oauth2-callback', (req, res) => {
   if (!codeVerifier) {
     return res.status(401).send('No codeVerifier provided');
   }
-
+  console.log(codeVerifier);
+  
   res.send('Success');
 });
 
