@@ -71,7 +71,7 @@ app.get('/oauth2-callback', (req, res) => {
   // Bước 3: Đổi mã code để lấy token
   request.post(
     {
-      url: tokenUrl,
+      url: riotTokenUrl,
       auth: {
         user: riotClientId,
         pass: riotClientSecret, // Cài đặt header "Authorization: Basic ..."
