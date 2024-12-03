@@ -15,13 +15,13 @@ const RSO_Authorization = () => {
   const handleOAuthCallback = async (code) => {
     setLoading(true);
     try {
-      // Gửi mã "code" qua backend để lấy token
-      const response = await axios.get(`https://dongchuyennghiep-backend.vercel.app/oauth?code=${code}`);
+      const response = await axios.get(`https://dongchuyennghiep-backend.vercel.app/oauth2-callback?code=${code}`);
       setTokens(response.data); // Lưu token vào state
       setLoading(false);
     } catch (err) {
       setLoading(false);
-      setError('Failed to authenticate with Riot Games');
+      // Hiển thị thông báo lỗi chi tiết hơn nếu có
+      setError(err.response ? err.response.data : 'Failed to authenticate with Riot Games');
     }
   };
 
