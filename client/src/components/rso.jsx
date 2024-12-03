@@ -8,7 +8,7 @@ const RSO_Authorization = () => {
 
   // Hàm xử lý đăng nhập Riot Games (chuyển hướng người dùng đến trang OAuth của Riot)
   const handleRiotLogin = () => {
-    window.location.href = 'http://localhost:3000/auth/riot'; // Điều hướng đến backend của bạn (OAuth)
+    window.location.href = 'https://dongchuyennghiep-backend.vercel.app/auth/riot'; // Điều hướng đến backend của bạn (OAuth)
   };
 
   // Hàm xử lý callback từ Riot Games
@@ -16,7 +16,7 @@ const RSO_Authorization = () => {
     setLoading(true);
     try {
       // Gửi mã "code" qua backend để lấy token
-      const response = await axios.get(`http://localhost:3000/oauth?code=${code}`);
+      const response = await axios.get(`https://dongchuyennghiep-backend.vercel.app/oauth?code=${code}`);
       setTokens(response.data); // Lưu token vào state
       setLoading(false);
     } catch (err) {
