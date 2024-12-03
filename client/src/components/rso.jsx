@@ -1,96 +1,73 @@
-import React, { useState } from 'react';
-import { useEffect } from 'react';
-function App_RSO() {
-    const [tokens, setTokens] = useState(null);
-    const [error, setError] = useState(null);
+import React, { useState } from "react";
+import axios from "axios";
 
-    const handleLogin = () => {
-        // Redirect user to backend route for Riot Sign-On
-        window.location.href = 'https://dongchuyennghiep-backend.vercel.app/rso-login';
-    };
-    
-    const fetchTokens = async () => {
-        try {
-            // Lấy mã code từ URL (khi Riot chuyển hướng về frontend với ?code=<authorization_code>)
-            const queryParams = new URLSearchParams(window.location.search);
-            
-    
-            if (!queryParams) {
-                throw new Error('Authorization code is missing in the URL');
-            }else{
-                console.log(queryParams)
-            }
-    
-            // Gửi mã code tới backend qua POST
-            const response = await fetch('https://dongchuyennghiep-backend.vercel.app/oauth2-callback', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code }), // Gửi mã code trong body
-            });
-    
-            if (!response.ok) {
-                throw new Error('Failed to fetch tokens');
-            }
-    
-            const data = await response.json();
-            setTokens(data.tokens); // Lưu token trả về từ backend
-        } catch (err) {
-            setError(err.message); // Hiển thị lỗi nếu có
-        }
-    };
-    
+function App() {
+  const [accessToken, setAccessToken] = useState("");
+  const [userInfo, setUserInfo] = useState(null);
 
-    return (
-        <div className="mt-40" style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <h1>Riot Sign-On Demo</h1>
+  const handleLogin = () => {
+    const riotAuthUrl = "http://localhost:3000/auth/riot"; // Backend URL
+    window.location.href = riotAuthUrl;
+  };
+
+  const fetchUserInfo = async () => {
+    if (!accessToken) {
+      alert("Vui lòng đăng nhập trước.");
+      return;
+    }
+
+    try {
+      const response = await axios.get("http://localhost:3000/auth/userinfo", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      setUserInfo(response.data);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      alert("Lỗi lấy thông tin tài khoản.");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-md">
+        <h1 className="text-2xl font-bold text-center text-gray-800 mb-4">
+          Riot Sign-On
+        </h1>
+
+        <div className="flex flex-col space-y-4">
+          {!accessToken ? (
             <button
-                onClick={handleLogin}
-                style={{
-                    padding: '10px 20px',
-                    fontSize: '16px',
-                    backgroundColor: '#007bff',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                }}
+              onClick={handleLogin}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
             >
-                Login with Riot
+              Đăng nhập với Riot Games
             </button>
-            <button
-                onClick={fetchTokens}
-                style={{
-                    padding: '10px 20px',
-                    fontSize: '16px',
-                    backgroundColor: '#28a745',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '5px',
-                    marginLeft: '10px',
-                    cursor: 'pointer',
-                }}
-            >
-                Fetch Tokens
-            </button>
-            {error && <p style={{ color: 'red', marginTop: '20px' }}>{error}</p>}
-            {tokens && (
-                <pre
-                    style={{
-                        background: '#f4f4f4',
-                        padding: '10px',
-                        marginTop: '20px',
-                        border: '1px solid #ddd',
-                        borderRadius: '5px',
-                        overflowX: 'auto',
-                    }}
-                >
-                    {JSON.stringify(tokens, null, 2)}
-                </pre>
-            )}
+          ) : (
+            <div>
+              <p className="text-green-500 text-center mb-2">
+                Đăng nhập thành công!
+              </p>
+              <button
+                onClick={fetchUserInfo}
+                className="bg-gray-700 hover:bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg"
+              >
+                Lấy Thông Tin Tài Khoản
+              </button>
+            </div>
+          )}
+
+          {userInfo && (
+            <div className="bg-gray-100 rounded-lg p-4 mt-4">
+              <h2 className="text-lg font-bold mb-2">Thông Tin Tài Khoản:</h2>
+              <pre className="text-sm bg-white p-2 rounded">{JSON.stringify(userInfo, null, 2)}</pre>
+            </div>
+          )}
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
-export default App_RSO;
+export default App;

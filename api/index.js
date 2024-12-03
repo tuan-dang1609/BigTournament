@@ -37,6 +37,69 @@ app.use(
     credentials: true
   })
 );
+app.get('/auth/riot', (req, res) => {
+  const state = crypto.randomBytes(16).toString('hex'); // Tạo state để bảo vệ CSRF
+  const authUrl = `${riotAuthorizeUrl}?response_type=code&client_id=${riotClientId}&redirect_uri=${encodeURIComponent(riotRedirectUri)}&scope=openid&state=${state}`;
+  res.redirect(authUrl);
+});
+
+app.get('/auth/callback', async (req, res) => {
+  const { code, state } = req.query;
+
+  if (!code) {
+    return res.status(400).json({ error: 'Authorization code is missing' });
+  }
+
+  try {
+    const response = await axios.post(
+      riotTokenUrl,
+      {
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: riotRedirectUri,
+      },
+      {
+        auth: {
+          username: riotClientId,
+          password: riotClientSecret,
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    const { access_token, id_token } = response.data;
+
+    // Lưu token hoặc gửi về frontend
+    res.json({ accessToken: access_token, idToken: id_token });
+  } catch (error) {
+    console.error('Error fetching token:', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to fetch token' });
+  }
+});
+
+// Route: Truy vấn thông tin tài khoản Riot
+app.get('/auth/userinfo', async (req, res) => {
+  const { accessToken } = req.headers;
+
+  if (!accessToken) {
+    return res.status(401).json({ error: 'Access token is required' });
+  }
+
+  try {
+    const response = await axios.get('https://auth.riotgames.com/userinfo', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching user info:', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to fetch user info' });
+  }
+});
 
 
 // MongoDB connection
@@ -59,74 +122,7 @@ mongoose
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Redirect user to Riot Sign-On
-app.get('/rso-login', (req, res) => {
-  const authUrl = `${riotAuthorizeUrl}?response_type=code&client_id=${riotClientId}&redirect_uri=${riotRedirectUri}&scope=openid`;
-  res.redirect(authUrl);
-});
 
-app.post('/oauth2-callback', async (req, res) => {
-  const { code } = req.body; // Lấy mã code từ body của request
-
-  if (!code) {
-      return res.status(400).send('Authorization code is missing');
-  }
-
-  try {
-      // Gửi request đến Riot để đổi mã code lấy token
-      const response = await axios.post(
-          riotTokenUrl,
-          new URLSearchParams({
-              grant_type: 'authorization_code',
-              code,
-              redirect_uri: riotRedirectUri,
-              client_id: riotClientId,
-              client_secret: riotClientSecret,
-          }),
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
-
-      const tokens = response.data;
-
-      // Trả token về frontend
-      res.json({
-          message: 'Tokens retrieved successfully',
-          tokens,
-      });
-  } catch (error) {
-      console.error('Error exchanging code for tokens:', error.response?.data || error.message);
-      res.status(500).send('Failed to exchange code for tokens');
-  }
-});
-app.post('/oauth2-refresh', async (req, res) => {
-  const { refresh_token } = req.body;
-
-  if (!refresh_token) {
-      return res.status(400).send('Refresh token is missing');
-  }
-
-  try {
-      const response = await axios.post(
-          riotTokenUrl,
-          new URLSearchParams({
-              grant_type: 'refresh_token',
-              refresh_token,
-              client_id: riotClientId,
-              client_secret: riotClientSecret,
-          }),
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
-
-      const newTokens = response.data;
-      res.json({
-          message: 'Tokens refreshed successfully',
-          newTokens,
-      });
-  } catch (error) {
-      console.error('Error refreshing tokens:', error.response?.data || error.message);
-      res.status(500).send('Failed to refresh tokens');
-  }
-});
 // Helmet security configuration
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
