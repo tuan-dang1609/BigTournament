@@ -16,6 +16,7 @@ import compression from 'compression';
 import Queue from 'bull';
 import https from 'https';
 import request from 'request';
+import crypto from 'crypto';
 dotenv.config();
 const app = express();
 const apiKey = process.env.TFT_KEY;
@@ -28,8 +29,23 @@ const riotAuthorizeUrl = `${riotProvider}/authorize`;
 const riotTokenUrl = `${riotProvider}/token`;
 const appBaseUrl = process.env.APP_BASE_URL
 const appCallbackUrl = `${appBaseUrl}/oauth2-callback`;
+function generateCodeChallenge(codeVerifier) {
+  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+  return codeChallenge;
+}
+
+// Trong route /auth/riot
 app.get('/auth/riot', (req, res) => {
-  const redirectUri =`${riotAuthorizeUrl}?redirect_uri=${encodeURIComponent('https://dongchuyennghiep.vercel.app/rsotest')}&client_id=${riotClientId}&response_type=code&scope=openid`;;
+  // Tạo code_verifier
+  const codeVerifier = crypto.randomBytes(32).toString('base64url');
+  const codeChallenge = generateCodeChallenge(codeVerifier);
+
+  // Lưu code_verifier vào session (hoặc bất kỳ nơi nào bạn quản lý phiên làm việc)
+  req.session.codeVerifier = codeVerifier;
+
+  // Tạo URL ủy quyền với code_challenge
+  const redirectUri = `${riotAuthorizeUrl}?redirect_uri=${encodeURIComponent(riotRedirectUri)}&client_id=${riotClientId}&response_type=code&scope=openid&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+
   res.redirect(redirectUri);
 });
 app.get('/oauth', function(req, res) {
@@ -63,51 +79,42 @@ app.get('/oauth', function(req, res) {
 app.get('/oauth2-callback', (req, res) => {
   const accessCode = req.query.code;
 
-  // Kiểm tra nếu không có mã code trong query params
   if (!accessCode) {
     return res.status(400).send('No authorization code provided');
   }
 
-  // Bước 3: Đổi mã code để lấy token
-  request.post(
-    {
-      url: riotTokenUrl,
-      auth: {
-        user: riotClientId,
-        pass: riotClientSecret, // Cài đặt header "Authorization: Basic ..."
-      },
-      form: {
-        grant_type: 'authorization_code',
-        code: accessCode,
-        redirect_uri: appCallbackUrl, // URL redirect phải khớp với URL đã đăng ký
-      },
+  // Lấy code_verifier từ session
+  const codeVerifier = req.session.codeVerifier;
+
+  if (!codeVerifier) {
+    return res.status(400).send('No code verifier available');
+  }
+
+  // Đổi mã code để lấy token
+  request.post({
+    url: riotTokenUrl,
+    auth: {
+      user: riotClientId,
+      pass: riotClientSecret
     },
-    (error, response, body) => {
-      // Nếu có lỗi hoặc mã trạng thái không phải 200
-      if (error || response.statusCode !== 200) {
-        console.error('Error fetching tokens:', error || body);
-        return res.status(500).send('Failed to exchange code for tokens');
-      }
-
-      try {
-        // Phân tích phản hồi và trả về token
-        const payload = JSON.parse(body);
-
-        // Lưu trữ và hiển thị các token
-        const tokens = {
-          access_token: payload.access_token,
-          refresh_token: payload.refresh_token,
-          id_token: payload.id_token,
-        };
-
-        // Gửi token dưới dạng <pre> để hiển thị dễ đọc
-        res.send(`<pre>${JSON.stringify(tokens, null, 4)}</pre>`);
-      } catch (parseError) {
-        console.error('Error parsing token response:', parseError);
-        return res.status(500).send('Failed to parse token response');
-      }
+    form: {
+      grant_type: "authorization_code",
+      code: accessCode,
+      redirect_uri: riotRedirectUri,
+      code_verifier: codeVerifier  // Gửi code_verifier
     }
-  );
+  }, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      const payload = JSON.parse(body);
+      res.json({
+        access_token: payload.access_token,
+        refresh_token: payload.refresh_token,
+        id_token: payload.id_token
+      });
+    } else {
+      res.status(400).send('Failed to get tokens');
+    }
+  });
 });
 // MongoDB connection
 mongoose
@@ -350,8 +357,13 @@ app.use((err, req, res, next) => {
 
 setInterval(async () => {
   try {
-    await mongoose.connection.db.admin().ping();
-    console.log('MongoDB is healthy');
+    // Kiểm tra kết nối MongoDB
+    if (mongoose.connection.readyState === 1) {  // 1 có nghĩa là kết nối thành công
+      await mongoose.connection.db.admin().ping();
+      console.log('MongoDB is healthy');
+    } else {
+      console.log('MongoDB connection is not established');
+    }
   } catch (err) {
     console.error('MongoDB connection issue:', err);
   }
