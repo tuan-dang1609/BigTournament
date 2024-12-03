@@ -40,7 +40,7 @@ app.use(
   })
 );
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'mysecret',
+  secret: 'mysecret',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: process.env.NODE_ENV === 'production' } // secure=true nếu chạy trên HTTPS
@@ -57,7 +57,7 @@ app.get('/auth/riot', (req, res) => {
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
   const codeChallenge = generateCodeChallenge(codeVerifier);
 
-  // Lưu code_verifier vào session (hoặc bất kỳ nơi nào bạn quản lý phiên làm việc)
+  // Lưu code_verifier vào session
   req.session.codeVerifier = codeVerifier;
 
   // Tạo URL ủy quyền với code_challenge
@@ -100,12 +100,13 @@ app.get('/oauth2-callback', (req, res) => {
     return res.status(400).send('No authorization code provided');
   }
 
-  // Lấy code_verifier từ session
+  // Kiểm tra session và log giá trị codeVerifier
   const codeVerifier = req.session.codeVerifier;
+  console.log('codeVerifier:', codeVerifier); // Thêm log để kiểm tra
+
   if (!codeVerifier) {
     return res.status(401).send('No codeVerifier provided');
   }
-
 
   // Đổi mã code để lấy token
   request.post({
@@ -130,7 +131,9 @@ app.get('/oauth2-callback', (req, res) => {
         refresh_token: payload.refresh_token,
         id_token: payload.id_token
       });
-    } 
+    } else {
+      res.status(400).send('Failed to get tokens');
+    }
   });
 });
 // MongoDB connection
