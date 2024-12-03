@@ -30,11 +30,7 @@ const riotAuthorizeUrl = `${riotProvider}/authorize`;
 const riotTokenUrl = `${riotProvider}/token`;
 const appBaseUrl = process.env.APP_BASE_URL
 const appCallbackUrl = `${appBaseUrl}/oauth2-callback`;
-function generateCodeChallenge(codeVerifier) {
-  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
-  return codeChallenge;
-}
-// Cấu hình CORS để cho phép truy cập từ nguồn cụ thể
+
 app.use(
   cors({
     origin: ['http://localhost:5173', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
@@ -49,6 +45,12 @@ app.use(session({
   saveUninitialized: true, // Lưu session mới nếu chưa có gì thay đổi
   cookie: { secure: false } // Đặt secure: true nếu chạy trên HTTPS
 }));
+
+function generateCodeChallenge(codeVerifier) {
+  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+  return codeChallenge;
+}
+
 // Trong route /auth/riot
 app.get('/auth/riot', (req, res) => {
   // Tạo code_verifier
@@ -101,9 +103,7 @@ app.get('/oauth2-callback', (req, res) => {
   // Lấy code_verifier từ session
   const codeVerifier = req.session.codeVerifier;
 
-  if (!codeVerifier) {
-    return res.status(400).send('No code verifier available');
-  }
+
 
   // Đổi mã code để lấy token
   request.post({
