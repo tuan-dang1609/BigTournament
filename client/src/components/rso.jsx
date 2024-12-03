@@ -15,7 +15,7 @@ const RSO_Authorization = () => {
   const handleOAuthCallback = async (code) => {
     setLoading(true);
     try {
-      const response = await axios.get(`https://dongchuyennghiep-backend.vercel.app/oauth2-callback?code=${code}`);
+      const response = await axios.get(`https://dongchuyennghiep-backend.vercel.app/oauth2-callback`);
       setTokens(response.data); // Lưu token vào state
       setLoading(false);
     } catch (err) {
