@@ -40,10 +40,10 @@ app.use(
   })
 );
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'mysecret',  // Đặt một secret key cho session
-  resave: false, // Không lưu lại session nếu không thay đổi
-  saveUninitialized: true, // Lưu session mới nếu chưa có gì thay đổi
-  cookie: { secure: false } // Đặt secure: true nếu chạy trên HTTPS
+  secret: process.env.SESSION_SECRET || 'mysecret',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: process.env.NODE_ENV === 'production' } // secure=true nếu chạy trên HTTPS
 }));
 
 function generateCodeChallenge(codeVerifier) {
