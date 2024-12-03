@@ -15,6 +15,7 @@ import { Server } from 'socket.io';
 import compression from 'compression';
 import Queue from 'bull';
 import https from 'https';
+import request from 'request';
 dotenv.config();
 const app = express();
 const apiKey = process.env.TFT_KEY;
