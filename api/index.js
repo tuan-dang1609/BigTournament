@@ -27,7 +27,8 @@ const riotClientSecret = process.env.RIOT_CLIENT_SECRET;
 const riotRedirectUri = 'https://dongchuyennghiep.vercel.app/rsotest'; // Sử dụng giá trị mới từ .env
 const riotAuthorizeUrl = 'https://auth.riotgames.com/authorize';
 const riotTokenUrl = 'https://auth.riotgames.com/token';
-
+const appBaseUrl = 'https://dongchuyennghiep.vercel.app/tft'
+const appCallbackUrl  = appBaseUrl+'/oauth2-callback'
 
 app.use(
   cors({
@@ -37,69 +38,51 @@ app.use(
     credentials: true
   })
 );
-app.get('/auth/riot', (req, res) => {
-  const state = crypto.randomBytes(16).toString('hex'); // Tạo state để bảo vệ CSRF
-  const authUrl = `${riotAuthorizeUrl}?response_type=code&client_id=${riotClientId}&redirect_uri=${encodeURIComponent(riotRedirectUri)}&scope=openid&state=${state}`;
-  res.redirect(authUrl);
+app.get('/', function(req, res) {
+  const link = riotAuthorizeUrl
+  + "?redirect_uri=" + appCallbackUrl
+  + "&client_id=" + riotClientId
+  + "&response_type=code"
+  + "&scope=openid";
+// create a single link, send as an html document
+res.send('<a href="' + link + '">Sign In</a>');
 });
 
-app.get('/auth/callback', async (req, res) => {
-  const { code, state } = req.query;
+app.get('/oauth2-callback', function(req, res) {
+  const accessCode = req.query.code;
+  request.post({
+    url: riotTokenUrl,
+    auth: { // sets "Authorization: Basic ..." header
+        user: riotClientId,
+        pass: riotClientSecret
+    },
+    form: { // post information as x-www-form-urlencoded
+        grant_type: "authorization_code",
+        code: accessCode, // accessCode should be url decoded before being set here
+        redirect_uri: appCallbackUrl 
+    }
+}, function (error, response, body) {
+  if (!error && response.statusCode == 200) {
+    // parse the response to JSON
+    var payload = JSON.parse(body);
 
-  if (!code) {
-    return res.status(400).json({ error: 'Authorization code is missing' });
-  }
+    // separate the tokens from the entire response body
+    var tokens = {
+        refresh_token:  payload.refresh_token,
+        id_token:       payload.id_token,
+        access_token:   payload.access_token
+    };
 
-  try {
-    const response = await axios.post(
-      riotTokenUrl,
-      {
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: riotRedirectUri,
-      },
-      {
-        auth: {
-          username: riotClientId,
-          password: riotClientSecret,
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    );
-
-    const { access_token, id_token } = response.data;
-
-    // Lưu token hoặc gửi về frontend
-    res.json({ accessToken: access_token, idToken: id_token });
-  } catch (error) {
-    console.error('Error fetching token:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch token' });
-  }
+    // legibly print out our tokens
+    res.send("<pre>" + JSON.stringify(tokens, false, 4) + "</pre>");
+} else {
+    res.send("/token request failed");
+}
 });
 
-// Route: Truy vấn thông tin tài khoản Riot
-app.get('/auth/userinfo', async (req, res) => {
-  const { accessToken } = req.headers;
-
-  if (!accessToken) {
-    return res.status(401).json({ error: 'Access token is required' });
-  }
-
-  try {
-    const response = await axios.get('https://auth.riotgames.com/userinfo', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    res.json(response.data);
-  } catch (error) {
-    console.error('Error fetching user info:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch user info' });
-  }
 });
+
+
 
 
 // MongoDB connection

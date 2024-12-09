@@ -6,7 +6,7 @@ function App() {
   const [userInfo, setUserInfo] = useState(null);
 
   const handleLogin = () => {
-    const riotAuthUrl = "http://localhost:3000/auth/riot"; // Backend URL
+    const riotAuthUrl = "https://dongchuyennghiep-backend.vercel.app/auth/riot"; // Backend URL
     window.location.href = riotAuthUrl;
   };
 
@@ -17,7 +17,7 @@ function App() {
     }
 
     try {
-      const response = await axios.get("http://localhost:3000/auth/userinfo", {
+      const response = await axios.get("https://dongchuyennghiep-backend.vercel.app/auth/userinfo", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

@@ -207,7 +207,7 @@ const TournamentBracketAOV16 = () => {
             <div className="max-w-[900px] justify-center flex flex-col mx-auto">
     <p>Hiii! Xin chào tất cả các bạn, chào mừng các bạn đã đến với vòng đấu Thụy Sĩ, và đây là một số luật lệ tụi mình sẽ có update thêm trong tương lai nhaaaa: </p>
     <ul class="list-disc">
-        <li>8 đội gồm 2 đội thắng ở nhánh 2-0, 3 đội ở nhánh 2-1 và 3 đội thua ở nhánh 2-2 sẽ đi tiếp.</li>
+        <li>8 đội gồm 2 đội thắng ở nhánh 2-0, 3 đội ở nhánh 2-1 và 3 đội thắng ở nhánh 2-2 sẽ đi tiếp.</li>
         <li>8 đội gồm 2 đội thua ở nhánh 0-2, 3 đội thua ở nhánh 1-2 và 3 đội thua ở nhánh 2-2 sẽ bị loại.</li>
         <li>Tất cả các trận ở đây là BO1. Riêng các trận quyết định (2-0, 0-2, 2-1, 1-2, 2-2) sẽ là BO3.</li>
         <li>Các bạn có thể kiểm tra kết quả trận đấu bằng cách ấn vào cặp trận.</li>
