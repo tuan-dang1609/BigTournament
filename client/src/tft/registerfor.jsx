@@ -296,14 +296,14 @@ const TeamRegistrationForm = () => {
 
 
                                 <div className="flex flex-col" id="logoUrl">
-                                    <label className="font-semibold text-base-content" htmlFor="logoUpload">Logo của đội</label>
+                                    <label className="font-semibold text-base-content" htmlFor="logoUpload">Logo của bạn</label>
                                     <input type="file" accept="image/*" onChange={handleLogoChange} />
                                     {errors.logoUrl && <p className="text-red-500 text-xs">{errors.logoUrl}</p>}
                                 </div>
 
 
                                 <div className="flex flex-col" id="gameChoose">
-                                    <label className="leading-loose font-semibold text-base-content">Chọn game mà đội bạn sẽ tham gia</label>
+                                    <label className="leading-loose font-semibold text-base-content">Chọn game mà bạn sẽ tham gia</label>
                                     <div className="flex flex-wrap gap-2">
                                         {gameOptions.map((game) => (
                                             <motion.button
