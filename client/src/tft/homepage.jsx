@@ -27,9 +27,8 @@ const CompetitionPage = () => {
     const [showPlayers, setShowPlayers] = useState(false);
 
     const prizePool = [
-        { place: "1st", prize: "0 VND", color: "#FFD700" }, // Gold
-        { place: "2nd", prize: "0 VND", color: "#C0C0C0" },  // Silver
-        { place: "3rd", prize: "0 VND", color: "#CD7F32" }   // Bronze
+        { place: "1st", prize: "135 000 VND", color: "#FFD700" }, // Gold
+        { place: "1 tuớng 5 vàng 3 sao", prize: "20 000 VND", color: "#C0C0C0" },  // Silver
     ];
     const timeline = [
         { stage: "Registration", date: "June 1 - June 15", completed: true },
@@ -162,7 +161,7 @@ const CompetitionPage = () => {
                     Giải thưởng
                 </h2>
                 <div className="mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {prizePool.map((prize, index) => (
                             <div key={index} className="text-center bg-gray-800 rounded-lg p-6 shadow-xl transform hover:scale-105 transition duration-300 ease-in-out">
                                 <div className="text-6xl mb-4 flex justify-center" style={{ color: prize.color }}>
