@@ -112,11 +112,7 @@ const TeamRegistrationForm = () => {
         }
     }, [signupSuccess, countdown, navigate]);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-        validateField(name, value);
-    };
+
 
     const handleGameToggle = (game) => {
         let updatedGames = [...formData.games];
@@ -132,26 +128,6 @@ const TeamRegistrationForm = () => {
 
         setFormData({ ...formData, games: updatedGames, gameMembers: updatedGameMembers });
         validateField("games", updatedGames);
-    };
-
-    const handleMemberChange = (game, index, value) => {
-        const updatedGameMembers = { ...formData.gameMembers };
-        updatedGameMembers[game][index] = value;
-
-        const isDuplicate = updatedGameMembers[game].filter((member) => member === value).length > 1;
-
-        if (isDuplicate) {
-            setErrors((prevErrors) => ({
-                ...prevErrors,
-                gameMembers: `Thành viên "${value}" đã tồn tại.`
-            }));
-        } else {
-            const newErrors = { ...errors };
-            delete newErrors.gameMembers;
-            setErrors(newErrors);
-        }
-
-        setFormData({ ...formData, gameMembers: updatedGameMembers });
     };
 
 
