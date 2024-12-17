@@ -284,7 +284,6 @@ const TeamRegistrationForm = () => {
                             className="w-28 h-28 mb-5"
                             alt="Logo của đội"
                         />
-                        <p className="text-gray-600">User ID: {userRegister.usernameregister}</p>
                         <p className="text-gray-600">Riot ID: {userRegister.gameMembers["Teamfight Tactics"][0]}</p>
                         <p className="text-gray-600">Game sẽ tham gia: {userRegister.games[0]}</p>
                     </div>
