@@ -6,5 +6,5 @@ const powerRankingAOVSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const PowerRankingAOV = mongoose.model('PowerRankingAOV', powerRankingAOVSchema);
+const PowerRankingAOV = mongoose.model('PowerRankingAOV', powerRankingAOVSchema,'PowerRankingAOV');
 export default PowerRankingAOV;
