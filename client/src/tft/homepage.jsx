@@ -97,16 +97,12 @@ const CompetitionPage = () => {
                         <img src={ImageDCN} alt="DCN logo" className="h-32 w-32" />
                     </div>
                     <h1 className="text-6xl md:text-7xl animate__animated animate__fadeIn font-extrabold mb-6 animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                        Giải Giao Lưu TFT Đôi DCN
+                        Giải Chung Kết TFT DCN 2024
                     </h1>
                     <p className="animate__animated animate__fadeIn text-xl md:text-xl mb-8 animate-fade-in-up">
                        Thắng bại tại kĩ năng !!!
                     </p>
-                    <Link to="/tft/register">
-                        <button className="animate__animated animate__fadeInUp bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent text-white font-bold py-4 px-10 rounded-full text-xl transform hover:scale-105 shadow-lg">
-                            Đăng kí ngay
-                        </button>
-                    </Link>
+                    
                 </div>
                 <div className="absolute bottom-8 left-0 right-0 flex justify-center">
                     <button
@@ -123,7 +119,7 @@ const CompetitionPage = () => {
             {/* Content Section */}
             <section id="participant" className="py-12 lg:py-16 px-4 md:px-8 bg-gradient-to-b text-white">
                 <div className="mx-auto">
-                    <h2 className="animate__animated animate__fadeInUp text-4xl md:text-5xl font-bold mb-6 text-center text-primary">Các đội tham dự giải đấu</h2>
+                    <h2 className="animate__animated animate__fadeInUp text-4xl md:text-5xl font-bold mb-6 text-center text-primary">Người chơi tham dự giải đấu</h2>
 
                     {loading ? (
                         <div className="flex items-center justify-center mt-24">
