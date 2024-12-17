@@ -1,6 +1,7 @@
 import express from 'express';
 import { signin, signup,teamHOF,leagueHOF,findleagueHOF,findteamHOF, signout,getCorrectAnswers,comparePredictionmultiple,calculateMaxPoints,getUserPickemScore,comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
+import PowerRankingAOV from '../models/powerRankingAOV.model.js';
 import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
 import Match from '../models/match.model.js';
@@ -32,6 +33,73 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
+router.post('powerrankingaov', async (req, res) => {
+    try {
+      // Truy vấn tất cả dữ liệu trong collection PowerRankingAOV
+      const rankings = await PowerRankingAOV.find().sort({ points: -1 }); // Sắp xếp theo điểm giảm dần
+  
+      if (!rankings.length) {
+        return res.status(404).json({ message: 'Bảng xếp hạng hiện đang trống!' });
+      }
+  
+      return res.status(200).json({
+        message: 'Lấy bảng xếp hạng thành công!',
+        data: rankings,
+      });
+    } catch (error) {
+      console.error('Lỗi khi lấy bảng xếp hạng:', error);
+      return res.status(500).json({ message: 'Lỗi server!', error: error.message });
+    }
+  });
+router.post('/addpowerrankingaov', async (req, res) => {
+    try {
+      // Lấy danh sách đội từ TeamRegister có game là 'Liên Quân Mobile'
+      const teams = await TeamRegister.find({ games: 'Liên Quân Mobile' });
+  
+      if (!teams.length) {
+        return res.status(404).json({ message: 'Không tìm thấy đội Liên Quân Mobile nào!' });
+      }
+  
+      // Lấy tất cả dữ liệu bảng xếp hạng hiện có
+      const existingRankings = await PowerRankingAOV.find({});
+      const existingTeamNames = existingRankings.map(rank => rank.teamName);
+  
+      // Kiểm tra JSON body, nếu rỗng thì chỉ cập nhật lại tên đội
+      if (Object.keys(req.body).length === 0) {
+        for (const team of teams) {
+          await PowerRankingAOV.updateOne(
+            { teamName: team.teamName }, // Điều kiện tìm kiếm
+            { $set: { teamName: team.teamName, teamLogo: team.logoUrl } } // Chỉ cập nhật tên và logo
+          );
+        }
+        return res.status(200).json({ message: 'Đã cập nhật lại tên đội thành công!' });
+      }
+  
+      // Thêm các đội mới từ TeamRegister chưa có trong bảng xếp hạng
+      const newTeams = teams.filter(team => !existingTeamNames.includes(team.teamName));
+  
+      const newRankingData = newTeams.map(team => ({
+        teamName: team.teamName,
+        teamLogo: team.logoUrl, // Logo đội
+        points: 500, // Điểm mặc định cho đội mới
+      }));
+  
+      // Chỉ thêm đội mới vào collection
+      if (newRankingData.length > 0) {
+        await PowerRankingAOV.insertMany(newRankingData);
+      }
+  
+      return res.status(201).json({
+        message: 'Cập nhật bảng xếp hạng thành công!',
+        newTeamsAdded: newRankingData,
+      });
+    } catch (error) {
+      console.error('Lỗi khi tạo/cập nhật bảng xếp hạng:', error);
+      return res.status(500).json({ message: 'Lỗi server!', error: error.message });
+    }
+  });
+  
+  
 router.post('/upsertquestionsWithDynamicLogo', async (req, res) => {
     try {
         const { questions } = req.body;
