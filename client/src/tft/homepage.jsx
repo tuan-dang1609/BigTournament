@@ -194,8 +194,6 @@ const TeamCard = ({ team, showPlayers }) => {
     return (
         <div
             className="bg-gray-700 py-1 lg:p-5 rounded-lg shadow-lg text-center transition duration-300 ease-in-out"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
         >
             <div className="w-full lg:h-48 h-24 lg:p-0 p-2 overflow-hidden relative">
                 <img
@@ -212,7 +210,7 @@ const TeamCard = ({ team, showPlayers }) => {
                 </div>
             </div>
             <p className="font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent text-[12.5px] lg:text-[18px] lg:pt-4 lg:pb-2">
-  {team.teamName}
+  {team.gameMembers["Teamfight Tactics"][0]}
 </p>
         </div>
     );
