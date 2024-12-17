@@ -41,6 +41,7 @@ import TournamentBracketLOL from './leagueoflegend/bracket.jsx'
 import TournamentBracketAOV16 from './arenaofvalor/bracket_16team.jsx'
 import PlayinAOV from './arenaofvalor/bracket.jsx'
 import RSO_Authorization from './components/rso.jsx';
+import PowerRankingAOV from './arenaofvalor/ranking.jsx'; 
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -68,6 +69,7 @@ if (rootElement) {
               <Route path="/tft" element={<TFThompage />} />
               <Route path='/register' element={<TeamRegistrationForm />} />
               <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
+              <Route path='/arenaofvalor/ranking' element={<PowerRankingAOV />} />
               <Route path='/arenaofvalor/pickem/welcome' element={<WelcomePage />} />
               <Route path='/arenaofvalor/playin' element={<PlayinAOV />} />
               <Route path='/arenaofvalor/test' element={<TournamentBracketAOV />} />

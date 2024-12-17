@@ -33,7 +33,7 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
-router.post('powerrankingaov', async (req, res) => {
+router.post('/powerrankingaov', async (req, res) => {
     try {
       // Truy vấn tất cả dữ liệu trong collection PowerRankingAOV
       const rankings = await PowerRankingAOV.find().sort({ points: -1 }); // Sắp xếp theo điểm giảm dần
