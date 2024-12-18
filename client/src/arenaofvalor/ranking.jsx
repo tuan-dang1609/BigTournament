@@ -135,7 +135,23 @@ const PowerRankingAOV = () => {
         <p style={{ color: "red" }}>{error}</p>
       ) : (
         <>
-          <h1 className="mt-32 text-center font-bold text-3xl text-primary mb-10">Bảng Xếp Hạng Liên Quân Mobile</h1>
+          <div className="mt-32 flex lg:flex-row flex-col lg:gap-y-1 gap-y-2 items-center justify-center mb-2 gap-x-2">
+            <h1 className="text-center font-bold text-3xl text-primary ">Bảng Xếp Hạng Các Đội </h1>
+            <div class="badge badge-primary badge-outline p-2 mt-1 font-semibold">BETA</div></div>
+          <div >
+            <div className="max-w-[900px] justify-center flex flex-col mx-auto">
+              <p>Hiii! Xin chào tất cả các bạn, chào mừng các bạn đã đến với bảng xếp hạng các đội, và đây là một số thông tin về bảng xếp hạng này nhé: </p>
+              <ul class="list-disc">
+                <li>Bảng xếp hạng này là BETA, nghĩa là đang trong quá trình thử nghiệm.</li>
+                <li>Tất cả các đội đều có điểm khởi điểm ban đầu là 500. Điểm này cũng sẽ áp dụng cho các đội tham gia sau này.</li>
+                <li>Điểm số cộng/trừ dựa trên khoảng cách thứ hạng giữa 2 đội đấu và số ván đấu thắng chênh lệch trong 1 trận</li>
+                <li>Bảng xếp hạng này cũng sẽ áp dụng để xếp hạt giống cho các giải sau này.</li>
+                <li>Ấn vào dòng của đội đó để hiện lineup. Riêng đội hạng nhất sẽ tự động hiện.</li>
+                <li>Nếu muốn hiện Avatar thành viên như team with'u thì các bạn update ảnh đại diện ở tài khoản của mình. Lưu ý là tài khoản đó phải trùng IGN thì mới đổi được avatar.</li>
+              </ul>
+              <p> Mọi thông tin thắc mắc hay gợi ý hay về cách tính điểm (ELO) thì có thể nhắn lên kênh Suggestion hoặc nhắn riêng Beacon nhé. </p>
+            </div>
+          </div>
           <table
             border="1"
             cellPadding="4"
@@ -147,7 +163,7 @@ const PowerRankingAOV = () => {
           >
             <thead className="bg-gray-800 text-white">
               <tr>
-                <th className="w-[10%] py-3">Hạng</th>
+                <th className="lg:w-[12%] w-[10%] py-3"></th>
                 <th className="text-left py-3">Tên Đội</th>
                 <th className="py-3">Điểm</th>
               </tr>
