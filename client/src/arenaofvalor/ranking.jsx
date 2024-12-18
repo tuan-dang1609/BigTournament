@@ -178,7 +178,7 @@ const PowerRankingAOV = () => {
                   </tr>
 
                   {expandedTeams[team.teamName] && (
-                    <tr>
+                    <tr className="">
                       <td colSpan="3" className="bg-gray-50">
                         <div
                           style={{
@@ -198,9 +198,9 @@ const PowerRankingAOV = () => {
                                   <img
                                     src={`https://drive.google.com/thumbnail?id=${player.avatar}`}
                                     alt={player.name}
-                                    className="lg:w-20 lg:h-20 w-12 h-12 rounded-full"
+                                    className="lg:w-20 lg:h-20 w-14 h-14 rounded-full"
                                   />
-                                  <span className="lg:text-base text-[11px] mt-3">
+                                  <span className="lg:text-base text-[11.5px] mt-3">
                                     {player.name}
                                   </span>
                                 </div>
