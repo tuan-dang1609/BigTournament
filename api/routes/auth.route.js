@@ -267,86 +267,101 @@ router.post('/fetchplayerprofiles', async (req, res) => {
 });
 // Route để thêm mới trận đấu
 router.post('/addmatchdetail', async (req, res) => {
-    try {
-      // Thêm trận đấu vào database
-      const match = new Match(req.body);
-      await match.save();
-  
-      const { teamA, teamB, scoreteamA, scoreteamB } = req.body;
-  
-      // Lấy bảng xếp hạng hiện tại
-      const rankings = await PowerRankingAOV.find().sort({ points: -1 });
-  
-      // Tìm thứ hạng của teamA và teamB
-      const rankTeamA = rankings.findIndex(team => team.teamName === teamA);
-      const rankTeamB = rankings.findIndex(team => team.teamName === teamB);
-  
-      if (rankTeamA === -1 || rankTeamB === -1) {
-        return res.status(404).json({ message: "Teams not found in ranking!" });
+  try {
+    // Thêm trận đấu vào database
+    const match = new Match(req.body);
+    await match.save();
+
+    const { teamA, teamB, scoreteamA, scoreteamB } = req.body;
+
+    // Lấy bảng xếp hạng hiện tại và sắp xếp theo điểm giảm dần
+    const allRankings = await PowerRankingAOV.find().sort({ points: -1 });
+
+    // Tính toán thứ hạng đồng hạng
+    let currentRank = 1;
+    const rankings = allRankings.map((team, index, array) => {
+      if (index > 0 && team.points === array[index - 1].points) {
+        team.rank = array[index - 1].rank; // Giữ nguyên thứ hạng cho đội đồng hạng
+      } else {
+        team.rank = currentRank;
       }
-  
-      // Tính toán khoảng cách thứ hạng
-      const rankGap = Math.abs(rankTeamA - rankTeamB);
-      const scoreGap = Math.abs(scoreteamA - scoreteamB);
-      let teamAGain = 0, teamALoss = 0;
-      let teamBGain = 0, teamBLoss = 0;
-  
-      // Logic cộng/trừ điểm
-      if (scoreteamA > scoreteamB) { // teamA thắng
-        if (rankTeamA > rankTeamB) { // teamA có thứ hạng thấp hơn teamB
-          teamAGain = 30 + rankGap * 3 + scoreGap; // Cộng nhiều điểm
-          teamBLoss = 30 + rankGap * 3 + scoreGap; // Trừ nhiều điểm
-        } else if (rankTeamA < rankTeamB) { // teamA có thứ hạng cao hơn teamB
-          teamAGain = 18 + rankGap * 2 + scoreGap; // Cộng ít điểm
-          teamBLoss = 18 + rankGap * 2 + scoreGap; // Trừ ít điểm
-        } else { // Thứ hạng bằng nhau
-          teamAGain = 23 + scoreGap; // Điểm cố định
-          teamBLoss = 23 + scoreGap;
-        }
-      } else if (scoreteamB > scoreteamA) { // teamB thắng
-        if (rankTeamB > rankTeamA) { // teamB có thứ hạng thấp hơn teamA
-          teamBGain = 30 + rankGap * 3 + scoreGap; // Cộng nhiều điểm
-          teamALoss = 30 + rankGap * 3 + scoreGap; // Trừ nhiều điểm
-        } else if (rankTeamB < rankTeamA) { // teamB có thứ hạng cao hơn teamA
-          teamBGain = 18 + rankGap * 2 + scoreGap; // Cộng ít điểm
-          teamALoss = 18 + rankGap * 2 + scoreGap; // Trừ ít điểm
-        } else { // Thứ hạng bằng nhau
-          teamBGain = 23; // Điểm cố định
-          teamALoss = 23;
-        }
-      }
-  
-      // Update điểm số cho teamA và teamB
-      if (scoreteamA > scoreteamB) { // teamA thắng
-        await PowerRankingAOV.updateOne(
-          { teamName: teamA },
-          { $inc: { points: teamAGain } }
-        );
-        await PowerRankingAOV.updateOne(
-          { teamName: teamB },
-          { $inc: { points: -teamBLoss } }
-        );
-      } else if (scoreteamB > scoreteamA) { // teamB thắng
-        await PowerRankingAOV.updateOne(
-          { teamName: teamB },
-          { $inc: { points: teamBGain } }
-        );
-        await PowerRankingAOV.updateOne(
-          { teamName: teamA },
-          { $inc: { points: -teamALoss } }
-        );
-      }
-  
-      return res.status(201).json({
-        message: "Match added and rankings updated successfully!",
-        teamA: { name: teamA, pointsGained: teamAGain || -teamALoss },
-        teamB: { name: teamB, pointsGained: teamBGain || -teamBLoss },
-      });
-    } catch (error) {
-      console.error("Error updating match and rankings:", error);
-      return res.status(500).json({ error: "Failed to add match or update rankings." });
+      currentRank++;
+      return team;
+    });
+
+    // Tìm thứ hạng của teamA và teamB
+    const rankTeamA = rankings.findIndex(team => team.teamName === teamA);
+    const rankTeamB = rankings.findIndex(team => team.teamName === teamB);
+
+    if (rankTeamA === -1 || rankTeamB === -1) {
+      return res.status(404).json({ message: "Teams not found in ranking!" });
     }
-  });
+
+    // Tính toán khoảng cách thứ hạng
+    const rankGap = Math.abs(rankings[rankTeamA].rank - rankings[rankTeamB].rank);
+    const scoreGap = Math.abs(scoreteamA - scoreteamB);
+    let teamAGain = 0, teamALoss = 0;
+    let teamBGain = 0, teamBLoss = 0;
+
+    // Logic cộng/trừ điểm
+    if (scoreteamA > scoreteamB) { // teamA thắng
+      if (rankings[rankTeamA].rank > rankings[rankTeamB].rank) {
+        teamAGain = 30 + rankGap * 3 + scoreGap;
+        teamBLoss = 30 + rankGap * 3 + scoreGap;
+      } else if (rankings[rankTeamA].rank < rankings[rankTeamB].rank) {
+        teamAGain = 18 + rankGap * 2 + scoreGap;
+        teamBLoss = 18 + rankGap * 2 + scoreGap;
+      } else {
+        teamAGain = 23 + scoreGap;
+        teamBLoss = 23 + scoreGap;
+      }
+    } else if (scoreteamB > scoreteamA) { // teamB thắng
+      if (rankings[rankTeamB].rank > rankings[rankTeamA].rank) {
+        teamBGain = 30 + rankGap * 3 + scoreGap;
+        teamALoss = 30 + rankGap * 3 + scoreGap;
+      } else if (rankings[rankTeamB].rank < rankings[rankTeamA].rank) {
+        teamBGain = 18 + rankGap * 2 + scoreGap;
+        teamALoss = 18 + rankGap * 2 + scoreGap;
+      } else {
+        teamBGain = 23 + scoreGap;
+        teamALoss = 23 + scoreGap;
+      }
+    }
+
+    // Update điểm số cho teamA và teamB
+    if (scoreteamA > scoreteamB) {
+      await PowerRankingAOV.updateOne(
+        { teamName: teamA },
+        { $inc: { points: teamAGain } }
+      );
+      await PowerRankingAOV.updateOne(
+        { teamName: teamB },
+        { $inc: { points: -teamBLoss } }
+      );
+    } else if (scoreteamB > scoreteamA) {
+      await PowerRankingAOV.updateOne(
+        { teamName: teamB },
+        { $inc: { points: teamBGain } }
+      );
+      await PowerRankingAOV.updateOne(
+        { teamName: teamA },
+        { $inc: { points: -teamALoss } }
+      );
+    }
+
+    return res.status(201).json({
+      message: "Match added and rankings updated successfully!",
+      teamA: { name: teamA, pointsGained: teamAGain || -teamALoss },
+      teamB: { name: teamB, pointsGained: teamBGain || -teamBLoss },
+    });
+  } catch (error) {
+    console.error("Error updating match and rankings:", error);
+    return res.status(500).json({ error: "Failed to add match or update rankings." });
+  }
+});
+
+
+
   
 router.post('/fetchmatchAOV/:idmatch', async (req, res) => {
     const { idmatch } = req.params; // Lấy `idmatch` từ body của request
