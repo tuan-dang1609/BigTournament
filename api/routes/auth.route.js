@@ -285,37 +285,34 @@ router.post('/addmatchdetail', async (req, res) => {
         return res.status(404).json({ message: "Teams not found in ranking!" });
       }
   
-      const teamAData = rankings[rankTeamA];
-      const teamBData = rankings[rankTeamB];
-  
       // Tính toán khoảng cách thứ hạng
       const rankGap = Math.abs(rankTeamA - rankTeamB);
-  
+      const scoreGap = Math.abs(scoreteamA - scoreteamB);
       let teamAGain = 0, teamALoss = 0;
       let teamBGain = 0, teamBLoss = 0;
   
       // Logic cộng/trừ điểm
       if (scoreteamA > scoreteamB) { // teamA thắng
         if (rankTeamA > rankTeamB) { // teamA có thứ hạng thấp hơn teamB
-          teamAGain = 50 + rankGap * 3; // Cộng nhiều điểm
-          teamBLoss = 50 + rankGap * 3; // Trừ nhiều điểm
+          teamAGain = 30 + rankGap * 3 + scoreGap; // Cộng nhiều điểm
+          teamBLoss = 30 + rankGap * 3 + scoreGap; // Trừ nhiều điểm
         } else if (rankTeamA < rankTeamB) { // teamA có thứ hạng cao hơn teamB
-          teamAGain = 20 + rankGap * 2; // Cộng ít điểm
-          teamBLoss = 20 + rankGap * 2; // Trừ ít điểm
+          teamAGain = 18 + rankGap * 2 + scoreGap; // Cộng ít điểm
+          teamBLoss = 18 + rankGap * 2 + scoreGap; // Trừ ít điểm
         } else { // Thứ hạng bằng nhau
-          teamAGain = 35; // Điểm cố định
-          teamBLoss = 35;
+          teamAGain = 23 + scoreGap; // Điểm cố định
+          teamBLoss = 23 + scoreGap;
         }
       } else if (scoreteamB > scoreteamA) { // teamB thắng
         if (rankTeamB > rankTeamA) { // teamB có thứ hạng thấp hơn teamA
-          teamBGain = 50 + rankGap * 3; // Cộng nhiều điểm
-          teamALoss = 50 + rankGap * 3; // Trừ nhiều điểm
+          teamBGain = 30 + rankGap * 3 + scoreGap; // Cộng nhiều điểm
+          teamALoss = 30 + rankGap * 3 + scoreGap; // Trừ nhiều điểm
         } else if (rankTeamB < rankTeamA) { // teamB có thứ hạng cao hơn teamA
-          teamBGain = 20 + rankGap * 2; // Cộng ít điểm
-          teamALoss = 20 + rankGap * 2; // Trừ ít điểm
+          teamBGain = 18 + rankGap * 2 + scoreGap; // Cộng ít điểm
+          teamALoss = 18 + rankGap * 2 + scoreGap; // Trừ ít điểm
         } else { // Thứ hạng bằng nhau
-          teamBGain = 35; // Điểm cố định
-          teamALoss = 35;
+          teamBGain = 23; // Điểm cố định
+          teamALoss = 23;
         }
       }
   
