@@ -306,25 +306,25 @@ router.post('/addmatchdetail', async (req, res) => {
     // Logic cộng/trừ điểm
     if (scoreteamA > scoreteamB) { // teamA thắng
       if (rankings[rankTeamA].rank > rankings[rankTeamB].rank) {
-        teamAGain = 30 + rankGap * 3 + scoreGap;
-        teamBLoss = 30 + rankGap * 3 + scoreGap;
+        teamAGain = 25 + rankGap * 3 + scoreGap;
+        teamBLoss = 25 + rankGap * 3 + scoreGap;
       } else if (rankings[rankTeamA].rank < rankings[rankTeamB].rank) {
         teamAGain = 18 + rankGap * 2 + scoreGap;
         teamBLoss = 18 + rankGap * 2 + scoreGap;
       } else {
-        teamAGain = 23 + scoreGap;
-        teamBLoss = 23 + scoreGap;
+        teamAGain = 21 + scoreGap;
+        teamBLoss = 21 + scoreGap;
       }
     } else if (scoreteamB > scoreteamA) { // teamB thắng
       if (rankings[rankTeamB].rank > rankings[rankTeamA].rank) {
-        teamBGain = 30 + rankGap * 3 + scoreGap;
-        teamALoss = 30 + rankGap * 3 + scoreGap;
+        teamBGain = 25 + rankGap * 3 + scoreGap;
+        teamALoss = 25 + rankGap * 3 + scoreGap;
       } else if (rankings[rankTeamB].rank < rankings[rankTeamA].rank) {
         teamBGain = 18 + rankGap * 2 + scoreGap;
         teamALoss = 18 + rankGap * 2 + scoreGap;
       } else {
-        teamBGain = 23 + scoreGap;
-        teamALoss = 23 + scoreGap;
+        teamBGain = 21 + scoreGap;
+        teamALoss = 21 + scoreGap;
       }
     }
 
