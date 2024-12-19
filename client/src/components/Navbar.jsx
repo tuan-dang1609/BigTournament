@@ -131,7 +131,7 @@ export default function Example() {
               <Link to="/">
                 <img
                   alt="Your Company"
-                  src={imageUrls["waiting"]}
+                  src={imageUrls["LogoChristmas"]}
                   className="h-12.5 w-12.5"
                 />
               </Link>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Waiting from '../image/waiting.png';
+import Waiting from '../image/LogoChristmas.png';
 import Raze from '../image/Raze.png';
 import Wingman from '../image/wingman.png';
 import $ from 'jquery';
