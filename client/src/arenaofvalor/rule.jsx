@@ -158,6 +158,16 @@ const RuleBook = () => {
                 ]}
             />
 
+<Section
+                title="X. Nháy đèn"
+                content={
+                    <>
+                        Chỉ cần làm 1 lần thì tự động xử thua toàn bộ trận đấu. Còn nếu biến về bị lag thì tụi mình sẽ bỏ qua (vui lòng gửi bằng chứng ping cao hoặc packet loss).
+                    </>
+                }
+                
+            />
+
 
             <Conclusion
                 content="Cảm ơn các bạn đã đọc luật và chúc các bạn có một mùa giải thành công!! Graaaaa"
