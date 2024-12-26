@@ -1,7 +1,8 @@
 
 ## Demo
 Swiss Stage/ Vòng Thụy Sỹ
-![image](https://github.com/user-attachments/assets/b110f742-a217-4137-b4f4-7ff647e11dd1)
+![image](https://github.com/user-attachments/assets/5588e153-5de5-48eb-bd86-3cbb8d6d0059)
+
 
 # English/ Tiếng Anh
 ### Hi there, welcome to my project
