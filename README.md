@@ -15,7 +15,7 @@ You can download the code, especially Swiss bracket, Single Elimination and Doub
 ## Note
 - I am just a beginner programmer so my code isn't clean.
 - This project is in Vietnamese. In the future I will try to add English to the website. Stay tune !!!
-- This project mostly related to esport tournament from Phu Nhuan Highschool in Ho Chi Minh city, Vietnam.
+- This project mostly related to esport tournament from Phu Nhuan Highschool in Ho Chi Minh city, Vietnam 🇻🇳 (operated by DONG CHUYEN NGHIEP).
 - If you want to have API from Riot Games, you can apply here: <a href="https://developer.riotgames.com/">Riot Developer Portal</a>
 
 # Vietnamese
@@ -35,9 +35,12 @@ Bạn có thể tải code của mình, đặc biệt là các loại nhánh đ�
 ## Lưu ý
 - Mình mới là newbie nên code không được sạch cho lắm. Mong các bạn thông cảm cho mình nhé :(
 - Trong tương lai mình sẽ thêm tiếng Anh vào website. Các bạn hãy chờ đợi nhaaa.
+- Website này hầu hết liên quan tới các giải đấu game của trường Trung học Phổ Thông Phú Nhuận ở Thành phố Hồ Chí Minh, Việt Nam 🇻🇳 (vận hành bởi DONG CHUYEN NGHIEP).
 - Nếu các bạn muốn có API từ Riot, các bạn có thể nộp đơn tại đây: <a href="https://developer.riotgames.com/">Riot Developer Portal</a>
+- Nếu các bạn muốn hợp tác với mình trong việc tổ chức giải game thì có thể ấn vào trang mạng xã hội mà mình để ở phía dưới để liên lạc nhé.
+
 ## Link to the website/ Link tới website
-<a href="https://dongchuyennghiep.vercel.app/">Click here</a>
+<a href="https://dongchuyennghiep.vercel.app/">https://dongchuyennghiep.vercel.app</a>
 
 ## Social Media/ Mạng xã hội
 - Facebook: <a href="https://www.facebook.com/dongchuyennghiep">DONG CHUYEN NGHIEP</a>
