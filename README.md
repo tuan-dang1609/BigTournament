@@ -1,6 +1,4 @@
 
-![LogoChristmas](https://github.com/user-attachments/assets/8d9e65c6-166e-4db7-bd27-d92fd260e731)
-
 ## Demo
 Swiss Stage/ Vòng Thụy Sỹ
 ![image](https://github.com/user-attachments/assets/b110f742-a217-4137-b4f4-7ff647e11dd1)
