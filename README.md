@@ -37,7 +37,7 @@ Bạn có thể tải code của mình, đặc biệt là các loại nhánh đ�
 ## Lưu ý
 - Mình mới là newbie nên code không được sạch cho lắm. Mong các bạn thông cảm cho mình nhé :(
 - Trong tương lai mình sẽ thêm tiếng Anh vào website. Các bạn hãy chờ đợi nhaaa.
-- Website này hầu hết liên quan tới các giải đấu game của trường Trung học Phổ Thông Phú Nhuận ở Thành phố Hồ Chí Minh, Việt Nam 🇻🇳 (vận hành bởi DONG CHUYEN NGHIEP).
+- Website này hầu hết liên quan tới các giải đấu game của trường Trung học Phổ Thông Phú Nhuận ở Thành phố Hồ Chí Minh, Việt Nam 🇻🇳 (được vận hành bởi DONG CHUYEN NGHIEP).
 - Nếu các bạn muốn có API từ Riot, các bạn có thể nộp đơn tại đây: <a href="https://developer.riotgames.com/">Riot Developer Portal</a>
 - Ngôn ngữ lập trình mình sử dụng: Javascript
 - Cơ sở dữ liệu (database): MongoDB
