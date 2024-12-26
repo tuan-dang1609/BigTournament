@@ -15,8 +15,7 @@ Swiss Stage/ Vòng Thụy Sỹ
 - Arena Of Valor: I will input data manually through Insomnia
 
 ## Usage
-You can download the code, especially Swiss bracket, Single Elimination and Double Elimination Bracket. Note that all data at here is taken from Google Sheet. 
-
+- Feel free to use the code, except Pick'em Challenge code. Note that all data at Swiss Stage, Single elimination and Double elimination is taken from Google Sheet. 
 ## Note
 - I am just a beginner programmer so my code isn't clean.
 - This project is in Vietnamese. In the future I will try to add English to the website. Stay tune !!!
@@ -37,7 +36,7 @@ You can download the code, especially Swiss bracket, Single Elimination and Doub
 - Liên Quân Mobile: Mình sẽ nhập tay thông qua Insomnia
 
 ## Sử dụng
-Bạn có thể tải code của mình, đặc biệt là các loại nhánh đấu như thể thức thụy sỹ, loại đơn và loại kép. Lưu ý là dữ liệu của các thể thức được lấy từ Google Sheet.
+Bạn có thể tải code của mình, ngoại trừ code cho Pick'em Challenge. Lưu ý là dữ liệu của các thể thức như thể thức Thụy Sỹ, loại đơn và loại kép được lấy từ Google Sheet.
 
 ## Lưu ý
 - Mình mới là newbie nên code không được sạch cho lắm. Mong các bạn thông cảm cho mình nhé :(
