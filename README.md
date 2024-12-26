@@ -26,7 +26,7 @@ You can download the code, especially Swiss bracket, Single Elimination and Doub
 - Mục đích mình viết website này là để lưu được dữ liêu các trận đấu, qua đó giúp mình phân tích được dữ liệu.
 
 ## Bằng cách nào có thể cập nhật dữ liệu trận đấu
-- Với các trò chơi thuộc Riot Games như Liên Minh Huyền Thoại, Valorant, Đấu Trường Chân Lý: Dữ liệu được lấy thông qua API chính thức của Riot(các bạn có thể thấy các trang này khi các giải được tổ chức từ tháng 5/2025)
+- Với các trò chơi thuộc Riot Games như Liên Minh Huyền Thoại, Valorant, Đấu Trường Chân Lý: Dữ liệu được lấy thông qua API chính thức của Riot (các bạn có thể thấy các trang này khi các giải được tổ chức từ tháng 5/2025)
 - Liên Quân Mobile: Mình sẽ nhập tay thông qua Insomnia
 
 ## Sử dụng
