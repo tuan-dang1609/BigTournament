@@ -1,4 +1,8 @@
-# English
+## Demo
+Swiss Stage/ Vòng Thụy Sỹ
+![image](https://github.com/user-attachments/assets/b110f742-a217-4137-b4f4-7ff647e11dd1)
+
+# English/ Tiếng Anh
 ### Hi there, welcome to my project
 
 ## About this project
@@ -20,12 +24,12 @@ You can download the code, especially Swiss bracket, Single Elimination and Doub
 - Programming Language that I used: JavaScript
 - Database: MongoDB
 
-# Vietnamese
+# Vietnamese/ Tiếng Việt
 ## Chào mừng các bạn tới dự án của mình
 
 ## Về dự án này
 - Đây là dự án cá nhân của mình.
-- Mục đích mình viết website này là để lưu được dữ liêu các trận đấu, qua đó giúp mình phân tích được dữ liệu.
+- Mục đích mình viết website này là để lưu được dữ liệu các trận đấu, qua đó giúp mình phân tích được dữ liệu.
 
 ## Bằng cách nào có thể cập nhật dữ liệu trận đấu
 - Với các trò chơi thuộc Riot Games như Liên Minh Huyền Thoại, Valorant, Đấu Trường Chân Lý: Dữ liệu được lấy thông qua API chính thức của Riot (các bạn có thể thấy các trang này khi các giải được tổ chức từ tháng 5/2025)
