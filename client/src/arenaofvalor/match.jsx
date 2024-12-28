@@ -67,7 +67,7 @@ function FeatureRichTable({ matchInfo, opponentInfo, error }) {
                   } else if (column.key === "KP") {
                     cellData = `${kastPercentage}%`;
                   } else {
-                    cellData = row[column.key] || "N/A";
+                    cellData = row[column.key] || "0";
                   }
 
                   return (
