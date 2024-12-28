@@ -735,6 +735,20 @@ export const findAllMatchID = async (req, res, next) => {
     next(error);
   }
 };
+
+export const findAllteamAOV = async (req, res, next) => {
+  try {
+    const allTeam = await TeamRegister.find({ game: "Liên Quân Mobile" });
+
+    if (!allTeam || allTeam.length === 0) {
+      return next(errorHandler(404, 'No Game found'));
+    }
+
+    res.status(200).json(allTeam);
+  } catch (error) {
+    next(error);
+  }
+};
 export const findAllteam = async (req, res, next) => {
   try {
     const allTeam = await TeamRegister.find();
