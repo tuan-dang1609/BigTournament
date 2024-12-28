@@ -203,7 +203,14 @@ const TournamentBracketAOV16 = () => {
     );
     return (
         <div className="relative w-[95%] lg:w-full mx-auto mt-24" id="bracket"  style={{ overflowX: 'scroll' }}>
-            <h1 className="text-3xl font-bold mb-6 text-center">Vòng Thụy Sỹ 1</h1>
+            
+            {loading ? (
+                <div className="flex items-center justify-center min-h-screen">
+                    <span className="loading loading-dots loading-lg text-primary"></span>
+                </div>
+            ) : (
+                <>
+                <h1 className="text-3xl font-bold mb-6 text-center">Vòng Thụy Sỹ 1</h1>
             <div className="max-w-[900px] justify-center flex flex-col mx-auto">
     <p>Hiii! Xin chào tất cả các bạn, chào mừng các bạn đã đến với vòng đấu Thụy Sĩ, và đây là một số luật lệ tụi mình sẽ có update thêm trong tương lai nhaaaa: </p>
     <ul class="list-disc">
@@ -233,12 +240,7 @@ const TournamentBracketAOV16 = () => {
                 &gt;
             </button>
             </div>
-            {loading ? (
-                <div className="flex items-center justify-center min-h-screen">
-                    <span className="loading loading-dots loading-lg text-primary"></span>
-                </div>
-            ) : (
-                <div className="w-full overflow-x-scroll scrollbar-none" ref={containerRef}>
+            <div className="w-full overflow-x-scroll scrollbar-none" ref={containerRef}>
                     <div  className="flex flex-col lg:flex-row justify-between lg:space-x-4 relative w-full lg:w-[140%] mx-auto">
                         <div className="w-full lg:w-1/6 lg:mt-40 mt-10 relative">
                             {renderSection("0W-0L", [
@@ -346,6 +348,8 @@ const TournamentBracketAOV16 = () => {
                         </div>
                     </div>
                     </div>
+                </>
+                
             )}
                 </div>
             );
