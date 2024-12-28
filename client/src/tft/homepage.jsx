@@ -48,7 +48,7 @@ const CompetitionPage = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamAOV', {
+                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamTFT', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

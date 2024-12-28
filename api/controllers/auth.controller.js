@@ -750,6 +750,21 @@ export const findAllteamAOV = async (req, res, next) => {
     next(error);
   }
 };
+
+export const findAllteamTFT = async (req, res, next) => {
+  try {
+    // Sử dụng truy vấn $in để kiểm tra mảng "games" có chứa "Liên Quân Mobile"
+    const allTeam = await TeamRegister.find({ games: { $in: ["Teamfight Tactics"] } });
+
+    if (!allTeam || allTeam.length === 0) {
+      return next(errorHandler(404, 'No teams found for "Teamfight Tactics"'));
+    }
+
+    res.status(200).json(allTeam);
+  } catch (error) {
+    next(error);
+  }
+};
 export const findAllteam = async (req, res, next) => {
   try {
     const allTeam = await TeamRegister.find();
