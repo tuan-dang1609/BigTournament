@@ -170,10 +170,18 @@ export const calculateMaxPoints = async (req, res) => {
 
     // Iterate over all correct answers and calculate the maximum points
     for (const correctAnswer of correctAnswers.answers) {
+      const questionId = parseInt(correctAnswer.questionId);
+
+      // Check if questionId is NaN
+      if (isNaN(questionId)) {
+        console.warn(`Invalid questionId: ${correctAnswer.questionId}`);
+        continue; // Skip this iteration if the ID is not valid
+      }
+
       // Fetch the question from the QuestionPickem collection to get the maxChoose value
-      const question = await QuestionPickem.findOne({ id: parseInt(correctAnswer.questionId) });
+      const question = await QuestionPickem.findOne({ id: questionId });
       if (!question) {
-        console.warn(`Question with ID ${correctAnswer.questionId} not found in QuestionPickem`);
+        console.warn(`Question with ID ${questionId} not found in QuestionPickem`);
         continue;
       }
 
