@@ -16,7 +16,7 @@ import QuestionPickem from '../models/question.model.js';
 const scoreQueue = new Queue('score-processing');
 
 const pointSystem = {
-  1: 10,
+  1: 15,
   2: 10,
   3: 10,
   9: 10,
