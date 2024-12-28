@@ -21,9 +21,18 @@ const pointSystem = {
   3: 10,
   9: 10,
   4: 15,  // Question 4 is worth 15 points per correct answer
-  5: 7,    // Question 5 is worth 9 points per correct answer
-  6: 9,
-  10:10
+  5: 9,    // Question 5 is worth 9 points per correct answer
+  6: 8,
+  7:10,
+  8: 8, 
+  10:10,
+  11:12,
+  12:11,
+  13: 12,
+  14: 20,
+  15:20,
+  16:4,
+  17:12
 };
 
 for (let day = 1; day <= 8; day++) {
