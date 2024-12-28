@@ -25,6 +25,12 @@ const pointSystem = {
   6: 9,
   10:10
 };
+
+for (let day = 1; day <= 8; day++) {
+  for (let question = 1; question <= 8; question++) {
+    pointSystem[`day${day}-${question}`] = 10;
+  }
+}
 export const signup = async (req, res, next) => {
   const { garenaaccount,nickname,riotID, username, password, discordID } = req.body;
   try {
