@@ -159,47 +159,78 @@ export const findteamHOF = async (req, res, next) => {
 
 export const calculateMaxPoints = async (req, res) => {
   try {
-    // Fetch the correct answers
     const correctAnswers = await CorrectAnswersSubmit.findOne();
     if (!correctAnswers) {
       return res.status(404).json({ message: 'Correct answers not found' });
     }
 
-    // Initialize total points counter
     let totalMaxPoints = 0;
+    const calculatedQuestions = [];
 
-    // Iterate over all correct answers and calculate the maximum points
     for (const correctAnswer of correctAnswers.answers) {
-      const questionId = parseInt(correctAnswer.questionId);
+      const questionId = correctAnswer.questionId;
 
-      // Check if questionId is NaN
-      if (isNaN(questionId)) {
-        console.warn(`Invalid questionId: ${correctAnswer.questionId}`);
-        continue; // Skip this iteration if the ID is not valid
-      }
-
-      // Fetch the question from the QuestionPickem collection to get the maxChoose value
-      const question = await QuestionPickem.findOne({ id: questionId });
-      if (!question) {
-        console.warn(`Question with ID ${questionId} not found in QuestionPickem`);
+      if (!questionId) {
+        console.warn(`Invalid questionId: ${questionId}`);
         continue;
       }
 
-      // Calculate points for this question based on maxChoose and the point system
-      const pointsForQuestion = Math.min(correctAnswer.correctTeams.length, question.maxChoose) * (pointSystem[correctAnswer.questionId] || 0);
+      // Xử lý trường hợp `questionId` là dạng `category-id` hoặc chỉ `id`
+      let question;
+      if (questionId.includes('-')) {
+        // Trường hợp `category-id` (ví dụ: `day1-5`)
+        const [category, idStr] = questionId.split('-');
+        const id = Number(idStr);
+
+        if (!category || isNaN(id)) {
+          console.warn(`Invalid questionId format: ${questionId}`);
+          continue;
+        }
+
+        question = await QuestionPickem.findOne({ category, id });
+      } else {
+        // Trường hợp chỉ có `id` (dạng số, ví dụ: `10`)
+        const id = Number(questionId);
+        if (isNaN(id)) {
+          console.warn(`Invalid numeric questionId: ${questionId}`);
+          continue;
+        }
+
+        question = await QuestionPickem.findOne({ id });
+      }
+
+      if (!question) {
+        console.warn(`Question with ID "${questionId}" not found in QuestionPickem`);
+        continue;
+      }
+
+      // Tính điểm cho câu hỏi
+      const pointsForQuestion = Math.min(correctAnswer.correctTeams.length, question.maxChoose) * (pointSystem[questionId] || 0);
       totalMaxPoints += pointsForQuestion;
+
+      calculatedQuestions.push({
+        questionId,
+        pointsForQuestion,
+        correctTeams: correctAnswer.correctTeams,
+        maxChoose: question.maxChoose,
+        pointSystemValue: pointSystem[questionId] || 0,
+      });
     }
 
-    // Return the total maximum points
+    console.log('Calculated Questions:', calculatedQuestions);
+
     res.status(200).json({
       message: `The maximum possible points if all answers are correct is ${totalMaxPoints}.`,
-      totalMaxPoints
+      totalMaxPoints,
+      calculatedQuestions,
     });
   } catch (error) {
     console.error('Error calculating maximum points:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
 export const comparePredictions = async (req, res) => {
   try {
     const { userId } = req.body;  // Expecting userId in the request body
