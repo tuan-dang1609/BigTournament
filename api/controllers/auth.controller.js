@@ -738,10 +738,11 @@ export const findAllMatchID = async (req, res, next) => {
 
 export const findAllteamAOV = async (req, res, next) => {
   try {
-    const allTeam = await TeamRegister.find({ game: "Liên Quân Mobile" });
+    // Sử dụng truy vấn $in để kiểm tra mảng "games" có chứa "Liên Quân Mobile"
+    const allTeam = await TeamRegister.find({ games: { $in: ["Liên Quân Mobile"] } });
 
     if (!allTeam || allTeam.length === 0) {
-      return next(errorHandler(404, 'No Game found'));
+      return next(errorHandler(404, 'No teams found for "Liên Quân Mobile"'));
     }
 
     res.status(200).json(allTeam);
