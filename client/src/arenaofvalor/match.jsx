@@ -53,7 +53,7 @@ function FeatureRichTable({ matchInfo, opponentInfo, error }) {
 
             const kastPercentage = teamStats.totalK > 0
               ? ((K + A) * 100 / teamStats.totalK).toFixed(1)
-              : "N/A";
+              : "0";
 
             return (
               <tr key={rowIndex} className={`hover:bg-${teamColor}-100 transition-colors`}>
