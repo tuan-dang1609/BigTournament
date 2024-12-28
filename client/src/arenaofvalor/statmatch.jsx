@@ -338,7 +338,7 @@ export default function MatchStat() {
 
             {/* Display all players with profiles */}
             <div className='flex lg:flex-row flex-col mt-2 gap-x-4 w-full mb-4'>
-                <div className="team-members p-4 lg:w-[50%] w-full border-r-2 border-base-content">
+                <div className="team-members p-4 lg:w-[50%] w-full lg:border-r-2 lg:border-base-content">
                     <h3 className="text-lg font-bold mb-2">Thành viên của {teamA}</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-3 gap-y-1">
                         {teamAProfiles.map((player, index) => (
