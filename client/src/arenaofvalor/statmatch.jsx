@@ -344,7 +344,7 @@ export default function MatchStat() {
                         {teamAProfiles.map((player, index) => (
                             <div key={index} className="flex flex-col items-center justify-center">
                                 <img src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`} alt={player.name} className="w-20 h-20 rounded-full mb-2" />
-                                <p className="text-[12.5px]">{player.name || player}</p>
+                                <p className="text-[12.5px] font-semibold">{player.name || player}</p>
                             </div>
                         ))}
                     </div>
@@ -357,7 +357,7 @@ export default function MatchStat() {
                         {teamBProfiles.map((player, index) => (
                             <div key={index} className="flex flex-col items-center justify-center">
                                 <img src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`} alt={player.name} className="w-20 h-20 rounded-full mb-2" />
-                                <p className="text-[12.5px]">{player.name || player}</p>
+                                <p className="text-[12.5px] font-semibold">{player.name || player}</p>
                             </div>
                         ))}
                     </div>
