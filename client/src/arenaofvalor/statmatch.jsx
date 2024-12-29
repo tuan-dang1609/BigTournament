@@ -216,7 +216,7 @@ export default function MatchStat() {
             <div className="w-full rounded-lg overflow-hidden flex" style={{ height: '40px' }}>
                 {/* Phần của Team A */}
                 <div
-                    className="h-full text-white text-center flex items-center justify-center font-semibold transition-all duration-500 opacity-80"
+                    className="h-full text-base-content text-center flex items-center justify-center font-semibold transition-all duration-500 opacity-80"
                     style={{
                         width: `${teamAWidth}%`,
                         backgroundColor: hexToRgba(teamABgColor, 0.55) || 'rgba(0, 0, 255, 0.2)', // màu xanh với độ mờ
@@ -227,7 +227,7 @@ export default function MatchStat() {
                 
                 {/* Phần của Team B */}
                 <div
-                    className="h-full text-white text-center flex items-center justify-center font-semibold transition-all duration-500 opacity-80"
+                    className="h-full text-base-content text-center flex items-center justify-center font-semibold transition-all duration-500 opacity-80"
                     style={{
                         width: `${teamBWidth}%`,
                         backgroundColor: hexToRgba(teamBBgColor, 0.55) || 'rgba(255, 0, 0, 0.2)', // màu đỏ với độ mờ
