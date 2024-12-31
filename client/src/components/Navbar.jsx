@@ -40,6 +40,7 @@ export default function Example() {
     general: [
       { name: "Trang chủ", href: "/", current: location.pathname === "/" },
       { name: "Game", href: "/allgame", current: location.pathname === "/allgame" },
+      { name: "Lịch trình", href: "/calendar", current: location.pathname === "/calendar" },
     ],
     valorant: [
       { name: "VALORANT", href: "/valorant", current: location.pathname === "/valorant", logo: "val_icon" },

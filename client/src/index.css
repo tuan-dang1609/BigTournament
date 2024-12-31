@@ -2,6 +2,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.fc-toolbar-chunk{
+    width: 33% !important;
+    justify-content: center;
+    display: flex;
+    text-transform: capitalize;
+    font-size: 15px;
+}
+.fc-daygrid-day{
+    height: 150px;
+}
+@media screen and (max-width:1024px) {
+    .fc-toolbar-chunk{
+        font-size: 10.5px;
+    }
+}
+.fc-toolbar-chunk:first-child{
+    justify-content: start;
+}
+.fc-toolbar-chunk:last-child{
+    justify-content: end;
+}
 .matchstat{
     font-family: "Quicksand", sans-serif !important;
 }

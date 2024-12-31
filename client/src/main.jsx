@@ -42,6 +42,7 @@ import TournamentBracketAOV16 from './arenaofvalor/bracket_16team.jsx'
 import PlayinAOV from './arenaofvalor/bracket.jsx'
 import RSO_Authorization from './components/rso.jsx';
 import PowerRankingAOV from './arenaofvalor/ranking.jsx'; 
+import Calendar from './components/calendar.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -58,6 +59,7 @@ if (rootElement) {
               <Route exact path='/' element={<Home />} />
               <Route path='/signup' element={<SignUp />} />
               <Route path='/signin' element={<SignIn />} />
+              <Route path='/calendar' element={<Calendar />} />
               <Route path='/valorant/me' element={<Rule />} />
               <Route path='/allgame' element={<AllGame />} />
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
