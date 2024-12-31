@@ -12,7 +12,9 @@ const Calendar = () => {
   const SHEET_RANGE_CALENDER = 'A2:F30';
   const SHEET_ID_CALENDER = '1KZyEwotS-18GSOuLPee4vI7Vyz0lGrGIkJZ1tDNFn9E';
   const FULL_URL_CALENDER = `https://docs.google.com/spreadsheets/d/${SHEET_ID_CALENDER}/gviz/tq?sheet=${SHEET_TITLE_CALENDER}&range=${SHEET_RANGE_CALENDER}`;
-
+  useEffect(()=>{
+    document.title="Lịch trình giải đấu"
+  })
   const fetchEvents = async () => {
     try {
       const res = await axios.get(FULL_URL_CALENDER);
