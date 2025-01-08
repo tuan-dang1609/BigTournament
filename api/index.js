@@ -313,7 +313,7 @@ app.post('/api/auth/tft_double_rank', async (req, res) => {
               leagueId: null,
               queueType: 'RANKED_TFT_DOUBLE_UP',
               tier: 'UNRANKED',
-              rank: '0',
+              rank: '',
               leaguePoints: null,
               wins: 0,
               losses: 0,
