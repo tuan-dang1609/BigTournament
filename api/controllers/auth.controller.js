@@ -768,7 +768,7 @@ export const findAllteamTFT = async (req, res, next) => {
 export const findAllteamTFTDouble = async (req, res, next) => {
   try {
     // Sử dụng truy vấn $in để kiểm tra mảng "games" có chứa "Liên Quân Mobile"
-    const allTeam = await TeamRegister.find({ games: { $in: ["Teamfight Tactics Double"] } });
+    const allTeam = await TeamRegister.find({ games: { $in: ["Teamfight Tactics Double Up"] } });
 
     if (!allTeam || allTeam.length === 0) {
       return next(errorHandler(404, 'No teams found for "Teamfight Tactics Double"'));
