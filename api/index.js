@@ -272,7 +272,7 @@ app.post('/api/auth/tft_double_rank', async (req, res) => {
     // Lấy danh sách gameMembers từ request body
     const { gameMembers } = req.body;
 
-    if (!gameMembers || !gameMembers["Teamfight Tactics"]) {
+    if (!gameMembers || !gameMembers["Teamfight Tactics Double Up"]) {
       return res.status(400).json({ error: "Missing or invalid Teamfight Tactics members" });
     }
 
