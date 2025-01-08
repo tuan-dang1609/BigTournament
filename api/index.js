@@ -374,7 +374,7 @@ app.post('/api/auth/tft_double_rank', async (req, res) => {
     const averageResult = {
       queueType: "RANKED_TFT_DOUBLE_UP_AVERAGE",
       tier: averageTier.split(" ")[0],
-      rank: averageTier.split(" ")[1] || "0",
+      rank: averageTier.split(" ")[1] || "",
       leaguePoints: averageLeaguePoints,
       wins: averageWins,
       losses: averageLosses,
