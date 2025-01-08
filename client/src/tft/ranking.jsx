@@ -169,7 +169,7 @@ const PowerRankingTFTDouble = () => {
                             alt={`${team.averageRank.tier} Rank`}
                             className="lg:w-14 lg:h-14 w-16 h-16 lg:mr-2"
                           />
-                          <p className="flex items-center lg:text-[15px] font-semibold text-[10.5px] w-full">
+                          <p className="flex items-center lg:text-[15px] font-semibold text-[10.5px] lg:w-[180px]">
                             {team.averageRank.tier} {team.averageRank.rank} {team.averageRank?.leaguePoints || ""} LP
                           </p>
 
