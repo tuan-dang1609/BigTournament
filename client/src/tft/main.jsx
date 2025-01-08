@@ -44,8 +44,6 @@ import RSO_Authorization from './components/rso.jsx';
 import PowerRankingAOV from './arenaofvalor/ranking.jsx'; 
 import Calendar from './components/calendar.jsx'
 import TeamRegistrationTFTDoubleForm from './tft/registerfordouble.jsx'
-import CompetitionPageDoubleUp from './tft/homepagedouble.jsx';
-import PowerRankingTFTDouble from './tft/ranking.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -72,8 +70,6 @@ if (rootElement) {
               <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
               <Route path="/arenaofvalor" element={<HomepageAOV />} />
               <Route path="/tft" element={<TFThompage />} />
-              <Route path="/tftdouble" element={<CompetitionPageDoubleUp />} />
-              <Route path="/tftdouble/ranking" element={<PowerRankingTFTDouble />} />
               <Route path='/register' element={<TeamRegistrationForm />} />
               <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
               <Route path='/arenaofvalor/ranking' element={<PowerRankingAOV />} />

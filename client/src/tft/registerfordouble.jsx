@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const TeamRegistrationForm = () => {
+const TeamRegistrationTFTDoubleForm = () => {
     const [formData, setFormData] = useState({
         teamName: "",
         shortName: "",
@@ -51,7 +51,7 @@ const TeamRegistrationForm = () => {
             delete updatedGameMembers[game];
         } else {
             updatedGames.push(game);
-            updatedGameMembers[game] = (game === "League Of Legends" || game === "Valorant"|| game === "Liên Quân Mobile") ? Array(5).fill("") : [""];
+            updatedGameMembers[game] = (game === "Teamfight Tactics Double Up") ? Array(2).fill("") : [""];
         }
 
         setFormData({ ...formData, games: updatedGames, gameMembers: updatedGameMembers });
@@ -65,11 +65,7 @@ const TeamRegistrationForm = () => {
         validateField("gameMembers", updatedGameMembers);
     };
 
-    const addMember = (game) => {
-        const updatedGameMembers = { ...formData.gameMembers };
-        updatedGameMembers[game] = [...updatedGameMembers[game], ""];
-        setFormData({ ...formData, gameMembers: updatedGameMembers });
-    };
+
 
     const removeMember = (game, index) => {
         const updatedGameMembers = { ...formData.gameMembers };
@@ -173,7 +169,7 @@ const TeamRegistrationForm = () => {
 
     return (
         <div className="min-h-screen py-6 flex flex-col justify-center sm:py-12">
-            <div className="relative py-3 sm:max-w-7xl sm:mx-auto">
+            <div className="relative py-3 lg:max-w-7xl lg:w-5/12 sm:mx-auto">
                 <div className="relative px-4 py-8 sm:rounded-3xl sm:px-2 sm:py-12">
                     <div className="max-w-md mx-auto">
                         <div>
@@ -214,21 +210,7 @@ const TeamRegistrationForm = () => {
                                     )}
                                 </div>
 
-                                <div className="flex flex-col">
-                                    <label className="leading-loose font-semibold text-base-content" htmlFor="classTeam">Team bạn là của lớp nào</label>
-                                    <input
-                                        type="text"
-                                        id="classTeam"
-                                        name="classTeam"
-                                        value={formData.classTeam}
-                                        onChange={handleInputChange}
-                                        className="px-4 py-2 border bg-white focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
-                                        placeholder="Lớp của team bạn đang học"
-                                    />
-                                    {errors.classTeam && (
-                                        <p className="text-red-500 text-xs italic">{errors.classTeam}</p>
-                                    )}
-                                </div>
+                                
 
                                 <div className="flex flex-col">
                                     <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">Google Drive Logo URL của bạn</label>
@@ -295,29 +277,11 @@ const TeamRegistrationForm = () => {
                                                     </motion.button>
                                                 )}
 
-                                                {!(game === "League Of Legends" || game === "Valorant"|| game === "Liên Quân Mobile") && formData.gameMembers[game].length > 1 && (
-                                                    <motion.button
-                                                        type="button"
-                                                        whileHover={{ scale: 1.1 }}
-                                                        whileTap={{ scale: 0.9 }}
-                                                        onClick={() => removeMember(game, index)}
-                                                        className="bg-red-500 text-white p-2 rounded-full"
-                                                    >
-                                                        <FaMinus />
-                                                    </motion.button>
-                                                )}
+                                                
                                             </div>
                                         ))}
 
-                                        <motion.button
-                                            type="button"
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => addMember(game)}
-                                            className="bg-green-500 text-white px-4 py-2 rounded-md flex items-center justify-center mt-2"
-                                        >
-                                            <FaUserPlus className="mr-2" /> Add {game} Member
-                                        </motion.button>
+                                       
                                     </div>
                                 ))}
 
@@ -347,4 +311,4 @@ const TeamRegistrationForm = () => {
     );
 };
 
-export default TeamRegistrationForm;
+export default TeamRegistrationTFTDoubleForm;

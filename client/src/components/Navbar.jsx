@@ -64,6 +64,11 @@ export default function Example() {
 
 
     ],
+    tft_double: [
+      { name: "Teamfight Tactics Double", href: "/tftdouble/", current: location.pathname === "/tftdouble/", logo: "tft_icon" },
+      { name: "BXH", href: "/tftdouble/ranking", current: location.pathname === "/tftdouble/ranking"},
+
+    ],
     lol: [
       { name: "League Of Legends", href: "/leagueoflegend", current: location.pathname === "/leagueoflegend", logo: "lol_icon" },
 
@@ -77,7 +82,10 @@ export default function Example() {
   const getNavigation = () => {
     if (location.pathname.includes("valorant")) return navigationAll.valorant;
     if (location.pathname.includes("arenaofvalor")) return navigationAll.aov;
-    if (location.pathname.includes("tft")) return navigationAll.tft;
+    if (location.pathname.includes("/tft") && !location.pathname.includes("/tftdouble")) 
+      return navigationAll.tft;
+    if (location.pathname.includes("/tftdouble")) 
+      return navigationAll.tft_double;
     if (location.pathname.includes("leagueoflegend")) return navigationAll.lol;
     if (location.pathname.includes("https://www.chess.com/")) return navigationAll.chess;
     return navigationAll.general;
