@@ -266,6 +266,133 @@ app.post('/api/accounts', async (req, res) => {
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch account data' });
   }
 });
+
+app.post('/api/auth/tft_double_rank', async (req, res) => {
+  try {
+    // Lấy danh sách gameMembers từ request body
+    const { gameMembers } = req.body;
+
+    if (!gameMembers || !gameMembers["Teamfight Tactics"]) {
+      return res.status(400).json({ error: "Missing or invalid Teamfight Tactics members" });
+    }
+
+    const accounts = gameMembers["Teamfight Tactics"]; // Lấy danh sách Riot IDs từ gameMembers
+
+    // Xử lý dữ liệu như trước, với accounts được lấy từ gameMembers
+    const accountPromises = accounts.map(async (accountString) => {
+      try {
+        const [gameName, tagLine] = accountString.split('#');
+        if (!gameName || !tagLine) throw new Error('Invalid account format');
+
+        // Step 1: Get PUUID from Riot ID
+        const accountResponse = await axios.get(
+          `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}?api_key=${process.env.TFT_KEY}`
+        );
+        const { puuid } = accountResponse.data;
+
+        // Step 2: Get Summoner ID using PUUID
+        const summonerResponse = await axios.get(
+          `https://vn2.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/${puuid}?api_key=${process.env.TFT_KEY}`
+        );
+        const { id: summonerId } = summonerResponse.data;
+
+        // Step 3: Get League Data using Summoner ID
+        const leagueResponse = await axios.get(
+          `https://vn2.api.riotgames.com/tft/league/v1/entries/by-summoner/${summonerId}?api_key=${process.env.TFT_KEY}`
+        );
+
+        // Step 4: Filter for queueType: RANKED_TFT_DOUBLE_UP
+        const doubleUpData = leagueResponse.data.find(
+          (entry) => entry.queueType === 'RANKED_TFT_DOUBLE_UP'
+        );
+
+        return doubleUpData
+          ? { puuid, ...doubleUpData }
+          : {
+              puuid,
+              leagueId: null,
+              queueType: 'RANKED_TFT_DOUBLE_UP',
+              tier: 'UNRANKED',
+              rank: '0',
+              leaguePoints: 0,
+              wins: 0,
+              losses: 0,
+              veteran: false,
+              inactive: false,
+              freshBlood: false,
+              hotStreak: false,
+            };
+      } catch (innerError) {
+        console.error(`Error processing account ${accountString}:`, innerError.message);
+        return {
+          error: `Failed to process account ${accountString}`,
+        };
+      }
+    });
+
+    // Wait for all promises to resolve
+    const results = await Promise.all(accountPromises);
+
+    // Tính toán kết quả trung bình (như đoạn code trước đây)
+    const tiers = {
+      UNRANKED: 0,
+      "IRON IV": 1, "IRON III": 2, "IRON II": 3, "IRON I": 4,
+      "BRONZE IV": 5, "BRONZE III": 6, "BRONZE II": 7, "BRONZE I": 8,
+      "SILVER IV": 9, "SILVER III": 10, "SILVER II": 11, "SILVER I": 12,
+      "GOLD IV": 13, "GOLD III": 14, "GOLD II": 15, "GOLD I": 16,
+      "PLATINUM IV": 17, "PLATINUM III": 18, "PLATINUM II": 19, "PLATINUM I": 20,
+      "EMERALD IV": 21, "EMERALD III": 22, "EMERALD II": 23, "EMERALD I": 24,
+      "DIAMOND IV": 25, "DIAMOND III": 26, "DIAMOND II": 27, "DIAMOND I": 28,
+      "MASTER I": 29, "GRANDMASTER I": 30, "CHALLENGER I": 31,
+    };
+    
+
+    const reverseTiers = Object.fromEntries(Object.entries(tiers).map(([key, value]) => [value, key]));
+
+    const tierValues = results.map(({ tier, rank }) => {
+      const numericRank = tiers[`${tier} ${rank}`] || 0;
+      return numericRank;
+    });
+
+    const averageTierValue = Math.round(tierValues.reduce((a, b) => a + b, 0) / results.length);
+    const averageTier = reverseTiers[averageTierValue] || "UNRANKED";
+    const averageLeaguePoints = Math.ceil(
+      results.reduce((sum, { leaguePoints }) => sum + leaguePoints, 0) / results.length
+    );
+    const averageWins = Math.round(
+      results.reduce((sum, { wins }) => sum + wins, 0) / results.length
+    );
+    const averageLosses = Math.round(
+      results.reduce((sum, { losses }) => sum + losses, 0) / results.length
+    );
+
+    const veteran = results.some(({ veteran }) => veteran);
+    const inactive = results.every(({ inactive }) => inactive);
+    const freshBlood = results.some(({ freshBlood }) => freshBlood);
+    const hotStreak = results.every(({ hotStreak }) => hotStreak);
+
+    const averageResult = {
+      queueType: "RANKED_TFT_DOUBLE_UP_AVERAGE",
+      tier: averageTier.split(" ")[0],
+      rank: averageTier.split(" ")[1] || "0",
+      leaguePoints: averageLeaguePoints,
+      wins: averageWins,
+      losses: averageLosses,
+      veteran,
+      inactive,
+      freshBlood,
+      hotStreak,
+    };
+
+    res.json([...results, averageResult]);
+  } catch (error) {
+    console.error('Error processing accounts:', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to process accounts' });
+  }
+});
+
+
+
 const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server listening on port ${process.env.PORT || 3000}`);
 });
