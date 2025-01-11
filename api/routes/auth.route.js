@@ -476,24 +476,26 @@ router.post('/checkregisterTFT', async (req, res) => {
     }
 });
 router.post('/allteamAOVcolor', async (req, res) => {
-    try {
-        const { usernameregister } = req.body;
+  try {
+      const { usernameregister } = req.body;
 
-        // Fetch only teamName, logoUrl, and color fields
-        const teams = await TeamRegister.find().select('teamName shortName logoUrl color games');
+      // Fetch teams where games include "Liên Quân Mobile"
+      const teams = await TeamRegister.find({ games: "Liên Quân Mobile" })
+          .select('teamName shortName logoUrl color');
 
-        if (teams.length > 0) {
-            // If teams are found, return the relevant information
-            return res.status(200).json(teams);
-        } else {
-            return res.status(404).json({ message: 'No teams found' });
-        }
+      if (teams.length > 0) {
+          // If teams are found, return the relevant information
+          return res.status(200).json(teams);
+      } else {
+          return res.status(404).json({ message: 'No teams found for Liên Quân Mobile' });
+      }
 
-    } catch (error) {
-        // Handle server errors
-        res.status(500).json({ message: 'Server error' });
-    }
+  } catch (error) {
+      // Handle server errors
+      res.status(500).json({ message: 'Server error' });
+  }
 });
+
 
 router.post('/upsertquestions', async (req, res) => {
     try {
