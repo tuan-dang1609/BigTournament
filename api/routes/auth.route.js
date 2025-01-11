@@ -480,7 +480,7 @@ router.post('/allteamAOVcolor', async (req, res) => {
         const { usernameregister } = req.body;
 
         // Fetch only teamName, logoUrl, and color fields
-        const teams = await TeamRegister.find().select('teamName shortName logoUrl color');
+        const teams = await TeamRegister.find().select('teamName shortName logoUrl color games');
 
         if (teams.length > 0) {
             // If teams are found, return the relevant information
