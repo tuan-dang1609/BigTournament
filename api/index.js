@@ -22,13 +22,12 @@ dotenv.config();
 const app = express();
 const apiKey = process.env.TFT_KEY;
 
-const riotClientId = process.env.RIOT_CLIENT_ID;
+const clientID = process.env.RIOT_CLIENT_ID;
 const riotClientSecret = process.env.RIOT_CLIENT_SECRET;
-const riotRedirectUri = 'https://dongchuyennghiep.vercel.app/rsotest'; // Sử dụng giá trị mới từ .env
-const riotAuthorizeUrl = 'https://auth.riotgames.com/authorize';
-const riotTokenUrl = 'https://auth.riotgames.com/token';
-const appBaseUrl = 'https://dongchuyennghiep.vercel.app/tft'
-const appCallbackUrl  = appBaseUrl+'/oauth2-callback'
+const appBaseUrl      = "https://dongchuyennghiep-backend.vercel.app"
+const appCallbackUrl  = appBaseUrl + "/oauth2-callback";
+const  provider       = "https://auth.riotgames.com"
+const authorizeUrl    = provider + "/authorize";
 
 app.use(
   cors({
@@ -38,10 +37,12 @@ app.use(
     credentials: true
   })
 );
+
+
 app.get('/', function(req, res) {
-  const link = riotAuthorizeUrl
+  const link = authorizeUrl
   + "?redirect_uri=" + appCallbackUrl
-  + "&client_id=" + riotClientId
+  + "&client_id=" + clientID
   + "&response_type=code"
   + "&scope=openid";
 // create a single link, send as an html document
@@ -49,38 +50,9 @@ res.send('<a href="' + link + '">Sign In</a>');
 });
 
 app.get('/oauth2-callback', function(req, res) {
-  const accessCode = req.query.code;
-  request.post({
-    url: riotTokenUrl,
-    auth: { // sets "Authorization: Basic ..." header
-        user: riotClientId,
-        pass: riotClientSecret
-    },
-    form: { // post information as x-www-form-urlencoded
-        grant_type: "authorization_code",
-        code: accessCode, // accessCode should be url decoded before being set here
-        redirect_uri: appCallbackUrl 
-    }
-}, function (error, response, body) {
-  if (!error && response.statusCode == 200) {
-    // parse the response to JSON
-    var payload = JSON.parse(body);
-
-    // separate the tokens from the entire response body
-    var tokens = {
-        refresh_token:  payload.refresh_token,
-        id_token:       payload.id_token,
-        access_token:   payload.access_token
-    };
-
-    // legibly print out our tokens
-    res.send("<pre>" + JSON.stringify(tokens, false, 4) + "</pre>");
-} else {
-    res.send("/token request failed");
-}
+    res.send("callback");
 });
 
-});
 
 
 
