@@ -15,7 +15,7 @@ const PickemChallenge = () => {
   const [userRegister, setUserRegister] = useState(null); // Store the fetched team data
   const [detailedResults, setDetailedResults] = useState([]); // To store detailed results
   const [countdowns, setCountdowns] = useState({}); // Countdown state for each question
-  const [selectedCategory, setSelectedCategory] = useState("day3");
+  const [selectedCategory, setSelectedCategory] = useState("day4");
   const [categories, setCategories] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Trạng thái dropdown
   useEffect(() => {
