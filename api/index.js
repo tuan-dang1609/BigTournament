@@ -23,11 +23,12 @@ const app = express();
 const apiKey = process.env.TFT_KEY;
 
 const clientID = process.env.RIOT_CLIENT_ID;
-const riotClientSecret = process.env.RIOT_CLIENT_SECRET;
+const clientSecret = process.env.RIOT_CLIENT_SECRET;
 const appBaseUrl      = "https://dongchuyennghiep-backend.vercel.app"
 const appCallbackUrl  = appBaseUrl + "/oauth2-callback";
 const  provider       = "https://auth.riotgames.com"
 const authorizeUrl    = provider + "/authorize";
+const tokenUrl        = provider + "/token";
 
 app.use(
   cors({
@@ -50,7 +51,38 @@ res.send('<a href="' + link + '">Sign In</a>');
 });
 
 app.get('/oauth2-callback', function(req, res) {
-    res.send("callback");
+    const accessCode = req.query.code;
+    request.post({
+      url: tokenUrl,
+      auth: { // sets "Authorization: Basic ..." header
+          user: clientID,
+          pass: clientSecret
+      },
+      form: { // post information as x-www-form-urlencoded
+          grant_type: "authorization_code",
+          code: accessCode, // accessCode should be url decoded before being set here
+          redirect_uri: appCallbackUrl 
+      }
+  }, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      // parse the response to JSON
+      const payload = JSON.parse(body);
+
+      // separate the tokens from the entire response body
+      const tokens = {
+          refresh_token:  payload.refresh_token,
+          id_token:       payload.id_token,
+          access_token:   payload.access_token
+      };
+
+      // legibly print out our tokens
+      res.send("<pre>" + JSON.stringify(tokens, false, 4) + "</pre>");
+  }else {
+    res.send("/token request failed");
+}
+
+  });
+
 });
 
 
