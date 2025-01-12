@@ -47,7 +47,7 @@ app.get('/', function(req, res) {
   + "&response_type=code"
   + "&scope=openid";
 // create a single link, send as an html document
-res.send('<a href="' + link + '">Sign In</a>');
+res.redirect(link);
 });
 
 app.get('/oauth2-callback', function(req, res) {
@@ -76,7 +76,7 @@ app.get('/oauth2-callback', function(req, res) {
       };
 
       // legibly print out our tokens
-      res.send("<pre>" + JSON.stringify(payload, false, 4) + "</pre>");
+      res.send("<pre>" + JSON.stringify(tokens, false, 4) + "</pre>");
   }else {
     res.send("/token request failed");
 }

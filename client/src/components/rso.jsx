@@ -6,7 +6,7 @@ function App() {
   const [userInfo, setUserInfo] = useState(null);
 
   const handleLogin = () => {
-    const riotAuthUrl = "https://dongchuyennghiep-backend.vercel.app/auth/riot"; // Backend URL
+    const riotAuthUrl = "https://dongchuyennghiep-backend.vercel.app/"; // Backend URL
     window.location.href = riotAuthUrl;
   };
 
