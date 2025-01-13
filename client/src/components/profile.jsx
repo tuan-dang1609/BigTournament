@@ -187,7 +187,7 @@ export default function Profile() {
             className="bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-between"
         >
             <span>{loggedInUser || currentUser.riotID} </span>
-            <img src = {verifyIcon} className=""/>
+            <img src = {verifyIcon} className="h-5 w-5"/>
             <span
                 className="text-white ml-2 cursor-pointer"
                 onClick={handleLogout} // Gọi handleLogout khi nhấn "X"
