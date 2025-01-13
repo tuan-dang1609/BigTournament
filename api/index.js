@@ -50,62 +50,65 @@ app.get('/', function(req, res) {
 res.redirect(link);
 });
 
-app.get('/oauth2-callback', function(req, res) {
+app.get('/oauth2-callback', function (req, res) {
   const accessCode = req.query.code;
-  request.post({
-    url: tokenUrl,
-    auth: { 
-      user: clientID,
-      pass: clientSecret
-    },
-    form: { 
-      grant_type: "authorization_code",
-      code: accessCode,
-      redirect_uri: appCallbackUrl
-    }
-  }, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      const payload = JSON.parse(body);
-      const tokens = {
-        refresh_token: payload.refresh_token,
-        id_token: payload.id_token,
-        access_token: payload.access_token
-      };
 
-      // Trả về JSON response
-      res.json(tokens);
-    } else {
-      res.status(400).json({ error: "Token request failed" });
-    }
-  });
-});
-
-app.get('/riot/myaccount', async (req, res) => {
-  const accessToken = req.query.access_token; // Lấy access_token từ query parameter
-
-  if (!accessToken) {
-    return res.status(400).json({ error: 'Access token is required' });
-  }
-
-  try {
-    // Gửi yêu cầu đến Riot API
-    const response = await axios.get('https://asia.api.riotgames.com/riot/account/v1/accounts/me', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+  // Gửi yêu cầu để lấy access_token
+  request.post(
+    {
+      url: tokenUrl,
+      auth: {
+        user: clientID,
+        pass: clientSecret,
       },
-    });
+      form: {
+        grant_type: 'authorization_code',
+        code: accessCode,
+        redirect_uri: appCallbackUrl,
+      },
+    },
+    async function (error, response, body) {
+      if (!error && response.statusCode === 200) {
+        const payload = JSON.parse(body);
+        const accessToken = payload.access_token;
 
-    // Trả về PUUID, gameName, tagName
-    const { puuid, gameName, tagLine } = response.data;
-    res.json({ puuid, gameName, tagName: tagLine });
-  } catch (error) {
-    console.error('Error fetching Riot account info:', error.response?.data || error.message);
-    res.status(error.response?.status || 500).json({
-      error: 'Failed to fetch account info',
-      details: error.response?.data || error.message,
-    });
-  }
+        try {
+          // Gửi yêu cầu tự động lấy thông tin tài khoản Riot
+          const riotResponse = await axios.get(
+            'https://asia.api.riotgames.com/riot/account/v1/accounts/me',
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+
+          const { puuid, gameName, tagLine } = riotResponse.data;
+
+          // Trả về dữ liệu (tokens và thông tin tài khoản)
+          res.json({
+            access_token: accessToken,
+            accountInfo: {
+              puuid,
+              gameName,
+              tagName: tagLine,
+            },
+          });
+        } catch (riotError) {
+          console.error('Lỗi khi gọi Riot API:', riotError.response?.data || riotError.message);
+          res.status(500).json({
+            error: 'Không thể lấy thông tin tài khoản Riot.',
+            details: riotError.response?.data || riotError.message,
+          });
+        }
+      } else {
+        console.error('Lỗi khi lấy access_token:', error || response.statusMessage);
+        res.status(400).json({ error: 'Yêu cầu token thất bại.' });
+      }
+    }
+  );
 });
+
 
 
 
