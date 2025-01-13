@@ -5,7 +5,7 @@ import { FaDiscord, FaUser } from "react-icons/fa";
 import { SiRiotgames } from "react-icons/si";
 import { MdLock } from "react-icons/md";
 import garenaLogo from '../image/AOVLogo.png';
-import verifyIcon from '../image/verify-icon.png'
+import verifyIcon from '../image/verified-symbol-icon.png'
 import {
     updateUserStart,
     updateUserSuccess,
@@ -186,8 +186,10 @@ export default function Profile() {
         <button
             className="bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-between"
         >
+            <div>
             <span>{loggedInUser || currentUser.riotID} </span>
             <img src = {verifyIcon} className="h-5 w-5"/>
+            </div>
             <span
                 className="text-white ml-2 cursor-pointer"
                 onClick={handleLogout} // Gọi handleLogout khi nhấn "X"
