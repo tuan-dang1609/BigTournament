@@ -40,7 +40,7 @@ app.use(
 );
 
 
-app.get('/', function(req, res) {
+app.get('/sso/login-riot', function(req, res) {
   const link = authorizeUrl
   + "?redirect_uri=" + appCallbackUrl
   + "&client_id=" + clientID
