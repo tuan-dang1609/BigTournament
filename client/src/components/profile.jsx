@@ -186,12 +186,12 @@ export default function Profile() {
         <button
             className="bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-between"
         >
-            <div className="flex flex-row gap-x-2 items-center justify-center">
+            <div className="flex flex-row gap-x-1 items-center justify-center">
             <span>{loggedInUser || currentUser.riotID} </span>
             <img src = {verifyIcon} className="h-5 w-5"/>
             </div>
             <span
-                className="text-white ml-1 cursor-pointer"
+                className="text-white ml-2 cursor-pointer"
                 onClick={handleLogout} // Gọi handleLogout khi nhấn "X"
             >
                 X
