@@ -29,7 +29,7 @@ const appCallbackUrl  = appBaseUrl + "/oauth2-callback";
 const  provider       = "https://auth.riotgames.com"
 const authorizeUrl    = provider + "/authorize";
 const tokenUrl        = provider + "/token";
-const URLfrontend     = "http://localhost:5173"
+const URLfrontend     = "https://dongchuyennghiep.vercel.app"
 app.use(
   cors({
     origin: ['http://localhost:5173','https://28e7-88-86-155-193.ngrok-free.app', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins

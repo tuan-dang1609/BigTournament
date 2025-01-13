@@ -51,6 +51,11 @@ const userSlice = createSlice({
       state.loading = false;
       state.error = false;
     },
+    updateRiotID: (state, action) => {
+      if (state.currentUser) {
+        state.currentUser.riotID = action.payload;
+      }
+    },
   },
 });
 
@@ -65,6 +70,7 @@ export const {
   deleteUserStart,
   deleteUserSuccess,
   signOut,
+  updateRiotID, // Đã thêm action updateRiotID
 } = userSlice.actions;
 
 export default userSlice.reducer;
