@@ -20,7 +20,6 @@ const userSchema = new mongoose.Schema(
     },
     riotID:{
       type:String,
-      unique: true,
       default:""
     },
     username: {

@@ -49,13 +49,6 @@ const SignupPage = () => {
           delete newErrors.discordID;
         }
         break;
-      case "riotID":
-        if (!value.trim()) {
-          newErrors.riotID = "Phải nhập RiotID";
-        } else {
-          delete newErrors.riotID;
-        }
-        break;
       case "nickname":
         if (!value.trim()) {
           newErrors.nickname = "Phải nhập Nickname";
@@ -196,35 +189,8 @@ const SignupPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center mt-20 mb-10">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Create an Account</h2>
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Tạo tài khoản</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Riot ID Input */}
-          <div>
-            <label htmlFor="riotID" className="block text-sm font-medium text-gray-700">
-              Riot ID
-            </label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SiRiotgames className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </div>
-              <input
-                type="text"
-                name="riotID"
-                id="riotID"
-                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.riotID ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                placeholder="Nhập Riot ID của bạn"
-                value={formData.riotID}
-                onChange={handleChange}
-                aria-invalid={errors.riotID ? "true" : "false"}
-                aria-describedby="riotID-error"
-              />
-            </div>
-            {errors.riotID && (
-              <p className="mt-2 text-sm text-red-600" id="riotID-error">
-                {errors.riotID}
-              </p>
-            )}
-          </div>
           <div>
             <label htmlFor="garenaaccount" className="block text-sm font-medium text-gray-700">
               Tên trong game Liên Quân Mobile
