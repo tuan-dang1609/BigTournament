@@ -191,7 +191,7 @@ export default function Profile() {
             <img src = {verifyIcon} className="h-5 w-5"/>
             </div>
             <span
-                className="text-white ml-2 cursor-pointer"
+                className="text-white ml-1 cursor-pointer"
                 onClick={handleLogout} // Gọi handleLogout khi nhấn "X"
             >
                 X
