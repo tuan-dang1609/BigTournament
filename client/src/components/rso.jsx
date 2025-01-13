@@ -1,14 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 function App() {
   const [accessToken, setAccessToken] = useState("");
   const [userInfo, setUserInfo] = useState(null);
+  const [loggedInUser, setLoggedInUser] = useState("");
 
-  const handleLogin = () => {
-    const riotAuthUrl = "https://dongchuyennghiep-backend.vercel.app/"; // Backend URL
-    window.location.href = riotAuthUrl;
-  };
+  useEffect(() => {
+    // Lấy access_token, gameName, và tagName từ URL query string
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("access_token");
+    const gameName = urlParams.get("gameName");
+    const tagName = urlParams.get("tagName");
+
+    if (token) {
+      setAccessToken(token);
+      setLoggedInUser(`${gameName}#${tagName}`);
+    }
+  }, []);
 
   const fetchUserInfo = async () => {
     if (!accessToken) {
@@ -17,11 +26,14 @@ function App() {
     }
 
     try {
-      const response = await axios.get("https://dongchuyennghiep-backend.vercel.app/auth/userinfo", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await axios.get(
+        "https://dongchuyennghiep-backend.vercel.app/auth/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
       setUserInfo(response.data);
     } catch (error) {
       console.error("Error fetching user info:", error);
@@ -39,7 +51,7 @@ function App() {
         <div className="flex flex-col space-y-4">
           {!accessToken ? (
             <button
-              onClick={handleLogin}
+              onClick={() => (window.location.href = "https://dongchuyennghiep-backend.vercel.app/")}
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
             >
               Đăng nhập với Riot Games
@@ -47,7 +59,7 @@ function App() {
           ) : (
             <div>
               <p className="text-green-500 text-center mb-2">
-                Đăng nhập thành công!
+                Xin chào, {loggedInUser}!
               </p>
               <button
                 onClick={fetchUserInfo}

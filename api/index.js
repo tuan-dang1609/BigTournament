@@ -50,10 +50,11 @@ app.get('/', function(req, res) {
 res.redirect(link);
 });
 
+const axios = require('axios');
+
 app.get('/oauth2-callback', function (req, res) {
   const accessCode = req.query.code;
 
-  // Gửi yêu cầu để lấy access_token
   request.post(
     {
       url: tokenUrl,
@@ -73,7 +74,7 @@ app.get('/oauth2-callback', function (req, res) {
         const accessToken = payload.access_token;
 
         try {
-          // Gửi yêu cầu tự động lấy thông tin tài khoản Riot
+          // Gọi Riot API để lấy thông tin tài khoản
           const riotResponse = await axios.get(
             'https://asia.api.riotgames.com/riot/account/v1/accounts/me',
             {
@@ -85,15 +86,12 @@ app.get('/oauth2-callback', function (req, res) {
 
           const { puuid, gameName, tagLine } = riotResponse.data;
 
-          // Trả về dữ liệu (tokens và thông tin tài khoản)
-          res.json({
-            access_token: accessToken,
-            accountInfo: {
-              puuid,
-              gameName,
-              tagName: tagLine,
-            },
-          });
+          // Redirect về frontend với access_token và thông tin tài khoản
+          res.redirect(
+            `/rsotest?access_token=${accessToken}&gameName=${encodeURIComponent(
+              gameName
+            )}&tagName=${encodeURIComponent(tagLine)}`
+          );
         } catch (riotError) {
           console.error('Lỗi khi gọi Riot API:', riotError.response?.data || riotError.message);
           res.status(500).json({
