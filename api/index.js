@@ -29,7 +29,7 @@ const appCallbackUrl  = appBaseUrl + "/oauth2-callback";
 const  provider       = "https://auth.riotgames.com"
 const authorizeUrl    = provider + "/authorize";
 const tokenUrl        = provider + "/token";
-
+const URLfrontend     = "http://localhost:5173"
 app.use(
   cors({
     origin: ['http://localhost:5173','https://28e7-88-86-155-193.ngrok-free.app', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
@@ -87,7 +87,7 @@ app.get('/oauth2-callback', function (req, res) {
 
           // Redirect về frontend với access_token và thông tin tài khoản
           res.redirect(
-            `/rsotest?access_token=${accessToken}&gameName=${encodeURIComponent(
+            URLfrontend+ `/rsotest?access_token=${accessToken}&gameName=${encodeURIComponent(
               gameName
             )}&tagName=${encodeURIComponent(tagLine)}`
           );
