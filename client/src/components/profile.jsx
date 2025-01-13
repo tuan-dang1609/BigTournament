@@ -186,7 +186,8 @@ export default function Profile() {
         <button
             className="bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-between"
         >
-            <span>{loggedInUser || currentUser.riotID} <img src = {verifyIcon} className="absolute left-0 pl-3 h-5 w-5 pointer-events-none"/></span>
+            <span>{loggedInUser || currentUser.riotID} </span>
+            <img src = {verifyIcon} className=""/>
             <span
                 className="text-white ml-2 cursor-pointer"
                 onClick={handleLogout} // Gọi handleLogout khi nhấn "X"
