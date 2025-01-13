@@ -51,41 +51,61 @@ res.redirect(link);
 });
 
 app.get('/oauth2-callback', function(req, res) {
-    const accessCode = req.query.code;
-    request.post({
-      url: tokenUrl,
-      auth: { // sets "Authorization: Basic ..." header
-          user: clientID,
-          pass: clientSecret
-      },
-      form: { // post information as x-www-form-urlencoded
-          grant_type: "authorization_code",
-          code: accessCode, // accessCode should be url decoded before being set here
-          redirect_uri: appCallbackUrl 
-      }
+  const accessCode = req.query.code;
+  request.post({
+    url: tokenUrl,
+    auth: { 
+      user: clientID,
+      pass: clientSecret
+    },
+    form: { 
+      grant_type: "authorization_code",
+      code: accessCode,
+      redirect_uri: appCallbackUrl
+    }
   }, function (error, response, body) {
     if (!error && response.statusCode == 200) {
-      // parse the response to JSON
       const payload = JSON.parse(body);
-
-      // separate the tokens from the entire response body
       const tokens = {
-          refresh_token:  payload.refresh_token,
-          id_token:       payload.id_token,
-          access_token:   payload.access_token
+        refresh_token: payload.refresh_token,
+        id_token: payload.id_token,
+        access_token: payload.access_token
       };
 
-      // legibly print out our tokens
-      res.send("<pre>" + JSON.stringify(tokens, false, 4) + "</pre>");
-  }else {
-    res.send("/token request failed");
-}
-
+      // Trả về JSON response
+      res.json(tokens);
+    } else {
+      res.status(400).json({ error: "Token request failed" });
+    }
   });
-
 });
 
+app.get('/riot/myaccount', async (req, res) => {
+  const accessToken = req.query.access_token; // Lấy access_token từ query parameter
 
+  if (!accessToken) {
+    return res.status(400).json({ error: 'Access token is required' });
+  }
+
+  try {
+    // Gửi yêu cầu đến Riot API
+    const response = await axios.get('https://asia.api.riotgames.com/riot/account/v1/accounts/me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    // Trả về PUUID, gameName, tagName
+    const { puuid, gameName, tagLine } = response.data;
+    res.json({ puuid, gameName, tagName: tagLine });
+  } catch (error) {
+    console.error('Error fetching Riot account info:', error.response?.data || error.message);
+    res.status(error.response?.status || 500).json({
+      error: 'Failed to fetch account info',
+      details: error.response?.data || error.message,
+    });
+  }
+});
 
 
 
