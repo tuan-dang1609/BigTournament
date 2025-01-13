@@ -87,7 +87,7 @@ app.get('/oauth2-callback', function (req, res) {
 
           // Redirect về frontend với access_token và thông tin tài khoản
           res.redirect(
-            URLfrontend+ `/rsotest?&gameName=${encodeURIComponent(
+            URLfrontend+ `/profile?&gameName=${encodeURIComponent(
               gameName
             )}&tagName=${encodeURIComponent(tagLine)}`
           );
