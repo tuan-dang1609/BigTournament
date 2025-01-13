@@ -5,6 +5,7 @@ import { FaDiscord, FaUser } from "react-icons/fa";
 import { SiRiotgames } from "react-icons/si";
 import { MdLock } from "react-icons/md";
 import garenaLogo from '../image/AOVLogo.png';
+import verifyIcon from '../image/verify-icon.png'
 import {
     updateUserStart,
     updateUserSuccess,
@@ -179,13 +180,13 @@ export default function Profile() {
             }}
             className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
         >
-            {loggedInUser || "Đăng nhập với Riot Games"}
+            <div className="flex flex-row items-center justify-center gap-x-2">{loggedInUser || "Đăng nhập với Riot Games"} <SiRiotgames /></div>
         </button>
     ) : (
         <button
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-between"
+            className="bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-between"
         >
-            <span>{loggedInUser || currentUser.riotID}</span>
+            <span>{loggedInUser || currentUser.riotID} <img src = {verifyIcon} className="absolute left-0 pl-3 h-5 w-5 pointer-events-none"/></span>
             <span
                 className="text-white ml-2 cursor-pointer"
                 onClick={handleLogout} // Gọi handleLogout khi nhấn "X"
@@ -309,9 +310,9 @@ export default function Profile() {
     <button
         type="submit"
         name="updateProfile"  // Ensure the button has the 'name' attribute
-        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm font-medium text-white bg-secondary hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
     >
-        {isSubmitted ? "Saving..." : "Save Changes"}
+        {isSubmitted ? "Đang cập nhật..." : "Cập nhật"}
     </button>
 </form>
 
