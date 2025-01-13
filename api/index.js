@@ -50,7 +50,6 @@ app.get('/', function(req, res) {
 res.redirect(link);
 });
 
-const axios = require('axios');
 
 app.get('/oauth2-callback', function (req, res) {
   const accessCode = req.query.code;
