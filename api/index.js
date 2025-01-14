@@ -269,7 +269,7 @@ app.get('/api/lol/match/:matchId', async (req, res) => {
 
   try {
     const response = await axios.get(`https://sea.api.riotgames.com/lol/match/v5/matches/${matchId}`, {
-      headers: { 'X-Riot-Token': process.env.LOL_RIOT_API_KEY }
+      headers: { 'X-Riot-Token':process.env.LOL_RIOT_API_KEY }
     });
 
     // Thêm Access-Control-Allow-Origin vào header

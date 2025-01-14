@@ -46,6 +46,7 @@ import Calendar from './components/calendar.jsx'
 import TeamRegistrationTFTDoubleForm from './tft/registerfordouble.jsx'
 import CompetitionPageDoubleUp from './tft/homepagedouble.jsx';
 import PowerRankingTFTDouble from './tft/ranking.jsx';
+import MatchStatLOL from './leagueoflegend/match.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -70,6 +71,7 @@ if (rootElement) {
               <Route path="/valorant/swissstage" element={<SwissStage />} />
               <Route path="/valorant/playoff" element={<PlayoffValo />} />
               <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
+              <Route path="/leagueoflegend/match" element={<MatchStatLOL />} />
               <Route path="/arenaofvalor" element={<HomepageAOV />} />
               <Route path="/tft" element={<TFThompage />} />
               <Route path="/tftdouble" element={<CompetitionPageDoubleUp />} />
