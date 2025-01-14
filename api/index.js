@@ -264,7 +264,22 @@ app.get('/api/tft/match/:matchId', async (req, res) => {
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
   }
 });
+app.get('/api/lol/match/:matchId', async (req, res) => {
+  const { matchId } = req.params;
 
+  try {
+    const response = await axios.get(`https://sea.api.riotgames.com/lol/match/v5/matches/${matchId}`, {
+      headers: { 'X-Riot-Token': process.env.LOL_RIOT_API_KEY }
+    });
+
+    // Thêm Access-Control-Allow-Origin vào header
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching match data:', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+  }
+});
 app.post('/api/accounts', async (req, res) => {
   const { puuids } = req.body;
 
