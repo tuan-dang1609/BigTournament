@@ -7,7 +7,7 @@ const MatchData = () => {
     const [showPlayers, setShowPlayers] = useState(true);
 
     const lobbies = [
-        { id: 'Lobby 1', matchIds: ['VN2_633813781', 'VN2_633855378', 'VN2_633884563'] },
+        { id: 'Lobby 1', matchIds: ['VN2_633813781', 'VN2_633855378'] },
         { id: 'Lobby 2', matchIds: ['VN2_715042777', 'VN2_712840246'] }
     ];
 
