@@ -203,7 +203,7 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
 
   try {
     const response = await axios.get(`https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`, {
-      headers: { 'X-Riot-Token': apiKeyValorant }
+      headers: { 'X-Riot-Token':  process.env.API_KEY_VALORANT_RIOT }
     });
 
     // Thêm Access-Control-Allow-Origin vào header
