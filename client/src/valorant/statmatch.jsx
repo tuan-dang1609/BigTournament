@@ -48,7 +48,7 @@ export default function MatchStat() {
         if (matchid.length > 0) {
             Promise.all(
                 matchid.map(id =>
-                    fetch(`https://dongchuyennghiep-backend.vercel.app/api/match/${region}/${id}`)
+                    fetch(`https://dongchuyennghiep-backend.vercel.app/api/valorant/match/${id}`)
                         .then(res => {
                             if (!res.ok) {
                                 throw new Error(`HTTP error! status: ${res.status}`);
