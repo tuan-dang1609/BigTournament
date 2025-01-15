@@ -75,7 +75,7 @@ export default function MatchStatLOL() {
         <div className="table-container p-2">
             <div className="overflow-x-auto">
                 <table className="min-w-full table-auto text-base-content lg:w-full w-[280%] font-semibold">
-                    <thead className="bg-[#362431]">
+                    <thead className="bg-[#362431] text-white">
                         <tr>
                             <th className="p-2 bg-[#362431] sticky left-0 z-10 lg:!w-[270px] !w-[180px]">Player</th>
                             <th className="p-2  ">Trang bị</th>
