@@ -214,6 +214,27 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
   }
 });
+app.get('/api/valorant/dictionary', async (req, res) => {
+  try {
+    const response = await axios.get(`https://ap.api.riotgames.com/val/content/v1/contents?locale=vi-VN`, {
+      headers: { 'X-Riot-Token': process.env.API_KEY_VALORANT_RIOT }
+    });
+
+    // Lọc dữ liệu chỉ giữ lại "characters" và "maps"
+    const filteredData = {
+      characters: response.data.characters || [],
+      maps: response.data.maps || []
+    };
+
+    // Thêm Access-Control-Allow-Origin vào header
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    res.json(filteredData);
+  } catch (error) {
+    console.error('Error fetching dictionary data:', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to fetch dictionary data' });
+  }
+});
+
 
 app.get('/api/matches', async (req, res) => {
   const { page = 1, limit = 10, matchids } = req.query;
