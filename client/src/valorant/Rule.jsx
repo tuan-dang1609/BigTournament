@@ -7,7 +7,7 @@ const RuleBook = () => {
       document.documentElement.scrollTop = 0;
     };
     setTimeout(scrollToTop, 0);
-    document.title = "Luật giải đấu Arena Of Valor";
+    document.title = "Luật giải đấu Valorant";
 
   }, []);
   return (
@@ -129,7 +129,7 @@ const RuleBook = () => {
         title="VII. Khung giờ thi đấu"
         content={
           <>
-            <p> Các trận sẽ diễn ra từ 21h00 - 01h00. Lịch trình cụ thể sẽ được thông báo trên Discord
+            <p> Các trận sẽ diễn ra từ 19h00 - 01h00. Lịch trình cụ thể sẽ được thông báo trên Discord
             </p>
           </>
         }
