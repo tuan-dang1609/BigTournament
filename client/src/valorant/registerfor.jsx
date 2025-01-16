@@ -96,7 +96,7 @@ const TeamRegistrationForm = () => {
             }, 1000);
 
             if (countdown === 0) {
-                navigate('/arenaofvalor');
+                navigate('/valorant');
             }
 
             return () => clearInterval(timer);
@@ -277,7 +277,7 @@ const TeamRegistrationForm = () => {
             <>
 
                 <div className="min-h-screen flex flex-col sm:mx-96 mx-5 ">
-                    <Link to='/arenaofvalor' className="!justify-start flex mt-28 font-bold hover:underline text-lg lg:mb-2 mb-1">&lt; Quay lại</Link>
+                    <Link to='/valorant' className="!justify-start flex mt-28 font-bold hover:underline text-lg lg:mb-2 mb-1">&lt; Quay lại</Link>
                     <div className="bg-white p-8 rounded-lg shadow-md w-full flex justify-center items-center flex-col">
                         <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Bạn đã đăng kí đội</h2>
                         <img src={`https://drive.google.com/thumbnail?id=${userRegister.logoUrl}`} className="w-28 h-28 mb-5" />
@@ -317,7 +317,7 @@ const TeamRegistrationForm = () => {
                 <div className="relative px-4 py-8 sm:rounded-3xl sm:px-2 sm:py-12 " >
                     <div className="mx-auto">
                         <div>
-                            <h1 className="text-3xl font-bold text-center">Đơn đăng kí giải Arena Of Valor DCN: Season 2</h1>
+                            <h1 className="text-3xl font-bold text-center">Đơn đăng kí giải Valorant Đón Xuân DCN: Season 2</h1>
                         </div>
                         <button onClick={startTour} className="bg-blue-500 text-white px-4 py-2 rounded-md mt-4">
                             Hướng dẫn
