@@ -750,6 +750,20 @@ export const findAllteamAOV = async (req, res, next) => {
     next(error);
   }
 };
+export const findAllteamValorant = async (req, res, next) => {
+  try {
+    // Sử dụng truy vấn $in để kiểm tra mảng "games" có chứa "Liên Quân Mobile"
+    const allTeam = await TeamRegister.find({ games: { $in: ["Valorant"] } });
+
+    if (!allTeam || allTeam.length === 0) {
+      return next(errorHandler(404, 'No teams found for "Valorant"'));
+    }
+
+    res.status(200).json(allTeam);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const findAllteamTFT = async (req, res, next) => {
   try {

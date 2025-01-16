@@ -1,5 +1,5 @@
 import express from 'express';
-import {findAllteamTFT,findAllteamAOV,findAllteamTFTDouble, signin, signup,teamHOF,leagueHOF,findleagueHOF,findteamHOF, signout,getCorrectAnswers,comparePredictionmultiple,calculateMaxPoints,getUserPickemScore,comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
+import {findAllteamValorant,findAllteamTFT,findAllteamAOV,findAllteamTFTDouble, signin, signup,teamHOF,leagueHOF,findleagueHOF,findteamHOF, signout,getCorrectAnswers,comparePredictionmultiple,calculateMaxPoints,getUserPickemScore,comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
 import QuestionPickem from '../models/question.model.js';
 import PowerRankingAOV from '../models/powerRankingAOV.model.js';
 import Response from '../models/response.model.js';
@@ -22,6 +22,7 @@ router.post('/findmatchid', findmatchID)
 router.post('/findallteam', findAllteam)
 router.post('/findallteamAOV', findAllteamAOV)
 router.post('/findallteamTFT', findAllteamTFT)
+router.post('/findallteamValorant', findAllteamValorant)
 router.post('/findallteamTFTDouble', findAllteamTFTDouble)
 router.post('/submitPrediction', submitPrediction)
 router.post('/checkuserprediction', finduserPrediction)
