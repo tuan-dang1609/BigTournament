@@ -45,6 +45,7 @@ export default function Example() {
     valorant: [
       { name: "VALORANT", href: "/valorant", current: location.pathname === "/valorant", logo: "val_icon" },
       { name: "HOF", href: "/valorant/halloffame", current: location.pathname === "/valorant/halloffame" },
+      { name: "Luật lệ", href: "/valorant/rule", current: location.pathname === "/valorant/rule" }
     ],
     aov: [
       { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },

@@ -24,7 +24,7 @@ const TeamRegistrationForm = () => {
     const [errors, setErrors] = useState({});
     const [submitStatus, setSubmitStatus] = useState(null);
     const [signupSuccess, setSignupSuccess] = useState(false);
-    const [countdown, setCountdown] = useState(5);
+    const [countdown, setCountdown] = useState(10);
     const [loading, setLoading] = useState(true); // Loading state
     const [checkingRegistration, setCheckingRegistration] = useState(true); // New state for checking registration
     const navigate = useNavigate();
@@ -305,6 +305,7 @@ const TeamRegistrationForm = () => {
                 <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
                     <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Đăng kí thành công!</h2>
                     <p className="text-center text-gray-600">Cảm ơn bạn đã đăng kí đội cho lớp.</p>
+                    <p className="text-center text-gray-600">Link vào Discord Phú Nhuận: <a href="https://discord.gg/B4EKuhJ2">Discord THPT Phú Nhuận</a></p>
                     <p className="text-center text-gray-600 mt-4">Tự động chuyển tới trang chủ trong {countdown} giây...</p>
                 </div>
             </div>
