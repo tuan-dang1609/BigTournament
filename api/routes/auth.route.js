@@ -457,6 +457,25 @@ router.post('/checkregisterAOV', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+router.post('/checkregisterValorant', async (req, res) => {
+  try {
+      const { usernameregister } = req.body;
+      const game = "Valorant";
+      const existingTeam = await TeamRegister.findOne({ usernameregister, games: { $in: [game] } });
+
+      if (existingTeam) {
+          // Nếu tìm thấy đội, trả lại thông tin đội
+          return res.status(200).json(existingTeam);
+      } 
+
+      // Nếu không tìm thấy đội, trả lại lỗi 404
+      return res.status(404).json({ message: 'Team not found' }); 
+
+  } catch (error) {
+      // Xử lý lỗi server
+      res.status(500).json({ message: 'Server error' });
+  }
+});
 router.post('/checkregisterTFT', async (req, res) => {
     try {
         const { usernameregister } = req.body;
