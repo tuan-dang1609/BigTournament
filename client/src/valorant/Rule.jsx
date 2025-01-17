@@ -13,7 +13,7 @@ const RuleBook = () => {
   return (
     <div className="animate__animated animate__fadeIn max-w-6xl mx-auto p-6 bg-base-100 lg:mt-24 lg:mb-16 mt-[72px] mb-8 rounded-lg text-base-content">
       <h1 className="lg:text-5xl sm:text-4xl text-3xl font-bold text-center mb-10 text-primary">
-        Luật Lệ Giải Liên Quân Mobile - THPT Phú Nhuận (Season 2)
+        Luật Lệ Giải Valorant Đón Xuân Cùng DCN (Season 2)
       </h1>
       <Section
         title={<div className="text-3xl font-bold text-secondary mb-3 uppercase text-center">Giới thiệu</div>}
