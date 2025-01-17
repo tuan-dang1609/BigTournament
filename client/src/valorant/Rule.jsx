@@ -21,7 +21,7 @@ const RuleBook = () => {
           <>
             <div>Kính gửi các bạn đã đăng ký VALORANT Đón Xuân Cùng DCN: SEASON 2.</div>
             <div>Lời nói đầu tiên xin thay mặt Dong Chuyen Nghiep gửi lời chào chân thành và cảm ơn sâu sắc đến với các thành viên đã/sẽ đăng kí giải đấu lần này.</div>
-            <div>Sau khi tổng hợp ý kiến từ các thành viên trong Discord, chúng mình quyết định tổ chức một giải đấu Liên Quân Mobile giữa các lớp trong Trường, nhằm tìm ra đội có thành tích xuất sắc nhất cũng như giao lưu vui vẻ với nhau cuối năm. </div>
+            <div>Sau khi tổng hợp ý kiến từ các thành viên trong Discord, chúng mình quyết định tổ chức một giải đấu Valorant Đón Xuân nhằm tìm ra đội có thành tích xuất sắc nhất cũng như giao lưu vui vẻ với nhau cuối năm. </div>
             <h3 className="text-primary text-xl font-bold text-center my-4">GIẢI THƯỞNG</h3>
             <div className="overflow-x-auto">
               <table className="table-auto border-collapse border border-primary w-full">
