@@ -93,7 +93,7 @@ if (rootElement) {
               <Route path='/valorant/halloffame' element={<HallOfFameValo />} />
               <Route path='/tft/match' element={<TFT />} />
               <Route path='/lol/hudgame' element={<LiveGameDataLOL />} />
-              <Route path='/arenaofvalor/vong1' element={<TournamentBracketAOV16 />} />
+              <Route path='/arenaofvalor/vong2' element={<TournamentBracketAOV16 />} />
               <Route element={<PrivateRoute />}>
               <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
               <Route path="/valorant/register" element={<TeamRegistrationValorantForm  />} />

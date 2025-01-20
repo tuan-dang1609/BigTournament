@@ -102,7 +102,7 @@ const CompetitionPage = () => {
                     <p className="animate__animated animate__fadeIn text-xl md:text-xl mb-8 animate-fade-in-up">
                        Thắng bại tại kĩ năng !!!
                     </p>
-                    <Link to="/arenaofvalor/vong1">
+                    <Link to="/arenaofvalor/vong2">
                         <button className="animate__animated animate__fadeInUp bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent text-white font-bold py-4 px-10 rounded-full text-xl transform hover:scale-105 shadow-lg">
                             Xem ngay bảng đấu
                         </button>
