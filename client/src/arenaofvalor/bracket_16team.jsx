@@ -57,7 +57,7 @@ const TournamentBracketAOV16 = () => {
             document.documentElement.scrollTop = 0;
         };
         setTimeout(scrollToTop, 0);
-        document.title = "Vòng Thụy Sỹ 1";
+        document.title = "Vòng Thụy Sỹ 2";
 
     }, []);
     const handleScrollLeft = () => {
@@ -160,7 +160,7 @@ const TournamentBracketAOV16 = () => {
     const renderAdvanceSection = () => (
         <div className="flex flex-col border-2 border-gray-300 rounded-lg overflow-hidden relative">
             <h2 className="text-lg font-bold p-2 bg-[#D9D9D94D] border-b border-gray-300">
-                Tiến tới vòng 2
+                Tiến tới Play-off
             </h2>
             <div className="p-2">
                 {teams[5].slice(0, 8).map((team, index) => (
@@ -210,7 +210,7 @@ const TournamentBracketAOV16 = () => {
                 </div>
             ) : (
                 <>
-                <h1 className="text-3xl font-bold mb-6 text-center mt-24">Vòng Thụy Sỹ 1</h1>
+                <h1 className="text-3xl font-bold mb-6 text-center mt-24">Vòng Thụy Sỹ 2</h1>
             <div className="max-w-[900px] justify-center flex flex-col mx-auto">
     <p>Hiii! Xin chào tất cả các bạn, chào mừng các bạn đã đến với vòng đấu Thụy Sĩ, và đây là một số luật lệ tụi mình sẽ có update thêm trong tương lai nhaaaa: </p>
     <ul class="list-disc">
