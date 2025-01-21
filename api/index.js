@@ -198,20 +198,31 @@ app.get('/api/livegame', async (req, res) => {  // Thay đổi để lấy riotI
 app.use(express.static(path.join(__dirname, '..', 'client')));
 
 // API to get match data with NodeCache
-app.get('/api/valorant/match/:matchId', async (req, res) => {
-  const { matchId } = req.params;
+app.get('/api/match/:region/:matchid', async (req, res) => {
+  const { region, matchid } = req.params;
+  const cacheKey = `${region}-${matchid}`;
+  const apiKey = process.env.API_KEY_VALORANT;
+
+  const cachedData = cache.get(cacheKey);
+  if (cachedData) {
+    return res.json(cachedData);
+  }
 
   try {
-    const response = await axios.get(`https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`, {
-      headers: { 'X-Riot-Token':  process.env.API_KEY_VALORANT_RIOT }
+    const response = await axios.get(`https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`, {
+      headers: {
+        Authorization: apiKey,
+      },
     });
 
-    // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    cache.set(cacheKey, response.data, 300);
     res.json(response.data);
-  } catch (error) {
-    console.error('Error fetching match data:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+  } catch (err) {
+    res.status(err.response?.status || 500).json({
+      success: false,
+      message: err.message,
+      statusCode: err.response?.status || 500,
+    });
   }
 });
 app.get('/api/valorant/dictionary', async (req, res) => {
