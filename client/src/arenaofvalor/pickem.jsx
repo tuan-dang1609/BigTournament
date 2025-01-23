@@ -104,7 +104,7 @@ const PickemChallenge = () => {
        
         // Tạo một mảng mới để lưu trạng thái khóa từng câu hỏi
         const lockedStates = questions.data.map((question) => {
-            const lockTime = question.id === 18 ? specificLockTime : helsinkiLockTime;
+            const lockTime =  helsinkiLockTime;
             const timeDiff = lockTime - now;
 
             if (timeDiff <= 0) {
