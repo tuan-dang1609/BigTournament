@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
+import Image from '../image/waiting.png'
 const TournamentBracket = () => {
   const [teams, setTeams] = useState([[], [], [], []]);
   const [loading, setLoading] = useState(true);
   const [idmatch, setMatchId] = useState([]);
-  document.title = "Solo Yasuo cuối tuần"
+  document.title = "Vòng loại Valorant"
   const fetchTeams = async () => {
     try {
       const response = await fetch(
@@ -15,14 +15,29 @@ const TournamentBracket = () => {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const text = await response.text();
       const json = JSON.parse(text.substring(47, text.length - 2));
-
+      const teamResponse = await fetch(
+        "https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamValorant",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!teamResponse.ok) throw new Error(`HTTP error! status: ${teamResponse.status}`);
+      const teamData = await teamResponse.json();
       const columns = [0, 3, 6, 9];
       const updatedTeams = columns.map((col) =>
-        json.table.rows.map(row => ({
-          name: row.c[col + 1]?.v || "Unknown",
-          icon: `https://drive.google.com/thumbnail?id=${row.c[col]?.v}` || "🏅",
-          score: row.c[col + 2]?.v || 0
-        }))
+        json.table.rows.map((row) => {
+          const teamName = row.c[col + 1]?.v || "Unknown";
+          const team = teamData.find((t) => t.teamName === teamName);
+
+          return {
+            name: teamName,
+            icon: team ? `https://drive.google.com/thumbnail?id=${team.logoUrl}` : Image,
+            score: row.c[col + 2]?.v || 0,
+          };
+        })
       );
       setTeams(updatedTeams);
     } catch (error) {
@@ -44,9 +59,8 @@ const TournamentBracket = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const data = await response.json();
-      setMatchId(data);
+      const filteredGames = response.data.filter((game) => game.game === "Valorant");
+      setMatchId(filteredGames);
     } catch (error) {
       console.error("Failed to fetch games:", error);
     }
@@ -104,8 +118,41 @@ const TournamentBracket = () => {
       ))}
     </Link>
   );
+  const renderAdvance = (team1, team2, hasMargin = true, additionalMargin = '') => (
+    <Link
+      to={getMatchLink(team1, team2)}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'} ${additionalMargin}`}
+    >
+      {[team1].map((team, index) => (
+        <div
+          key={index}
+          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white `}
+        >
+          <div className="flex items-center h-14">
+            <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
+            <span className="text-black">{team?.name || 'Unknown'}</span>
+          </div>
 
+        </div>
+      ))}
+    </Link>
+  );
+  const renderAdvanceSection = (title, matchups, className = "") => {
+    const styles = roundStyles[title] || { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" };
 
+    return (
+      <div className={`flex flex-col  ${styles.border} overflow-hidden ${title === "1W-1L" ? "lg:mt-5" : ""}`}>
+        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>{title}</h2>
+        <div className="py-2">
+          {matchups.map((matchup, index) => (
+            <div key={index} className={className}>
+              {renderAdvance(matchup[0] || {}, matchup[1] || {})}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
   const renderSection = (title, matchups, className = "") => {
     const styles = roundStyles[title] || { border: "border-gray-300", titleBg: "bg-[#D9D9D94D]" };
 
@@ -126,53 +173,59 @@ const TournamentBracket = () => {
 
   return (
     <div className="container mx-auto p-4 relative">
-      <h1 className="text-3xl font-bold mb-10 mt-20 text-center">PLAY-OFF</h1>
+      <h1 className="text-3xl font-bold mb-10 mt-20 text-center">Vòng loại VALORANT</h1>
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
-      ) : (
+      ) : (<>
+        <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
+          <div className="w-full lg:w-1/4 relative">
+            {renderSection("Khởi động (BO1)", [
+              [teams[0][0], teams[0][1]],
+              [teams[0][2], teams[0][3]],
+            ], 'last:!mb-[0px] lg:!mb-[210px]')}
+            <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] w-[25%]  bg-secondary"></div>
+            <div className="hidden lg:block absolute top-[calc(7.9rem)] left-[125%]  h-[327px] w-[2.5px] bg-secondary"></div>
+            <div className="hidden lg:block absolute top-[28.2rem] left-full h-[2px] w-[25%] bg-secondary"></div>
+            <div className="hidden lg:block absolute top-[18.05rem] left-[125%]  h-[2px] w-[25%] bg-secondary"></div>
+          </div>
+          <div className="w-full lg:w-1/4 relative">
+            {renderSection("Trận quyết định", [
+              [teams[1][0], teams[1][1]]
+            ], 'lg:!mt-[180px]')}
+            <div className="hidden lg:block absolute top-[18.05rem] left-[100%] h-[2px] w-[50%] bg-secondary"></div>
+          </div>
+          <div className="w-full lg:w-1/4 relative">
+            {renderAdvanceSection("Đi tiếp", [
+              [teams[2][0]],
+            ], 'lg:!mt-[205px]')}
+
+          </div>
+        </div>
         <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
 
           <div className="w-full lg:w-1/4 relative">
-            <div>
-              {renderSection("Tứ kết", [
-                [teams[1][0], teams[1][1]],
-                [teams[1][2], teams[1][3]],
-                [teams[1][4], teams[1][5]],
-                [teams[1][6], teams[1][7]],
-              ], 'lg:!mb-[148px] lg:last:!mb-[0px] lg:first:!mt-[80px]')}
-              <div className="hidden lg:block absolute top-[11.8rem] left-full h-[2px] w-[25%]  bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[calc(11.8rem)] left-[125%] h-[268px] w-[2.5px] bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[28.4rem] left-full h-[2px] w-[25%]  bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[20.1rem] left-[125%] h-[2px] w-[25%] bg-secondary"></div>
-
-            <div className="hidden lg:block absolute top-[44.7rem] left-full h-[2px] w-[25%] bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[calc(44.7rem)] left-[125%]  h-[265px] w-[2.5px] bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[61.1rem] left-full h-[2px] w-[25%] bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[52.9rem] left-[125%] h-[2px] w-[25%] bg-secondary"></div> 
-            </div>
-
+            {renderSection("Vòng loại", [
+              [teams[0][4], teams[0][5]],
+            ], 'last:!mb-[0px]')}
+            <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] w-[50%]  bg-secondary"></div>
           </div>
           <div className="w-full lg:w-1/4 relative">
-            {renderSection("Bán kết", [
-              [teams[2][0], teams[2][1]],
-              [teams[2][2], teams[2][3]],
-            ],'lg:!mt-[212px] last:!mb-[0px] lg:!mb-[410px]')}
-            <div className="hidden lg:block absolute top-[20.1rem] left-full h-[2px] w-[25%]  bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[calc(20.1rem)] left-[125%]  h-[527px] w-[2.5px] bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[52.9rem] left-full h-[2px] w-[25%] bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[36.5rem] left-[125%]  h-[2px] w-[25%] bg-secondary"></div>
+            {renderSection("Trận Last Chance", [
+              [teams[1][2], teams[1][3]],
+            ], 'last:!mb-[0px]')}
+            <div className="hidden lg:block absolute  top-[7.9rem] left-full h-[2px] w-[50%]  bg-secondary"></div>
           </div>
           <div className="w-full lg:w-1/4 relative">
-            {renderSection("Chung kết", [
-              [teams[3][0], teams[3][1]],
+            {renderAdvanceSection("Đi tiếp", [
+              [teams[2][1]],
+            ], 'last:!mt-[42px]')}
 
-            ],'lg:!my-[475px]')}
-            
           </div>
 
         </div>
+      </>
       )}
     </div>
   );
