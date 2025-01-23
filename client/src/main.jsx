@@ -49,6 +49,7 @@ import PowerRankingTFTDouble from './tft/ranking.jsx';
 import MatchStatLOL from './leagueoflegend/match.jsx';
 import TeamRegistrationValorantForm from './valorant/registerfor.jsx';
 import CompetitionPage from './valorant/homepage.jsx';
+import TournamentBracketAOV16_1 from './arenaofvalor/bracket_16team_1.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -93,6 +94,7 @@ if (rootElement) {
               <Route path='/valorant/halloffame' element={<HallOfFameValo />} />
               <Route path='/tft/match' element={<TFT />} />
               <Route path='/lol/hudgame' element={<LiveGameDataLOL />} />
+              <Route path='/arenaofvalor/vong1' element={<TournamentBracketAOV16_1/>} />
               <Route path='/arenaofvalor/vong2' element={<TournamentBracketAOV16 />} />
               <Route element={<PrivateRoute />}>
               <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
