@@ -191,7 +191,7 @@ const TournamentBracket = () => {
             <div className="hidden lg:block absolute top-[18.05rem] left-[125%]  h-[2px] w-[25%] bg-secondary"></div>
           </div>
           <div className="w-full lg:w-1/4 relative">
-            {renderSection("Trận quyết định", [
+            {renderSection("Trận quyết định (BO3)", [
               [teams[1][0], teams[1][1]]
             ], 'lg:!mt-[180px]')}
             <div className="hidden lg:block absolute top-[18.05rem] left-[100%] h-[2px] w-[50%] bg-secondary"></div>
@@ -206,13 +206,13 @@ const TournamentBracket = () => {
         <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
 
           <div className="w-full lg:w-1/4 relative">
-            {renderSection("Vòng loại", [
+            {renderSection("Vòng loại (BO3)", [
               [teams[0][4], teams[0][5]],
             ], 'last:!mb-[0px]')}
             <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] w-[50%]  bg-secondary"></div>
           </div>
           <div className="w-full lg:w-1/4 relative">
-            {renderSection("Trận Last Chance", [
+            {renderSection("Trận Last Chance (BO3)", [
               [teams[1][2], teams[1][3]],
             ], 'last:!mb-[0px]')}
             <div className="hidden lg:block absolute  top-[7.9rem] left-full h-[2px] w-[50%]  bg-secondary"></div>
