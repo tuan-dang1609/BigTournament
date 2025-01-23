@@ -88,66 +88,36 @@ const PickemChallenge = () => {
     };
     currentUser && fetchQuestionsAndPredictions();
   }, [currentUser]);
-  useEffect(() => {
-    if(questions){console.log(questions)}
    
-}, [questions]);
   // Single global countdown
   useEffect(() => {
-    const helsinkiLockTime = new Date("2024-12-28T18:16:00.000+02:00");
-    const specificLockTime = new Date("2025-01-21T20:35:00.000+00:00");
+    // Thời gian khóa dựa trên giờ Helsinki cố định
+    const dateInHelsinki = new Date("2024-12-28T18:16:00.000+02:00");
 
     const interval = setInterval(() => {
-        const now = new Date();
+      const now = new Date(); // Lấy thời gian hiện tại của người dùng
+      const timeDiff = dateInHelsinki - now; // Tính toán sự khác biệt
 
-        // Kiểm tra nếu `questions` hoặc `questions.data` tồn tại
-       
-        // Tạo một mảng mới để lưu trạng thái khóa từng câu hỏi
-        const lockedStates = questions.data.map((question) => {
-            const lockTime =  helsinkiLockTime;
-            const timeDiff = lockTime - now;
-
+      // Kiểm tra nếu đã hết thời gian (khóa)
             if (timeDiff <= 0) {
-                return { id: question.id, isLocked: true };
-            } else {
-                return { id: question.id, isLocked: false };
-            }
-        });
-
-        // Cập nhật trạng thái `isLocked` và thông báo countdown
-        const globalCountdownMessage = lockedStates
-            .map(({ id, isLocked }) => {
-                if (isLocked) {
-                    return `Câu hỏi ${id} đã bị khóa.`;
+        setIsLocked(true); // Nếu hết thời gian, khóa lựa chọn
+        setGlobalCountdown("Đã hết thời gian. Bạn không thể lựa chọn nữa");
                 } else {
-                    const lockTime =
-                        id === 18 ? specificLockTime : helsinkiLockTime;
-                    const timeDiff = lockTime - now;
+        setIsLocked(false); // Nếu chưa hết thời gian, không khóa
                     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
                     const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
                     const seconds = Math.floor((timeDiff / 1000) % 60);
-                    return `Câu hỏi ${id} sẽ khóa sau ${days
+        setGlobalCountdown(
+          `Lựa chọn sẽ khóa sau ${days.toString().padStart(2, "0")}:${hours
                         .toString()
-                        .padStart(2, "0")}:${hours
-                        .toString()
-                        .padStart(2, "0")}:${minutes
-                        .toString()
-                        .padStart(2, "0")}:${seconds
-                        .toString()
-                        .padStart(2, "0")}`;
-                }
-            })
-            .join("\n");
-
-        // Cập nhật trạng thái khóa toàn cục
-        setIsLocked(lockedStates);
-        setGlobalCountdown(globalCountdownMessage);
+            .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
+        );
+      }
     }, 1000);
 
     return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
-}, [questions]);
-
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value.toLowerCase());
