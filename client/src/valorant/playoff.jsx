@@ -70,6 +70,7 @@ const TournamentBracket = () => {
       console.error("Failed to fetch games:", error);
     }
   };
+  
 
   useEffect(() => {
     fetchTeams();
