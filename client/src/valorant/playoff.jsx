@@ -55,11 +55,16 @@ const TournamentBracket = () => {
           'Content-Type': 'application/json',
         }
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const filteredGames = response.data.filter((game) => game.game === "Valorant");
+  
+      // Parse JSON response
+      const data = await response.json(); // Thêm dòng này
+      
+      // Lọc các trận Valorant
+      const filteredGames = data.filter((game) => game.game === "Valorant"); // Sử dụng `data` thay vì `response.data`
       setMatchId(filteredGames);
     } catch (error) {
       console.error("Failed to fetch games:", error);

@@ -5,6 +5,12 @@ import MatchResult from "./match";
 export default function MatchStat() {
     const { round, Match } = useParams();
     const [matchid, setMatchid] = useState([]);
+    const [teamA, setteamA] = useState([]);
+    const [teamB, setteamB] = useState([]);
+    const [teamALogo, setTeamALogo] = useState('');
+    const [teamBLogo, setTeamBLogo] = useState('');
+    const [teamABgColor, setTeamABgColor] = useState('');
+    const [teamBBgColor, setTeamBBgColor] = useState('');
     const [mapData, setMapData] = useState({});
     const [matchInfo, setMatchInfo] = useState([]);
     const [error, setError] = useState(null);
@@ -15,7 +21,13 @@ export default function MatchStat() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedMap, setSelectedMap] = useState(null);
     const region = 'ap';
-
+    const hexToRgba = (hex, opacity) => {
+        hex = hex.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    };
     const fetchGames = async () => {
         try {
             const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findmatchid', {
@@ -25,7 +37,8 @@ export default function MatchStat() {
                 },
                 body: JSON.stringify({
                     round: round,
-                    Match: Match
+                    Match: Match,
+                    game:"Valorant"
                 })
             });
 
@@ -35,13 +48,40 @@ export default function MatchStat() {
 
             const data = await response.json();
             setMatchid(data.matchid);
+            setteamA(data.teamA);
+            setteamB(data.teamB);
         } catch (error) {
             console.error("Failed to fetch game:", error);
         }
     };
+    const fetchTeamLogos = async () => {
+        try {
+            const teamResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamValorant', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
 
+            if (!teamResponse.ok) {
+                throw new Error(`HTTP error! status: ${teamResponse.status}`);
+            }
+
+            const teamData = await teamResponse.json();
+            const teamAData = teamData.find(team => team.teamName === teamA);
+            const teamBData = teamData.find(team => team.teamName === teamB);
+
+            setTeamALogo(`https://drive.google.com/thumbnail?id=${teamAData?.logoUrl || ''}`);
+            setTeamBLogo(`https://drive.google.com/thumbnail?id=${teamBData?.logoUrl || ''}`);
+            setTeamABgColor(teamAData?.color || '#ffffff');
+            setTeamBBgColor(teamBData?.color || '#ffffff');
+        } catch (error) {
+            console.error("Failed to fetch team logos:", error);
+        }
+    };
     useEffect(() => {
         fetchGames();
+        fetchTeamLogos()
     }, [round, Match]);
 
     useEffect(() => {
@@ -114,7 +154,7 @@ export default function MatchStat() {
     };
 
     const renderMapTabs = () => (
-        <div className="flex items-center justify-between bg-[#362431] p-2 mb-2">
+        <div className="flex items-center justify-between bg-[#362431] p-2 mb-2 mt-1">
             <span className="text-white text-[11px] font-bold mr-4">MATCH STATS</span>
             <div className="flex gap-2">
                 {Object.keys(mapData).map((mapName) => (
@@ -203,15 +243,15 @@ export default function MatchStat() {
             <div className="matchstat">
                 <div className="scoreboard-title">
                     <div className="scoreboard w-full">
-                        <div className="team teamleft w-full flex items-center">
+                        <div className="team teamleft w-full flex items-center" style={{ backgroundColor: hexToRgba(teamABgColor, 0.2) }}>
                             <div className="logo">
                                 <img
                                     className="w-12 h-12 ml-2 max-lg:ml-0 max-lg:w-9 max-lg:h-9"
-                                    src="https://drive.google.com/thumbnail?id=1z1thZ57p3ZSxT2sY_RpoLT0wzBZoy_76"
+                                    src={teamALogo}
                                     alt="Team Left Logo"
                                 />
                             </div>
-                            <div className="teamname">Hysteric</div>
+                            <div className="teamname">{teamA}</div>
                         </div>
                         <div className="score-and-time">
                             <div className="score bg-[#362431]">
@@ -239,20 +279,20 @@ export default function MatchStat() {
                                 )}
                             </div>
                         </div>
-                        <div className="team teamright w-full flex items-center">
+                        <div className="team teamright w-full flex items-center " style={{ backgroundColor: hexToRgba(teamBBgColor, 0.2) }}>
                             <div className="logo">
                                 <img
                                     className="w-12 h-12 mr-2 max-lg:mr-0 max-lg:w-9 max-lg:h-9"
-                                    src="https://drive.google.com/thumbnail?id=1Y2tyRSmHv0GwkzdR5jXqNcgvI9pcYVWo"
+                                    src={teamBLogo}
                                     alt="Team Right Logo"
                                 />
                             </div>
-                            <div className="teamname">Paper Shark</div>
+                            <div className="teamname">{teamB}</div>
                         </div>
                     </div>
                     <div className='title bg-[#362431]'>
                         <span className='league all-title'>Valorant DCN Split 2</span>
-                        <span className='group all-title text-white'>Nhánh 0-0 ● BO1</span>
+                        <span className='group all-title text-white'>Nhánh Qualifier ● BO1</span>
                     </div>
                 </div>
                 {renderMapTabs()}

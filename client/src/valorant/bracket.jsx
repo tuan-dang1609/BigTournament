@@ -34,16 +34,23 @@ const TournamentBracket = () => {
 
   const fetchGames = async () => {
     try {
-        const response = await axios.post(
-            "https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid"
-        );
-        const filteredGames = response.data.filter((game) => game.game === "Valorant");
+      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
 
-        setMatchId(filteredGames);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setMatchId(data);
     } catch (error) {
-        console.error("Failed to fetch games:", error);
+      console.error("Failed to fetch games:", error);
     }
-};
+  };
 
   useEffect(() => {
     fetchTeams();
