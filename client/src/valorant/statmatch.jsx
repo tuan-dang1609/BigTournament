@@ -11,6 +11,8 @@ export default function MatchStat() {
     const [teamBLogo, setTeamBLogo] = useState('');
     const [teamABgColor, setTeamABgColor] = useState('');
     const [teamBBgColor, setTeamBBgColor] = useState('');
+    const [teamAshort, setTeamAshort] = useState('')
+    const [teamBshort, setTeamBshort] = useState('')
     const [mapData, setMapData] = useState({});
     const [matchInfo, setMatchInfo] = useState([]);
     const [error, setError] = useState(null);
@@ -20,7 +22,9 @@ export default function MatchStat() {
     const [time, setTime] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedMap, setSelectedMap] = useState(null);
+    const [botype, setBotype] = useState('');
     const region = 'ap';
+
     const hexToRgba = (hex, opacity) => {
         hex = hex.replace('#', '');
         const r = parseInt(hex.substring(0, 2), 16);
@@ -28,6 +32,18 @@ export default function MatchStat() {
         const b = parseInt(hex.substring(4, 6), 16);
         return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     };
+    useEffect(() => {
+        // Fetch match data (teamA, teamB, matchId)
+        fetchGames();
+    }, [round, Match]);
+
+    useEffect(() => {
+        // Fetch team logos and colors only when teamA and teamB are set
+        if (teamA.length > 0 && teamB.length > 0) {
+            fetchTeamLogos();
+        }
+    }, [teamA, teamB]);
+
     const fetchGames = async () => {
         try {
             const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findmatchid', {
@@ -38,7 +54,7 @@ export default function MatchStat() {
                 body: JSON.stringify({
                     round: round,
                     Match: Match,
-                    game:"Valorant"
+                    game: "Valorant"
                 })
             });
 
@@ -47,13 +63,36 @@ export default function MatchStat() {
             }
 
             const data = await response.json();
+
+            // Đếm số lượng matchid
+            const matchCount = data.matchid.length;
+
+            // Xét trường hợp để trả về BOx
+            let boType;
+            if (matchCount === 1) {
+                boType = 'BO1';
+            } else if (matchCount <= 3) {
+                boType = 'BO3';
+            } else if (matchCount <= 5) {
+                boType = 'BO5';
+            } else if (matchCount <= 7) {
+                boType = 'BO7';
+            } else {
+                boType = `Invalid BO type`; // Trường hợp không hợp lệ
+            }
+
+            // Cập nhật state
             setMatchid(data.matchid);
             setteamA(data.teamA);
             setteamB(data.teamB);
+            setBotype(boType)
+            console.log(`Match type: ${boType}`); // In ra loại BO để kiểm tra
         } catch (error) {
             console.error("Failed to fetch game:", error);
         }
     };
+
+
     const fetchTeamLogos = async () => {
         try {
             const teamResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamValorant', {
@@ -71,18 +110,19 @@ export default function MatchStat() {
             const teamAData = teamData.find(team => team.teamName === teamA);
             const teamBData = teamData.find(team => team.teamName === teamB);
 
-            setTeamALogo(`https://drive.google.com/thumbnail?id=${teamAData?.logoUrl || ''}`);
-            setTeamBLogo(`https://drive.google.com/thumbnail?id=${teamBData?.logoUrl || ''}`);
+            setTeamALogo(`https://drive.google.com/thumbnail?id=${teamAData?.logoUrl}`);
+            setTeamBLogo(`https://drive.google.com/thumbnail?id=${teamBData?.logoUrl}`);
             setTeamABgColor(teamAData?.color || '#ffffff');
             setTeamBBgColor(teamBData?.color || '#ffffff');
+            setTeamAshort(teamAData?.shortName);
+            setTeamBshort(teamBData?.shortName);
         } catch (error) {
             console.error("Failed to fetch team logos:", error);
         }
     };
-    useEffect(() => {
-        fetchGames();
-        fetchTeamLogos()
-    }, [round, Match]);
+
+
+
 
     useEffect(() => {
         if (matchid.length > 0) {
@@ -186,7 +226,17 @@ export default function MatchStat() {
             calculateFKAndMK(players, kills);
         }
     }, [selectedMap, mapData]);
-
+    const capitalizeFirstLetter = (string) => {
+        if (!string) return '';
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    };
+    useEffect(() => {
+        if (teamA && teamB) {
+            document.title = `${teamA} vs ${teamB} | ${capitalizeFirstLetter(round)}`;
+        } else {
+            document.title = "Đang tải"; // Tiêu đề mặc định
+        }
+    }, [teamA, teamB]);
     const calculateFKAndMK = (players, kills) => {
         const fkMap = {};
         const mkMap = {};
@@ -239,7 +289,7 @@ export default function MatchStat() {
 
     return (
         <>
-            
+
             <div className="matchstat">
                 <div className="scoreboard-title">
                     <div className="scoreboard w-full">
@@ -251,7 +301,10 @@ export default function MatchStat() {
                                     alt="Team Left Logo"
                                 />
                             </div>
-                            <div className="teamname">{teamA}</div>
+                            <div className="teamname">
+                                <span className="block sm:hidden">{teamAshort}</span> {/* Hiển thị teamAshort khi màn hình nhỏ hơn sm */}
+                                <span className="hidden sm:block">{teamA}</span>       {/* Hiển thị teamA khi màn hình từ sm trở lên */}
+                            </div>
                         </div>
                         <div className="score-and-time">
                             <div className="score bg-[#362431]">
@@ -287,12 +340,15 @@ export default function MatchStat() {
                                     alt="Team Right Logo"
                                 />
                             </div>
-                            <div className="teamname">{teamB}</div>
+                            <div className="teamname">
+                                <span className="block sm:hidden">{teamBshort}</span> {/* Hiển thị teamAshort khi màn hình nhỏ hơn sm */}
+                                <span className="hidden sm:block">{teamB}</span>       {/* Hiển thị teamA khi màn hình từ sm trở lên */}
+                            </div>
                         </div>
                     </div>
                     <div className='title bg-[#362431]'>
                         <span className='league all-title'>Valorant DCN Split 2</span>
-                        <span className='group all-title text-white'>Nhánh Qualifier ● BO1</span>
+                        <span className='group all-title text-white'>Nhánh {capitalizeFirstLetter(round)} ● {botype}</span>
                     </div>
                 </div>
                 {renderMapTabs()}
