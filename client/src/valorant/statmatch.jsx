@@ -23,6 +23,8 @@ export default function MatchStat() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedMap, setSelectedMap] = useState(null);
     const [botype, setBotype] = useState('');
+    const [scoreA, setScoreA] = useState('');
+    const [scoreB, setScoreB] = useState('');
     const region = 'ap';
 
     const hexToRgba = (hex, opacity) => {
@@ -86,6 +88,8 @@ export default function MatchStat() {
             setteamA(data.teamA);
             setteamB(data.teamB);
             setBotype(boType)
+            setScoreA(data.scoreA);
+            setScoreB(data.scoreB)
             console.log(`Match type: ${boType}`); // In ra loại BO để kiểm tra
         } catch (error) {
             console.error("Failed to fetch game:", error);
@@ -310,10 +314,10 @@ export default function MatchStat() {
                             <div className="score bg-[#362431]">
                                 {selectedTeams && selectedTeams.length > 0 && (
                                     <span
-                                        className={`scoreA ${selectedTeams[0].rounds.won > selectedTeams[1].rounds.won ? 'green-win' : 'red-lose'}`}
+                                        className={`scoreA ${scoreA > scoreB ? 'green-win' : 'red-lose'}`}
                                         id='score-left'
                                     >
-                                        {selectedTeams[0].rounds.won}
+                                        {scoreA}
                                     </span>
                                 )}
                             </div>
@@ -324,10 +328,10 @@ export default function MatchStat() {
                             <div className="score bg-[#362431]">
                                 {selectedTeams && selectedTeams.length > 1 && (
                                     <span
-                                        className={`scoreA ${selectedTeams[0].rounds.won < selectedTeams[1].rounds.won ? 'green-win' : 'red-lose'}`}
+                                        className={`scoreA ${scoreA < scoreB ? 'green-win' : 'red-lose'}`}
                                         id='score-right'
                                     >
-                                        {selectedTeams[1].rounds.won}
+                                        {scoreB}
                                     </span>
                                 )}
                             </div>
