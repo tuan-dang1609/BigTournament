@@ -196,7 +196,22 @@ app.get('/api/livegame', async (req, res) => {  // Thay đổi để lấy riotI
 });
 // Serve static files
 app.use(express.static(path.join(__dirname, '..', 'client')));
+app.get('/api/valorant/match/:matchId', async (req, res) => {
+  const { matchId } = req.params;
 
+  try {
+    const response = await axios.get(`https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`, {
+      headers: { 'X-Riot-Token': apiKeyValorant }
+    });
+
+    // Thêm Access-Control-Allow-Origin vào header
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching match data:', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+  }
+});
 // API to get match data with NodeCache
 app.get('/api/match/:region/:matchid', async (req, res) => {
   const { region, matchid } = req.params;
