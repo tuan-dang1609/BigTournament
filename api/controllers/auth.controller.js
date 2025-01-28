@@ -32,7 +32,8 @@ const pointSystem = {
   14: 20,
   15:20,
   16:4,
-  17:12
+  17:12,
+  18:8
 };
 
 for (let day = 1; day <= 8; day++) {
@@ -715,7 +716,7 @@ export const addMatchID = async (req, res, next) => {
       return res.status(200).json({ message: "MatchID updated successfully" });
     } else {
       // Create a new match ID entry
-      const newMatchId = new MatchID({ matchid, teamA, teamB, round,Match,game});
+      const newMatchId = new MatchID({ matchid, teamA, teamB, round,Match,game,scoreA,scoreB});
       await newMatchId.save();
       return res.status(201).json({ message: "MatchID added successfully" });
     }
