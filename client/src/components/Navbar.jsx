@@ -50,7 +50,7 @@ export default function Example() {
     ],
     aov: [
       { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },
-      { name: "Nhánh đấu", href: "/arenaofvalor/vong2", current: location.pathname === "/arenaofvalor/vong2"},
+      { name: "Nhánh đấu", href: "/arenaofvalor/playoff", current: location.pathname === "/arenaofvalor/playoff"},
       { name: "BXH", href: "/arenaofvalor/ranking", current: location.pathname === "/arenaofvalor/ranking"},
       { 
         name: "Pick'em", 

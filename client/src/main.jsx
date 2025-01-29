@@ -50,6 +50,8 @@ import MatchStatLOL from './leagueoflegend/match.jsx';
 import TeamRegistrationValorantForm from './valorant/registerfor.jsx';
 import CompetitionPage from './valorant/homepage.jsx';
 import TournamentBracketAOV16_1 from './arenaofvalor/bracket_16team_1.jsx';
+import MatchStat2 from './valorant/test.jsx';
+import PlayoffBracketAOV from './arenaofvalor/playoff8.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -69,8 +71,9 @@ if (rootElement) {
               <Route path='/calendar' element={<Calendar />} />
               <Route path='/valorant' element={<CompetitionPage />} />
               <Route path='/valorant/rule' element={<Rule />} />
+              <Route path='/valorant/test' element={<MatchStat2 />} />
               <Route path='/allgame' element={<AllGame />} />
-              <Route path='/valorant/test/speciall' element={<TournamentBracketLOL />} />
+              <Route path='/valorant/test/special' element={<TournamentBracketLOL />} />
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
               <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
               <Route path="/valorant/swissstage" element={<SwissStage />} />
@@ -86,7 +89,7 @@ if (rootElement) {
               <Route path='/arenaofvalor/ranking' element={<PowerRankingAOV />} />
               <Route path='/arenaofvalor/pickem/welcome' element={<WelcomePage />} />
               <Route path='/arenaofvalor/playin' element={<PlayinAOV />} />
-              <Route path='/arenaofvalor/test' element={<TournamentBracketAOV />} />
+              <Route path='/arenaofvalor/playoff' element={<TournamentBracketAOV />} />
               <Route path='/arenaofvalor/match/:round/:Match' element={<MatchStatAOV />} />
               <Route path='/privacy' element={<PrivacyPolicy />} />
               <Route path='/tos' element={<TermsOfService />} />
