@@ -227,7 +227,7 @@ const TournamentBracket = () => {
         <li>Tất cả các trận ở đây là BO5. Riêng các trận chung kết tổng sẽ là BO7.</li>
         <li>Các cặp trận được xếp dựa trên ELO tích được ở vòng bảng.</li>
         <li>Thể thức là Double Elimination. Nghĩa là các bạn sẽ có 2 cơ hội. Riêng từ tranh hạng 4 trở đi sẽ chỉ có 1 cơ hội.</li>
-        <li>Thời gian sẽ được thông báo ở kênh riêng trên <a href="https://discord.gg/4AGUSHS2">Discord </a>.</li>
+        <li>Thời gian sẽ được thông báo ở kênh riêng trên <a href="https://discord.gg/4AGUSHS2">Discord</a>.</li>
         <li>Trước giờ thi đấu 2h các bạn phải đưa lại đội hình cho BTC để bọn mình dễ dàng kiểm soát thông tin người chơi.</li>
         <li>Mọi thông tin khác tụi mình sẽ thông báo riêng trên kênh đấu giải.</li>
         <li>Thời gian thi đấu BTC thông báo sẽ là cố định và KHÔNG thể dời dưới mọi hình thức. Nếu không đủ thành viên thi đấu thì chỉ có thể tìm Stand-in hoặc bị xử thua</li>
