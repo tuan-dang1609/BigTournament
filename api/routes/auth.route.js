@@ -6,7 +6,7 @@ import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
 import Match from '../models/match.model.js';
 import User from '../models/user.model.js';
-import { BanPickValo } from '../models/veto.model.js';
+import BanPickValo from '../models/veto.model.js';
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -40,7 +40,7 @@ router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
 router.post('/create', async (req, res) => {
   try {
-    const match = new Match({
+    const match = new BanPickValo({
       ...req.body,
       id: Math.random().toString(36).substr(2, 9),
       currentTurn: "team1"
@@ -54,7 +54,7 @@ router.post('/create', async (req, res) => {
 
 router.post('/action', async (req, res) => {
   try {
-    const match = await Match.findOne({ id: req.body.matchId });
+    const match = await BanPickValo.findOne({ id: req.body.matchId });
     if (!match) return res.status(404).json({ error: "Match not found" });
 
     // Process action logic
@@ -70,7 +70,7 @@ router.post('/action', async (req, res) => {
 });
 router.post('/status', async (req, res) => {
   try {
-    const match = await Match.findOne({ id: req.body.matchId })
+    const match = await BanPickValo.findOne({ id: req.body.matchId })
       .select('-__v -_id')
       .lean();
 

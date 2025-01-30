@@ -20,5 +20,5 @@ const matchSchema = new mongoose.Schema({
   currentTurn: { type: String, enum: ["team1", "team2"], required: true },
   createdAt: { type: Date, default: Date.now }
 });
-
-export const BanPickValo = mongoose.model("BanPickValo", matchSchema,"BanPickValo");
+const BanPickValo = mongoose.model("BanPickValo", matchSchema,"BanPickValo");
+export default BanPickValo
