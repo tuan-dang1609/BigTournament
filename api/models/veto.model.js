@@ -1,19 +1,24 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const banPick = new mongoose.Schema({
-    map: { type: String, required: true },
-    type: { type: String, enum: ['ban', 'pick', 'decider'], required: true },
-    team: { type: String }, // Ensure team is a required string
-    index: { type: Number, required: true },
-    teamname:{type:String},
-    image: { type: String } // URL or path to the map image
-}, { _id: false });
-
-const banPickSchema = new mongoose.Schema({
-    id: { type: String, required: true},
-    group: { type: String, required: true},
-    veto: [banPick]
+const matchSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  team1: { type: String, required: true },
+  team2: { type: String, required: true },
+  matchType: { type: String, enum: ["BO1", "BO3", "BO5"], required: true },
+  maps: {
+    pool: { type: [String], default: ["Bind", "Haven", "Split", "Ascent", "Icebox", "Breeze", "Fracture","Abyss","Pearl","Sunset","Lotus"] },
+    banned: [{ type: String }],
+    picked: [{ type: String }],
+    selected: [{ type: String }]
+  },
+  sides: [{
+    map: String,
+    team1: String,
+    team2: String
+  }],
+  currentPhase: { type: String, enum: ["ban", "pick", "side", "completed"], default: "ban" },
+  currentTurn: { type: String, enum: ["team1", "team2"], required: true },
+  createdAt: { type: Date, default: Date.now }
 });
 
-const BanPick = mongoose.model('BanPick', banPickSchema, "BanPickVeto");
-export default BanPick;
+export const BanPickValo = mongoose.model("BanPickValo", matchSchema,"BanPickValo");

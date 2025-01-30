@@ -6,6 +6,7 @@ import Response from '../models/response.model.js';
 import TeamRegister from '../models/registergame.model.js'
 import Match from '../models/match.model.js';
 import User from '../models/user.model.js';
+import { BanPickValo } from '../models/veto.model.js';
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -37,7 +38,56 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
+router.post('/create', async (req, res) => {
+  try {
+    const match = new Match({
+      ...req.body,
+      id: Math.random().toString(36).substr(2, 9),
+      currentTurn: "team1"
+    });
+    await match.save();
+    res.status(201).json(match);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
+router.post('/action', async (req, res) => {
+  try {
+    const match = await Match.findOne({ id: req.body.matchId });
+    if (!match) return res.status(404).json({ error: "Match not found" });
+
+    // Process action logic
+    if (req.body.action === "ban") await processBan(match, req.body);
+    if (req.body.action === "pick") await processPick(match, req.body);
+    if (req.body.action === "side") await processSide(match, req.body);
+
+    await match.save();
+    res.json(match);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Helper functions for action processing
+async function processBan(match, { map }) {
+  if (match.currentPhase !== "ban") throw new Error("Invalid phase for ban");
+  if (!match.maps.pool.includes(map)) throw new Error("Map not available");
+  
+  match.maps.banned.push(map);
+  match.maps.pool = match.maps.pool.filter(m => m !== map);
+  match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+  
+  checkBanCompletion(match);
+}
+
+function checkBanCompletion(match) {
+  const requiredBans = { BO1: 4, BO3: 2, BO5: 1 }[match.matchType];
+  if (match.maps.banned.length >= requiredBans) {
+    match.currentPhase = "pick";
+    match.currentTurn = "team1";
+  }
+}
 router.post('/powerrankingaov', async (req, res) => {
     try {
       // Truy vấn tất cả dữ liệu trong collection PowerRankingAOV
