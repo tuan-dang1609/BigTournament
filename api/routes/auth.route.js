@@ -70,27 +70,25 @@ router.post('/action', async (req, res) => {
 });
 router.post('/status', async (req, res) => {
   try {
-    const match = await BanPickValo.findOne({ id: req.body.matchId })
-      .select('-__v -_id')
-      .lean();
-
+    console.log('Request body:', req.body); // Debug incoming request
+    const match = await BanPickValo.findOne({ id: req.body.matchId }).lean();
+    
     if (!match) {
-      return res.status(404).json({ error: "Match not found" });
+      console.log(`Không tìm thấy match với ID: ${req.body.matchId}`);
+      return res.status(404).json({ 
+        error: "Match not found",
+        receivedId: req.body.matchId,
+        storedIds: await BanPickValo.distinct('id') 
+      });
     }
 
-    // Tính toán trạng thái hiển thị
-    const displayStatus = {
-      ...match,
-      remainingBans: calculateRemainingBans(match),
-      nextAction: getNextAction(match),
-    };
-
-    res.json(displayStatus);
+    console.log('Found match:', match); // Debug kết quả tìm được
+    res.json(match);
   } catch (error) {
+    console.error('Lỗi truy vấn database:', error);
     res.status(500).json({ error: error.message });
   }
 });
-
 // Hàm hỗ trợ
 function calculateRemainingBans(match) {
   const requiredBans = {
