@@ -1,10 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
-function FeatureRichTable({ matchInfo, numRound, kill, error }) {
-  const [data, setData] = useState([]);
-  const [sortDirection, setSortDirection] = useState("desc");
-  const tableRef = useRef(null);
+const columns = [
+  { key: "name", label: "Người chơi" },
+  { key: "acs", label: "ACS" },
+  { key: "kda", label: "K/D/A" },
+  { key: "stats.kills/stats.deaths", label: "KD" },
+  { key: "stats.headshotPercentage", label: "HS%" },
+  { key: "adr", label: "ADR" },
+  { key: "fk", label: "FK" },
+  { key: "mk", label: "MK" },
+];
+
+const PlayerStats = ({ data,dictionary }) => {
+  const [selectedMap, setSelectedMap] = useState(null);
   const [imageUrls, setImageUrls] = useState({});
+
   const images = import.meta.glob('../agent/*.{png,jpg,jpeg,gif}');
 
   useEffect(() => {
@@ -23,163 +33,272 @@ function FeatureRichTable({ matchInfo, numRound, kill, error }) {
     };
     loadImageUrls();
   }, []);
+  const getMapName = (mapId) => {
+    if (!dictionary || !dictionary.maps || !Array.isArray(dictionary.maps)) {
+      return "Unknown";
+    }
+
+    if (!mapId) {
+      return "Unknown";
+    }
+
+    const map = dictionary.maps.find(
+      (map) => map.assetPath && map.assetPath.toLowerCase() === mapId.toLowerCase()
+    );
+
+    return map ? map.name : "Unknown";
+  };
+  const getagentName = (agentid) => {
+    if (!dictionary || !dictionary.maps || !Array.isArray(dictionary.maps)) {
+      return "Unknown";
+    }
+
+    if (!agentid) {
+      return "Unknown";
+    }
+
+    const agent = dictionary.characters.find(
+      (agent) => agent.id && agent.id.toLowerCase() === agentid.toLowerCase()
+    );
+
+    return agent ? agent.name : "Unknown";
+  };
+  // Tạo map data
+  const mapData = data.reduce((acc, match) => {
+    const mapName = getMapName(match.matchInfo?.mapId, dictionary);
+    acc[mapName] = true;
+    return acc;
+  }, {});
+
+  // Lấy dữ liệu match được chọn
+  const playerData = data.find(match =>
+    getMapName(match.matchInfo?.mapId) === selectedMap
+  ) || data[0];
 
   useEffect(() => {
-    if (matchInfo) {
-      const maxScore = Math.max(...matchInfo.map(player => player.stats.score));
-      const maxKills = Math.max(...matchInfo.map(player => player.stats.kills));
-      const maxDamage = Math.max(...matchInfo.map(player => player.stats.damage.dealt));
-
-      // Normalize each player's score, kills, and damage dealt between 0 and 1
-      const normalizedData = matchInfo.map(player => {
-        const normalizedScore = player.stats.score / maxScore;
-        const normalizedKills = player.stats.kills / maxKills;
-        const normalizedDamage = player.stats.damage.dealt / maxDamage;
-  
-        const acs = player.stats.score / numRound;
-        const performanceScore = (
-          (normalizedScore + normalizedKills + normalizedDamage) / 3
-        ) * 10; // Scale the average of normalized values to 0-10
-  
-        return {
-          ...player,
-          acs: acs.toFixed(0),
-          performanceScore: performanceScore.toFixed(1),
-        };
-      }).sort((a, b) => b.acs - a.acs);
-  
-      setData(normalizedData);
+    if (!selectedMap && Object.keys(mapData).length > 0) {
+      setSelectedMap(Object.keys(mapData)[0]);
     }
-  }, [matchInfo, numRound, kill]);
+  }, [mapData]);
+  const calculatePlayerStats = (player) => {
+    const { puuid } = player;
+    let firstKills = 0;
+    let multiKills = 0;
+    let totalDamage = 0;
+    let headshots = 0;
+    let bodyshots = 0;
+    let legshots = 0;
+    const gameName = player.gameName; // Truy cập trực tiếp từ player
+    const tagName = player.tagLine;  // Truy cập trực tiếp từ player
+    const roundPlayed = playerData.teams[0].roundsPlayed;
 
-  const handleSort = (column) => {
-    if (column !== "acs") {
-      return; // Disable sorting for all columns except "acs"
-    }
-  
-    // Toggle sort direction for the "acs" column
-    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-  
-    const sortedData = [...data].sort((a, b) => {
-      let aValue = a[column];
-      let bValue = b[column];
-  
-      if (sortDirection === "asc") {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+    playerData.roundResults.forEach((round) => {
+      const stats = round.playerStats.find((stat) => stat.puuid === puuid);
+      if (stats) {
+        const firstKillInRound = stats.kills.find(
+          (kill) =>
+            kill.killer === puuid &&
+            kill.timeSinceRoundStartMillis ===
+            Math.min(
+              ...round.playerStats.flatMap((stat) =>
+                stat.kills.map((k) => k.timeSinceRoundStartMillis)
+              )
+            )
+        );
+        if (firstKillInRound) {
+          firstKills += 1;
+        }
+
+        if (stats.kills.length >= 3) {
+          multiKills += 1;
+        }
+
+        stats.damage.forEach((dmg) => {
+          totalDamage += dmg.damage;
+          headshots += dmg.headshots;
+          bodyshots += dmg.bodyshots;
+          legshots += dmg.legshots;
+        });
       }
     });
-  
-    setData(sortedData);
+
+    const totalShots = headshots + bodyshots + legshots;
+    const headshotPercentage = totalShots > 0 ? ((headshots / totalShots) * 100).toFixed(0) : 0;
+
+    return { tagName, gameName, roundPlayed, firstKills, multiKills, totalDamage, headshots, bodyshots, legshots, headshotPercentage };
   };
+  // Định nghĩa renderTable TRƯỚC khi sử dụng
+  const renderTable = (teamData, teamColor) => {
+    // Sắp xếp teamData dựa trên ACS giảm dần
+    const sortedTeamData = teamData.sort((a, b) => {
+      const statsA = calculatePlayerStats(a);
+      const statsB = calculatePlayerStats(b);
+      const acsA = statsA.roundPlayed > 0 ? (a.stats.score / statsA.roundPlayed) : 0;
+      const acsB = statsB.roundPlayed > 0 ? (b.stats.score / statsB.roundPlayed) : 0;
+      return acsB - acsA; // Sắp xếp giảm dần
+    });
   
-
-  const columns = [
-    { key: "name", label: "Người chơi" },
-    { key: "performanceScore", label: "Score" },
-    { key: "acs", label: "ACS" },
-    { key: "kda", label: "K/D/A" },
-    { key: "stats.kills/stats.deaths", label: "KD" },
-    { key: "stats.headshots", label: "HS%" },
-    { key: "adr", label: "ADR" },
-    { key: "fk", label: "FK" },
-    { key: "mk", label: "MK" },
-  ];
-
-  const renderTable = (teamData, teamColor) => (
-    <div ref={tableRef} className="w-full overflow-x-auto shadow-lg rounded-lg mb-8">
-      <table className="w-full min-w-max table-auto font-bold text-center">
-        <thead>
-          <tr className={`uppercase text-sm leading-normal sticky top-0`}>
-            {columns.map((column, index) => (
-              <th
-                key={column.key}
-                className={`py-[6px] bg-[#362431] px-2 text-center text-[10.5px] xl:text-[10.75px] text-white hover:bg-${teamColor}-200 transition-colors ${index === 0 ? "sticky left-0 z-10 bg-${teamColor}-100" : ""}`}
-                onClick={() => handleSort(column.key)}
-                style={index === 0 ? { width: '185px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : { width: '10px' }}
-              >
-                <div className="flex items-center justify-center">
-                  <span>{column.label}</span>
-                  
-                </div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className={`xl:text-[10.75px] text-[10.5px]`}>
-          {teamData.map((row, rowIndex) => (
-            <tr key={rowIndex} className={`border-${teamColor}-200 hover:bg-${teamColor}-100 transition-colors`}>
-              {columns.map((column, columnIndex) => {
-                let cellData;
-
-                if (column.key === "acs" || column.key === "performanceScore") {
-                  cellData = row[column.key];
-                } else if (column.key === "adr") {
-                  cellData = (row.stats.damage.dealt / numRound).toFixed(1);
-                }
-                else if (column.key === "kda") {
-                  cellData = `${row.stats.kills}/${row.stats.deaths}/${row.stats.assists}`;
-                }
-                else if (column.key === "stats.headshots") {
-                  cellData = (row.stats.headshots*100 /(row.stats.headshots+row.stats.bodyshots+row.stats.legshots)).toFixed(0);
-                }
-                else if (column.key === "stats.kills/stats.deaths") {
-                  // Calculate the KD ratio
-                  const kills = row.stats.kills;
-                  const deaths = row.stats.deaths;
-                  cellData = deaths === 0 ? kills : (kills / deaths).toFixed(1);
-                }
-                else {
-                  const columnKeys = column.key.split('.');
-                  cellData = row;
-                  columnKeys.forEach(key => {
-                    cellData = cellData ? cellData[key] : 'N/A';
-                  });
-                }
-
-                return (
-                  <td key={`${rowIndex}-${column.key}`} className={`py-2 px-3 text-center ${columnIndex === 0 ? "sticky left-0 z-10 bg-base-100" : ""}`} style={columnIndex === 0 ? { width: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : { width: '50px' }}>
-                    {column.key === "name" ? (
-                      <div className="flex items-center">
-                        <img
-                          src={imageUrls[row.agent.name]}
-                          alt={row.agent.name}
-                          className="w-8 h-8 rounded-full mr-2"
-                        />
-                        <span>{row.name}#{row.tag}</span>
-                      </div>
-                    ) : (
-                      cellData
-                    )}
-                  </td>
-                );
-              })}
+    return (
+      <div className="w-full overflow-x-auto shadow-lg rounded-lg mb-8">
+        <table className="w-full min-w-max table-auto font-bold text-center">
+          <thead>
+            <tr className="uppercase text-sm leading-normal sticky top-0">
+              {columns.map((column, index) => (
+                <th
+                  key={column.key}
+                  className={`py-[6px] bg-[#362431] px-2 text-center text-[10.5px] xl:text-[10.75px] text-white transition-colors ${index === 0 ? `sticky left-0 z-10` : ""
+                    }`}
+                >
+                  <div className="flex items-center justify-center">
+                    <span>{column.label}</span>
+                  </div>
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="xl:text-[10.75px] text-[10.5px]">
+            {sortedTeamData.map((row, rowIndex) => {
+              const stats = calculatePlayerStats(row);
+  
+              return (
+                <tr
+                  key={rowIndex}
+                  className={`border-${teamColor}-200 hover:bg-${teamColor}-100 transition-colors`}
+                >
+                  {columns.map((column, columnIndex) => {
+                    let cellData;
+                    const columnKeys = column.key.split('.');
+  
+                    // Xử lý từng loại cột
+                    switch (column.key) {
+                      case "name":
+                        cellData = (
+                          <div className="flex items-center">
+                            <img
+                              src={imageUrls[getagentName(row.characterId)]}
+                              alt={row.characterId}
+                              className="w-8 h-8 rounded-full mr-2"
+                            />
+                            <span>{row.gameName}#{row.tagLine}</span>
+                          </div>
+                        );
+                        break;
+  
+                      case "performanceScore":
+                        cellData = row.stats?.score || 'N/A';
+                        break;
+  
+                      case "acs":
+                        cellData = stats.roundPlayed > 0
+                          ? (row.stats.score / stats.roundPlayed).toFixed(1)
+                          : 'N/A';
+                        break;
+  
+                      case "kda":
+                        cellData = `${row.stats.kills || 0}/${row.stats.deaths || 0}/${row.stats.assists || 0}`;
+                        break;
+  
+                      case "stats.kills/stats.deaths":
+                        cellData = row.stats.deaths === 0
+                          ? row.stats.kills
+                          : (row.stats.kills / row.stats.deaths).toFixed(1);
+                        break;
+  
+                      case "stats.headshotPercentage":
+                        cellData = `${stats.headshotPercentage}%`;
+                        break;
+  
+                      case "adr":
+                        cellData = stats.roundPlayed > 0
+                          ? (stats.totalDamage / stats.roundPlayed).toFixed(1)
+                          : 'N/A';
+                        break;
+  
+                      case "fk":
+                        cellData = stats.firstKills;
+                        break;
+  
+                      case "mk":
+                        cellData = stats.multiKills;
+                        break;
+  
+                      default:
+                        // Xử lý các trường hợp nested object
+                        cellData = columnKeys.reduce((acc, key) => {
+                          if (acc && acc[key] !== undefined) return acc[key];
+                          return 'N/A';
+                        }, row);
+                    }
+  
+                    return (
+                      <td
+                        key={`${rowIndex}-${column.key}`}
+                        className={`py-2 px-3 text-center ${columnIndex === 0 ? "sticky left-0 z-10 bg-base-100" : ""
+                          }`}
+                        style={columnIndex === 0 ? {
+                          width: '150px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        } : { width: '50px' }}
+                      >
+                        {cellData}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const renderMapTabs = () => (
+    <div className="flex items-center justify-between !bg-[#362431] p-2 mb-2 mt-1">
+      <span className="text-white text-[11px] font-bold mr-4">MATCH STATS</span>
+      <div className="flex gap-2">
+        {Object.keys(mapData).map((mapName) => (
+          <button
+            key={mapName}
+            onClick={() => setSelectedMap(mapName)}
+            className={`px-4 py-2 text-[11px] font-bold rounded ${selectedMap === mapName
+              ? 'bg-white text-black'
+              : 'bg-[#4A374A] text-white'
+              }`}
+          >
+            {mapName.toUpperCase()}
+          </button>
+        ))}
+      </div>
     </div>
   );
-
-  if (error) {
-    return <div className="text-red-500 text-center">Lỗi data hoặc do trận đấu chưa diễn ra. Các bạn quay lại sau nhé.</div>;
-  }
-
-  const redTeam = data.filter(player => player.team_id === "Red");
-  const blueTeam = data.filter(player => player.team_id === "Blue");
 
   return (
+    <>{renderMapTabs()}
     <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-x-7">
-      <div className="w-full xl:w-[49%]">
-        {renderTable(redTeam, "red")}
-      </div>
-      <div className="w-full xl:w-[49%]">
-        {renderTable(blueTeam, "blue")}
-      </div>
       
+      {playerData?.players && (
+        <>
+        <div className="w-full xl:w-[49%]">
+          {renderTable(
+            playerData.players.filter(p => p.teamId === "Red"),
+            "red"
+          )}
+        </div>
+        <div className="w-full xl:w-[49%]">
+          {renderTable(
+            playerData.players.filter(p => p.teamId === "Blue"),
+            "blue"
+          )}
+          </div>
+        </>
+      )}
     </div>
+    </>
+    
   );
-}
+};
 
-export default FeatureRichTable;
+export default PlayerStats;

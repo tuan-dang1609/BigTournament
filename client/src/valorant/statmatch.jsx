@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import MatchResult from "./match";
+import PlayerStats from "./match.jsx";
 
-export default function MatchStat() {
+export default function MatchStat2() {
     const { round, Match } = useParams();
     const [matchid, setMatchid] = useState([]);
     const [teamA, setteamA] = useState([]);
@@ -13,20 +13,13 @@ export default function MatchStat() {
     const [teamBBgColor, setTeamBBgColor] = useState('');
     const [teamAshort, setTeamAshort] = useState('')
     const [teamBshort, setTeamBshort] = useState('')
-    const [mapData, setMapData] = useState({});
     const [matchInfo, setMatchInfo] = useState([]);
-    const [error, setError] = useState(null);
-    const [numRound, setNumRound] = useState(null);
-    const [kill, setAllKill] = useState([]);
-    const [score, setScore] = useState([]);
     const [time, setTime] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedMap, setSelectedMap] = useState(null);
     const [botype, setBotype] = useState('');
     const [scoreA, setScoreA] = useState('');
     const [scoreB, setScoreB] = useState('');
-    const region = 'ap';
-
+    const [dictionary, setDictionary] = useState(null)
     const hexToRgba = (hex, opacity) => {
         hex = hex.replace('#', '');
         const r = parseInt(hex.substring(0, 2), 16);
@@ -90,7 +83,7 @@ export default function MatchStat() {
             setBotype(boType)
             setScoreA(data.scoreA);
             setScoreB(data.scoreB)
-            console.log(`Match type: ${boType}`); // In ra loại BO để kiểm tra
+
         } catch (error) {
             console.error("Failed to fetch game:", error);
         }
@@ -125,51 +118,70 @@ export default function MatchStat() {
         }
     };
 
+    useEffect(() => {
+        let isMounted = true;
 
+        const fetchDict = async () => {
+            try {
+                if (!dictionary) {
+                    const res = await fetch(
+                        `https://dongchuyennghiep-backend.vercel.app/api/valorant/dictionary`
+                    );
+
+                    if (!res.ok) throw new Error(`HTTP error! ${res.status}`);
+
+                    const data = await res.json();
+                    if (isMounted) {
+                        setDictionary(data)
+                        setIsLoading(false);
+
+                    };
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setError(err.message);
+                    console.error("Dictionary fetch error:", err);
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        fetchDict();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
 
     useEffect(() => {
         if (matchid.length > 0) {
-            Promise.all(
-                matchid.map(id =>
-                    fetch(`https://dongchuyennghiep-backend.vercel.app/api/match/${region}/${id}`)
-                        .then(res => {
-                            if (!res.ok) {
-                                throw new Error(`HTTP error! status: ${res.status}`);
-                            }
+            const fetchData = async () => {
+                try {
+                    const results = await Promise.all(
+                        matchid.map(async (id) => {
+                            const res = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/valorant/match/${id}`);
+                            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                             return res.json();
                         })
-                        .then(data => ({
-                            id,
-                            data: data.data
-                        }))
-                        .catch(err => {
-                            return null;
-                        })
-                )
-            ).then(results => {
-                const validResults = results.filter(result => result !== null);
-                if (validResults.length > 0) {
-                    const groupedData = validResults.reduce((acc, result) => {
-                        const mapName = result.data.metadata.map.name;
-                        if (!acc[mapName]) {
-                            acc[mapName] = [];
-                        }
-                        acc[mapName].push(result.data);
-                        return acc;
-                    }, {});
+                    );
+                    setMatchInfo(results);
+                    setTime(results[0].matchInfo.gameStartMillis)
 
-                    setMapData(groupedData);
-                    setSelectedMap(Object.keys(groupedData)[0]); // Set the first map as the default
-                    setIsLoading(false);
+                } catch (err) {
+                    setError(err.message);
+
                 }
-            }).catch(err => {
-                setError(err.message);
-                setIsLoading(false);
-            });
-        }
-    }, [region, matchid]);
+            };
 
+            // Thêm điều kiện kiểm tra để tránh gọi API liên tục
+            if (matchInfo.length === 0) {
+                fetchData();
+            }
+        }
+    }, [matchid]);
+
+    
     const formatTime = (utcTime) => {
         const date = new Date(utcTime);
         const options = {
@@ -196,40 +208,7 @@ export default function MatchStat() {
             default: return 'th';
         }
     };
-
-    const renderMapTabs = () => (
-        <div className="flex items-center justify-between bg-[#362431] p-2 mb-2 mt-1">
-            <span className="text-white text-[11px] font-bold mr-4">MATCH STATS</span>
-            <div className="flex gap-2">
-                {Object.keys(mapData).map((mapName) => (
-                    <button
-                        key={mapName}
-                        onClick={() => setSelectedMap(mapName)}
-                        className={`px-4 py-2 text-[11px] font-bold rounded ${selectedMap === mapName ? 'bg-white text-black' : 'bg-[#4A374A] text-white'}`}
-                    >
-                        {mapName.toUpperCase()}
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
-
-    useEffect(() => {
-        if (selectedMap) {
-            const selectedMatchData = mapData[selectedMap] || [];
-
-            const players = selectedMatchData.flatMap(match => match.players) || [];
-            const kills = selectedMatchData.flatMap(match => match.kills) || [];
-            const rounds = selectedMatchData.reduce((sum, match) => sum + match.rounds.length, 0);
-            const teams = selectedMatchData.flatMap(match => match.teams);
-            const time = selectedMatchData.length > 0 ? formatTime(selectedMatchData[0].metadata.started_at) : null;
-
-            setNumRound(rounds);
-            setScore(teams);
-            setTime(time);
-            calculateFKAndMK(players, kills);
-        }
-    }, [selectedMap, mapData]);
+    
     const capitalizeFirstLetter = (string) => {
         if (!string) return '';
         return string.charAt(0).toUpperCase() + string.slice(1);
@@ -241,47 +220,6 @@ export default function MatchStat() {
             document.title = "Đang tải"; // Tiêu đề mặc định
         }
     }, [teamA, teamB]);
-    const calculateFKAndMK = (players, kills) => {
-        const fkMap = {};
-        const mkMap = {};
-
-        players.forEach(player => {
-            fkMap[player.puuid] = 0;
-            mkMap[player.puuid] = 0;
-        });
-
-        const roundKillCount = {};
-
-        kills.forEach(killEvent => {
-            const { killer, round } = killEvent;
-
-            if (!roundKillCount[round]) {
-                roundKillCount[round] = {};
-                fkMap[killer.puuid] += 1;
-            }
-
-            if (!roundKillCount[round][killer.puuid]) {
-                roundKillCount[round][killer.puuid] = 0;
-            }
-            roundKillCount[round][killer.puuid] += 1;
-
-            if (roundKillCount[round][killer.puuid] === 3) {
-                mkMap[killer.puuid] += 1;
-            }
-        });
-
-        const updatedMatchInfo = players.map(player => ({
-            ...player,
-            fk: fkMap[player.puuid] || 0,
-            mk: mkMap[player.puuid] || 0,
-        }));
-
-        setMatchInfo(updatedMatchInfo);
-    };
-
-    const selectedData = selectedMap ? matchInfo : [];
-    const selectedKills = selectedMap ? kill : [];
-    const selectedTeams = selectedMap ? score : [];
 
     if (isLoading) {
         return (
@@ -312,28 +250,24 @@ export default function MatchStat() {
                         </div>
                         <div className="score-and-time">
                             <div className="score bg-[#362431]">
-                                {selectedTeams && selectedTeams.length > 0 && (
-                                    <span
-                                        className={`scoreA ${scoreA > scoreB ? 'green-win' : 'red-lose'}`}
-                                        id='score-left'
-                                    >
-                                        {scoreA}
-                                    </span>
-                                )}
+                                <span
+                                    className={`scoreA ${scoreA > scoreB ? 'green-win' : 'red-lose'}`}
+                                    id='score-left'
+                                >
+                                    {scoreA}
+                                </span>
                             </div>
                             <div className="time text-sm uppercase bg-[#362431] text-white">
                                 <span>Fin</span>
-                                <span>{time}</span>
+                                <span>{formatTime(time)}</span>
                             </div>
                             <div className="score bg-[#362431]">
-                                {selectedTeams && selectedTeams.length > 1 && (
-                                    <span
-                                        className={`scoreA ${scoreA < scoreB ? 'green-win' : 'red-lose'}`}
-                                        id='score-right'
-                                    >
-                                        {scoreB}
-                                    </span>
-                                )}
+                                <span
+                                    className={`scoreB ${scoreA < scoreB ? 'green-win' : 'red-lose'}`}
+                                    id='score-right'
+                                >
+                                    {scoreB}
+                                </span>
                             </div>
                         </div>
                         <div className="team teamright w-full flex items-center " style={{ backgroundColor: hexToRgba(teamBBgColor, 0.2) }}>
@@ -355,9 +289,9 @@ export default function MatchStat() {
                         <span className='group all-title text-white'>Nhánh {capitalizeFirstLetter(round)} ● {botype}</span>
                     </div>
                 </div>
-                {renderMapTabs()}
+
                 <div>
-                    <MatchResult matchInfo={selectedData} numRound={numRound} kill={selectedKills} error={error} />
+                    <PlayerStats data={matchInfo} dictionary={dictionary} />
                 </div>
             </div>
         </>

@@ -67,7 +67,7 @@ const TournamentBracket = () => {
     );
 
     if (match) {
-      return `/valorant/match/${match.round}/${match.Match}`;
+      return `/valorant/match/qualifier/${match.Match}`;
     } else {
       return "#";
     }
