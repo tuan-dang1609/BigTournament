@@ -68,7 +68,51 @@ router.post('/action', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+router.post('/status', async (req, res) => {
+  try {
+    const match = await Match.findOne({ id: req.body.matchId })
+      .select('-__v -_id')
+      .lean();
 
+    if (!match) {
+      return res.status(404).json({ error: "Match not found" });
+    }
+
+    // Tính toán trạng thái hiển thị
+    const displayStatus = {
+      ...match,
+      remainingBans: calculateRemainingBans(match),
+      nextAction: getNextAction(match),
+    };
+
+    res.json(displayStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Hàm hỗ trợ
+function calculateRemainingBans(match) {
+  const requiredBans = {
+    BO1: 4,
+    BO3: 2,
+    BO5: 1
+  }[match.matchType];
+  
+  return Math.max(0, requiredBans - match.maps.banned.length);
+}
+
+function getNextAction(match) {
+  if (match.currentPhase === 'completed') return 'Match completed';
+  
+  const actions = {
+    ban: `Waiting for ${match.currentTurn} to ban map`,
+    pick: `Waiting for ${match.currentTurn} to pick map`,
+    side: `Waiting for side selection`
+  };
+  
+  return actions[match.currentPhase] || 'Unknown status';
+}
 // Helper functions for action processing
 async function processBan(match, { map }) {
   if (match.currentPhase !== "ban") throw new Error("Invalid phase for ban");
