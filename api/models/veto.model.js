@@ -6,7 +6,7 @@ const matchSchema = new mongoose.Schema({
   team2: { type: String, required: true },
   matchType: { type: String, enum: ["BO1", "BO3", "BO5"], required: true },
   maps: {
-    pool: { type: [String], default: ["Bind", "Haven", "Split", "Ascent", "Icebox", "Breeze", "Fracture","Abyss","Pearl","Sunset","Lotus"] },
+    pool: { type: [String], default: ["Bind", "Haven", "Split", "Fracture","Abyss","Pearl","Lotus"] },
     banned: [{ type: String }],
     picked: [{ type: String }],
     selected: [{ type: String }]
