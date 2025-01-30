@@ -122,7 +122,52 @@ async function processBan(match, { map }) {
   
   checkBanCompletion(match);
 }
+async function processPick(match, { map }) {
+  if (match.currentPhase !== 'pick') {
+    throw new Error('Invalid phase for picking');
+  }
 
+  if (!match.maps.pool.includes(map)) {
+    throw new Error('Map not available for picking');
+  }
+
+  // Thêm map vào danh sách đã pick
+  match.maps.picked.push(map);
+  match.maps.pool = match.maps.pool.filter(m => m !== map);
+
+  // Xử lý logic pick theo loại match
+  const pickRequirements = {
+    BO1: 1,
+    BO3: 2,
+    BO5: 3
+  }[match.matchType];
+
+  // Chuyển lượt pick
+  match.currentTurn = match.currentTurn === 'team1' ? 'team2' : 'team1';
+
+  // Kiểm tra đã pick đủ map chưa
+  if (match.maps.picked.length >= pickRequirements) {
+    // Chuyển map đã pick thành map được chọn chính thức
+    match.maps.selected = [...match.maps.picked];
+    match.maps.picked = [];
+    
+    // Chuyển sang phase chọn side
+    match.currentPhase = 'side';
+    
+    // Khởi tạo danh sách sides cho từng map
+    match.sides = match.maps.selected.map(map => ({
+      map,
+      team1: null,
+      team2: null
+    }));
+  }
+
+  // Xử lý lượt pick đặc biệt cho BO3
+  if (match.matchType === 'BO3' && match.maps.picked.length === 1) {
+    // Ở BO3, lượt pick thứ 2 thuộc về đội còn lại
+    match.currentTurn = match.currentTurn === 'team1' ? 'team2' : 'team1';
+  }
+}
 function checkBanCompletion(match) {
   const requiredBans = { BO1: 4, BO3: 2, BO5: 1 }[match.matchType];
   if (match.maps.banned.length >= requiredBans) {
