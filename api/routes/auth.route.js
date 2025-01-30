@@ -175,6 +175,54 @@ function checkBanCompletion(match) {
     match.currentTurn = "team1";
   }
 }
+async function processSide(match, { map, side }) {
+  if (match.currentPhase !== 'side') {
+    throw new Error('Invalid phase for side selection');
+  }
+
+  // Kiểm tra map có trong danh sách selected không
+  if (!match.maps.selected.includes(map)) {
+    throw new Error('Map not in selected maps');
+  }
+
+  // Tìm side configuration cho map
+  const mapSide = match.sides.find(s => s.map === map);
+  
+  if (!mapSide) {
+    throw new Error('Map side configuration not found');
+  }
+
+  // Xác định team đang chọn side
+  const team = match.currentTurn;
+  
+  // Validate role
+  if (!['team1', 'team2'].includes(team)) {
+    throw new Error('Invalid team for side selection');
+  }
+
+  // Cập nhật side cho đội hiện tại
+  if (team === 'team1') {
+    mapSide.team1 = side;
+    // Đội 2 sẽ tự động nhận side ngược lại
+    mapSide.team2 = side === 'Attacker' ? 'Defender' : 'Attacker';
+  } else {
+    mapSide.team2 = side;
+    // Đội 1 sẽ tự động nhận side ngược lại
+    mapSide.team1 = side === 'Attacker' ? 'Defender' : 'Attacker';
+  }
+
+  // Chuyển lượt chọn sang đội tiếp theo
+  match.currentTurn = team === 'team1' ? 'team2' : 'team1';
+
+  // Kiểm tra đã chọn hết tất cả sides chưa
+  const allSidesSelected = match.sides.every(s => 
+    s.team1 !== null && s.team2 !== null
+  );
+
+  if (allSidesSelected) {
+    match.currentPhase = 'completed';
+  }
+}
 router.post('/powerrankingaov', async (req, res) => {
     try {
       // Truy vấn tất cả dữ liệu trong collection PowerRankingAOV
