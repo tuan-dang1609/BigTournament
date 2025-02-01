@@ -257,20 +257,35 @@ const PlayerStats = ({ data,dictionary }) => {
 
   const renderMapTabs = () => (
     <div className="flex items-center justify-between !bg-[#362431] p-2 mb-2 mt-1">
-      <span className="text-white text-[11px] font-bold mr-4">MATCH STATS</span>
+      <span className="text-white text-[11px] font-bold mr-4">THÔNG SỐ</span>
       <div className="flex gap-2">
-        {Object.keys(mapData).map((mapName) => (
-          <button
-            key={mapName}
-            onClick={() => setSelectedMap(mapName)}
-            className={`px-4 py-2 text-[11px] font-bold rounded ${selectedMap === mapName
-              ? 'bg-white text-black'
-              : 'bg-[#4A374A] text-white'
+        {Object.keys(mapData).map((mapName) => {
+          // Tìm match tương ứng với mapName
+          const matchForTab = data.find(
+            (match) => getMapName(match.matchInfo?.mapId) === mapName
+          );
+          let score = "";
+          if (matchForTab && matchForTab.teams) {
+            const redTeam = matchForTab.teams.find((team) => team.teamId === "Red");
+            const blueTeam = matchForTab.teams.find((team) => team.teamId === "Blue");
+            if (redTeam && blueTeam) {
+              score = `${redTeam.roundsWon} - ${blueTeam.roundsWon}`;
+            }
+          }
+          return (
+            <button
+              key={mapName}
+              onClick={() => setSelectedMap(mapName)}
+              className={`px-4 py-2 text-[10px] font-bold rounded ${
+                selectedMap === mapName
+                  ? "bg-white text-black"
+                  : "bg-[#4A374A] text-white"
               }`}
-          >
-            {mapName.toUpperCase()}
-          </button>
-        ))}
+            >
+              {mapName.toUpperCase()} ({score})
+            </button>
+          );
+        })}
       </div>
     </div>
   );

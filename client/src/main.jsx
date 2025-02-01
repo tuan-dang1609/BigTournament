@@ -50,8 +50,8 @@ import MatchStatLOL from './leagueoflegend/match.jsx';
 import TeamRegistrationValorantForm from './valorant/registerfor.jsx';
 import CompetitionPage from './valorant/homepage.jsx';
 import TournamentBracketAOV16_1 from './arenaofvalor/bracket_16team_1.jsx';
-import MatchStat2 from './valorant/test2.jsx';
-import PlayoffBracketAOV from './arenaofvalor/playoff8.jsx';
+import MatchInterface from './valorant/test2.jsx';
+import CreateMatch from './valorant/test.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -71,7 +71,8 @@ if (rootElement) {
               <Route path='/calendar' element={<Calendar />} />
               <Route path='/valorant' element={<CompetitionPage />} />
               <Route path='/valorant/rule' element={<Rule />} />
-              <Route path='/valorant/test/:round/:Match' element={<MatchStat2 />} />
+              <Route path='/valorant/test/createbanpick' element={<CreateMatch />} />
+              <Route path='/match/:matchId/:role' element={<MatchInterface />} />
               <Route path='/allgame' element={<AllGame />} />
               <Route path='/valorant/test/special' element={<TournamentBracketLOL />} />
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />

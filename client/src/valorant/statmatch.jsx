@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import PlayerStats from "./match.jsx";
-
+import Valoveto from './vetoshow.jsx';
 export default function MatchStat2() {
     const { round, Match } = useParams();
     const [matchid, setMatchid] = useState([]);
@@ -19,7 +19,9 @@ export default function MatchStat2() {
     const [botype, setBotype] = useState('');
     const [scoreA, setScoreA] = useState('');
     const [scoreB, setScoreB] = useState('');
+    const [banpickid,setbanpickid] = useState('');
     const [dictionary, setDictionary] = useState(null)
+    const [findteam,setFindteam] = useState([]);
     const hexToRgba = (hex, opacity) => {
         hex = hex.replace('#', '');
         const r = parseInt(hex.substring(0, 2), 16);
@@ -31,7 +33,14 @@ export default function MatchStat2() {
         // Fetch match data (teamA, teamB, matchId)
         fetchGames();
     }, [round, Match]);
+    useEffect(() => {
+        const scrollToTop = () => {
+            document.documentElement.scrollTop = 0;
+            
+        };
+        setTimeout(scrollToTop, 0);
 
+    }, []);
     useEffect(() => {
         // Fetch team logos and colors only when teamA and teamB are set
         if (teamA.length > 0 && teamB.length > 0) {
@@ -83,6 +92,7 @@ export default function MatchStat2() {
             setBotype(boType)
             setScoreA(data.scoreA);
             setScoreB(data.scoreB)
+            setbanpickid(data.banpickid)
 
         } catch (error) {
             console.error("Failed to fetch game:", error);
@@ -104,6 +114,7 @@ export default function MatchStat2() {
             }
 
             const teamData = await teamResponse.json();
+            setFindteam(teamData)
             const teamAData = teamData.find(team => team.teamName === teamA);
             const teamBData = teamData.find(team => team.teamName === teamB);
 
@@ -289,9 +300,12 @@ export default function MatchStat2() {
                         <span className='group all-title text-white'>Nhánh {capitalizeFirstLetter(round)} ● {botype}</span>
                     </div>
                 </div>
-
+                <div className='flex'>
+                <div className='w-full'><Valoveto banpickid={banpickid} teams={findteam}/></div>
+                
+                </div>
                 <div>
-                    <PlayerStats data={matchInfo} dictionary={dictionary} />
+                    <PlayerStats data={matchInfo} dictionary={dictionary}  />
                 </div>
             </div>
         </>

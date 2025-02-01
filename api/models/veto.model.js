@@ -1,20 +1,30 @@
 import mongoose from "mongoose";
 
 const matchSchema = new mongoose.Schema({
+  banPhase: { type: Number, default: 1 }, // 1 = Ban đầu, 2 = Ban sau pick
+  pickPhase: { type: Number, default: 1 }, // 1 = Pick đầu, 2 = Pick sau
   id: { type: String, required: true, unique: true },
   team1: { type: String, required: true },
   team2: { type: String, required: true },
+  deciderMap: { type: String },
   matchType: { type: String, enum: ["BO1", "BO3", "BO5"], required: true },
   maps: {
     pool: { type: [String], default: ["Bind", "Haven", "Split", "Fracture","Abyss","Pearl","Lotus"] },
-    banned: [{ type: String }],
-    picked: [{ type: String }],
+    banned: [{
+      name: { type: String },      // Tên map bị ban
+      bannedBy: { type: String }   // Tên đội ban
+    }],
+    picked: [{ 
+      name: { type: String },      // Tên map được pick
+      pickedBy: { type: String }   // Tên đội pick
+    }],
     selected: [{ type: String }]
   },
   sides: [{
-    map: String,
-    team1: String,
-    team2: String
+    map: { type: String, required: true },
+    pickedBy: { type: String, required: true }, // Thêm trường này
+    team1: { type: String, enum: ["Attacker", "Defender", null], default: null },
+    team2: { type: String, enum: ["Attacker", "Defender", null], default: null }
   }],
   currentPhase: { type: String, enum: ["ban", "pick", "side", "completed"], default: "ban" },
   currentTurn: { type: String, enum: ["team1", "team2"], required: true },

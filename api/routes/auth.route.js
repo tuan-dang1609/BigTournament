@@ -51,7 +51,26 @@ router.post('/create', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+router.post('/status', async (req, res) => {
+  try {
 
+    const match = await BanPickValo.findOne({ id: req.body.matchId }).lean();
+    
+    if (!match) {
+      console.log(`Không tìm thấy match với ID: ${req.body.matchId}`);
+      return res.status(404).json({ 
+        error: "Match not found",
+        receivedId: req.body.matchId,
+        storedIds: await BanPickValo.distinct('id') 
+      });
+    }
+
+    res.json(match);
+  } catch (error) {
+    console.error('Lỗi truy vấn database:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 router.post('/action', async (req, res) => {
   try {
     const match = await BanPickValo.findOne({ id: req.body.matchId });
@@ -68,114 +87,112 @@ router.post('/action', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-router.post('/status', async (req, res) => {
-  try {
-    console.log('Request body:', req.body); // Debug incoming request
-    const match = await BanPickValo.findOne({ id: req.body.matchId }).lean();
-    
-    if (!match) {
-      console.log(`Không tìm thấy match với ID: ${req.body.matchId}`);
-      return res.status(404).json({ 
-        error: "Match not found",
-        receivedId: req.body.matchId,
-        storedIds: await BanPickValo.distinct('id') 
-      });
-    }
 
-    console.log('Found match:', match); // Debug kết quả tìm được
-    res.json(match);
-  } catch (error) {
-    console.error('Lỗi truy vấn database:', error);
-    res.status(500).json({ error: error.message });
+async function processPick(match, { map, role }) {
+  if (match.matchType === "BO1") {
+    throw new Error("BO1 does not have pick phase");
   }
-});
-// Hàm hỗ trợ
-function calculateRemainingBans(match) {
-  const requiredBans = {
-    BO1: 4,
-    BO3: 2,
-    BO5: 1
-  }[match.matchType];
+  if (match.currentPhase !== "pick") throw new Error("Invalid phase for pick");
   
-  return Math.max(0, requiredBans - match.maps.banned.length);
+  // Validate lượt pick
+  if (match.matchType === "BO3") {
+    const currentPickCount = match.maps.picked.length;
+    
+    if (currentPickCount === 0 && role !== "team1") {
+      throw new Error("Only Team 1 can make the first pick");
+    }
+    
+    if (currentPickCount === 1 && role !== "team2") {
+      throw new Error("Only Team 2 can make the second pick");
+    }
+  }
+
+  // Thêm thông tin pickedBy
+  match.maps.picked.push({
+    name: map,
+    pickedBy: role === "team1" ? match.team1 : match.team2
+  });
+  
+  match.maps.pool = match.maps.pool.filter(m => m !== map);
+
+  // Thêm vào sides với pickedBy
+  match.sides.push({
+    map,
+    pickedBy: role === "team1" ? match.team1 : match.team2,
+    team1: null,
+    team2: null
+  });
+
+  // Xử lý lượt pick
+  if (match.matchType === "BO3") {
+    const pickedCount = match.maps.picked.length;
+    
+    if (pickedCount === 1) {
+      match.currentTurn = "team2";
+    } 
+    else if (pickedCount === 2) {
+      match.currentPhase = "ban";
+      match.banPhase = 2;
+      match.currentTurn = "team1";
+    }
+  }
+  
+  await match.save();
 }
 
-function getNextAction(match) {
-  if (match.currentPhase === 'completed') return 'Match completed';
-  
-  const actions = {
-    ban: `Waiting for ${match.currentTurn} to ban map`,
-    pick: `Waiting for ${match.currentTurn} to pick map`,
-    side: `Waiting for side selection`
-  };
-  
-  return actions[match.currentPhase] || 'Unknown status';
-}
-// Helper functions for action processing
 async function processBan(match, { map }) {
   if (match.currentPhase !== "ban") throw new Error("Invalid phase for ban");
-  if (!match.maps.pool.includes(map)) throw new Error("Map not available");
   
-  match.maps.banned.push(map);
-  match.maps.pool = match.maps.pool.filter(m => m !== map);
-  match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+  // Thêm thông tin bannedBy
+  match.maps.banned.push({
+    name: map,
+    bannedBy: match.currentTurn === "team1" ? match.team1 : match.team2
+  });
   
-  checkBanCompletion(match);
-}
-async function processPick(match, { map }) {
-  if (match.currentPhase !== 'pick') {
-    throw new Error('Invalid phase for picking');
-  }
-
-  if (!match.maps.pool.includes(map)) {
-    throw new Error('Map not available for picking');
-  }
-
-  // Thêm map vào danh sách đã pick
-  match.maps.picked.push(map);
   match.maps.pool = match.maps.pool.filter(m => m !== map);
 
-  // Xử lý logic pick theo loại match
-  const pickRequirements = {
-    BO1: 1,
-    BO3: 2,
-    BO5: 3
-  }[match.matchType];
-
-  // Chuyển lượt pick
-  match.currentTurn = match.currentTurn === 'team1' ? 'team2' : 'team1';
-
-  // Kiểm tra đã pick đủ map chưa
-  if (match.maps.picked.length >= pickRequirements) {
-    // Chuyển map đã pick thành map được chọn chính thức
-    match.maps.selected = [...match.maps.picked];
-    match.maps.picked = [];
+  // Xử lý BO3 (Logic cập nhật lượt)
+  if (match.matchType === "BO3") {
+    if (match.banPhase === 1) {
+      if (match.maps.banned.length === 2) {
+        match.currentPhase = "pick";
+        match.currentTurn = "team1";
+        match.banPhase = 2;
+      } else {
+        match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+      }
+    }
+    else if (match.banPhase === 2) {
+      if (match.maps.banned.length === 4) {
+        match.maps.selected = [...match.maps.picked.map(p => p.name), match.maps.pool[0]];
+        match.currentTurn = "team2";
+        match.currentPhase = "side";
+      } else {
+        match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+      }
+    }
+  }
+  else if (match.matchType === "BO1") {
+    const banCount = match.maps.banned.length;
     
-    // Chuyển sang phase chọn side
-    match.currentPhase = 'side';
-    
-    // Khởi tạo danh sách sides cho từng map
-    match.sides = match.maps.selected.map(map => ({
-      map,
-      team1: null,
-      team2: null
-    }));
+    // Khi đã ban 6 map (3 lượt mỗi đội)
+    if (banCount === 6) {
+      // Lấy map cuối cùng làm Decider
+      match.deciderMap = match.maps.pool[0];
+      match.maps.selected = [match.deciderMap]; // Thêm vào selected (tuỳ nhu cầu)
+      match.currentPhase = "completed";
+    } 
+    // Chưa đủ 6 bans -> đổi lượt
+    else {
+      match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+    }
   }
-
-  // Xử lý lượt pick đặc biệt cho BO3
-  if (match.matchType === 'BO3' && match.maps.picked.length === 1) {
-    // Ở BO3, lượt pick thứ 2 thuộc về đội còn lại
-    match.currentTurn = match.currentTurn === 'team1' ? 'team2' : 'team1';
-  }
-}
-function checkBanCompletion(match) {
-  const requiredBans = { BO1: 4, BO3: 2, BO5: 1 }[match.matchType];
-  if (match.maps.banned.length >= requiredBans) {
-    match.currentPhase = "pick";
-    match.currentTurn = "team1";
-  }
+  await match.save();
 }
 async function processSide(match, { map, side }) {
+  if (match.matchType === "BO1") {
+    throw new Error("BO1 does not have side selection");
+  }
   if (match.currentPhase !== 'side') {
     throw new Error('Invalid phase for side selection');
   }
@@ -212,7 +229,8 @@ async function processSide(match, { map, side }) {
   }
 
   // Chuyển lượt chọn sang đội tiếp theo
-  match.currentTurn = team === 'team1' ? 'team2' : 'team1';
+  const nextTeam = team === 'team1' ? 'team2' : 'team1';
+  match.currentTurn = nextTeam;
 
   // Kiểm tra đã chọn hết tất cả sides chưa
   const allSidesSelected = match.sides.every(s => 

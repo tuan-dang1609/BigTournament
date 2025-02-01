@@ -1,299 +1,242 @@
-import { useState, useEffect } from 'react';
+// components/MatchInterface.js
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import PlayerStats from "./test.jsx";
+export default function MatchInterface() {
+  const [match, setMatch] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { matchId, role } = useParams();
 
-export default function MatchStat2() {
-    const { round, Match } = useParams();
-    const [matchid, setMatchid] = useState([]);
-    const [teamA, setteamA] = useState([]);
-    const [teamB, setteamB] = useState([]);
-    const [teamALogo, setTeamALogo] = useState('');
-    const [teamBLogo, setTeamBLogo] = useState('');
-    const [teamABgColor, setTeamABgColor] = useState('');
-    const [teamBBgColor, setTeamBBgColor] = useState('');
-    const [teamAshort, setTeamAshort] = useState('')
-    const [teamBshort, setTeamBshort] = useState('')
-    const [matchInfo, setMatchInfo] = useState([]);
-    const [time, setTime] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [botype, setBotype] = useState('');
-    const [scoreA, setScoreA] = useState('');
-    const [scoreB, setScoreB] = useState('');
-    const [dictionary, setDictionary] = useState(null)
-    const hexToRgba = (hex, opacity) => {
-        hex = hex.replace('#', '');
-        const r = parseInt(hex.substring(0, 2), 16);
-        const g = parseInt(hex.substring(2, 4), 16);
-        const b = parseInt(hex.substring(4, 6), 16);
-        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    };
-    useEffect(() => {
-        // Fetch match data (teamA, teamB, matchId)
-        fetchGames();
-    }, [round, Match]);
+  useEffect(() => {
+    const fetchMatch = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/api/auth/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ matchId })
+        });
 
-    useEffect(() => {
-        // Fetch team logos and colors only when teamA and teamB are set
-        if (teamA.length > 0 && teamB.length > 0) {
-            fetchTeamLogos();
-        }
-    }, [teamA, teamB]);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-    const fetchGames = async () => {
-        try {
-            const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findmatchid', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    round: round,
-                    Match: Match,
-                    game: "Valorant"
-                })
-            });
+        const data = await res.json();
+        setMatch(data);
+        
+        // Thêm log để kiểm tra trạng thái match
+        console.log('Current Phase:', data.currentPhase);
+        console.log('Current Turn:', data.currentTurn);
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            // Đếm số lượng matchid
-            const matchCount = data.matchid.length;
-
-            // Xét trường hợp để trả về BOx
-            let boType;
-            if (matchCount === 1) {
-                boType = 'BO1';
-            } else if (matchCount <= 3) {
-                boType = 'BO3';
-            } else if (matchCount <= 5) {
-                boType = 'BO5';
-            } else if (matchCount <= 7) {
-                boType = 'BO7';
-            } else {
-                boType = `Invalid BO type`; // Trường hợp không hợp lệ
-            }
-
-            // Cập nhật state
-            setMatchid(data.matchid);
-            setteamA(data.teamA);
-            setteamB(data.teamB);
-            setBotype(boType)
-            setScoreA(data.scoreA);
-            setScoreB(data.scoreB)
-
-        } catch (error) {
-            console.error("Failed to fetch game:", error);
-        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
+    fetchMatch();
+    const interval = setInterval(fetchMatch, 3000);
+    return () => clearInterval(interval);
+  }, [matchId]);
 
-    const fetchTeamLogos = async () => {
-        try {
-            const teamResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamValorant', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+  const handleAction = async (action, data) => {
+    // Log action trước khi gửi
+    console.log('Action Triggered:', {
+      action,
+      data,
+      matchId,
+      role,
+      currentPhase: match?.currentPhase,
+      currentTurn: match?.currentTurn
+    });
+
+    await fetch('http://localhost:3000/api/auth/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchId, action, role, ...data })
+    });
+  };
+
+  // Thêm log khi render
+ 
+  // Thêm các components phụ ngay trên MatchInterface
+  const MapPoolSection = ({ title, maps, onAction, phase, role, currentTurn, match }) => (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <h3 className="font-bold mb-2">{title}</h3>
+      
+      {/* Thêm validation message cho BO3 */}
+      {match.matchType === 'BO3' && match.pickPhase === 1 && (
+        <div className="text-sm text-gray-500 mb-2">
+          {match.maps.picked.length === 0 
+            ? "Team 1 pick first" 
+            : "Team 2 pick second"}
+        </div>
+      )}
+  
+  <div className="space-y-2">
+      {maps.map((map) => (
+        <div key={map} className="flex items-center justify-between bg-white p-2 rounded">
+          <span>{map}</span>
+          
+          {(phase === 'ban' || phase === 'pick') && 
+            role === currentTurn && (
+              <button
+                onClick={() => onAction(phase === 'ban' ? 'ban' : 'pick', { map })}
+                className={`px-3 py-1 text-sm text-white rounded ${
+                  phase === 'ban' 
+                    ? 'bg-red-500 hover:bg-red-600' 
+                    : 'bg-green-500 hover:bg-green-600'
+                }`}
+                // Thêm disabled ở đây 👇
+                disabled={
+                  phase === 'pick' && 
+                  match?.matchType === 'BO3' &&
+                  (
+                    (match?.pickPhase === 1 && match?.maps?.picked?.length === 0 && role !== 'team1') ||
+                    (match?.pickPhase === 1 && match?.maps?.picked?.length === 1 && role !== 'team2')
+                  )
                 }
-            });
+              >
+                {phase === 'ban' ? 'Ban' : 'Pick'}
+              </button>
+            )}
+        </div>
+      ))}
+    </div>
+    </div>
+  );
 
-            if (!teamResponse.ok) {
-                throw new Error(`HTTP error! status: ${teamResponse.status}`);
-            }
+  const BanPickSection = ({ title, maps, type }) => (
+    <div>
+      <h3>{title}</h3>
+      <ul>
+        {maps.map((item) => {
+          // Xử lý trường hợp dữ liệu raw string (backward compatibility)
+          const mapName = typeof item === "string" ? item : item?.name;
+          const pickedBy = typeof item === "object" ? item.pickedBy : "";
+          const bannedBy = typeof item === "object" ? item.bannedBy : "";
+  
+          return (
+            <li key={mapName}>
+              <strong>{mapName}</strong>
+              <div style={{ marginLeft: "1rem" }}>
+                {type === "picked" && (
+                  <div>Picked by: {pickedBy || "Chưa xác định"}</div>
+                )}
+                {type === "banned" && (
+                  <div>Banned by: {bannedBy || "Chưa xác định"}</div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
 
-            const teamData = await teamResponse.json();
-            const teamAData = teamData.find(team => team.teamName === teamA);
-            const teamBData = teamData.find(team => team.teamName === teamB);
-
-            setTeamALogo(`https://drive.google.com/thumbnail?id=${teamAData?.logoUrl}`);
-            setTeamBLogo(`https://drive.google.com/thumbnail?id=${teamBData?.logoUrl}`);
-            setTeamABgColor(teamAData?.color || '#ffffff');
-            setTeamBBgColor(teamBData?.color || '#ffffff');
-            setTeamAshort(teamAData?.shortName);
-            setTeamBshort(teamBData?.shortName);
-        } catch (error) {
-            console.error("Failed to fetch team logos:", error);
-        }
-    };
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const fetchDict = async () => {
-            try {
-                if (!dictionary) {
-                    const res = await fetch(
-                        `https://dongchuyennghiep-backend.vercel.app/api/valorant/dictionary`
-                    );
-
-                    if (!res.ok) throw new Error(`HTTP error! ${res.status}`);
-
-                    const data = await res.json();
-                    if (isMounted) {
-                        setDictionary(data)
-                        setIsLoading(false);
-
-                    };
-                }
-            } catch (err) {
-                if (isMounted) {
-                    setError(err.message);
-                    console.error("Dictionary fetch error:", err);
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        fetchDict();
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-
-    useEffect(() => {
-        if (matchid.length > 0) {
-            const fetchData = async () => {
-                try {
-                    const results = await Promise.all(
-                        matchid.map(async (id) => {
-                            const res = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/valorant/match/${id}`);
-                            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                            return res.json();
-                        })
-                    );
-                    setMatchInfo(results);
-                    setTime(results[0].matchInfo.gameStartMillis)
-
-                } catch (err) {
-                    setError(err.message);
-
-                }
-            };
-
-            // Thêm điều kiện kiểm tra để tránh gọi API liên tục
-            if (matchInfo.length === 0) {
-                fetchData();
-            }
-        }
-    }, [matchid]);
-
-    
-    const formatTime = (utcTime) => {
-        const date = new Date(utcTime);
-        const options = {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        };
-        const time = new Intl.DateTimeFormat('en-US', options).format(date);
-
-        const day = date.getDate();
-        const month = date.toLocaleString('en-US', { month: 'short' });
-        const year = date.getFullYear();
-        const daySuffix = getDaySuffix(day);
-
-        return `${time} - ${day}${daySuffix} ${month} ${year}`;
-    };
-
-    const getDaySuffix = (day) => {
-        if (day > 3 && day < 21) return 'th';
-        switch (day % 10) {
-            case 1: return 'st';
-            case 2: return 'nd';
-            case 3: return 'rd';
-            default: return 'th';
-        }
-    };
-    
-    const capitalizeFirstLetter = (string) => {
-        if (!string) return '';
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    };
-    useEffect(() => {
-        if (teamA && teamB) {
-            document.title = `${teamA} vs ${teamB} | ${capitalizeFirstLetter(round)}`;
-        } else {
-            document.title = "Đang tải"; // Tiêu đề mặc định
-        }
-    }, [teamA, teamB]);
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <span className="loading loading-dots loading-lg text-primary"></span>
-            </div>
-        );
-    }
-
-    return (
-        <>
-
-            <div className="matchstat">
-                <div className="scoreboard-title">
-                    <div className="scoreboard w-full">
-                        <div className="team teamleft w-full flex items-center" style={{ backgroundColor: hexToRgba(teamABgColor, 0.2) }}>
-                            <div className="logo">
-                                <img
-                                    className="w-12 h-12 ml-2 max-lg:ml-0 max-lg:w-9 max-lg:h-9"
-                                    src={teamALogo}
-                                    alt="Team Left Logo"
-                                />
-                            </div>
-                            <div className="teamname">
-                                <span className="block sm:hidden">{teamAshort}</span> {/* Hiển thị teamAshort khi màn hình nhỏ hơn sm */}
-                                <span className="hidden sm:block">{teamA}</span>       {/* Hiển thị teamA khi màn hình từ sm trở lên */}
-                            </div>
-                        </div>
-                        <div className="score-and-time">
-                            <div className="score bg-[#362431]">
-                                <span
-                                    className={`scoreA ${scoreA > scoreB ? 'green-win' : 'red-lose'}`}
-                                    id='score-left'
-                                >
-                                    {scoreA}
-                                </span>
-                            </div>
-                            <div className="time text-sm uppercase bg-[#362431] text-white">
-                                <span>Fin</span>
-                                <span>{formatTime(time)}</span>
-                            </div>
-                            <div className="score bg-[#362431]">
-                                <span
-                                    className={`scoreB ${scoreA < scoreB ? 'green-win' : 'red-lose'}`}
-                                    id='score-right'
-                                >
-                                    {scoreB}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="team teamright w-full flex items-center " style={{ backgroundColor: hexToRgba(teamBBgColor, 0.2) }}>
-                            <div className="logo">
-                                <img
-                                    className="w-12 h-12 mr-2 max-lg:mr-0 max-lg:w-9 max-lg:h-9"
-                                    src={teamBLogo}
-                                    alt="Team Right Logo"
-                                />
-                            </div>
-                            <div className="teamname">
-                                <span className="block sm:hidden">{teamBshort}</span> {/* Hiển thị teamAshort khi màn hình nhỏ hơn sm */}
-                                <span className="hidden sm:block">{teamB}</span>       {/* Hiển thị teamA khi màn hình từ sm trở lên */}
-                            </div>
-                        </div>
-                    </div>
-                    <div className='title bg-[#362431]'>
-                        <span className='league all-title'>Valorant DCN Split 2</span>
-                        <span className='group all-title text-white'>Nhánh {capitalizeFirstLetter(round)} ● {botype}</span>
-                    </div>
-                </div>
-
-                <div>
-                    <PlayerStats data={matchInfo} dictionary={dictionary} />
-                </div>
-            </div>
-        </>
+  const SideSelection = ({ match, role, onSelect }) => {
+    // Tìm map đầu tiên chưa chọn side
+    const currentMapSide = match.sides.find(side => 
+      side.team1 === null || side.team2 === null
     );
+  
+    if (!currentMapSide) return null; // Đã chọn hết
+  
+    // Xác định thông tin lượt chọn
+    const isMapPickedByTeam1 = currentMapSide.pickedBy === "team1";
+    const currentTeam = match.currentTurn;
+    const pickingForTeam = isMapPickedByTeam1 ? match.team2 : match.team1;
+    const pickedByTeam = isMapPickedByTeam1 ? match.team1 : match.team2;
+  
+    return (
+      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+        <h3 className="font-bold mb-4">
+          {currentTeam === "team1" ? match.team1 : match.team2} đang chọn bên cho bản đồ của {pickingForTeam}
+        </h3>
+  
+        <div className="bg-white p-4 rounded-lg">
+          <h4 className="font-semibold mb-2">{currentMapSide.map}</h4>
+          <div className="flex gap-2">
+            <button
+              onClick={() => onSelect('side', {
+                map: currentMapSide.map,
+                side: 'Attacker'
+              })}
+              disabled={role !== currentTeam}
+              className={`flex-1 bg-orange-500 text-white p-2 rounded ${
+                role !== currentTeam ? "opacity-50 cursor-not-allowed" : "hover:bg-orange-600"
+              }`}
+            >
+              Tấn công
+            </button>
+            <button
+              onClick={() => onSelect('side', {
+                map: currentMapSide.map,
+                side: 'Defender'
+              })}
+              disabled={role !== currentTeam}
+              className={`flex-1 bg-blue-500 text-white p-2 rounded ${
+                role !== currentTeam ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
+              }`}
+            >
+             Phòng thủ
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  if (loading || !match || !match.maps) return (
+    <div className="text-center p-8">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+      <p className="mt-4 text-gray-600">Đang tải dữ liệu match...</p>
+    </div>
+  );
+
+  return (
+    <div className="container mx-auto p-4 mt-16">
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold">
+            {match?.team1 || 'Đội 1'} vs {match?.team2 || 'Đội 2'}
+          </h1>
+          <p className="text-gray-600">{match?.matchType} Match</p>
+        </div>
+
+        {/* Thêm optional chaining và default values */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+        <MapPoolSection 
+    title="Bản đồ khả dụng"
+    maps={match.maps?.pool || []}
+    onAction={handleAction}
+    phase={match.currentPhase}
+    role={role}
+    currentTurn={match.currentTurn}
+    match={match} // Thêm dòng này
+  />
+
+          <BanPickSection
+            title="Bản đồ bị cấm"
+            maps={match.maps?.banned  || []}
+            type="banned"
+          />
+
+          <BanPickSection
+            title="Bản đồ được chọn"
+            maps={match?.maps.picked|| []}
+            type="picked"
+          />
+        </div>
+
+        {/* Kiểm tra sides tồn tại */}
+        {match.currentPhase === 'side' && (
+  <>
+
+    <SideSelection
+      match={match}
+      role={role}
+      onSelect={handleAction}
+    />
+  </>
+)}
+      </div>
+    </div>
+  );
 }

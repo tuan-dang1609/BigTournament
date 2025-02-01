@@ -8,6 +8,7 @@ const allgameSchema = new mongoose.Schema({
     scoreA: { type: Number },
     scoreB: { type: Number },
     Match: { type: String },
+    banpickid : {type:String},
     game:{type: String,required:true,default:"Valorant"}
 });
 

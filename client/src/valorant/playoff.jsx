@@ -5,6 +5,7 @@ const TournamentBracket = () => {
   const [teams, setTeams] = useState([[], [], [], []]);
   const [loading, setLoading] = useState(true);
   const [idmatch, setMatchId] = useState([]);
+  
   document.title = "Vòng loại Valorant"
   const fetchTeams = async () => {
     try {
@@ -179,12 +180,13 @@ const TournamentBracket = () => {
 
   return (
     <div className="container mx-auto p-4 relative">
-      <h1 className="text-3xl font-bold mb-10 mt-20 text-center">Vòng loại VALORANT</h1>
+      
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
       ) : (<>
+      <h1 className="text-3xl font-bold mb-10 mt-20 text-center">Vòng loại VALORANT</h1>
         <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
           <div className="w-full lg:w-1/4 relative">
             {renderSection("Khởi động (BO1)", [
