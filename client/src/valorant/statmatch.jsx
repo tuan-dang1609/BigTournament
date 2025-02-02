@@ -208,7 +208,7 @@ export default function MatchStat2() {
         if (allPlayer.length > 0) {
             const checkRegisteredPlayers = async () => {
                 try {
-                    const response = await fetch('http://localhost:3000/api/auth/check-registered-valorant', {
+                    const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/check-registered-valorant', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
