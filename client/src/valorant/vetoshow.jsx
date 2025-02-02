@@ -8,7 +8,8 @@ import Fracture from "../image/Fracture.png";
 import Abyss from "../image/Abyss.jpg";
 import Pearl from "../image/Pearl.jpg";
 import Lotus from "../image/Lotus.jpg";
-
+import Attacker from "../image/Attacker.png";
+import Defender from "../image/Defender.png";
 const image = {
     "Bind.jpg": Bind,
     "Haven.jpg": Haven,
@@ -71,14 +72,30 @@ const Valoveto = ({ banpickid, teams }) => {
             return (
                 <img
                     src={`https://drive.google.com/thumbnail?id=${team.logoUrl}`}
-                    
-                    className="lg:w-11 lg:h-11 md:w-10 md:h-10 w-9 h-9 object-contain"
+
+                    className="lg:w-12 lg:h-12 md:w-10 md:h-10 w-9 h-9 object-contain"
                 />
             );
         }
         return teamName;
     };
-
+    const getTeamShort = (teamName) => {
+        const team = teams.find((t) => t.teamName === teamName);
+        if (team) {
+            return (
+                team.shortName
+            );
+        }
+        return teamName;
+    };
+    const getSideImage = (sideValue) => {
+        if (sideValue === "Attacker") {
+            return <img src={Attacker} alt="Attacker" className="lg:w-10 lg:h-10 w-8 h-8 " />;
+        } else if (sideValue === "Defender") {
+            return <img src={Defender} alt="Defender" className="lg:w-10 lg:h-10 w-8 h-8" />;
+        }
+        return sideValue;
+    };
     // Lọc các map có pickedBy (dành cho BO3)
     const pickedMaps = match.maps.picked ? match.maps.picked.filter((pick) => pick.pickedBy) : [];
     const selectedMaps = match.maps.selected; // Giả sử mảng này chứa tên map
@@ -146,7 +163,7 @@ const Valoveto = ({ banpickid, teams }) => {
                 ) : (
                     // Giao diện dành cho BO3
                     <div className="flex flex-col">
-                        <div className="grid md:grid-cols-7 grid-cols-2 w-full justify-center gap-1 font-bold">
+                        <div className="grid md:grid-cols-7 grid-cols-2 w-full justify-center gap-1 md:last:gap-1 last:!gap-x-0 font-bold">
                             {/* Sắp xếp theo thứ tự: Ban[0], Ban[1], Pick[0], Pick[1], Ban[2], Ban[3], Selected Map (Decider) */}
                             {match.maps.banned[0] &&
                                 renderTile(
@@ -236,7 +253,7 @@ const Valoveto = ({ banpickid, teams }) => {
                                         </span>,
                                     ],
                                     "selected-last",
-                                    ""
+                                    "md:w-[100%] w-[201.6%]"
                                 )}
                         </div>
                         <div className="mt-1">
@@ -247,14 +264,28 @@ const Valoveto = ({ banpickid, teams }) => {
                                         className="p-4 rounded bg-cover bg-center"
                                         style={{ backgroundImage: `url(${getMapImage(side.map)})` }}
                                     >
-                                        <div className="bg-black bg-opacity-60 p-2 rounded">
+                                        <div className="bg-black bg-opacity-60 p-2 rounded font-semibold">
                                             <h3 className="text-lg font-semibold">{side.map}</h3>
-                                            <div className="md:flex-col flex-row items-center md:justify-center justify-between h-full">
-                                            <p className="flex flex-row items-center gap-x-2 h-1/3" >
-                                                Map chọn bởi: {getTeamDisplay(side.pickedBy)}{side.pickedBy}
-                                            </p>
-                                            <p className="h-1/3">{match.team1}: {side.team1}</p>
-                                            <p className="h-1/3">{match.team2}: {side.team2}</p>
+                                            <div className="grid grid-cols-3 items-center justify-between mx-auto h-full w-[85%]">
+                                                <div className="flex items-center justify-center flex-col lg:gap-y-0 gap-y-1" >
+                                                    {getTeamDisplay(side.pickedBy)} <p className="lg:text-[14px] text-[12px] ">Team Pick</p>
+                                                </div>
+                                                <div className="flex items-center justify-center flex-col gap-y-2"><div>
+                                                    {typeof getSideImage(side.team1) === "string" ? (
+                                                        <span>{getSideImage(side.team1)}</span>
+                                                    ) : (
+                                                        getSideImage(side.team1) // Hiển thị component SVG
+                                                    )}</div>
+                                                    <p className="lg:hidden block text-[11px]">{getTeamShort(match.team1)}</p><p className="lg:block hidden text-[14px]">{match.team1}</p>
+
+                                                </div>
+                                                <div className="flex items-center justify-center flex-col gap-y-2">
+                                                    <div className="flex items-center justify-center">
+                                                        {typeof getSideImage(side.team2) === "string" ? (
+                                                            <span>{getSideImage(side.team2)}</span>
+                                                        ) : (
+                                                            getSideImage(side.team2) // Hiển thị component SVG
+                                                        )}</div><p className="lg:hidden block text-[11px]">{getTeamShort(match.team2)}</p><p className="lg:block hidden text-[14px]">{match.team2}</p></div>
                                             </div>
                                         </div>
                                     </div>

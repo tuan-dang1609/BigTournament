@@ -38,6 +38,66 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
+router.post('/check-registered-valorant', async (req, res) => {
+  try {
+      const { riotid } = req.body;
+
+      if (!Array.isArray(riotid)) {
+          return res.status(400).json({ error: 'riotid phải là một mảng' });
+      }
+
+      const game = 'Valorant';
+      // Lấy tất cả các team tham gia game "Valorant"
+      const teams = await TeamRegister.find({ games: game });
+
+      if (!teams || teams.length === 0) {
+          return res.status(404).json({ error: 'Không tìm thấy team nào tham gia game này' });
+      }
+
+      // Tổng hợp tất cả các thành viên của game "Valorant" từ các team
+      let combinedMembers = [];
+      teams.forEach(team => {
+          let members = [];
+          // Nếu gameMembers được lưu dưới dạng Map (nếu schema dùng Map)
+          if (team.gameMembers instanceof Map) {
+              members = team.gameMembers.get(game) || [];
+          }
+          // Nếu gameMembers là object thông thường
+          else if (typeof team.gameMembers === 'object' && team.gameMembers !== null) {
+              members = team.gameMembers[game] || [];
+          }
+          combinedMembers.push(...members.map(member => ({
+              riotID: member.trim().toLowerCase(),
+              teamName: team.teamName // Thêm teamName vào từng thành viên
+          })));
+      });
+
+      // Loại bỏ trùng lặp (nếu cần) và chuẩn hóa chuỗi (trim và chuyển về chữ thường)
+      combinedMembers = [
+          ...new Map(
+              combinedMembers.map(member => [member.riotID, member])
+          ).values()
+      ];
+
+      // Kiểm tra từng riotID đầu vào (chuẩn hóa theo cùng định dạng)
+      const result = riotid.map(id => {
+          const normalizedId = id.trim().toLowerCase();
+          const member = combinedMembers.find(member => member.riotID === normalizedId);
+          return {
+              riotID: id,
+              isregistered: !!member, // Kiểm tra xem có tồn tại trong danh sách không
+              teamname: member ? member.teamName : null // Lấy teamName nếu có
+          };
+      });
+
+      return res.status(200).json(result);
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: error.message });
+  }
+});
+
+
 router.post('/create', async (req, res) => {
   try {
     const match = new BanPickValo({
@@ -472,6 +532,31 @@ router.post('/fetchplayerprofiles', async (req, res) => {
         console.error('Error fetching player profiles:', error);
         res.status(500).json({ error: 'Failed to fetch player profiles' });
     }
+});
+router.post('/fetchplayerprofilesvalo', async (req, res) => {
+  try {
+      const { players } = req.body; // Lấy danh sách các IGN từ request body
+      const playerProfiles = await Promise.all(players.map(async (player) => {
+          const user = await User.findOne({riotID: player });
+
+          if (user) {
+              return {
+                  name: user.riotID,
+                  avatar: user.profilePicture,
+              };
+          }
+          // Trả về thông tin mặc định nếu không tìm thấy người dùng
+          return {
+              name: player,
+              avatar: '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L', // Đường dẫn hoặc URL đến hình ảnh mặc định
+          };
+      }));
+
+      res.status(200).json(playerProfiles);
+  } catch (error) {
+      console.error('Error fetching player profiles:', error);
+      res.status(500).json({ error: 'Failed to fetch player profiles' });
+  }
 });
 // Route để thêm mới trận đấu
 router.post('/addmatchdetail', async (req, res) => {

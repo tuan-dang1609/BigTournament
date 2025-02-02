@@ -12,6 +12,7 @@
 .fc-daygrid-day{
     height: 150px;
 }
+
 @media screen and (max-width:1024px) {
     .fc-toolbar-chunk{
         font-size: 10.5px;

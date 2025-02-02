@@ -52,6 +52,7 @@ import CompetitionPage from './valorant/homepage.jsx';
 import TournamentBracketAOV16_1 from './arenaofvalor/bracket_16team_1.jsx';
 import MatchInterface from './valorant/test2.jsx';
 import CreateMatch from './valorant/test.jsx';
+
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 

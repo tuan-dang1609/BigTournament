@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useState, useEffect} from "react";
+import Verify from '../image/verified-symbol-icon.png'
 const columns = [
   { key: "name", label: "Người chơi" },
   { key: "acs", label: "ACS" },
@@ -11,7 +11,7 @@ const columns = [
   { key: "mk", label: "MK" },
 ];
 
-const PlayerStats = ({ data,dictionary }) => {
+const PlayerStats = ({ data,dictionary,registeredPlayers,teamA,teamB }) => {
   const [selectedMap, setSelectedMap] = useState(null);
   const [imageUrls, setImageUrls] = useState({});
 
@@ -33,6 +33,16 @@ const PlayerStats = ({ data,dictionary }) => {
     };
     loadImageUrls();
   }, []);
+  const getVerificationStatus = (gameName, tagLine) => {
+    if (!registeredPlayers || registeredPlayers.length === 0) return '';
+    
+    const normalizedId = `${gameName}#${tagLine}`.toLowerCase().trim();
+    const player = registeredPlayers.find(p => 
+        p.riotID.toLowerCase().trim() === normalizedId
+    );
+
+    return player?.isregistered ? <img src={Verify} className="w-4 h-4" /> : '';
+};
   const getMapName = (mapId) => {
     if (!dictionary || !dictionary.maps || !Array.isArray(dictionary.maps)) {
       return "Unknown";
@@ -63,6 +73,7 @@ const PlayerStats = ({ data,dictionary }) => {
 
     return agent ? agent.name : "Unknown";
   };
+
   // Tạo map data
   const mapData = data.reduce((acc, match) => {
     const mapName = getMapName(match.matchInfo?.mapId, dictionary);
@@ -128,6 +139,15 @@ const PlayerStats = ({ data,dictionary }) => {
     return { tagName, gameName, roundPlayed, firstKills, multiKills, totalDamage, headshots, bodyshots, legshots, headshotPercentage };
   };
   // Định nghĩa renderTable TRƯỚC khi sử dụng
+  const getPlayerTeamName = (player) => {
+    const normalizedId = `${player.gameName}#${player.tagLine}`.toLowerCase().trim();
+    const registeredPlayer = registeredPlayers.find(rp => 
+        rp.riotID.toLowerCase().trim() === normalizedId
+    );
+    return registeredPlayer?.teamname || null;
+};
+const teamAPlayers = playerData?.players.filter(p => getPlayerTeamName(p) === teamA) || [];
+const teamBPlayers = playerData?.players.filter(p => getPlayerTeamName(p) === teamB) || [];
   const renderTable = (teamData, teamColor) => {
     // Sắp xếp teamData dựa trên ACS giảm dần
     const sortedTeamData = teamData.sort((a, b) => {
@@ -173,14 +193,25 @@ const PlayerStats = ({ data,dictionary }) => {
                     switch (column.key) {
                       case "name":
                         cellData = (
-                          <div className="flex items-center">
-                            <img
-                              src={imageUrls[getagentName(row.characterId)]}
-                              alt={row.characterId}
-                              className="w-8 h-8 rounded-full mr-2"
-                            />
-                            <span>{row.gameName}#{row.tagLine}</span>
-                          </div>
+                            <div className="flex items-center">
+                                <img
+                                    src={imageUrls[getagentName(row.characterId)]}
+                                    alt={row.characterId}
+                                    className="w-8 h-8 rounded-full mr-2"
+                                />
+                                <span className="lg:flex lg:flex-row hidden">
+                                    {row.gameName}#{row.tagLine} 
+                                    <span className="text-xs ml-1">
+                                        {getVerificationStatus(row.gameName, row.tagLine)}
+                                    </span>
+                                </span>
+                                <span className="lg:hidden flex flex-row">
+                                    {row.gameName}
+                                    <span className="text-xs ml-1">
+                                        {getVerificationStatus(row.gameName, row.tagLine)}
+                                    </span>
+                                </span>
+                            </div>
                         );
                         break;
   
@@ -264,53 +295,101 @@ const PlayerStats = ({ data,dictionary }) => {
           const matchForTab = data.find(
             (match) => getMapName(match.matchInfo?.mapId) === mapName
           );
-          let score = "";
+
+          let scoreDisplay = "";
           if (matchForTab && matchForTab.teams) {
-            const redTeam = matchForTab.teams.find((team) => team.teamId === "Red");
-            const blueTeam = matchForTab.teams.find((team) => team.teamId === "Blue");
-            if (redTeam && blueTeam) {
-              score = `${redTeam.roundsWon} - ${blueTeam.roundsWon}`;
+            // Lấy teamId thực tế của teamA và teamB
+            const sortedPlayers = matchForTab.players.reduce((acc, player) => {
+              const playerTeamName = getPlayerTeamName(player);
+              if (playerTeamName) {
+                acc[playerTeamName] = player.teamId;
+              }
+              return acc;
+            }, {});
+
+            // Xác định đúng teamName cho Red và Blue
+            let actualTeamA = Object.keys(sortedPlayers).find(
+              (team) => sortedPlayers[team] === "Red"
+            ) || "Đội Đỏ";
+
+            let actualTeamB = Object.keys(sortedPlayers).find(
+              (team) => sortedPlayers[team] === "Blue"
+            ) || "Đội Xanh";
+
+            // Lấy điểm số đúng của từng team
+            const redTeam = matchForTab.teams.find(team => team.teamId === "Red");
+            const blueTeam = matchForTab.teams.find(team => team.teamId === "Blue");
+
+            let scoreA = redTeam ? redTeam.roundsWon : 0;
+            let scoreB = blueTeam ? blueTeam.roundsWon : 0;
+
+            // Đảm bảo teamA luôn nằm bên trái và teamB bên phải
+            if (actualTeamA !== teamA) {
+              // Hoán đổi nếu teamA không khớp với actualTeamA
+              [actualTeamA, actualTeamB] = [actualTeamB, actualTeamA];
+              [scoreA, scoreB] = [scoreB, scoreA];
             }
+
+            scoreDisplay = `${scoreA} - ${scoreB}`;
           }
+
           return (
             <button
               key={mapName}
               onClick={() => setSelectedMap(mapName)}
               className={`px-4 py-2 text-[10px] font-bold rounded ${
-                selectedMap === mapName
-                  ? "bg-white text-black"
-                  : "bg-[#4A374A] text-white"
+                selectedMap === mapName ? "bg-white text-black" : "bg-[#4A374A] text-white"
               }`}
             >
-              {mapName.toUpperCase()} ({score})
+              {mapName.toUpperCase()} ({scoreDisplay})
             </button>
           );
         })}
       </div>
     </div>
-  );
-
+);
   return (
     <>{renderMapTabs()}
     <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-x-7">
-      
-      {playerData?.players && (
-        <>
+    {playerData?.players && (
+    <>
         <div className="w-full xl:w-[49%]">
-          {renderTable(
-            playerData.players.filter(p => p.teamId === "Red"),
-            "red"
-          )}
+            {renderTable(
+                playerData.players.filter(p => {
+                    const playerTeamName = getPlayerTeamName(p);
+                    
+                    // Nếu có teamname, nhóm vào đúng teamname
+                    if (playerTeamName === teamA) return true;
+
+                    // Nếu không có teamname, nhóm vào team có cùng teamId với teamA
+                    return playerTeamName === null && 
+                           playerData.players.some(player => 
+                               getPlayerTeamName(player) === teamA && player.teamId === p.teamId
+                           );
+                }),
+                "red"
+            )}
         </div>
         <div className="w-full xl:w-[49%]">
-          {renderTable(
-            playerData.players.filter(p => p.teamId === "Blue"),
-            "blue"
-          )}
-          </div>
-        </>
-      )}
-    </div>
+            {renderTable(
+                playerData.players.filter(p => {
+                    const playerTeamName = getPlayerTeamName(p);
+
+                    // Nếu có teamname, nhóm vào đúng teamname
+                    if (playerTeamName === teamB) return true;
+
+                    // Nếu không có teamname, nhóm vào team có cùng teamId với teamB
+                    return playerTeamName === null && 
+                           playerData.players.some(player => 
+                               getPlayerTeamName(player) === teamB && player.teamId === p.teamId
+                           );
+                }),
+                "blue"
+            )}
+        </div>
+    </>
+)}
+  </div>
     </>
     
   );
