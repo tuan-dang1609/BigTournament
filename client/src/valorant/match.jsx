@@ -146,8 +146,7 @@ const PlayerStats = ({ data,dictionary,registeredPlayers,teamA,teamB }) => {
     );
     return registeredPlayer?.teamname || null;
 };
-const teamAPlayers = playerData?.players.filter(p => getPlayerTeamName(p) === teamA) || [];
-const teamBPlayers = playerData?.players.filter(p => getPlayerTeamName(p) === teamB) || [];
+
   const renderTable = (teamData, teamColor) => {
     // Sắp xếp teamData dựa trên ACS giảm dần
     const sortedTeamData = teamData.sort((a, b) => {

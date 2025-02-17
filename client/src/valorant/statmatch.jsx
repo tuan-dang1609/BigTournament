@@ -17,8 +17,6 @@ export default function MatchStat2() {
     const [time, setTime] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [botype, setBotype] = useState('');
-    const [scoreA, setScoreA] = useState('');
-    const [scoreB, setScoreB] = useState('');
     const [banpickid, setbanpickid] = useState('');
     const [dictionary, setDictionary] = useState(null)
     const [findteam, setFindteam] = useState([]);
