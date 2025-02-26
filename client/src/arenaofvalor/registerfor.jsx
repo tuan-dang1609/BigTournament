@@ -152,7 +152,7 @@ const TeamRegistrationForm = () => {
         if (value.length > 0) {
             const filteredUsers = allUsers
                 .filter(user =>
-                    user.username.toLowerCase().includes(value.toLowerCase()) ||
+                    user.nickname.toLowerCase().includes(value.toLowerCase()) ||
                     user.garenaaccount.toLowerCase().includes(value.toLowerCase())
                 )
                 .slice(0, 5); // Lấy tối đa 5 kết quả gợi ý gần nhất
@@ -523,7 +523,7 @@ const TeamRegistrationForm = () => {
                                                                         className="w-8 h-8 rounded-full mr-2"
                                                                     />
                                                                     <div>
-                                                                        <strong>{user.username}</strong> <span className="text-black">({user.garenaaccount})</span>
+                                                                        <strong>{user.nickname}</strong> <span className="text-black">({user.garenaaccount})</span>
                                                                     </div>
                                                                 </li>
                                                             ))}
