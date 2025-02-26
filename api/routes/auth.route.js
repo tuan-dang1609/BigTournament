@@ -38,6 +38,21 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
+router.post('/alluser', async (req, res) => {
+  try {
+    const allPlayers = await User.find({});
+    const formattedPlayers = allPlayers.map(player => ({
+      riotId: player.riotID,
+      nickname: player.nickname,
+      username: player.username,
+      profilePicture: player.profilePicture
+    }));
+    res.json(formattedPlayers);
+  } catch (error) {
+    res.status(500).json({ "Message": error.message });
+  }
+});
+
 router.post('/check-registered-valorant', async (req, res) => {
   try {
       const { riotid } = req.body;

@@ -27,6 +27,10 @@ const TeamRegistrationForm = () => {
     const [countdown, setCountdown] = useState(10);
     const [loading, setLoading] = useState(true); // Loading state
     const [checkingRegistration, setCheckingRegistration] = useState(true); // New state for checking registration
+    const [allUsers, setAllUsers] = useState([]); // Lưu tất cả người dùng
+    const [suggestions, setSuggestions] = useState([]); // Lưu danh sách gợi ý
+    const [activeInputIndex, setActiveInputIndex] = useState(null); // Theo dõi ô input đang nhập
+
     const navigate = useNavigate();
     const gameOptions = ["Valorant"];
     const driverObj = driver({
@@ -54,6 +58,19 @@ const TeamRegistrationForm = () => {
         driverObj.drive();
     };
     useEffect(() => {
+        const fetchAllUsers = async () => {
+            try {
+                const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/alluser"); // POST request
+                const users = Array.isArray(response.data) ? response.data : response.data.users || [];
+                setAllUsers(users); // Lưu vào state
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách tất cả người dùng:", error);
+            }
+        };
+
+        fetchAllUsers();
+    }, []); // Chỉ chạy một lần khi component mount
+    useEffect(() => {
         const fetchTeams = async () => {
             try {
                 const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterValorant', {
@@ -80,6 +97,29 @@ const TeamRegistrationForm = () => {
 
         fetchTeams();
     }, [currentUser]);
+    const fetchRiotIDSuggestions = async (query) => {
+        if (!query) {
+            setSuggestions([]);
+            return;
+        }
+
+        try {
+            const response = await axios.get("http://localhost:3000/api/auth/alluser");
+            const users = response.data;
+
+            // Lọc dữ liệu theo query (tìm kiếm trong username hoặc riotId)
+            const filteredUsers = users.filter(user =>
+                user.username.toLowerCase().includes(query.toLowerCase()) ||
+                user.riotId.toLowerCase().includes(query.toLowerCase())
+            );
+
+            setSuggestions(filteredUsers);
+        } catch (error) {
+            console.error("Lỗi khi lấy gợi ý RiotID:", error);
+            setSuggestions([]);
+        }
+    };
+
 
     useEffect(() => {
         const scrollToTop = () => {
@@ -126,11 +166,14 @@ const TeamRegistrationForm = () => {
     };
 
     const handleMemberChange = (game, index, value) => {
+        setActiveInputIndex(index); // Lưu index của ô input đang nhập
+
         const updatedGameMembers = { ...formData.gameMembers };
         updatedGameMembers[game][index] = value;
+        setFormData({ ...formData, gameMembers: updatedGameMembers });
 
-        const isDuplicate = updatedGameMembers[game].filter((member) => member === value).length > 1;
-
+        // Kiểm tra trùng lặp RiotID
+        const isDuplicate = updatedGameMembers[game].some((member, i) => i !== index && member === value);
         if (isDuplicate) {
             setErrors((prevErrors) => ({
                 ...prevErrors,
@@ -142,8 +185,21 @@ const TeamRegistrationForm = () => {
             setErrors(newErrors);
         }
 
-        setFormData({ ...formData, gameMembers: updatedGameMembers });
+        // Nếu nhập trên 2 ký tự, tìm nhiều RiotID gần nhất
+        if (value.length > 0) {
+            const filteredUsers = allUsers
+                .filter(user =>
+                    user.username.toLowerCase().includes(value.toLowerCase()) ||
+                    user.riotId.toLowerCase().includes(value.toLowerCase())
+                );
+
+            // Lấy tối đa 5 gợi ý gần nhất
+            setSuggestions(filteredUsers.slice(0, 5));
+        } else {
+            setSuggestions([]);
+        }
     };
+
 
     const addMember = (game) => {
         const updatedGameMembers = { ...formData.gameMembers };
@@ -359,7 +415,7 @@ const TeamRegistrationForm = () => {
                                     )}
                                 </div>
 
-                                
+
 
                                 <div className="flex flex-col" id="logoUrl">
                                     <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">
@@ -443,14 +499,46 @@ const TeamRegistrationForm = () => {
                                         </small>
                                         {formData.gameMembers[game].map((member, index) => (
                                             <div key={index} className="flex items-center space-x-2 mb-2">
-                                                <input
-                                                    type="text"
+                                                <div className="relative focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600">
+                                                    <input
+                                                        type="text"
+                                                        value={formData.gameMembers[game][index]}
+                                                        onChange={(e) => handleMemberChange(game, index, e.target.value)}
+                                                        onFocus={() => setActiveInputIndex(index)} // Xác định ô input đang nhập
+                                                        onBlur={() => setTimeout(() => setActiveInputIndex(null), 200)} // Ẩn gợi ý khi mất focus
+                                                        className="px-4 py-2 border focus:ring-gray-500 focus:border-primary w-full sm:text-sm border-gray-300 rounded-md focus:outline-none"
+                                                        placeholder={`RiotID của thành viên ${index + 1}`}
+                                                    />
 
-                                                    value={member}
-                                                    onChange={(e) => handleMemberChange(game, index, e.target.value)}
-                                                    className="px-4 py-2 !text-base-content border focus:ring-gray-500 focus:border-primary w-full sm:text-sm border-gray-300 rounded-md focus:outline-none "
-                                                    placeholder={`RiotID của thành viên ${index + 1}`}
-                                                />
+                                                    {/* Chỉ hiển thị gợi ý nếu activeInputIndex khớp với index hiện tại */}
+                                                    {suggestions.length > 0 && activeInputIndex === index && (
+                                                        <ul className="absolute z-10 bg-white border border-gray-300 rounded-md mt-1 w-full shadow-lg">
+                                                            {suggestions.map((user) => (
+                                                                <li
+                                                                    key={user.riotId} // Đảm bảo mỗi RiotID là duy nhất
+                                                                    onMouseDown={(e) => e.preventDefault()} // Tránh mất focus khi click
+                                                                    onClick={() => {
+                                                                        handleMemberChange(game, activeInputIndex, user.riotId);
+                                                                        setSuggestions([]); // Ẩn gợi ý sau khi chọn
+                                                                    }}
+                                                                    className="cursor-pointer p-2 hover:bg-gray-200 flex items-center"
+                                                                >
+                                                                    <img
+                                                                        src={`https://drive.google.com/thumbnail?id=${user.profilePicture}`}
+                                                                        alt="profile"
+                                                                        className="w-8 h-8 rounded-full mr-2"
+                                                                    />
+                                                                    <div>
+                                                                        <strong>{user.username}</strong> <span className="text-gray-500">({user.riotId})</span>
+                                                                    </div>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    )}
+                                                </div>
+
+
+
 
                                                 {(game === "League Of Legends" || game === "Valorant" || game === "Liên Quân Mobile") && formData.gameMembers[game].length > 5 && (
                                                     <motion.button
