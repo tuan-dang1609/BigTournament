@@ -42,6 +42,7 @@ router.post('/alluser', async (req, res) => {
   try {
     const allPlayers = await User.find({});
     const formattedPlayers = allPlayers.map(player => ({
+      discordID: player.discordID,
       riotId: player.riotID,
       garenaaccount: player.garenaaccount,
       nickname: player.nickname,
