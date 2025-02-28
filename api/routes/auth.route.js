@@ -714,33 +714,54 @@ router.post('/updateMatch', async (req, res) => {
 
 
 router.post('/register', async (req, res) => {
-    try {
-        const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID,color } = req.body;
-        // Check if any member is already registered in another team
-        const existingTeam = await TeamRegister.findOne({ gameMembers: { $in: gameMembers } });
-        const newTeam = new TeamRegister({
-            discordID,
-            usernameregister,
-            teamName,
-            shortName,
-            classTeam,
-            logoUrl,
-            color,
-            games,
-            gameMembers,
-        });
+  try {
+      const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID, color } = req.body;
 
-        const savedTeam = await newTeam.save();
-        res.status(201).json(savedTeam);
-    } catch (error) {
-        console.error('Error registering team:', error);
-        if (error.name === 'ValidationError') {
-            const errors = Object.values(error.errors).map(err => err.message);
-            return res.status(400).json({ errors });
-        }
-        res.status(500).json({ message: 'Server error' });
-    }
+      // Tìm xem user đã đăng ký trong game này chưa
+      const existingTeam = await TeamRegister.findOne({
+          usernameregister,
+          games: { $in: games } // Kiểm tra xem user đã đăng ký team nào cho game này chưa
+      });
+
+      if (existingTeam) {
+          // Nếu đội đã tồn tại, cập nhật lại thông tin
+          existingTeam.teamName = teamName;
+          existingTeam.shortName = shortName;
+          existingTeam.classTeam = classTeam;
+          existingTeam.logoUrl = logoUrl;
+          existingTeam.color = color;
+          existingTeam.gameMembers = gameMembers;
+
+          const updatedTeam = await existingTeam.save();
+          return res.status(200).json({ message: "Cập nhật đội thành công!", team: updatedTeam });
+      }
+
+      // Nếu chưa có đội, tạo mới
+      const newTeam = new TeamRegister({
+          discordID,
+          usernameregister,
+          teamName,
+          shortName,
+          classTeam,
+          logoUrl,
+          color,
+          games,
+          gameMembers,
+      });
+
+      const savedTeam = await newTeam.save();
+      res.status(201).json({ message: "Đăng ký đội thành công!", team: savedTeam });
+
+  } catch (error) {
+      console.error('Error registering team:', error);
+      if (error.name === 'ValidationError') {
+          const errors = Object.values(error.errors).map(err => err.message);
+          return res.status(400).json({ errors });
+      }
+      res.status(500).json({ message: 'Lỗi server' });
+  }
 });
+
 
 router.post('/checkregisterAOV', async (req, res) => {
     try {
