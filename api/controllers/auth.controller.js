@@ -92,7 +92,8 @@ export const leagueHOF = async (req, res, next) => {
     // Tạo các hoạt động `upsert` cho từng giải đấu
     const operations = leagues.map((league) => ({
       updateOne: {
-        filter: { league: league.league,game:league.game,name:league.name }, // Điều kiện xác định giải đấu đã tồn tại
+        filter: { id: league.id, game: league.game, name: league.name },
+ // Điều kiện xác định giải đấu đã tồn tại
         update: { $set: league },
         upsert: true // Thêm mới nếu không tồn tại
       }

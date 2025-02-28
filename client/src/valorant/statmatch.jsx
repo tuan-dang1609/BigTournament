@@ -90,15 +90,12 @@ export default function MatchStat2() {
             setteamA(data.teamA);
             setteamB(data.teamB);
             setBotype(boType)
-            setScoreA(data.scoreA);
-            setScoreB(data.scoreB)
             setbanpickid(data.banpickid)
 
         } catch (error) {
             console.error("Failed to fetch game:", error);
         }
     };
-
 
     const fetchTeamLogos = async () => {
         try {
@@ -249,18 +246,18 @@ export default function MatchStat2() {
     };
     const getPlayerTeamName = (player) => {
         if (!registeredPlayers || registeredPlayers.length === 0) return null;
-    
+
         const normalizedId = `${player.gameName}#${player.tagLine}`.toLowerCase().trim();
-        const registeredPlayer = registeredPlayers.find(rp => 
+        const registeredPlayer = registeredPlayers.find(rp =>
             rp.riotID.toLowerCase().trim() === normalizedId
         );
-    
+
         return registeredPlayer?.teamname || null;
     };
     const calculateTotalWins = () => {
         let totalWinsA = 0;
         let totalWinsB = 0;
-    
+
         matchInfo.forEach(match => {
             const sortedPlayers = match.players.reduce((acc, player) => {
                 const playerTeamName = getPlayerTeamName(player);
@@ -269,36 +266,36 @@ export default function MatchStat2() {
                 }
                 return acc;
             }, {});
-    
+
             let actualTeamA = Object.keys(sortedPlayers).find(
                 (team) => sortedPlayers[team] === "Red"
             ) || "Đội Đỏ";
-    
+
             let actualTeamB = Object.keys(sortedPlayers).find(
                 (team) => sortedPlayers[team] === "Blue"
             ) || "Đội Xanh";
-    
+
             const redTeam = match.teams.find(team => team.teamId === "Red");
             const blueTeam = match.teams.find(team => team.teamId === "Blue");
-    
+
             let scoreA = redTeam ? redTeam.roundsWon : 0;
             let scoreB = blueTeam ? blueTeam.roundsWon : 0;
-    
+
             if (actualTeamA !== teamA) {
                 [actualTeamA, actualTeamB] = [actualTeamB, actualTeamA];
                 [scoreA, scoreB] = [scoreB, scoreA];
             }
-    
+
             if (scoreA > scoreB) {
                 totalWinsA += 1;
             } else {
                 totalWinsB += 1;
             }
         });
-    
+
         return { totalWinsA, totalWinsB };
     };
-    
+
     // Gọi hàm tính tổng trận thắng
     const { totalWinsA, totalWinsB } = calculateTotalWins();
     const getDaySuffix = (day) => {
@@ -336,56 +333,56 @@ export default function MatchStat2() {
 
             <div className="matchstat">
                 <div className="scoreboard-title">
-                <div className="scoreboard w-full">
-    <div className="team teamleft w-full flex items-center" style={{ backgroundColor: hexToRgba(teamABgColor, 0.2) }}>
-        <div className="logo">
-            <img
-                className="w-12 h-12 ml-2 max-lg:ml-0 max-lg:w-9 max-lg:h-9"
-                src={teamALogo}
-                alt="Team Left Logo"
-            />
-        </div>
-        <div className="teamname">
-            <span className="block sm:hidden">{teamAshort}</span> {/* Hiển thị teamAshort khi màn hình nhỏ hơn sm */}
-            <span className="hidden sm:block">{teamA}</span>       {/* Hiển thị teamA khi màn hình từ sm trở lên */}
-        </div>
-    </div>
-    <div className="score-and-time">
-        <div className="score bg-[#362431]">
-            <span
-                className={`scoreA ${totalWinsA > totalWinsB ? 'green-win' : 'red-lose'}`}
-                id='score-left'
-            >
-                {totalWinsA}
-            </span>
-        </div>
-        <div className="time text-sm uppercase bg-[#362431] text-white">
-            <span>Fin</span>
-            <span>{formatTime(time)}</span>
-        </div>
-        <div className="score bg-[#362431]">
-            <span
-                className={`scoreB ${totalWinsA < totalWinsB ? 'green-win' : 'red-lose'}`}
-                id='score-right'
-            >
-                {totalWinsB}
-            </span>
-        </div>
-    </div>
-    <div className="team teamright w-full flex items-center " style={{ backgroundColor: hexToRgba(teamBBgColor, 0.2) }}>
-        <div className="logo">
-            <img
-                className="w-12 h-12 mr-2 max-lg:mr-0 max-lg:w-9 max-lg:h-9"
-                src={teamBLogo}
-                alt="Team Right Logo"
-            />
-        </div>
-        <div className="teamname">
-            <span className="block sm:hidden">{teamBshort}</span> {/* Hiển thị teamAshort khi màn hình nhỏ hơn sm */}
-            <span className="hidden sm:block">{teamB}</span>       {/* Hiển thị teamA khi màn hình từ sm trở lên */}
-        </div>
-    </div>
-</div>
+                    <div className="scoreboard w-full">
+                        <div className="team teamleft w-full flex items-center" style={{ backgroundColor: hexToRgba(teamABgColor, 0.2) }}>
+                            <div className="logo">
+                                <img
+                                    className="w-12 h-12 ml-2 max-lg:ml-0 max-lg:w-9 max-lg:h-9"
+                                    src={teamALogo}
+                                    alt="Team Left Logo"
+                                />
+                            </div>
+                            <div className="teamname">
+                                <span className="block sm:hidden">{teamAshort}</span> {/* Hiển thị teamAshort khi màn hình nhỏ hơn sm */}
+                                <span className="hidden sm:block">{teamA}</span>       {/* Hiển thị teamA khi màn hình từ sm trở lên */}
+                            </div>
+                        </div>
+                        <div className="score-and-time">
+                            <div className="score bg-[#362431]">
+                                <span
+                                    className={`scoreA ${totalWinsA > totalWinsB ? 'green-win' : 'red-lose'}`}
+                                    id='score-left'
+                                >
+                                    {totalWinsA}
+                                </span>
+                            </div>
+                            <div className="time text-sm uppercase bg-[#362431] text-white">
+                                <span>Fin</span>
+                                <span>{formatTime(time)}</span>
+                            </div>
+                            <div className="score bg-[#362431]">
+                                <span
+                                    className={`scoreB ${totalWinsA < totalWinsB ? 'green-win' : 'red-lose'}`}
+                                    id='score-right'
+                                >
+                                    {totalWinsB}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="team teamright w-full flex items-center " style={{ backgroundColor: hexToRgba(teamBBgColor, 0.2) }}>
+                            <div className="logo">
+                                <img
+                                    className="w-12 h-12 mr-2 max-lg:mr-0 max-lg:w-9 max-lg:h-9"
+                                    src={teamBLogo}
+                                    alt="Team Right Logo"
+                                />
+                            </div>
+                            <div className="teamname">
+                                <span className="block sm:hidden">{teamBshort}</span> {/* Hiển thị teamAshort khi màn hình nhỏ hơn sm */}
+                                <span className="hidden sm:block">{teamB}</span>       {/* Hiển thị teamA khi màn hình từ sm trở lên */}
+                            </div>
+                        </div>
+                    </div>
 
                     <div className='title bg-[#362431]'>
                         <span className='league all-title'>Valorant DCN Split 2</span>
