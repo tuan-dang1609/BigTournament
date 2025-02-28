@@ -47,7 +47,7 @@ export default function MatchInterface() {
       currentTurn: match?.currentTurn
     });
 
-    await fetch('http://localhost:3000/api/auth/action', {
+    await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ matchId, action, role, ...data })

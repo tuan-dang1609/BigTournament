@@ -71,6 +71,21 @@ const TeamRegistrationForm = () => {
         fetchAllUsers();
     }, []); // Chỉ chạy một lần khi component mount
     useEffect(() => {
+        if (userRegister) {
+            setFormData({
+                discordID: userRegister.discordID || currentUser.discordID,
+                usernameregister: userRegister.usernameregister || currentUser._id,
+                teamName: userRegister.teamName || "",
+                shortName: userRegister.shortName || "",
+                classTeam: userRegister.classTeam || "",
+                logoUrl: userRegister.logoUrl || "",
+                color: userRegister.color || "",
+                games: userRegister.games || [],
+                gameMembers: userRegister.gameMembers || {}
+            });
+        }
+    }, [userRegister]);
+    useEffect(() => {
         const fetchTeams = async () => {
             try {
                 const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterValorant', {
@@ -97,28 +112,6 @@ const TeamRegistrationForm = () => {
 
         fetchTeams();
     }, [currentUser]);
-    const fetchRiotIDSuggestions = async (query) => {
-        if (!query) {
-            setSuggestions([]);
-            return;
-        }
-
-        try {
-            const response = await axios.get("http://localhost:3000/api/auth/alluser");
-            const users = response.data;
-
-            // Lọc dữ liệu theo query (tìm kiếm trong username hoặc riotId)
-            const filteredUsers = users.filter(user =>
-                user.username.toLowerCase().includes(query.toLowerCase()) ||
-                user.riotId.toLowerCase().includes(query.toLowerCase())
-            );
-
-            setSuggestions(filteredUsers);
-        } catch (error) {
-            console.error("Lỗi khi lấy gợi ý RiotID:", error);
-            setSuggestions([]);
-        }
-    };
 
 
     useEffect(() => {
@@ -338,39 +331,26 @@ const TeamRegistrationForm = () => {
         return <div>Loading...</div>;
     }
 
-    if (userRegister && userRegister.teamName) {
+
+
+
+    if (signupSuccess && userRegister.__v > 0) {
         return (
-            <>
-
-                <div className="min-h-screen flex flex-col sm:mx-96 mx-5 ">
-                    <Link to='/valorant' className="!justify-start flex mt-28 font-bold hover:underline text-lg lg:mb-2 mb-1">&lt; Quay lại</Link>
-                    <div className="bg-white p-8 rounded-lg shadow-md w-full flex justify-center items-center flex-col">
-                        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Bạn đã đăng kí đội</h2>
-                        <img src={`https://drive.google.com/thumbnail?id=${userRegister.logoUrl}`} className="w-28 h-28 mb-5" />
-                        <p className=" text-gray-600">Tên đội: {userRegister.teamName}</p>
-                        <p className=" text-gray-600">Tên viết tắt: {userRegister.shortName}</p>
-                        <p className=" text-gray-600">Lớp: {userRegister.classTeam}</p>
-                        <div className="text-gray-600">
-                            <p>Thành viên Valorant:</p>
-                            {userRegister.gameMembers["Valorant"].map((member, index) => (
-                                <div key={index} className="text-center text-gray-600">
-                                    <strong>RiotID của thành viên {index + 1}:</strong> <span>{member}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                    </div>
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+                    <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Cập nhật thành công!</h2>
+                    <p className="text-center text-gray-600">Cảm ơn bạn đã cập nhật đội.</p>
+                    <p className="text-center text-gray-600">Link vào Discord: <a href="https://discord.gg/B4EKuhJ2" className="text-orange-400">Discord THPT Phú Nhuận</a></p>
+                    <p className="text-center text-gray-600 mt-4">Tự động chuyển tới trang chủ trong {countdown} giây...</p>
                 </div>
-            </>
+            </div>
         );
-    }
-
-    if (signupSuccess) {
+    } else if (signupSuccess) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
                     <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Đăng kí thành công!</h2>
-                    <p className="text-center text-gray-600">Cảm ơn bạn đã đăng kí đội cho lớp.</p>
+                    <p className="text-center text-gray-600">Cảm ơn bạn đã đăng kí đội.</p>
                     <p className="text-center text-gray-600">Link vào Discord: <a href="https://discord.gg/B4EKuhJ2" className="text-orange-400">Discord THPT Phú Nhuận</a></p>
                     <p className="text-center text-gray-600 mt-4">Tự động chuyển tới trang chủ trong {countdown} giây...</p>
                 </div>
