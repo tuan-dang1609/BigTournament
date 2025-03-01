@@ -182,7 +182,7 @@ const TeamRegistrationForm = () => {
     const handleInputBlur = (game, index) => {
         setTimeout(() => {
             const currentValue = formData.gameMembers[game][index];
-            const isValid = allUsers.some(user => user.riotId === currentValue);
+            const isValid = allUsers.some(user => user.garenaaccount === currentValue);
 
             if (!isValid) {
                 setFormData(prev => {
@@ -325,19 +325,7 @@ const TeamRegistrationForm = () => {
     }
 
 
-
-    if (signupSuccess && userRegister.__v > 0) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-                    <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Cập nhật thành công!</h2>
-                    <p className="text-center text-gray-600">Cảm ơn bạn đã cập nhật đội.</p>
-                    <p className="text-center text-gray-600">Link vào Discord: <a href="https://discord.gg/B4EKuhJ2" className="text-orange-400">Discord THPT Phú Nhuận</a></p>
-                    <p className="text-center text-gray-600 mt-4">Tự động chuyển tới trang chủ trong {countdown} giây...</p>
-                </div>
-            </div>
-        );
-    } else if (signupSuccess) {
+   if (signupSuccess) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
