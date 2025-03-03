@@ -9,7 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import axios from 'axios';
-import pLimit from 'p-limit';
+import Promise from 'bluebird';
 import NodeCache from 'node-cache';
 import rateLimit from 'express-rate-limit';
 import { Server } from 'socket.io';
@@ -343,10 +343,9 @@ app.post('/api/accounts', async (req, res) => {
       { headers: { 'X-Riot-Token': apiKey } }
     );
 
-    // Lấy thông tin từ headers
-    const rateLimit = testResponse.headers['x-app-rate-limit']; // VD: "100:120,2000:600"
-    const rateLimitCount = testResponse.headers['x-app-rate-limit-count']; // VD: "5:120,500:600"
-
+    // Lấy thông tin rate limit từ header
+    const rateLimit = testResponse.headers['x-app-rate-limit'];       // Ví dụ: "100:120,2000:600"
+    const rateLimitCount = testResponse.headers['x-app-rate-limit-count']; // Ví dụ: "5:120,500:600"
     console.log('Rate Limit:', rateLimit);
     console.log('Rate Limit Count:', rateLimitCount);
 
@@ -360,36 +359,26 @@ app.post('/api/accounts', async (req, res) => {
 
     console.log(`Requests còn lại: ${remainingShort} trong ${shortTermLimit[1]}s, ${remainingLong} trong ${longTermLimit[1]}s`);
 
-    // Nếu gần hết request, trả về lỗi sớm
+    // Nếu số request còn lại quá ít, trả về lỗi sớm
     if (remainingShort <= 5 || remainingLong <= 10) {
       return res.status(429).json({ error: 'Rate limit exceeded soon, please try again later' });
     }
 
-    // Giới hạn số lượng request đồng thời (ví dụ: 3 request đồng thời)
-    const limit = pLimit(3);
-
-    // Hàm fetch dữ liệu cho từng puuid với retry khi gặp lỗi 429
-    const fetchAccountData = async (puuid, retries = 3) => {
-      try {
+    // Sử dụng Bluebird Promise.map để giới hạn concurrency (ví dụ: 3 request đồng thời)
+    const accountDataArray = await Promise.map(
+      puuids,
+      async (puuid) => {
         const response = await axios.get(
           `https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`,
           { headers: { 'X-Riot-Token': apiKey } }
         );
+        // Loại bỏ trường puuid nếu không cần thiết
         const { puuid: _, ...accountData } = response.data;
         return accountData;
-      } catch (err) {
-        if (err.response && err.response.status === 429 && retries > 0) {
-          // Chờ 1 giây rồi retry (có thể áp dụng exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return fetchAccountData(puuid, retries - 1);
-        }
-        throw err;
-      }
-    };
+      },
+      { concurrency: 3 }
+    );
 
-    // Map các puuid vào hàm fetch được giới hạn bởi concurrency
-    const accountPromises = puuids.map(puuid => limit(() => fetchAccountData(puuid)));
-    const accountDataArray = await Promise.all(accountPromises);
     res.json(accountDataArray);
   } catch (error) {
     console.error('Error fetching account data:', error.message);
