@@ -8,8 +8,10 @@ const MatchData = () => {
 
     const lobbies = [
         { id: 'Lobby 1', matchIds: ['VN2_633813781'] },
-        { id: 'Lobby 2', matchIds: ['VN2_715042777'] }
+        { id: 'Lobby 2', matchIds: ['VN2_715042777'] },
+        { id: 'Lobby 3', matchIds: ['VN2_774619432'] }
     ];
+    
 
     const getPoints = (placement) => {
         if (placement >= 1 && placement <= 8) {

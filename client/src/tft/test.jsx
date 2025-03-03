@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 
 const lobbies = [
-    { id: 'Lobby 1', matchIds: ['VN2_633813781', 'VN2_633813781'] },
-    { id: 'Lobby 2', matchIds: ['VN2_715042777'] }
+    { id: 'Lobby 1', matchIds: ['VN2_633813781'] },
+    { id: 'Lobby 2', matchIds: ['VN2_715042777'] },
+    { id: 'Lobby 3', matchIds: ['VN2_774619432'] }
 ];
 
 const getPoints = (placement) => {
@@ -16,6 +17,7 @@ const CombinedLeaderboard = () => {
     const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showPlayers, setShowPlayers] = useState(true);
 
     useEffect(() => {
         const fetchLobbyData = async () => {
@@ -81,6 +83,19 @@ const CombinedLeaderboard = () => {
     return (
         <div className="mt-10 mx-auto lg:w-[90%]">
             <h2 className="text-lg font-bold mb-4">Bảng xếp hạng tổng</h2>
+            <div className="flex items-center mb-4">
+                <label className="relative inline-block w-14 h-8">
+                    <input
+                        type="checkbox"
+                        checked={showPlayers}
+                        onChange={() => setShowPlayers(!showPlayers)}
+                        className="sr-only"
+                    />
+                    <div className={`block bg-gray-300 w-14 h-8 rounded-full ${showPlayers ? 'bg-green-500' : 'bg-gray-500'} transition duration-300 ease-in-out`}></div>
+                    <div className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${showPlayers ? 'transform translate-x-6' : ''}`}></div>
+                </label>
+                <span className="ml-2">{showPlayers ? 'Hiển thị Placement' : 'Hiển thị Điểm'}</span>
+            </div>
             <table border="1" cellPadding="10" cellSpacing="0" className="text-center w-full">
                 <thead>
                     <tr>
