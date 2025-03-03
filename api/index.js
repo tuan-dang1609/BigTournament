@@ -16,8 +16,8 @@ import compression from 'compression';
 import Queue from 'bull';
 import https from 'https';
 import request from 'request';
-import crypto from 'crypto';
-import session from 'express-session';
+const pLimit = require('p-limit');
+const limit = pLimit(5); // Giới hạn chỉ 5 request chạy cùng lúc
 dotenv.config();
 const app = express();
 const apiKey = process.env.TFT_KEY;
@@ -338,6 +338,7 @@ app.post('/api/accounts', async (req, res) => {
   const { puuids } = req.body;
 
   try {
+    // Gửi 1 request test để lấy rate limit hiện tại
     const testResponse = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuids[0]}`, {
       headers: { 'X-Riot-Token': apiKey }
     });
@@ -357,26 +358,26 @@ app.post('/api/accounts', async (req, res) => {
       return res.status(429).json({ error: 'Rate limit exceeded soon, please try again later' });
     }
 
-    let accountDataArray = [];
+    // Tạo danh sách request nhưng giới hạn số lượng chạy cùng lúc (5 request/lượt)
+    const accountPromises = puuids.map((puuid) =>
+      limit(async () => {
+        try {
+          const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`, {
+            headers: { 'X-Riot-Token': apiKey }
+          });
+          const { puuid: _, ...accountData } = response.data;
+          return accountData;
+        } catch (error) {
+          console.error(`Error fetching account for puuid ${puuid}:`, error.message);
+          return null; // Trả về null nếu lỗi, tránh ảnh hưởng toàn bộ danh sách
+        }
+      })
+    );
 
-    for (let i = 0; i < puuids.length; i++) {
-      try {
-        const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuids[i]}`, {
-          headers: { 'X-Riot-Token': apiKey }
-        });
+    // Chạy tất cả request nhưng giới hạn số lượng chạy song song
+    const accountDataArray = await Promise.allSettled(accountPromises);
 
-        const { puuid: _, ...accountData } = response.data;
-        accountDataArray.push(accountData);
-
-        // 🌟 Delay giữa các request để tránh spam
-        if (i < puuids.length - 1) await sleep(1000); // Chờ 1 giây trước khi gửi request tiếp theo
-
-      } catch (error) {
-        console.error(`Error fetching account for puuid ${puuids[i]}:`, error.message);
-      }
-    }
-
-    res.json(accountDataArray);
+    res.json(accountDataArray.filter(result => result.status === 'fulfilled').map(result => result.value));
   } catch (error) {
     console.error('Error fetching account data:', error.message);
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch account data' });
