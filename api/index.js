@@ -32,14 +32,7 @@ const  provider       = "https://auth.riotgames.com"
 const authorizeUrl    = provider + "/authorize";
 const tokenUrl        = provider + "/token";
 const URLfrontend     = "https://dongchuyennghiep.vercel.app"
-app.use(
-  cors({
-    origin: ['http://localhost:5173','https://28e7-88-86-155-193.ngrok-free.app', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-  })
-);
+app.use(cors({}));
 
 
 app.get('/sso/login-riot', function(req, res) {
