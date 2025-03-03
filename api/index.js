@@ -364,20 +364,30 @@ app.post('/api/accounts', async (req, res) => {
       return res.status(429).json({ error: 'Rate limit exceeded soon, please try again later' });
     }
 
-    // Sử dụng Bluebird Promise.map để giới hạn concurrency (ví dụ: 3 request đồng thời)
-    const accountDataArray = await Promise.map(
-      puuids,
-      async (puuid) => {
-        const response = await axios.get(
-          `https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`,
-          { headers: { 'X-Riot-Token': apiKey } }
-        );
-        // Loại bỏ trường puuid nếu không cần thiết
-        const { puuid: _, ...accountData } = response.data;
-        return accountData;
-      },
-      { concurrency: 3 }
-    );
+    // Chia puuids thành các nhóm 8 phần tử
+    const chunkedPuuids = [];
+    for (let i = 0; i < puuids.length; i += 8) {
+      chunkedPuuids.push(puuids.slice(i, i + 8));
+    }
+
+    // Dùng Promise.all để fetch dữ liệu cho từng nhóm
+    const accountDataArray = [];
+    for (const chunk of chunkedPuuids) {
+      const accounts = await Promise.map(
+        chunk,
+        async (puuid) => {
+          const response = await axios.get(
+            `https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`,
+            { headers: { 'X-Riot-Token': apiKey } }
+          );
+          // Loại bỏ trường puuid nếu không cần thiết
+          const { puuid: _, ...accountData } = response.data;
+          return accountData;
+        },
+        { concurrency: 3 } // Giới hạn concurrency ở 3 request đồng thời
+      );
+      accountDataArray.push(...accounts);
+    }
 
     res.json(accountDataArray);
   } catch (error) {
