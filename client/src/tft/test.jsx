@@ -1,37 +1,79 @@
 import React, { useEffect, useState } from 'react';
 
-const CombinedLeaderboard = ({ lobbies }) => {
+const lobbies = [
+    { id: 'Lobby 1', matchIds: ['VN2_633813781', 'VN2_633813781'] },
+    { id: 'Lobby 2', matchIds: ['VN2_715042777'] }
+];
+
+const getPoints = (placement) => {
+    if (placement >= 1 && placement <= 8) {
+        return 9 - placement;
+    }
+    return 0;
+};
+
+const CombinedLeaderboard = () => {
     const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        try {
-            setLoading(true);
-            const combinedMap = {};
+        const fetchLobbyData = async () => {
+            try {
+                setLoading(true);
+                const participantMap = {};
 
-            lobbies.forEach((lobby) => {
-                lobby.participants.forEach((participant) => {
-                    const { puuid, gameNameTag, totalPoints } = participant;
-                    if (!combinedMap[puuid]) {
-                        combinedMap[puuid] = {
-                            puuid,
-                            gameNameTag,
-                            totalPoints: 0,
-                        };
+                for (const lobby of lobbies) {
+                    for (const matchId of lobby.matchIds) {
+                        const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/tft/match/${matchId}`);
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch match data');
+                        }
+                        const matchData = await response.json();
+                        
+                        matchData.info.participants.forEach((participant) => {
+                            const { puuid, placement } = participant;
+                            if (!participantMap[puuid]) {
+                                participantMap[puuid] = { puuid, points: [] };
+                            }
+                            participantMap[puuid].points.push(getPoints(placement));
+                        });
                     }
-                    combinedMap[puuid].totalPoints += totalPoints;
-                });
-            });
+                }
 
-            const sortedLeaderboard = Object.values(combinedMap).sort((a, b) => b.totalPoints - a.totalPoints);
-            setLeaderboard(sortedLeaderboard);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    }, [lobbies]);
+                const puuids = Object.keys(participantMap);
+                const accountResponse = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/accounts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ puuids })
+                });
+
+                if (!accountResponse.ok) {
+                    throw new Error('Failed to fetch account data');
+                }
+
+                const accounts = await accountResponse.json();
+                const participants = puuids.map((puuid, index) => {
+                    const totalPoints = participantMap[puuid].points.reduce((acc, curr) => acc + curr, 0);
+                    return {
+                        puuid,
+                        gameNameTag: `${accounts[index]?.gameName || 'Unknown'}#${accounts[index]?.tagLine || '0000'}`,
+                        points: participantMap[puuid].points,
+                        totalPoints
+                    };
+                });
+
+                participants.sort((a, b) => b.totalPoints - a.totalPoints);
+                setLeaderboard(participants);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLobbyData();
+    }, []);
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error}</p>;
@@ -44,6 +86,9 @@ const CombinedLeaderboard = ({ lobbies }) => {
                     <tr>
                         <th></th>
                         <th>Game Name</th>
+                        {Array.from({ length: lobbies.reduce((max, lobby) => Math.max(max, lobby.matchIds.length), 0) }).map((_, index) => (
+                            <th key={index}>Trận {index + 1}</th>
+                        ))}
                         <th>Tổng điểm</th>
                     </tr>
                 </thead>
@@ -52,6 +97,9 @@ const CombinedLeaderboard = ({ lobbies }) => {
                         <tr key={participant.puuid}>
                             <td>{index + 1}</td>
                             <td className="text-left">{participant.gameNameTag}</td>
+                            {Array.from({ length: lobbies.reduce((max, lobby) => Math.max(max, lobby.matchIds.length), 0) }).map((_, matchIndex) => (
+                                <td key={matchIndex}>{participant.points[matchIndex] || 0}</td>
+                            ))}
                             <td>{participant.totalPoints}</td>
                         </tr>
                     ))}
