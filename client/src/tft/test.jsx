@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 const lobbies = [
     { id: 'Lobby 1', matchIds: ['VN2_633813781'] },
-    { id: 'Lobby 2', matchIds: ['VN2_715042777'] },
+    { id: 'Lobby 2', matchIds: ['VN2_776825141'] },
     { id: 'Lobby 3', matchIds: ['VN2_774619432'] }
 ];
 
@@ -122,7 +122,13 @@ const CombinedLeaderboard = () => {
                             <td>{index + 1}</td>
                             <td className="text-left">{participant.gameNameTag}</td>
                             {Array.from({ length: lobbies.reduce((max, lobby) => Math.max(max, lobby.matchIds.length), 0) }).map((_, matchIndex) => (
-                                <td key={matchIndex}>{participant.points[matchIndex] || 0}</td>
+                                <td key={matchIndex}>
+                                    {showPlayers ? 
+                                        (participant.points[matchIndex] || 0) 
+                                        : 
+                                        (participant.points[matchIndex] || 0) // Replace with placement if needed
+                                    }
+                                </td>
                             ))}
                             <td>{participant.totalPoints}</td>
                         </tr>
