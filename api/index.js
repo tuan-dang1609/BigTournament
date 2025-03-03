@@ -9,6 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import axios from 'axios';
+import pLimit from'p-limit';
 import NodeCache from 'node-cache';
 import rateLimit from 'express-rate-limit';
 import { Server } from 'socket.io';
@@ -337,9 +338,10 @@ app.post('/api/accounts', async (req, res) => {
 
   try {
     // Gửi request mẫu để kiểm tra rate limit
-    const testResponse = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuids[0]}`, {
-      headers: { 'X-Riot-Token': apiKey }
-    });
+    const testResponse = await axios.get(
+      `https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuids[0]}`,
+      { headers: { 'X-Riot-Token': apiKey } }
+    );
 
     // Lấy thông tin từ headers
     const rateLimit = testResponse.headers['x-app-rate-limit']; // VD: "100:120,2000:600"
@@ -349,8 +351,8 @@ app.post('/api/accounts', async (req, res) => {
     console.log('Rate Limit Count:', rateLimitCount);
 
     // Chuyển đổi thông tin
-    const [shortTermLimit, longTermLimit] = rateLimit.split(',').map((limit) => limit.split(':').map(Number));
-    const [shortTermCount, longTermCount] = rateLimitCount.split(',').map((count) => count.split(':').map(Number));
+    const [shortTermLimit, longTermLimit] = rateLimit.split(',').map(limit => limit.split(':').map(Number));
+    const [shortTermCount, longTermCount] = rateLimitCount.split(',').map(count => count.split(':').map(Number));
 
     // Tính số request còn lại
     const remainingShort = shortTermLimit[0] - shortTermCount[0];
@@ -363,16 +365,30 @@ app.post('/api/accounts', async (req, res) => {
       return res.status(429).json({ error: 'Rate limit exceeded soon, please try again later' });
     }
 
-    // Gửi request lấy account data
-    const accountPromises = puuids.map(async (puuid) => {
-          const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`, {
-            headers: { 'X-Riot-Token': apiKey }
-          });
+    // Giới hạn số lượng request đồng thời (ví dụ: 3 request đồng thời)
+    const limit = pLimit(3);
 
-          const { puuid: _, ...accountData } = response.data;
-          return accountData;
-    });
+    // Hàm fetch dữ liệu cho từng puuid với retry khi gặp lỗi 429
+    const fetchAccountData = async (puuid, retries = 3) => {
+      try {
+        const response = await axios.get(
+          `https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`,
+          { headers: { 'X-Riot-Token': apiKey } }
+        );
+        const { puuid: _, ...accountData } = response.data;
+        return accountData;
+      } catch (err) {
+        if (err.response && err.response.status === 429 && retries > 0) {
+          // Chờ 1 giây rồi retry (có thể áp dụng exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return fetchAccountData(puuid, retries - 1);
+        }
+        throw err;
+      }
+    };
 
+    // Map các puuid vào hàm fetch được giới hạn bởi concurrency
+    const accountPromises = puuids.map(puuid => limit(() => fetchAccountData(puuid)));
     const accountDataArray = await Promise.all(accountPromises);
     res.json(accountDataArray);
   } catch (error) {
