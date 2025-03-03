@@ -16,6 +16,8 @@ import compression from 'compression';
 import Queue from 'bull';
 import https from 'https';
 import request from 'request';
+import crypto from 'crypto';
+import session from 'express-session';
 const pLimit = require('p-limit');
 const limit = pLimit(5); // Giới hạn chỉ 5 request chạy cùng lúc
 dotenv.config();
