@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
+import CombinedLeaderboard from './test';
 const MatchData = () => {
     const [lobbyData, setLobbyData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -7,7 +7,7 @@ const MatchData = () => {
     const [showPlayers, setShowPlayers] = useState(true);
 
     const lobbies = [
-        { id: 'Lobby 1', matchIds: ['VN2_633813781','VN2_633813781'] },
+        { id: 'Lobby 1', matchIds: ['VN2_633813781'] },
         { id: 'Lobby 2', matchIds: ['VN2_715042777'] }
     ];
 
@@ -139,6 +139,7 @@ const MatchData = () => {
                     </table>
                 </div>
             ))}
+            <CombinedLeaderboard lobbies={lobbyData} />
         </div>
     );
 };
