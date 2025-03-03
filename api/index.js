@@ -336,27 +336,51 @@ app.post('/api/accounts', async (req, res) => {
   const { puuids } = req.body;
 
   try {
-    // Tạo một mảng các promises để fetch dữ liệu cho từng puuid
+    // Gửi request mẫu để kiểm tra rate limit
+    const testResponse = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuids[0]}`, {
+      headers: { 'X-Riot-Token': apiKey }
+    });
+
+    // Lấy thông tin từ headers
+    const rateLimit = testResponse.headers['x-app-rate-limit']; // VD: "100:120,2000:600"
+    const rateLimitCount = testResponse.headers['x-app-rate-limit-count']; // VD: "5:120,500:600"
+
+    console.log('Rate Limit:', rateLimit);
+    console.log('Rate Limit Count:', rateLimitCount);
+
+    // Chuyển đổi thông tin
+    const [shortTermLimit, longTermLimit] = rateLimit.split(',').map((limit) => limit.split(':').map(Number));
+    const [shortTermCount, longTermCount] = rateLimitCount.split(',').map((count) => count.split(':').map(Number));
+
+    // Tính số request còn lại
+    const remainingShort = shortTermLimit[0] - shortTermCount[0];
+    const remainingLong = longTermLimit[0] - longTermCount[0];
+
+    console.log(`Requests còn lại: ${remainingShort} trong ${shortTermLimit[1]}s, ${remainingLong} trong ${longTermLimit[1]}s`);
+
+    // Nếu gần hết request, trả về lỗi sớm
+    if (remainingShort <= 5 || remainingLong <= 10) {
+      return res.status(429).json({ error: 'Rate limit exceeded soon, please try again later' });
+    }
+
+    // Gửi request lấy account data
     const accountPromises = puuids.map(async (puuid) => {
       const response = await axios.get(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`, {
         headers: { 'X-Riot-Token': apiKey }
       });
 
-      // Trả về dữ liệu mà không chứa `puuid`
       const { puuid: _, ...accountData } = response.data;
       return accountData;
     });
 
-    // Chờ tất cả các requests hoàn tất
     const accountDataArray = await Promise.all(accountPromises);
-
-    // Trả về dữ liệu đã xử lý cho client
     res.json(accountDataArray);
   } catch (error) {
     console.error('Error fetching account data:', error.message);
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch account data' });
   }
 });
+
 
 app.post('/api/auth/tft_double_rank', async (req, res) => {
   try {
