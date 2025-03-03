@@ -25,47 +25,56 @@ const CombinedLeaderboard = () => {
                 setLoading(true);
                 const participantMap = {};
 
+                // Loop through each lobby and fetch its data individually
                 for (const lobby of lobbies) {
+                    const lobbyParticipants = {};
                     for (const matchId of lobby.matchIds) {
                         const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/tft/match/${matchId}`);
                         if (!response.ok) {
                             throw new Error('Failed to fetch match data');
                         }
                         const matchData = await response.json();
-                        
+
                         matchData.info.participants.forEach((participant) => {
                             const { puuid, placement } = participant;
-                            if (!participantMap[puuid]) {
-                                participantMap[puuid] = { puuid, points: [] };
+                            if (!lobbyParticipants[puuid]) {
+                                lobbyParticipants[puuid] = { puuid, points: [] };
                             }
-                            participantMap[puuid].points.push(getPoints(placement));
+                            lobbyParticipants[puuid].points.push(getPoints(placement));
                         });
                     }
+
+                    const puuids = Object.keys(lobbyParticipants);
+                    const accountResponse = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/accounts`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ puuids })
+                    });
+
+                    if (!accountResponse.ok) {
+                        throw new Error('Failed to fetch account data');
+                    }
+
+                    const accounts = await accountResponse.json();
+                    puuids.forEach((puuid, index) => {
+                        const totalPoints = lobbyParticipants[puuid].points.reduce((acc, curr) => acc + curr, 0);
+                        const gameNameTag = `${accounts[index]?.gameName || 'Unknown'}#${accounts[index]?.tagLine || '0000'}`;
+                        if (!participantMap[puuid]) {
+                            participantMap[puuid] = {
+                                puuid,
+                                gameNameTag,
+                                points: [],
+                                totalPoints: 0
+                            };
+                        }
+                        participantMap[puuid].points.push(...lobbyParticipants[puuid].points);
+                        participantMap[puuid].totalPoints += totalPoints;
+                    });
                 }
 
-                const puuids = Object.keys(participantMap);
-                const accountResponse = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/accounts`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ puuids })
-                });
+                // Convert participantMap to an array and sort by total points
+                const participants = Object.values(participantMap).sort((a, b) => b.totalPoints - a.totalPoints);
 
-                if (!accountResponse.ok) {
-                    throw new Error('Failed to fetch account data');
-                }
-
-                const accounts = await accountResponse.json();
-                const participants = puuids.map((puuid, index) => {
-                    const totalPoints = participantMap[puuid].points.reduce((acc, curr) => acc + curr, 0);
-                    return {
-                        puuid,
-                        gameNameTag: `${accounts[index]?.gameName || 'Unknown'}#${accounts[index]?.tagLine || '0000'}`,
-                        points: participantMap[puuid].points,
-                        totalPoints
-                    };
-                });
-
-                participants.sort((a, b) => b.totalPoints - a.totalPoints);
                 setLeaderboard(participants);
             } catch (err) {
                 setError(err.message);
