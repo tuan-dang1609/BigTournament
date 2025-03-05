@@ -1,16 +1,23 @@
 import { Link } from "react-router-dom";
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import {
+    Disclosure,
+    Menu,
+    Transition,
+    MenuItem, MenuItems, DisclosurePanel, MenuButton, DisclosureButton
+} from "@headlessui/react";
 
-const renderNavItem = (item) => {
+const renderNavItem = (item, isMenuOpen, setIsMenuOpen) => {
     function classNames(...classes) {
         return classes.filter(Boolean).join(" ");
     }
+
     return (
         <Link
             key={item.name}
             to={item.href}
             aria-current={item.current ? "page" : undefined}
+            onClick={() => isMenuOpen && setIsMenuOpen(false)} // Đóng menu khi click trên mobile
             className={
                 item.logo
                     ? "flex flex-row p-2 font-bold text-primary gap-x-2 border-2 rounded-2xl border-primary justify-center items-center"
@@ -29,17 +36,16 @@ const renderNavItem = (item) => {
                     className="inline-block h-8 w-8"
                 />
             )}
-            <p className="py-1 text-a ">{item.name}</p>
+            <p className="py-1 text-a">{item.name}</p>
         </Link>
     );
 };
 
 const MyNavbar2 = ({ navigation, isMenuOpen, setIsMenuOpen }) => {
-    // Determine the current active navigation item
     const activeItem = navigation.find((item) => item.current) || {};
 
     return (
-        <nav className="bg-base-200 py-1 fixed w-full z-20 my-[72px]">
+        <Disclosure as="nav" className="bg-base-200 py-1 fixed w-full z-20 my-[72px]">
             <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 flex h-16 items-center justify-center relative">
                 {/* Hamburger Menu Button for mobile */}
                 <div className="absolute inset-y-0 left-0 flex items-center min-[1024px]:hidden">
@@ -66,7 +72,7 @@ const MyNavbar2 = ({ navigation, isMenuOpen, setIsMenuOpen }) => {
                 {/* Desktop Menu */}
                 <div className="hidden sm:ml-6 min-[1024px]:flex">
                     <div className="flex space-x-4">
-                        {navigation.map(renderNavItem)}
+                        {navigation.map((item) => renderNavItem(item, isMenuOpen, setIsMenuOpen))}
                     </div>
                 </div>
             </div>
@@ -74,10 +80,10 @@ const MyNavbar2 = ({ navigation, isMenuOpen, setIsMenuOpen }) => {
             {/* Mobile Menu */}
             {isMenuOpen && (
                 <div className="min-[1024px]:hidden px-2 pt-2 pb-3">
-                    {navigation.map(renderNavItem)}
+                    {navigation.map((item) => renderNavItem(item, isMenuOpen, setIsMenuOpen))}
                 </div>
             )}
-        </nav>
+        </Disclosure>
     );
 };
 

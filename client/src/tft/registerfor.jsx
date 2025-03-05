@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { FaMinus, FaUserPlus } from "react-icons/fa";
+import { FaMinus } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from 'axios';
 import Image from '../image/waiting.png'
@@ -84,19 +84,7 @@ const TeamRegistrationForm = () => {
         setTimeout(scrollToTop, 0);
         document.title = "Form đăng kí giải";
     }, []);
-    const handleLogoChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file); // Chuyển ảnh thành Base64
-            reader.onloadend = () => {
-                setFormData((prevData) => ({
-                    ...prevData,
-                    logoUrl: reader.result.split(",")[1], // Lấy chuỗi Base64
-                }));
-            };
-        }
-    };
+
     useEffect(() => {
         if (signupSuccess) {
             const timer = setInterval(() => {
@@ -129,7 +117,11 @@ const TeamRegistrationForm = () => {
         validateField("games", updatedGames);
     };
 
-
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        validateField(name, value);
+    };
     const removeMember = (game, index) => {
         const updatedGameMembers = { ...formData.gameMembers };
         updatedGameMembers[game] = updatedGameMembers[game].filter((_, i) => i !== index);
@@ -255,7 +247,7 @@ const TeamRegistrationForm = () => {
 
                         {/* Hiển thị logo từ chuỗi Base64 */}
                         <img
-                            src={`data:image/png;base64,${userRegister.logoUrl}`}
+                            src={`https://drive.google.com/thumbnail?id=${userRegister.logoUrl}`}
                             className="w-28 h-28 mb-5"
                             alt="Logo của đội"
                         />
@@ -295,9 +287,21 @@ const TeamRegistrationForm = () => {
 
 
                                 <div className="flex flex-col" id="logoUrl">
-                                    <label className="font-semibold text-base-content" htmlFor="logoUpload">Logo của bạn</label>
-                                    <input type="file" accept="image/*" onChange={handleLogoChange} />
-                                    {errors.logoUrl && <p className="text-red-500 text-xs">{errors.logoUrl}</p>}
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">
+                                        Logo ID của bạn
+                                    </label>
+                                    <input
+                                        type="text"
+
+                                        name="logoUrl"
+                                        value={formData.logoUrl}
+                                        onChange={handleInputChange}
+                                        className="px-4 py-2 bg-white border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                                        placeholder="Nhập ID của tệp Google Drive"
+                                    />
+                                    {errors.logoUrl && (
+                                        <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
+                                    )}
                                 </div>
 
 

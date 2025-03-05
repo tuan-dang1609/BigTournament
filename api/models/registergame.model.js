@@ -13,7 +13,6 @@ const teamSchema = new mongoose.Schema({
     teamName: {
         type: String,
         trim: true,
-        unique:true,
     },
     shortName: {
         type: String,

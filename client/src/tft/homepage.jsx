@@ -192,7 +192,7 @@ const TeamCard = ({ team, showPlayers }) => {
         >
             <div className="w-full lg:h-48 h-24 lg:p-0 p-2 overflow-hidden relative">
                 <img
-                    src={`data:image/png;base64,${team.logoUrl}`} 
+                    src={`https://drive.google.com/thumbnail?id=${team.logoUrl}`} 
                     alt={`${team.teamName} logo`}
                     className={`h-full flex w-full justify-center items-center lg:block object-contain transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-[.19]' : 'opacity-100'}`}
                 />
