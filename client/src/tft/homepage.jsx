@@ -27,14 +27,16 @@ const CompetitionPage = () => {
     const [showPlayers, setShowPlayers] = useState(false);
 
     const prizePool = [
-        { place: "1st", prize: "135 000 VND", color: "#FFD700" }, // Gold
-        { place: "1 tuớng 5 vàng 3 sao", prize: "20 000 VND", color: "#C0C0C0" },  // Silver
+        { place: "1st", prize: "100 Point", color: "#FFD700" }, // Gold
+        { place: "2nd", prize: "92 Point", color: "#C0C0C0" },  
+        { place: "3rd", prize: "85 Point", color: "#FFD700" }, // Gold
+        { place: "4th", prize: "77 Point", color: "#C0C0C0" },  // Silver
+        { place: "5th", prize: "72 Point", color: "#FFD700" }, // Gold
+        { place: "6th", prize: "68 Point", color: "#C0C0C0" },  // Silver
+        { place: "7th", prize: "64 Point", color: "#FFD700" }, // Gold
+        { place: "8th", prize: "60 Point", color: "#C0C0C0" },  // Silver
     ];
-    const timeline = [
-        { stage: "Registration", date: "June 1 - June 15", completed: true },
-        { stage: "Preliminary Rounds", date: "June 20 - July 5", completed: true },
-        { stage: "Finals", date: "July 10", completed: false }
-    ];
+
     useEffect(() => {
         const scrollToTop = () => {
             document.documentElement.scrollTop = 0;
@@ -96,12 +98,16 @@ const CompetitionPage = () => {
                         <img src={ImageDCN} alt="DCN logo" className="h-32 w-32" />
                     </div>
                     <h1 className="text-6xl md:text-7xl animate__animated animate__fadeIn font-extrabold mb-6 animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                        Giải Chung Kết TFT DCN 2024
+                        Vòng loại 1 giải TFT DCN: Season 2025
                     </h1>
                     <p className="animate__animated animate__fadeIn text-xl md:text-xl mb-8 animate-fade-in-up">
                        Thắng bại tại kĩ năng !!!
                     </p>
-                    
+                    <Link to="/tft/register">
+                                            <button className="animate__animated animate__fadeInUp bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent text-white font-bold py-4 px-10 rounded-full text-xl transform hover:scale-105 shadow-lg">
+                                                Đăng ký ngay
+                                            </button>
+                                        </Link>
                 </div>
                 <div className="absolute bottom-8 left-0 right-0 flex justify-center">
                     <button
@@ -161,9 +167,9 @@ const CompetitionPage = () => {
                     Giải thưởng
                 </h2>
                 <div className="mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-1">
                         {prizePool.map((prize, index) => (
-                            <div key={index} className="text-center bg-gray-800 rounded-lg p-6 shadow-xl transform hover:scale-105 transition duration-300 ease-in-out">
+                            <div key={index} className="text-center bg-gray-800 rounded-lg p-6 shadow-xl">
                                 <div className="text-6xl mb-4 flex justify-center" style={{ color: prize.color }}>
                                     <FaMedal />
                                 </div>

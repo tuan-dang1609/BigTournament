@@ -33,12 +33,11 @@ const TeamRegistrationForm = () => {
         showProgress: true,
         steps: [
             { popover: { title: 'Chào mừng', description: 'Chào mừng bạn tới form đăng ký giải đấu TFT của Dong Chuyen Nghiep. Mình sẽ hướng dẫn chi tiết cách điền nhé.' } },
-            { element: '#logoUrl', popover: { title: 'Logo', description: 'Chọn ảnh logo bạn muốn đăng. Lưu ý ảnh PHẢI có tỉ lệ là 1:1 và giới hạn của ảnh là 200KB' } },
-            { element: '#color', popover: { title: 'Màu chủ đạo của đội', description: 'Chọn màu chủ đạo cho đội bạn.' } },
+            { element: '#logoUrl', popover: { title: 'Logo', description: 'Điền URL ảnh em muốn đăng. Ví dụ https://drive.google.com/file/d/ 1wieQnqKp6C8xC6vm9V2eVfvw60 BXOND6/view?usp=drive_link thì mình ghi ở đây là 1wieQnqKp6C8xC6vm9V2eVfvw60BXOND6 và link phải phải để chế độ Public.' } },
             { element: '#gameChoose', popover: { title: 'Chọn game', description: 'Chọn vào game Teamfight Tactics. Click vào để thấy thêm phần điền tên trong game' } },
-            { element: '#ign', popover: { title: 'Nhập IGN', description: 'Điền tên riot ID của mỗi thành viên.' } },
+            { element: '#ign', popover: { title: 'Nhập IGN', description: 'Điền tên riot ID của mỗi thành viên. Ở form này tụi mình đã setup để tự điền riotID của bạn.' } },
             { element: '#submitTeam', popover: { title: 'Nộp đội', description: 'Khi bạn đã điền đúng theo yêu cầu, bạn sẽ nộp được. Sau khi nộp, các bạn có thể kiểm tra đội mình bằng cách lướt xuống mục các đội tham dự ở trang chủ nhé.' } },
-            { popover: { title: 'Kết thúc', description: 'Như vậy là mình đã hướng dẫn các bạn cách điền form rồi. Tụi mình sẽ chỉ giải đáp nếu có 2 đội trở lên trong 1 lớp đăng ký hay có lỗi (Bug) trong quá trình đăng ký. Hạn chót đã được thông báo ở Announcement Discord. Hẹn gặp lại các bạn ở giải đấu nhé!' } },
+            { popover: { title: 'Kết thúc', description: 'Như vậy là mình đã hướng dẫn các bạn cách điền form rồi. Hạn chót đã được thông báo ở Announcement Discord. Hẹn gặp lại các bạn ở giải đấu nhé!' } },
         ]
     });
 

@@ -46,12 +46,12 @@ const MatchData = () => {
     };
     const lobbies = {
         day1: [
-            { id: 'Lobby 1', matchIds: ['VN2_633813781', '0', '0'] },
-            { id: 'Lobby 2', matchIds: ['VN2_776825141', '0', '0'] }
+            { id: 'Lobby 1', matchIds: ['0', '0', '0'] },
+            { id: 'Lobby 2', matchIds: ['0', '0', '0'] }
         ],
         day2: [
-            { id: 'Lobby 1', matchIds: ['VN2_633813781', '0', '0'] },
-            { id: 'Lobby 2', matchIds: ['VN2_776825141', '0', '0'] }
+            { id: 'Lobby 1', matchIds: ['0', '0', '0'] },
+            { id: 'Lobby 2', matchIds: ['0', '0', '0'] }
         ]
     };
     const score = [
