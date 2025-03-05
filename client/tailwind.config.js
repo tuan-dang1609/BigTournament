@@ -36,7 +36,6 @@ export default {
 
       "retro",
       "cyberpunk",
-      "valentine",
       "forest",
       "autumn",
       "night",

@@ -181,7 +181,7 @@ export default function MatchStatLOL() {
 
                             return (
                                 <tr key={puuid} className="!h-[45.2px]">
-                                    <td className="   lg:!w-[270px] !w-[180px] sticky left-0 bg-base-100 z-10">
+                                    <td className="lg:!w-[270px] !w-[180px] sticky left-0 bg-base-100 z-10">
                                         <div className="flex flex-row gap-x-3">
                                             <img src={itemImages[teamPosition]} alt={`${teamPosition}`} className="inline-block h-7 w-7 rounded" />
                                             <img src={itemImages[championName]} alt={`Item ${championName}`} className="inline-block h-7 w-7 rounded" />

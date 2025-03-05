@@ -33,7 +33,6 @@ import TermsOfService from './components/termofservice.jsx';
 import HallOfFameAOV from './arenaofvalor/halloffame.jsx';
 import HallOfFameValo from './valorant/halloffame.jsx'
 import MatchStatAOV from './arenaofvalor/statmatch.jsx'
-import TFT from './tft/tftmatch.jsx'
 import TFTRegister from './tft/registerfor.jsx';
 import TFThompage from './tft/homepage.jsx'
 import LiveGameDataLOL from './leagueoflegend/hudgame.jsx'
@@ -52,7 +51,7 @@ import CompetitionPage from './valorant/homepage.jsx';
 import TournamentBracketAOV16_1 from './arenaofvalor/bracket_16team_1.jsx';
 import MatchInterface from './valorant/test2.jsx';
 import CreateMatch from './valorant/test.jsx';
-import TFTMatch from './tft/tftmatch.jsx'
+import TFTMatch from './tft/day1.jsx'
 import CombinedLeaderboard from './tft/test.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
@@ -60,7 +59,7 @@ const rootElement = document.getElementById('root');
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
-    <React.StrictMode>
+
       <Provider store={store}>
         <PersistGate persistor={persistor} loading={null}>
           <BrowserRouter>
@@ -85,8 +84,8 @@ if (rootElement) {
               <Route path="/leagueoflegend/match" element={<MatchStatLOL />} />
               <Route path="/arenaofvalor" element={<HomepageAOV />} />
               <Route path="/tft" element={<TFThompage />} />
-              <Route path="/tft/ranking/total" element={<CombinedLeaderboard />} />
-              <Route path="/tft/ranking" element={<TFTMatch />} />
+              <Route path="/tft/ranking/total/:day" element={<CombinedLeaderboard />} />
+              <Route path="/tft/ranking/:day" element={<TFTMatch />} />
               <Route path="/tftdouble" element={<CompetitionPageDoubleUp />} />
               <Route path="/tftdouble/ranking" element={<PowerRankingTFTDouble />} />
               <Route path='/register' element={<TeamRegistrationForm />} />
@@ -100,7 +99,6 @@ if (rootElement) {
               <Route path='/tos' element={<TermsOfService />} />
               <Route path='/arenaofvalor/halloffame' element={<HallOfFameAOV />} />
               <Route path='/valorant/halloffame' element={<HallOfFameValo />} />
-              <Route path='/tft/match' element={<TFT />} />
               <Route path='/lol/hudgame' element={<LiveGameDataLOL />} />
               <Route path='/arenaofvalor/vong1' element={<TournamentBracketAOV16_1/>} />
               <Route path='/arenaofvalor/vong2' element={<TournamentBracketAOV16 />} />
@@ -119,7 +117,6 @@ if (rootElement) {
           </BrowserRouter>
         </PersistGate>
       </Provider>
-    </React.StrictMode>
   );
 } else {
   console.error("Root element not found. Make sure there is an element with id='root' in your HTML.");

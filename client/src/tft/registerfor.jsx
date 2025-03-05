@@ -43,7 +43,6 @@ const TeamRegistrationForm = () => {
     });
 
 
-
     // Hàm kích hoạt hướng dẫn
     const startTour = () => {
         driverObj.drive();

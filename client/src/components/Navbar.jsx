@@ -185,7 +185,6 @@ export default function Example() {
                 >
                   {theme === "autumn" && "🌞 Light"}
                   {theme === "forest" && "🌙 Dark"}
-                  {theme === "valentine" && "💘 Cute"}
                 </label>
                 <ul
                   tabIndex={0}
@@ -196,9 +195,6 @@ export default function Example() {
                   </li>
                   <li>
                     <a onClick={() => handleToggle({ target: { value: "forest" } })}>🌙 Dark</a>
-                  </li>
-                  <li>
-                    <a onClick={() => handleToggle({ target: { value: "valentine" } })}>💘 Cute</a>
                   </li>
                 </ul>
               </div>
