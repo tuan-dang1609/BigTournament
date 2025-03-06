@@ -35,6 +35,14 @@ const CompetitionPage = () => {
         { place: "6th", prize: "68 Point", color: "#C0C0C0" },  // Silver
         { place: "7th", prize: "64 Point", color: "#FFD700" }, // Gold
         { place: "8th", prize: "60 Point", color: "#C0C0C0" },  // Silver
+        { place: "9th", prize: "57 Point", color: "#FFD700" }, // Gold
+        { place: "10th", prize: "53 Point", color: "#C0C0C0" },  
+        { place: "11th", prize: "50 Point", color: "#FFD700" }, // Gold
+        { place: "12th", prize: "48 Point", color: "#C0C0C0" },  // Silver
+        { place: "13th", prize: "45 Point", color: "#FFD700" }, // Gold
+        { place: "14th", prize: "42 Point", color: "#C0C0C0" },  // Silver
+        { place: "15th", prize: "40 Point", color: "#FFD700" }, // Gold
+        { place: "16th-32nd", prize: "32 Point", color: "#C0C0C0" },  // Silver
     ];
 
     useEffect(() => {
