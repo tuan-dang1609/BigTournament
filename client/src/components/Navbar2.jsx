@@ -36,7 +36,7 @@ const renderNavItem = (item, isMenuOpen, setIsMenuOpen) => {
                     className="inline-block h-8 w-8"
                 />
             )}
-            <p className="py-1 text-a">{item.name}</p>
+            <p className="py-1 text-a font-bold">{item.name}</p>
         </Link>
     );
 };
@@ -45,7 +45,7 @@ const MyNavbar2 = ({ navigation, isMenuOpen, setIsMenuOpen }) => {
     const activeItem = navigation.find((item) => item.current) || {};
 
     return (
-        <Disclosure as="nav" className="bg-base-200 py-1 fixed w-full z-20 my-[72px]">
+        <Disclosure as="nav" className="bg-base-200 py-1 fixed w-full z-20 my-[72px] font-semibold">
             <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 flex h-16 items-center justify-center relative">
                 {/* Hamburger Menu Button for mobile */}
                 <div className="absolute inset-y-0 left-0 flex items-center min-[1024px]:hidden">

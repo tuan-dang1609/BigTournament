@@ -35,8 +35,7 @@ const MatchData = () => {
     
     const navigationAll1 = {
         aov: [
-          { name: "Vòng 1", href: "/tft/ranking/day1", current: location.pathname === "/tft/ranking/day1" },
-          { name: "Vòng 2", href: "/tft/ranking/day2", current: location.pathname === "/tft/ranking/day2" }
+          { name: "Vòng 1", href: "/tft/ranking/day1", current: location.pathname === "/tft/ranking/day1" }
         ],
       };
     const getNavigation = () => navigationAll1.aov;
@@ -47,7 +46,8 @@ const MatchData = () => {
     const lobbies = {
         day1: [
             { id: 'Lobby 1', matchIds: ['0', '0', '0'] },
-            { id: 'Lobby 2', matchIds: ['0', '0', '0'] }
+            { id: 'Lobby 2', matchIds: ['0', '0', '0'] },
+            { id: 'Lobby 3', matchIds: ['0', '0', '0'] }
         ],
         day2: [
             { id: 'Lobby 1', matchIds: ['0', '0', '0'] },
@@ -76,7 +76,7 @@ const MatchData = () => {
             document.documentElement.scrollTop = 0;
         };
         setTimeout(scrollToTop, 0);
-        document.title = "Vòng 1 giải TFT";
+        document.title = `Vòng ${roundIndex} giải TFT`;
     
     }, []);
 
