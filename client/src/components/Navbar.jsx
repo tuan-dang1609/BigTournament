@@ -171,7 +171,7 @@ export default function Example() {
                           className="inline-block h-8 w-8"
                         />
                       )}
-                      <p className="py-1 text-a">{item.name}</p>
+                      <p className="py-1 text-a font-bold">{item.name}</p>
                     </Link>
                   ))}
                 </div>
