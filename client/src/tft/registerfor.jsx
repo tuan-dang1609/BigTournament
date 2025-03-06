@@ -75,7 +75,9 @@ const TeamRegistrationForm = () => {
 
         fetchTeams();
     }, [currentUser]);
-
+    if (!currentUser.riotID || currentUser.riotID.trim() === '' || currentUser.riotID === 'Đăng nhập với Riot Games') {  
+        navigate('/profile');  
+    }
     useEffect(() => {
         const scrollToTop = () => {
             document.documentElement.scrollTop = 0;
@@ -98,7 +100,7 @@ const TeamRegistrationForm = () => {
         }
     }, [signupSuccess, countdown, navigate]);
 
-
+    
 
     const handleGameToggle = (game) => {
         let updatedGames = [...formData.games];
