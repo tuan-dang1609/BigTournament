@@ -108,7 +108,7 @@ export default function Profile() {
             }, 1000);
 
             if (countdown === 0) {
-                navigate('/arenaofvalor');
+                navigate('/');
             }
 
             // Cleanup the interval on component unmount
