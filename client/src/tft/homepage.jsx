@@ -27,10 +27,10 @@ const CompetitionPage = () => {
     const [showPlayers, setShowPlayers] = useState(false);
 
     const prizePool = [
-        { place: "1st", prize: "100 Point", color: "#FFD700" }, // Gold
-        { place: "2nd", prize: "92 Point", color: "#C0C0C0" },  
-        { place: "3rd", prize: "85 Point", color: "#FFD700" }, // Gold
-        { place: "4th", prize: "77 Point", color: "#C0C0C0" },  // Silver
+        { place: "1st", prize: "Grand Final", color: "#FFD700" }, // Gold
+        { place: "2nd", prize: "Grand Final", color: "#C0C0C0" },  
+        { place: "3rd", prize: "Grand Final", color: "#FFD700" }, // Gold
+        { place: "4th", prize: "Grand Final", color: "#C0C0C0" },  // Silver
         { place: "5th", prize: "72 Point", color: "#FFD700" }, // Gold
         { place: "6th", prize: "68 Point", color: "#C0C0C0" },  // Silver
         { place: "7th", prize: "64 Point", color: "#FFD700" }, // Gold
@@ -172,17 +172,17 @@ const CompetitionPage = () => {
             {/* Prize Pool Section */}
             <div className="lg:my-12 px-4 my-10 tag">
                 <h2 className="max-w-xl mx-auto text-4xl md:text-5xl font-bold mb-10 text-center text-primary">
-                    Giải thưởng
+                    Điểm hạng
                 </h2>
                 <div className="mx-auto">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-1">
+                    <div className="grid grid-cols-2 lg:grid-cols-8 md:grid-cols-4 gap-1">
                         {prizePool.map((prize, index) => (
                             <div key={index} className="text-center bg-gray-800 rounded-lg p-6 shadow-xl">
-                                <div className="text-6xl mb-4 flex justify-center" style={{ color: prize.color }}>
+                                <div className="text-5xl mb-4 flex justify-center" style={{ color: prize.color }}>
                                     <FaMedal />
                                 </div>
                                 <h3 className="text-2xl font-bold mb-2">{prize.place}</h3>
-                                <p className="text-3xl font-semibold text-green-400">{prize.prize}</p>
+                                <p className="text-xl font-semibold text-green-400">{prize.prize}</p>
                             </div>
                         ))}
                     </div>
