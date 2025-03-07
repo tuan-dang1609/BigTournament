@@ -10,7 +10,7 @@ const MatchData = () => {
     const [lobbyData, setLobbyData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showPlayers, setShowPlayers] = useState(true);
+    const [showPlayers, setShowPlayers] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const roundIndex = day === 'day1' ? 1 : day === 'day2' ? 2 : 'Chung kết tổng';
     const driverObj = driver({
@@ -35,7 +35,8 @@ const MatchData = () => {
     
     const navigationAll1 = {
         aov: [
-          { name: "Vòng 1", href: "/tft/ranking/day1", current: location.pathname === "/tft/ranking/day1" }
+          { name: "Vòng 1", href: "/tft/ranking/day1", current: location.pathname === "/tft/ranking/day1" },
+          { name: "Vòng 2", href: "/tft/ranking/day2", current: location.pathname === "/tft/ranking/day2" },
         ],
       };
     const getNavigation = () => navigationAll1.aov;
@@ -187,7 +188,7 @@ const MatchData = () => {
                             </div>
                         ))}
                     </div>
-                    <button onClick={startTour} className="bg-[#48042c] text-white px-4 py-2 rounded-md mt-2 mb-4">
+                    <button onClick={startTour} className="bg-[#48042c] font-bold text-white px-4 py-2 rounded-md mt-2 mb-4">
                         Luật Tiebreaker
                     </button>
                 </div>
@@ -215,12 +216,12 @@ const MatchData = () => {
 
             {lobbyData.map((lobby) => (
                 <div key={lobby.lobbyId} className="mb-8">
-                    <h2 className="text-lg font-bold text-center uppercase py-2 border rounded-ss-lg rounded-se-lg border-[#48042c]">{lobby.lobbyId}</h2>
+                    <h2 className="text-lg font-bold text-center uppercase py-2 border rounded-ss-lg rounded-se-lg  border-[#48042c]">{lobby.lobbyId}</h2>
 
                     {/* Wrapper cho table */}
                     <div className="table-container">
                         <div className="overflow-x-auto rounded-es-lg rounded-ee-lg shadow-md border border-[#48042c]">
-                            <table className=" table-fixed min-w-full text-base-content lg:w-full w-[140%] font-semibold">
+                            <table className="table-fixed min-w-full text-base-content lg:w-full w-[140%] font-semibold">
                                 <thead className="bg-[#48042c] text-white">
                                     <tr>
                                         <th className="p-2 bg-[#48042c] sticky left-0 z-10 lg:!w-[270px] !w-[180px]"></th>

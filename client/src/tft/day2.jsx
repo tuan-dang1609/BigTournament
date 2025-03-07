@@ -7,44 +7,46 @@ const MatchData = () => {
     const [lobbyData, setLobbyData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showPlayers, setShowPlayers] = useState(true);
+    const [showPlayers, setShowPlayers] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const roundIndex =  'Chung kết tổng';
     const driverObj = driver({
         showProgress: true,
         steps: [
             {
                 popover: {
-                    title: 'Luật Tiebreaker',
+                    title: 'Luật Checkmate',
                     description: `
-                        <p class="mt-2 font-semibold">Bất kỳ người chơi nào có điểm số bằng nhau trong các trường hợp như Reseeding Lobbies, cắt điểm cuối ngày, hoặc xếp hạng chung cuộc sẽ được phân biệt theo các tiêu chí sau:</p>
                         <ul class="mt-2 list-disc list-inside space-y-2 text-sm font-semibold">
-                            <li><span class="font-medium">Tổng số điểm trong giải đấu.</span></li>
-                            <li><span class="font-medium">Số trận thắng cao nhất</span> và số lần lọt vào <span class="font-medium">Top 4</span> trong giai đoạn giải đấu (chiến thắng được tính gấp đôi).</li>
-                            <li>Số lần đạt được từng thứ hạng cụ thể trong một lobby <span class="font-medium">(1st, 2nd, 3rd, v.v.)</span> trong giai đoạn giải đấu.</li>
-                            <li>Vị trí hoàn thành trong trận đấu gần nhất của giai đoạn giải đấu, sau đó là thứ hạng của từng trận đấu trước đó <span class="font-medium">(ví dụ: Trận 5, 4, 3, v.v.).</span></li>
+                            <li><span class="font-medium">Người chơi đầu tiên đạt được 20 điểm sẽ đặt lobby vào trạng thái "check".</span></li>
+                            <li><span class="font-medium">Sau khi đạt 20 điểm, người chơi đó cần giành vị trí thứ nhất trong một ván đấu tiếp theo để giành chiến thắng chung cuộc.</span></li>
+                            <li><span class="font-medium">Nếu có nhiều người chơi đạt 20 điểm, tất cả đều có cơ hội giành chiến thắng bằng cách về nhất trong các ván đấu tiếp theo.</span></li>
+                            <li><span class="font-medium">Chung kết tổng sẽ tiếp tục cho đến khi một người chơi đủ điều kiện (đã đạt 20 điểm) giành được vị trí thứ nhất.</span></li>
+                            <li><span class="font-medium">Tối đa 7 ván đấu sẽ được chơi trong Chung kết tổng.</span></li>
+                            <li><span class="font-medium">Nếu sau 7 ván đấu vẫn chưa có người chiến thắng, người chơi đủ điều kiện có thứ hạng cao nhất trong ván đấu thứ 7 sẽ được công nhận là nhà vô địch.</span></li>
                         </ul>
                     `
                 }
             },
         ]
     });
-    
+    const participantMap = {};
     const navigationAll1 = {
         aov: [
-          { name: "Vòng 1", href: "/tft/ranking", current: location.pathname === "/tft/ranking" },
-          { name: "Vòng 2", href: "/tft/ranking", current: location.pathname === "/tft/ranking" },
-          { name: "Chung kết tổng", href: "/tft/ranking", current: location.pathname === "/tft/ranking" },
+            { name: "Vòng 1", href: "/tft/ranking/total/day1", current: location.pathname === "/tft/ranking/total/day1" },
+            { name: "Vòng 2", href: "/tft/ranking/total/day2", current: location.pathname === "/tft/ranking/total/day2" },
+            { name: "Chung kết tổng", href: "/tft/grandfinal", current: location.pathname === "/tft/grandfinal" },
         ],
-      };
+    };
     const getNavigation = () => navigationAll1.aov;
     // Hàm kích hoạt hướng dẫn
     const startTour = () => {
         driverObj.drive();
     };
     const lobbies = [
-        { id: 'Lobby 1', matchIds: ['VN2_633813781', '0', '0'] },
-        { id: 'Lobby 2', matchIds: ['VN2_776825141', '0', '0'] },
+        { id: 'Lobby 1', matchIds: ['0', '0', '0', '0', '0', '0', '0'] },
     ];
+
     const score = [
         { top: 1, point: 8 },
         { top: 2, point: 7 },
@@ -68,16 +70,17 @@ const MatchData = () => {
         }
         return 0;
     };
+
     useEffect(() => {
         const scrollToTop = () => {
             document.documentElement.scrollTop = 0;
         };
+
         setTimeout(scrollToTop, 0);
-        document.title = "Vòng 1 giải TFT";
-
+        document.title = "Chung kết tổng giải TFT";
     }, []);
-    useEffect(() => {
 
+    useEffect(() => {
         const fetchLobbyData = async () => {
             try {
                 setLoading(true);
@@ -98,6 +101,7 @@ const MatchData = () => {
                     const matchData = await Promise.all(matchPromises);
 
                     const participantMap = {};
+
                     matchData.forEach((match, matchIndex) => {
                         if (match.isFake) {
                             // Trận giả, gán tất cả người chơi có placement "N/A" và điểm 0
@@ -110,27 +114,24 @@ const MatchData = () => {
 
                         match.info.participants.forEach((participant) => {
                             const { puuid, placement } = participant;
+
                             if (!participantMap[puuid]) {
-                                participantMap[puuid] = { puuid, placements: [], points: [] };
+                                participantMap[puuid] = { puuid, placements: [], points: [], note: '' };
                             }
+
                             participantMap[puuid].placements[matchIndex] = placement || 'TBD';
                             participantMap[puuid].points[matchIndex] = placement ? getPoints(placement) : 0;
-                        });
-                    });
 
-                    // Nếu có trận giả, đảm bảo tất cả người chơi đều có một cột "N/A" và 0 điểm
-                    matchData.forEach((match, matchIndex) => {
-                        if (match.isFake) {
-                            Object.keys(participantMap).forEach((puuid) => {
-                                participantMap[puuid].placements[matchIndex] = 'TBD';
-                                participantMap[puuid].points[matchIndex] = 0;
-                            });
-                        }
+                            // Cập nhật ghi chú ngay khi có đủ điều kiện
+                            const totalPoints = participantMap[puuid].points.reduce((acc, curr) => acc + curr, 0);
+                            if (totalPoints >= 20 && matchIndex >= 3 && participantMap[puuid].placements[matchIndex] === 1) {
+                                participantMap[puuid].note = 'Top 1';
+                            }
+                        });
                     });
 
                     // Fetch account data only once and cache it in localStorage
                     const puuids = Object.keys(participantMap);
-
                     let accounts = JSON.parse(localStorage.getItem('accounts'));
                     if (!accounts) {
                         const accountResponse = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/accounts`, {
@@ -138,25 +139,37 @@ const MatchData = () => {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ puuids })
                         });
-
                         if (!accountResponse.ok) {
                             throw new Error('Failed to fetch account data');
                         }
-
                         accounts = await accountResponse.json();
                         // Cache the account data in localStorage
                         localStorage.setItem('accounts', JSON.stringify(accounts));
                     }
 
-                    const participants = Object.values(participantMap).map((participant, index) => ({
-                        ...participant,
-                        gameNameTag: `${accounts[index]?.gameName || 'Unknown'}#${accounts[index]?.tagLine || '0000'}`,
-                        gameName: `${accounts[index]?.gameName || 'Unknown'}`,
-                        totalPoints: participant.points.reduce((acc, curr) => acc + curr, 0)
-                    }));
+                    const participants = Object.values(participantMap).map((participant, index) => {
+                        const totalPoints = participant.points.reduce((acc, curr) => acc + curr, 0);
+                        return {
+                            ...participant,
+                            gameNameTag: `${accounts[index]?.gameName || 'Unknown'}#${accounts[index]?.tagLine || '0000'}`,
+                            gameName: `${accounts[index]?.gameName || 'Unknown'}`,
+                            totalPoints,
+                            note: participant.note,
+                            checkmate: totalPoints >= 20 ? '✅' : '❌',
+                        };
+                    });
+
 
                     // Sort by total points
-                    participants.sort((a, b) => b.totalPoints - a.totalPoints);
+                    participants.sort((a, b) => {
+                        if (a.note === 'thắng nhờ top 1' && b.note !== 'thắng nhờ top 1') {
+                            return -1;
+                        } else if (a.note !== 'thắng nhờ top 1' && b.note === 'thắng nhờ top 1') {
+                            return 1;
+                        } else {
+                            return b.totalPoints - a.totalPoints;
+                        }
+                    });
 
                     return { lobbyId: lobby.id, participants, matchCount: lobby.matchIds.length };
                 });
@@ -173,103 +186,119 @@ const MatchData = () => {
         fetchLobbyData();
     }, []);
 
+    const checkSpecialCondition = (participant) => {
+        let note = '';
+        let checkmate = false;
+
+        if (participant.totalPoints >= 20) {
+            checkmate = true;
+            if (participant.points.includes(8)) {
+                note = 'thắng nhờ top 1';
+            }
+        }
+
+        return { note, checkmate };
+    };
+
+    // In the fetchLobbyData function
+    const participants = Object.values(participantMap).map((participant, index) => {
+        const { note, checkmate } = checkSpecialCondition(participant);
+        return {
+            ...participant,
+            gameNameTag: `${accounts[index]?.gameName || 'Unknown'}#${accounts[index]?.tagLine || '0000'}`,
+            gameName: `${accounts[index]?.gameName || 'Unknown'}`,
+            totalPoints: participant.points.reduce((acc, curr) => acc + curr, 0),
+            note,
+            checkmateStatus: checkmate ? 'Đạt' : 'Chưa đạt',
+        };
+    });
+
+
 
 
     if (loading) return (
-        <div className="flex items-center justify-center min-h-screen">
-            <span className="loading loading-dots loading-lg text-[#ff7104]"></span>
-        </div>
+        <div>Loading...</div>
     );
-    if (error) return <p>Error: {error}</p>;
 
     return (
         <div><MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-        <div className="mt-40 mx-auto lg:w-[85%] w-[92%] ">
-            <div className='flex lg:flex-row flex-col-reverse items-center justify-center'>
-                <div className='lg:w-[70%] w-full'>
-                    <h2 className='uppercase p-2 text-base-content font-bold lg:text-[40px] text-[30px] lg:text-left text-center'>Vòng 1</h2>
-                    <h2 className='uppercase p-2 text-center lg:text-[25px] text-[18px] text-base-content font-bold'>Cách tính điểm</h2>
-                    <div className="grid lg:grid-cols-4 grid-cols-1 bg-[#48042c] h-full rounded">
-                        {pointsDisplay.map((text, index) => (
-                            <div key={index} className={`px-2 lg:my-3 my-2 flex items-center lg:justify-center score-item ${index !== 3 && index !== 7 ? 'lg:border-r' : ''}`}>
-                                {text}
-                            </div>
-                        ))}
+            <div className='mt-40 mx-auto lg:w-[88%] w-[92%]'>
+                <div className='flex lg:flex-row flex-col-reverse items-center justify-center'>
+                    <div className='lg:w-[70%] w-full'>
+                        <h2 className='uppercase p-2 text-base-content font-bold lg:text-[30px] text-[30px] lg:text-left text-center'>{roundIndex}</h2>
+                        <h2 className='uppercase p-2 text-center lg:text-[25px] text-[18px] text-base-content font-bold'>Cách tính điểm</h2>
+                        <div className="grid lg:grid-cols-4 grid-cols-1 bg-[#48042c] h-full rounded">
+                            {pointsDisplay.map((text, index) => (
+                                <div key={index} className={`px-2 lg:my-3 my-2 flex items-center lg:justify-center score-item ${index !== 3 && index !== 7 ? 'lg:border-r' : ''}`}>
+                                    {text}
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={startTour} className="bg-[#48042c] font-bold text-white px-4 py-2 rounded-md mt-2 mb-4">
+                            Luật Checkmate
+                        </button>
                     </div>
-                    <button onClick={startTour} className="bg-[#48042c] text-white px-4 py-2 rounded-md mt-2 mb-4">
-                        Luật Tiebreaker
-                    </button>
+                    <div className='lg:w-[30%] w-full flex items-center justify-center'>
+                        <img src={DCN} className='lg:w-[250px] w-[150px] lg:mt-0 mt-5 h-auto' />
+                    </div>
                 </div>
-                <div className='lg:w-[30%] w-full flex items-center justify-center'>
-                    <img src={DCN} className='lg:w-[250px] w-[150px] lg:mt-0 mt-5 h-auto' />
+                <div className="flex lg:flex-row flex-col lg:gap-x-2">
+                    <div className="flex items-center mb-4">
+                        <label className="relative inline-block w-14 h-8">
+                            <input
+                                type="checkbox"
+                                checked={showPlayers}
+                                onChange={() => setShowPlayers(!showPlayers)}
+                                className="sr-only"
+                            />
+                            <div className={`block bg-gray-300 w-14 h-8 rounded-full ${showPlayers ? 'bg-green-500' : 'bg-gray-500'} transition duration-300 ease-in-out`}></div>
+                            <div className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${showPlayers ? 'transform translate-x-6' : ''}`}></div>
+                        </label>
+                        <span className="ml-2">{showPlayers ? 'Hiển Thị Hạng' : 'Hiển Thị Điểm'}</span>
+                    </div>
                 </div>
-            </div>
-
-
-            <div className="flex lg:flex-row flex-col lg:gap-x-2">
-                <div className="flex items-center mb-4">
-                    <label className="relative inline-block w-14 h-8">
-                        <input
-                            type="checkbox"
-                            checked={showPlayers}
-                            onChange={() => setShowPlayers(!showPlayers)}
-                            className="sr-only"
-                        />
-                        <div className={`block bg-gray-300 w-14 h-8 rounded-full ${showPlayers ? 'bg-green-500' : 'bg-gray-500'} transition duration-300 ease-in-out`}></div>
-                        <div className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${showPlayers ? 'transform translate-x-6' : ''}`}></div>
-                    </label>
-                    <span className="ml-2">{showPlayers ? 'Hiển Thị Hạng' : 'Hiển Thị Điểm'}</span>
-                </div>
-            </div>
-
-            {lobbyData.map((lobby) => (
-                <div key={lobby.lobbyId} className="mb-8">
-                    <h2 className="text-lg font-bold text-center uppercase py-2 border rounded-ss-lg rounded-se-lg border-[#48042c]">{lobby.lobbyId}</h2>
-
-                    {/* Wrapper cho table */}
+                {lobbyData.map((lobby, index) => (
                     <div className="table-container">
                         <div className="overflow-x-auto rounded-es-lg rounded-ee-lg shadow-md border border-[#48042c]">
-                            <table className=" table-fixed min-w-full text-base-content lg:w-full w-[140%] font-semibold">
-                                <thead className="bg-[#48042c] text-white">
+                            <table key={index} className=" table-fixed min-w-full text-base-content lg:w-full md:w-[170%] w-[300%] font-semibold">
+                                <thead className="bg-[#48042c] text-white ">
                                     <tr>
-                                        <th className="p-2 bg-[#48042c] sticky left-0 z-10 lg:!w-[270px] !w-[180px]"></th>
-                                        <th className="px-4 py-2 text-center">Total</th>
-                                        {Array.from({ length: lobby.matchCount }).map((_, index) => (
-                                            <th key={index} className="px-4 py-2 text-center">
-                                                Trận {index + 1}
-                                            </th>
+
+                                        <th className='p-2 bg-[#48042c] sticky left-0 z-10 lg:!w-[210px] w-[120px] md:!w-[180px]'>Tên Người Chơi</th>
+                                        <th>Tổng Điểm</th>
+                                        {Array.from({ length: lobby.matchCount }, (_, i) => (
+                                            <th key={i}>Trận {i + 1}</th>
                                         ))}
 
+                                        <th>Ghi chú</th>
+                                        <th className=''>Checkmate</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {lobby.participants.map((participant, index) => (
-                                        <tr key={participant.puuid} className="hover:bg-[#ff7104] hover:!text-white">
-                                            <td className="lg:w-[210px] w-[150px] bg-base-100 text-base-content sticky left-0 z-10 p-2">
+                                        <tr key={index} className="hover:bg-[#ff7104] hover:!text-white">
+                                            <td className="lg:w-[210px] w-[180px] bg-base-100 text-base-content sticky left-0 z-10 p-2">
                                                 <p className='lg:block hidden'>{participant.gameNameTag}</p>
                                                 <p className='lg:hidden block'>{participant.gameName}</p>
-                                                </td>
+                                            </td>
                                             <td className=" px-4 py-2 text-center font-semibold">{participant.totalPoints}</td>
-                                            {Array.from({ length: lobby.matchCount }).map((_, matchIndex) => (
-                                                <td key={matchIndex} className="px-4 py-2 text-center">
-                                                    {showPlayers
-                                                        ? participant.placements[matchIndex] || 'TBD'
-                                                        : participant.points[matchIndex] || 0}
-                                                </td>
+                                            {Array.from({ length: lobby.matchCount }, (_, matchIndex) => (
+                                                <td key={matchIndex} className="px-4 py-2 text-center">{showPlayers ? participant.placements[matchIndex] || 'TBD' : participant.points[matchIndex] || 0}</td>
                                             ))}
 
+                                            <td className='text-center'>{participant.note}</td>
+                                            <td className='text-center'>{participant.checkmate}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
-        </div>
-        
     );
+
 };
 
 export default MatchData;

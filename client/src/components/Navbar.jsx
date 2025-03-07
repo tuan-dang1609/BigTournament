@@ -63,8 +63,8 @@ export default function Example() {
 ,    
     tft: [
       { name: "Teamfight Tactics", href: "/tft", current: location.pathname === "/tft", logo: "tft_icon" },
-
-
+      { name: "Bảng đấu", href: "/tft/ranking/day1", current: ["/tft/ranking/day1", "/tft/ranking/day2",].includes(location.pathname)},
+      { name: "BXH Tổng", href: "/tft/ranking/total/day1", current: ["/tft/ranking/total/day1", "/tft/ranking/total/day2", "/tft/grandfinal"].includes(location.pathname)},
     ],
     tft_double: [
       { name: "Teamfight Tactics Double", href: "/tftdouble/", current: location.pathname === "/tftdouble/", logo: "tft_icon" },

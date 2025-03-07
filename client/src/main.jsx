@@ -53,6 +53,7 @@ import MatchInterface from './valorant/test2.jsx';
 import CreateMatch from './valorant/test.jsx';
 import TFTMatch from './tft/day1.jsx'
 import CombinedLeaderboard from './tft/test.jsx';
+import GrandFinalTFT from './tft/day2.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -84,6 +85,7 @@ if (rootElement) {
               <Route path="/leagueoflegend/match" element={<MatchStatLOL />} />
               <Route path="/arenaofvalor" element={<HomepageAOV />} />
               <Route path="/tft" element={<TFThompage />} />
+              <Route path="/tft/grandfinal" element={<GrandFinalTFT />} />
               <Route path="/tft/ranking/total/:day" element={<CombinedLeaderboard />} />
               <Route path="/tft/ranking/:day" element={<TFTMatch />} />
               <Route path="/tftdouble" element={<CompetitionPageDoubleUp />} />
