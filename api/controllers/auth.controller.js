@@ -50,7 +50,7 @@ export const signup = async (req, res, next) => {
     await newUser.save();
     res.status(201).json({ message: 'Tạo tài khoản thành công' });
   } catch (error) {
-    return next(errorHandler(500, 'Tạo tài khoản thất bại'));
+    return res.status(500).json({ message: error });;
   }
 };
 export const teamHOF = async (req, res, next) => {
