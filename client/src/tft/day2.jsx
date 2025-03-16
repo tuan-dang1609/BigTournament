@@ -124,7 +124,7 @@ const MatchData = () => {
 
                             // Cập nhật ghi chú ngay khi có đủ điều kiện
                             const totalPoints = participantMap[puuid].points.reduce((acc, curr) => acc + curr, 0);
-                            if (totalPoints >= 20 && matchIndex >= 3 && participantMap[puuid].placements[matchIndex] === 1) {
+                            if (totalPoints >= 20 && matchIndex >= 4 && participantMap[puuid].placements[matchIndex] === 1) {
                                 participantMap[puuid].note = 'Top 1';
                             }
                         });
