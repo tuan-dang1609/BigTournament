@@ -1,7 +1,7 @@
 ---
 services:
   server:
-    image: "ghcr.io/valospectra/server:latest"
+    image: "ghcr.io/valospectra/server:v0.2.18"
     ports:
       - "5100:5100"
       - "5101:5101"
