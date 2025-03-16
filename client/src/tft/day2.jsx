@@ -258,7 +258,7 @@ const MatchData = () => {
                     </div>
                 </div>
                 {lobbyData.map((lobby, index) => (
-                    <div className="table-container">
+                    <div className="table-container mb-10">
                         <div className="overflow-x-auto rounded-es-lg rounded-ee-lg shadow-md border border-[#48042c]">
                             <table key={index} className=" table-fixed min-w-full text-base-content lg:w-full md:w-[170%] w-[300%] font-semibold">
                                 <thead className="bg-[#48042c] text-white ">
