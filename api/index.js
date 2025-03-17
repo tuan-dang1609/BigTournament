@@ -205,9 +205,39 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
       headers: { 'X-Riot-Token': apiKeyValorant }
     });
 
+    const matchData = response.data;
+
+    if (matchData?.players) {
+      matchData.players.forEach(player => {
+        // Tạo riotID dưới dạng gameName#tagLine
+        const gameName = player.gameName || 'Unknown';
+        const tagLine = player.tagLine || 'Unknown';
+        player.riotID = `${gameName}#${tagLine}`;
+
+        // Kiểm tra nếu player.stats tồn tại
+        if (player.stats) {
+          // Tính toán KDA (K + D) / A
+          const kills = player.stats.kills || 0;
+          const deaths = player.stats.deaths || 0;
+          const assists = player.stats.assists || 0;
+          const KDA = (kills + deaths) / (assists || 1);  // Tránh chia cho 0
+          const acs = (player.stats.score / player.stats.roundsPlayed).toFixed(1)
+          player.stats.KDA = KDA.toFixed(1); // Làm tròn tới 2 chữ số thập phân
+          player.stats.acs = acs
+        }
+      });
+
+      // Sắp xếp player theo score giảm dần
+      matchData.players.sort((a, b) => {
+        const scoreA = a.stats?.score ?? 0;
+        const scoreB = b.stats?.score ?? 0;
+        return scoreB - scoreA;
+      });
+    }
+
     // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
-    res.json(response.data);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.json(matchData);
   } catch (error) {
     console.error('Error fetching match data:', error.message);
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
