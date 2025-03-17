@@ -25,15 +25,15 @@ const apiKey = process.env.TFT_KEY;
 const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT
 const clientID = process.env.RIOT_CLIENT_ID;
 const clientSecret = process.env.RIOT_CLIENT_SECRET;
-const appBaseUrl      = "https://dongchuyennghiep-backend.vercel.app"
-const appCallbackUrl  = appBaseUrl + "/oauth2-callback";
-const  provider       = "https://auth.riotgames.com"
-const authorizeUrl    = provider + "/authorize";
-const tokenUrl        = provider + "/token";
-const URLfrontend     = "https://dongchuyennghiep.vercel.app"
+const appBaseUrl = "https://dongchuyennghiep-backend.vercel.app"
+const appCallbackUrl = appBaseUrl + "/oauth2-callback";
+const provider = "https://auth.riotgames.com"
+const authorizeUrl = provider + "/authorize";
+const tokenUrl = provider + "/token";
+const URLfrontend = "https://dongchuyennghiep.vercel.app"
 app.use(
   cors({
-    origin: ['http://localhost:5173','https://28e7-88-86-155-193.ngrok-free.app', 'https://dongchuyennghiep-backend.vercel.app','https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
+    origin: ['http://localhost:5173', 'https://28e7-88-86-155-193.ngrok-free.app', 'https://dongchuyennghiep-backend.vercel.app', 'https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -41,14 +41,14 @@ app.use(
 );
 
 
-app.get('/sso/login-riot', function(req, res) {
+app.get('/sso/login-riot', function (req, res) {
   const link = authorizeUrl
-  + "?redirect_uri=" + appCallbackUrl
-  + "&client_id=" + clientID
-  + "&response_type=code"
-  + "&scope=openid";
-// create a single link, send as an html document
-res.redirect(link);
+    + "?redirect_uri=" + appCallbackUrl
+    + "&client_id=" + clientID
+    + "&response_type=code"
+    + "&scope=openid";
+  // create a single link, send as an html document
+  res.redirect(link);
 });
 
 
@@ -88,7 +88,7 @@ app.get('/oauth2-callback', function (req, res) {
 
           // Redirect về frontend với access_token và thông tin tài khoản
           res.redirect(
-            URLfrontend+ `/profile?&gameName=${encodeURIComponent(
+            URLfrontend + `/profile?&gameName=${encodeURIComponent(
               gameName
             )}&tagName=${encodeURIComponent(tagLine)}`
           );
@@ -184,15 +184,15 @@ app.get('/api/livegame', async (req, res) => {  // Thay đổi để lấy riotI
 
 
   try {
-      // Gọi API với riotId trong URL
-      const response = await axios.get(`https://127.0.0.1:2999/liveclientdata/playerlist`, {
-          httpsAgent: new https.Agent({ rejectUnauthorized: false })
-      });
-      res.json(response.data);  // Trả dữ liệu về cho frontend
+    // Gọi API với riotId trong URL
+    const response = await axios.get(`https://127.0.0.1:2999/liveclientdata/playerlist`, {
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
+    });
+    res.json(response.data);  // Trả dữ liệu về cho frontend
   } catch (error) {
-      console.error('Error fetching live game data:', error.message);
-      console.error('Error response data:', error.response?.data);
-      res.status(error.response?.status || 500).json({ error: 'Failed to fetch live game data' });
+    console.error('Error fetching live game data:', error.message);
+    console.error('Error response data:', error.response?.data);
+    res.status(error.response?.status || 500).json({ error: 'Failed to fetch live game data' });
   }
 });
 // Serve static files
@@ -201,14 +201,34 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
   const { matchId } = req.params;
 
   try {
+    // Gọi API lấy danh sách nhân vật
+    const dictionaryResponse = await axios.get('https://dongchuyennghiep-backend.vercel.app/api/valorant/dictionary'); // Đổi URL theo API server của bạn
+    const characterMap = {};
+
+    if (dictionaryResponse.data.characters) {
+      dictionaryResponse.data.characters.forEach(char => {
+        characterMap[char.id] = char.name; // Map characterId -> Name
+      });
+    }
+    console.log("Character Map:", characterMap);
+    // Gọi API lấy thông tin trận đấu
     const response = await axios.get(`https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`, {
       headers: { 'X-Riot-Token': apiKeyValorant }
     });
 
     const matchData = response.data;
 
+    // Thêm số lần rate còn lại và thời gian reset từ header
+    const rateLimitRemaining = response.headers['x-ratelimit-remaining'];
+    const rateLimitReset = response.headers['x-ratelimit-reset'];
+
     if (matchData?.players) {
       matchData.players.forEach(player => {
+        // Chuyển characterId thành tên nhân vật
+        const cleanId = player.characterId?.toUpperCase(); // Chuyển thành chữ IN HOA
+
+
+        player.characterName = characterMap[cleanId] || "Unknown";
         // Tạo riotID dưới dạng gameName#tagLine
         const gameName = player.gameName || 'Unknown';
         const tagLine = player.tagLine || 'Unknown';
@@ -216,14 +236,14 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
 
         // Kiểm tra nếu player.stats tồn tại
         if (player.stats) {
-          // Tính toán KDA (K + D) / A
           const kills = player.stats.kills || 0;
           const deaths = player.stats.deaths || 0;
           const assists = player.stats.assists || 0;
           const KDA = (kills + deaths) / (assists || 1);  // Tránh chia cho 0
-          const acs = (player.stats.score / player.stats.roundsPlayed).toFixed(1)
-          player.stats.KDA = KDA.toFixed(1); // Làm tròn tới 2 chữ số thập phân
-          player.stats.acs = acs
+          const acs = (player.stats.score / player.stats.roundsPlayed).toFixed(1);
+
+          player.stats.KDA = KDA.toFixed(1);
+          player.stats.acs = acs;
         }
       });
 
@@ -237,12 +257,20 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
 
     // Thêm Access-Control-Allow-Origin vào header
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.json(matchData);
+
+    // Trả về dữ liệu đã chỉnh sửa
+    res.json({
+      rateLimitRemaining,
+      rateLimitReset,
+      matchData
+    });
+
   } catch (error) {
     console.error('Error fetching match data:', error.message);
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
   }
 });
+
 // API to get match data with NodeCache
 app.get('/api/match/:region/:matchid', async (req, res) => {
   const { region, matchid } = req.params;
@@ -336,7 +364,7 @@ app.get('/api/lol/match/:matchId', async (req, res) => {
 
   try {
     const response = await axios.get(`https://sea.api.riotgames.com/lol/match/v5/matches/${matchId}`, {
-      headers: { 'X-Riot-Token':process.env.LOL_RIOT_API_KEY }
+      headers: { 'X-Riot-Token': process.env.LOL_RIOT_API_KEY }
     });
 
     // Thêm Access-Control-Allow-Origin vào header
@@ -352,7 +380,7 @@ app.get('/api/lol/match/timeline/:matchId', async (req, res) => {
 
   try {
     const response = await axios.get(`https://sea.api.riotgames.com/lol/match/v5/matches/${matchId}/timeline`, {
-      headers: { 'X-Riot-Token':process.env.LOL_RIOT_API_KEY }
+      headers: { 'X-Riot-Token': process.env.LOL_RIOT_API_KEY }
     });
 
     // Thêm Access-Control-Allow-Origin vào header
@@ -459,19 +487,19 @@ app.post('/api/auth/tft_double_rank', async (req, res) => {
         return doubleUpData
           ? { puuid, ...doubleUpData }
           : {
-              puuid,
-              leagueId: null,
-              queueType: 'RANKED_TFT_DOUBLE_UP',
-              tier: 'UNRANKED',
-              rank: '',
-              leaguePoints: null,
-              wins: 0,
-              losses: 0,
-              veteran: false,
-              inactive: false,
-              freshBlood: false,
-              hotStreak: false,
-            };
+            puuid,
+            leagueId: null,
+            queueType: 'RANKED_TFT_DOUBLE_UP',
+            tier: 'UNRANKED',
+            rank: '',
+            leaguePoints: null,
+            wins: 0,
+            losses: 0,
+            veteran: false,
+            inactive: false,
+            freshBlood: false,
+            hotStreak: false,
+          };
       } catch (innerError) {
         console.error(`Error processing account ${accountString}:`, innerError.message);
         return {
@@ -495,7 +523,7 @@ app.post('/api/auth/tft_double_rank', async (req, res) => {
       "DIAMOND IV": 25, "DIAMOND III": 26, "DIAMOND II": 27, "DIAMOND I": 28,
       "MASTER I": 29, "GRANDMASTER I": 30, "CHALLENGER I": 31,
     };
-    
+
 
     const reverseTiers = Object.fromEntries(Object.entries(tiers).map(([key, value]) => [value, key]));
 
