@@ -22,6 +22,7 @@ export default function MatchStat2() {
     const [findteam, setFindteam] = useState([]);
     const [allPlayer, setAllPlayer] = useState([]);
     const [registeredPlayers, setRegisteredPlayers] = useState([]);
+    const [error, setError] = useState(null);
     const hexToRgba = (hex, opacity) => {
         hex = hex.replace('#', '');
         const r = parseInt(hex.substring(0, 2), 16);
@@ -171,29 +172,29 @@ export default function MatchStat2() {
                         matchid.map(async (id) => {
                             const res = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/valorant/match/${id}`);
                             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                            return res.json();
+                            const data = await res.json();
+                            return data.matchData; // Lấy trực tiếp matchData
                         })
                     );
-
+    
+                    console.log(results);
                     setMatchInfo(results);
                     setTime(results[0].matchInfo.gameStartMillis);
-
-                    // Xử lý players và loại bỏ trùng lặp
+    
                     const extractedPlayers = results.flatMap(match =>
                         match.players
-                            .filter(player => player.gameName && player.tagLine) // Đảm bảo không bị undefined
+                            ?.filter(player => player.gameName && player.tagLine)
                             .map(player => `${player.gameName}#${player.tagLine}`)
                     );
-
-                    // Lọc giá trị duy nhất bằng Set
+    
                     const uniquePlayers = [...new Set(extractedPlayers)];
                     setAllPlayer(uniquePlayers);
-
+    
                 } catch (err) {
                     setError(err.message);
                 }
             };
-
+    
             if (matchInfo.length === 0) {
                 fetchData();
             }
@@ -228,6 +229,9 @@ export default function MatchStat2() {
     useEffect(() => {
         console.log("Unique players:", allPlayer);
     }, [allPlayer]);
+    useEffect(() => {
+        console.log(matchInfo);
+    }, [matchInfo]);
     const formatTime = (utcTime) => {
         const date = new Date(utcTime);
         const options = {
