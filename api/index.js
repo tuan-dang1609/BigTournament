@@ -202,63 +202,57 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
 
   try {
     // Gọi API lấy danh sách nhân vật
-    const dictionaryResponse = await axios.get('https://dongchuyennghiep-backend.vercel.app/api/valorant/dictionary'); // Đổi URL theo API server của bạn
+    const dictionaryResponse = await axios.get('https://dongchuyennghiep-backend.vercel.app/api/valorant/dictionary');
     const characterMap = {};
 
     if (dictionaryResponse.data.characters) {
       dictionaryResponse.data.characters.forEach(char => {
-        characterMap[char.id] = char.name; // Map characterId -> Name
+        characterMap[char.id] = char.name;
       });
     }
-    console.log("Character Map:", characterMap);
-    // Gọi API lấy thông tin trận đấu
+
     const response = await axios.get(`https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`, {
       headers: { 'X-Riot-Token': apiKeyValorant }
     });
 
     const matchData = response.data;
-
-    // Thêm số lần rate còn lại và thời gian reset từ header
     const rateLimitRemaining = response.headers['x-ratelimit-remaining'];
     const rateLimitReset = response.headers['x-ratelimit-reset'];
 
     if (matchData?.players) {
       matchData.players.forEach(player => {
-        // Chuyển characterId thành tên nhân vật
-        const cleanId = player.characterId?.toUpperCase(); // Chuyển thành chữ IN HOA
-
-
+        const cleanId = player.characterId?.toUpperCase();
         player.characterName = characterMap[cleanId] || "Unknown";
-        // Tạo riotID dưới dạng gameName#tagLine
+
         const gameName = player.gameName || 'Unknown';
         const tagLine = player.tagLine || 'Unknown';
         player.riotID = `${gameName}#${tagLine}`;
 
-        // Kiểm tra nếu player.stats tồn tại
         if (player.stats) {
           const kills = player.stats.kills || 0;
           const deaths = player.stats.deaths || 0;
           const assists = player.stats.assists || 0;
           const KDA = (kills + deaths) / (assists || 1);  // Tránh chia cho 0
           const acs = (player.stats.score / player.stats.roundsPlayed).toFixed(1);
-
+          player.stats.KD = `${kills}/${deaths}`;
           player.stats.KDA = KDA.toFixed(1);
-          player.stats.acs = acs;
+          player.stats.acs = parseFloat(acs);
         }
       });
 
-      // Sắp xếp player theo score giảm dần
-      matchData.players.sort((a, b) => {
-        const scoreA = a.stats?.score ?? 0;
-        const scoreB = b.stats?.score ?? 0;
-        return scoreB - scoreA;
-      });
+      // Tách thành 2 nhóm: red và blue
+      const redTeam = matchData.players.filter(p => p.teamId === 'Red');
+      const blueTeam = matchData.players.filter(p => p.teamId === 'Blue');
+
+      // Sắp xếp mỗi nhóm theo ACS giảm dần
+      redTeam.sort((a, b) => (b.stats?.acs ?? 0) - (a.stats?.acs ?? 0));
+      blueTeam.sort((a, b) => (b.stats?.acs ?? 0) - (a.stats?.acs ?? 0));
+
+      // Gộp lại
+      matchData.players = [...redTeam, ...blueTeam];
     }
 
-    // Thêm Access-Control-Allow-Origin vào header
     res.setHeader('Access-Control-Allow-Origin', '*');
-
-    // Trả về dữ liệu đã chỉnh sửa
     res.json({
       rateLimitRemaining,
       rateLimitReset,
