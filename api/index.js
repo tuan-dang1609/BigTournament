@@ -222,7 +222,7 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
     if (matchData?.players) {
       matchData.players.forEach(player => {
         const cleanId = player.characterId?.toUpperCase();
-        player.characterName = characterMap[cleanId] || "Unknown";
+        player.characterName = `${characterMap[cleanId]}` || "Unknown";
 
         const gameName = player.gameName || 'Unknown';
         const tagLine = player.tagLine || 'Unknown';

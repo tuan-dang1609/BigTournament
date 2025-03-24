@@ -46,7 +46,7 @@ import TeamRegistrationTFTDoubleForm from './tft/registerfordouble.jsx'
 import CompetitionPageDoubleUp from './tft/homepagedouble.jsx';
 import PowerRankingTFTDouble from './tft/ranking.jsx';
 import MatchStatLOL from './leagueoflegend/match.jsx';
-import TeamRegistrationValorantForm from './valorant/registerfor.jsx';
+import TeamRegistrationValorantForm from './valorant/registerfor_1.jsx';
 import CompetitionPage from './valorant/homepage.jsx';
 import TournamentBracketAOV16_1 from './arenaofvalor/bracket_16team_1.jsx';
 import MatchInterface from './valorant/test2.jsx';

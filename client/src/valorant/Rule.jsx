@@ -1,6 +1,10 @@
 import React from 'react';
 import 'animate.css';
 import { useEffect } from 'react';
+import Pic1 from '../image/2_app.png'
+import Pic2 from '../image/in_app.png'
+import Pic3 from '../image/with_app.png'
+import Pic4 from '../image/without_app.png'
 const RuleBook = () => {
   useEffect(() => {
     const scrollToTop = () => {
@@ -13,15 +17,15 @@ const RuleBook = () => {
   return (
     <div className="animate__animated animate__fadeIn max-w-6xl mx-auto p-6 bg-base-100 lg:mt-24 lg:mb-16 mt-[72px] mb-8 rounded-lg text-base-content">
       <h1 className="lg:text-5xl sm:text-4xl text-3xl font-bold text-center mb-10 text-primary">
-        Luật Lệ Giải Valorant Đón Xuân Cùng DCN (Season 2)
+        Luật Lệ Giải Valorant Double Up DCN
       </h1>
       <Section
         title={<div className="text-3xl font-bold text-secondary mb-3 uppercase text-center">Giới thiệu</div>}
         content={
           <>
-            <div>Kính gửi các bạn đã đăng ký VALORANT Đón Xuân Cùng DCN: SEASON 2.</div>
+            <div>Kính gửi các bạn đã đăng ký VALORANT Double Up DCN.</div>
             <div>Lời nói đầu tiên xin thay mặt Dong Chuyen Nghiep gửi lời chào chân thành và cảm ơn sâu sắc đến với các thành viên đã/sẽ đăng kí giải đấu lần này.</div>
-            <div>Sau khi tổng hợp ý kiến từ các thành viên trong Discord, chúng mình quyết định tổ chức một giải đấu Valorant Đón Xuân nhằm tìm ra đội có thành tích xuất sắc nhất cũng như giao lưu vui vẻ với nhau cuối năm. </div>
+            <div>Sau khi tổng hợp ý kiến từ các thành viên trong Discord, chúng mình quyết định tổ chức một giải đấu Valorant Double Up nhằm tìm ra đội có thành tích xuất sắc nhất cũng như giao lưu vui vẻ với nhau sau giữa học kỳ 2. </div>
             <h3 className="text-primary text-xl font-bold text-center my-4">GIẢI THƯỞNG</h3>
             <div className="overflow-x-auto">
               <table className="table-auto border-collapse border border-primary w-full">
@@ -66,16 +70,16 @@ const RuleBook = () => {
         content="Chỉ được chat để nêu lý do Pause hoặc hiệu lệnh của trọng tài. Còn những lý do khác thì không được chat."
         rules={[
           "Lần đầu tiên sẽ cảnh cáo.",
-          "Lần thứ hai sẽ bị xử thuahua.",
+          "Lần thứ hai sẽ bị xử thua.",
           "Cố tình phạm luật sẽ bị ban và team sẽ bị xử thua tất cả các trận còn lại của giải đấu.",
         ]}
       />
 
       <Section
         title="II. Thời Gian Trước Trận Đấu"
-        content={<>Thời gian các bạn phải vào discord trước 10 phút trận đấu bắt đầu và để công bằng hơn các bạn phải có mặt trong discord <a className='text-primary' href="https://discord.gg/fFXxUNvj" ><strong>THPT Phú Nhuận</strong></a> để chúng mình dễ kiểm soát được là ai đang chơi trong trận đó. Trường hợp các bạn <strong>THẬT SỰ</strong> bận một việc gì đó phải báo cho admin discord trước 12h trưa (giờ Việt Nam) hôm diễn ra thi đấu để delay các trận đấu 10-15 phút.</>}
+        content={<>Thời gian các bạn phải vào discord trước 10 phút trận đấu bắt đầu và để công bằng hơn các bạn phải có mặt trong discord <a className='text-primary' href="https://discord.gg/fFXxUNvj" ><strong>THPT Phú Nhuận</strong></a> để chúng mình dễ kiểm soát được là ai đang chơi trong trận đó. Trường hợp các bạn <strong>THẬT SỰ</strong> bận một việc gì đó phải báo cho admin discord trước 12h trưa (giờ Việt Nam) hôm diễn ra thi đấu để delay các trận đấu.</>}
         rules={[
-          "Mỗi đội có 1 quyền delay trận đấu.",
+          "Mỗi đội có 1 quyền delay trận đấu, tối đa là 20 min.",
           "Phần thời gian dời lịch chúng mình sẽ không giải quyết những trường hợp XIN thay đổi lịch đã được đặt để các bạn thi đấu nên vui lòng các bạn sắp xếp thời gian phù hợp nhé.",
           "Mỗi trận đấu sẽ được quyền tạm ngưng vì vấn đề kỹ thuật (trường hợp ngoại lệ: wifi bị hư hỏng vì mưa, vịt vào nhà :D, … và những tình huống oái ăm khác) nếu có bằng chứng thuyết phục sau khi đã khắc phục hậu quả nếu không thì chúng mình sẽ xử lý thua cuộc sau khi trận đấu kết thúc.",
         ]}
@@ -106,21 +110,18 @@ const RuleBook = () => {
         rules={[
           "Xử lý thua cuộc với team phạm luật và cấm các thành viên không được tham gia các giải đấu thuộc Dong Chuyen Nghiep trong 4 tháng.",
           "Đối với những bạn đã đăng ký 2 team chúng mình sẽ xử lý thua cuộc 2 team bạn đã đăng ký và không cho bạn đăng ký tham gia các giải đấu còn lại của Dong Chuyen Nghiep trong 4 tháng (Trường hợp bạn đăng ký cả 2 team đã được sự chấp thuận từ admin Dong Chuyen Nghiep là ngoại lệ).",
-          "Thay đổi đội hình có nghĩa là thêm, thay thế hoặc xóa Tuyển thủ đã đăng ký với BTC khỏi danh sách các thành viên của Đội tuyển. Việc thay đổi phải được sự chấp thuận của BTC Dong Chuyen Nghiep. Đội hình đội bị khóa và không được thay đổi sau khi Đội tuyển gửi thông tin đội hình cho BTC theo thời gian được quy định. Tất cả các thay đổi Đội tuyển thực hiện sau khi đội hình bị khóa sẽ phải chịu các hình phạt hoặc bị từ chối theo quyết định của BTC giải đấu Dong Chuyen Nghiep.",
-          "Nếu Đội tuyển muốn giải phóng một Tuyển thủ khỏi đội hình đã được đăng ký (dù là vị trí chính hay dự bị), Đội tuyển có trách nhiệm phải thông báo vấn đề này với BTC giải đấu Dong Chuyen Nghiep và phải đảm bảo hoàn thành các thủ tục cần thiết do BTC đưa ra. Trong trường hợp ngược lại, BTC có quyền từ chối yêu cầu của Đội tuyển.",
           "Trường hợp các bạn “đánh thuê(1)” cho các bạn khác với mọi lý do chúng mình sẽ không cho bạn tham gia các trận đấu còn lại của giải đấu và không cho tham gia các giải đấu còn lại của Dong Chuyen Nghiep với mọi hình thức",
-
         ]}
       />
       <Section
         title="V. Tài khoản khi đấu giải"
-        content="Một khi đã hoàn tất đăng ký thì xuyên suốt giải sẽ phải dùng account đó mà không được thay đổi. Nên trong quá trình đăng ký nhớ chọn đúng account để đăng ký nhé."
+        content="Một khi đã hoàn tất đăng ký thì xuyên suốt giải sẽ phải dùng account đó mà không được thay đổi (Ví dụ, bạn đăng ký Beacon#DCN3 mà bạn cầm acc Beacon#DCN4 thì sẽ bị xử thua). Nên trong quá trình đăng ký nhớ chọn đúng account để đăng ký nhé."
       />
       <Section
         title="VI. Địa điểm thi đấu"
         content={
           <>
-            <p>Tất cả các trận đấu thuộc khuôn khổ <strong> VALORANT Đón Xuân Cùng DCN: SEASON 2</strong> sẽ được tổ chức theo hình thức online.
+            <p>Tất cả các trận đấu thuộc khuôn khổ <strong> VALORANT Double Up DCN</strong> sẽ được tổ chức theo hình thức online.
             </p>
           </>
         }
@@ -129,22 +130,48 @@ const RuleBook = () => {
         title="VII. Khung giờ thi đấu"
         content={
           <>
-            <p> Các trận sẽ diễn ra từ 19h00 - 01h00. Lịch trình cụ thể sẽ được thông báo trên Discord
+            <p> Các trận sẽ diễn ra từ 19h00 - 22h00. Lịch trình cụ thể sẽ được thông báo trên Discord
             </p>
           </>
         }
       />
       <Section
-        title="VIII. Map pool"
+        title="VIII. Quy tắc chơi"
+        content="Quy tắc chơi sẽ được đề cập ở dưới đây."
+        rules={[
+          "Map thi đấu: Ascent.",
+          "Site chọn thi đấu: Site A",
+          "Round đấu bắt đầu: Người chơi defender phải AFK tại Chân cầu thang, người Attacker vào đặt spike tại bom site đã đượcc chi định khi đặt spike 2 người chơi attacker phải đứng cùng nhau tại vị trí đặt spike.",
+          "Khi đã đặt xong spike: 2 người chơi phía attacker được phép di chuyển thoải mái và 2 người chơi phía defender được phép di chuyển.",
+          "Khu vực thi đấu: Site A, Main A , Heaven A, Garden",
+          "Agent: tất cả mọi agent",
+          "Được phép sử dụng tất cả skills của all đặc vụ",
+          "Không được phép thay đổi đặc vụ giữa trận đấu"
+        ]}
+      />
+      <Section
+        title="VIII. Về app bổ trợ cho HUD livestream (Không bắt buộc)"
         content={
           <>
-            <li>Abyss</li>
-            <li>Bind</li>
-            <li>Haven</li>
-            <li>Fracture</li>
-            <li>Lotus</li>
-            <li>Pearl</li>
-            <li>Split</li>
+            <p>Lưu ý: Giải này việc tải app phụ trợ HUD sẽ là không cần thiết. Nếu các bạn muốn tải mà sợ bị BAN thì khi làm RSO thì các bạn dùng account không quan trọng nhé.</p>
+            <ul className="list-disc pl-12">
+              <li>Link tải app: <a className='text-secondary' href="https://valospectra.com/download">Ấn vào đây để chuyển hướng</a>.</li>
+              <li>Sau khi tải xong thì nó sẽ có 2 app như hình ở duói đây.</li>
+              <img src={Pic1} />
+              <li>Các bạn chỉ cần để ý app [Player] Spectra Client (App bên phải).</li>
+              <li>Khi vào app bên phải thì nó sẽ hiện như ảnh dưới. Lưu ý là BẬT APP TRƯỚC khi vào Game nhé. Nếu làm ngược lại thì sẽ không có tác dụng.</li>
+              <li className='mb-2'>Khi ở Mục "Auto-detected on game start" hiện riotID mà bạn đang chơi thì coi như là thành công rồi nhé"</li>
+              <img src={Pic2} />
+              <li>Nếu app này không ảnh hưởng tới hiệu suất của máy trong các thử nghiệm hay không ai bị BAN thì trong tương lai, tải App này sẽ là BẮT BUỘC !!!</li>
+
+            </ul>
+            <p className="mt-5">Lợi ích của tải ứng dụng:</p>
+            <ul className="list-disc pl-12">
+              <li>Có dùng ứng dụng và Setup đúng (chiêu, máu được hiện đầy đủ).</li>
+              <img src={Pic3} />
+              <li>Setup sai hoặc không dùng app (chiêu, máu không hiện)</li>
+              <img src={Pic4} />
+            </ul>
           </>
         }
       />
@@ -158,17 +185,6 @@ const RuleBook = () => {
         content=" DCN không bắt buộc các bạn đăng kí giải đấu và đóng lệ phí tham gia với mọi hình thức nhưng các bạn vui lòng CÓ TÂM hơn với lượt tham gia của mình qua việc không bỏ giải. Trường hợp bỏ giải đấu vô điều kiện chúng mình phải thu 30k/ đội, nếu các bạn không đóng tiền chúng mình bắt buộc phải giữ thể diện của DCN bằng việc cấm các bạn trong đội hình đó tham gia các giải đấu game thuộc khuôn khổ DCN."
       />
 
-      <Section
-        title="XI. VẤN ĐỀ KHAI BÁO ĐỘI HÌNH TRƯỚC TRẬN, THAY NGƯỜI"
-        content="Mỗi đội có thể tiến hành thay đổi Tuyển thủ sau các ván đấu."
-        rules={[
-          "Các đội thi đấu vui lòng thông báo đội hình 4h trước giờ thi đấu. Các bạn phải khai báo tên người chơi và dự bị nếu có.",
-          "Đội tuyển chỉ được phép thay tối đa một Tuyển thủ trong mỗi ván đấu. Tuy nhiên, một Đội tuyển chỉ có thể được phép thay đổi TỐI ĐA là 03 tuyển thủ trong trận đấu BO5.",
-          "Thay đổi Tuyển thủ trong khi thi đấu chỉ có hiệu lực ở trong các lựa chọn sau: Trận BO3, BO5. Sau ván 1, Đội tuyển có thể tiến hành thay đổi Tuyển thủ dự bị. ",
-          "Trách nhiệm của đội tuyển trong việc thay người giữa các ván đấu Đội tuyển có trách nhiệm thông báo về yêu cầu thay đổi Tuyển thủ cho BTC và chỉ được coi là thay đổi hợp lệ nếu được BTC chấp thuận chậm nhất 3 phút ngay sau khi nhà chính của ván đấu liền trước đó bị phá hủy. Nếu chậm trễ trong việc thông báo, BTC có quyền không chấp nhận yêu cầu thay đổi này.",
-
-        ]}
-      />
 
       <Conclusion
         content="Cảm ơn các bạn đã đọc luật và chúc các bạn có một mùa giải thành công!! Graaaaa"

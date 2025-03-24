@@ -97,14 +97,14 @@ const CompetitionPage = () => {
                         <img src={ImageDCN} alt="DCN logo" className="h-32 w-32" />
                     </div>
                     <h1 className="text-6xl md:text-7xl animate__animated animate__fadeIn font-extrabold mb-6 animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                        Giải Valorant Đón Xuân DCN: Season 2
+                        Giải Valorant Double Up DCN
                     </h1>
                     <p className="animate__animated animate__fadeIn text-xl md:text-xl mb-8 animate-fade-in-up">
-                       Thắng bại tại kĩ năng !!!
+                       Go Big Or Go Home !!!
                     </p>
-                    <Link to="/valorant/qualifier">
+                    <Link to="/valorant/register">
                         <button className="animate__animated animate__fadeInUp bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent text-white font-bold py-4 px-10 rounded-full text-xl transform hover:scale-105 shadow-lg">
-                            Xem ngay bảng đấu
+                            Đăng ký ngay !!!
                         </button>
                     </Link>
                 </div>
