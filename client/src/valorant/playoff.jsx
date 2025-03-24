@@ -186,6 +186,12 @@ const TournamentBracket = () => {
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
       ) : (<>
+      
+      <div className="flex items-center justify-center min-h-screen flex-col">
+        <img src={Image}className="w-64"/>
+          <span className="font-bold">Bảng đấu sẽ hiện sau khi form đăng ký đóng. Các bạn đọc luật trong lúc này nhé</span>
+        </div>
+      {/*
       <h1 className="text-3xl font-bold mb-10 mt-20 text-center">Vòng loại VALORANT</h1>
         <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
           <div className="w-full lg:w-1/4 relative">
@@ -233,9 +239,11 @@ const TournamentBracket = () => {
           </div>
 
         </div>
+        */}
       </>
       )}
     </div>
+    
   );
 };
 
