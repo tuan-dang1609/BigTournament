@@ -150,7 +150,7 @@ const RuleBook = () => {
         ]}
       />
       <Section
-        title="VIII. Về app bổ trợ cho HUD livestream (Không bắt buộc)"
+        title="IX. Về app bổ trợ cho HUD livestream (Không bắt buộc)"
         content={
           <>
             <p>Lưu ý: Giải này việc tải app phụ trợ HUD sẽ là không cần thiết. Nếu các bạn muốn tải mà sợ bị BAN thì khi làm RSO thì các bạn dùng account không quan trọng nhé.</p>
@@ -176,12 +176,12 @@ const RuleBook = () => {
         }
       />
       <Section
-        title="IX. Đầu Hàng"
+        title="X. Đầu Hàng"
         content="Không được đầu hàng. Nếu còn trận đấu, sẽ bị xử thua thêm một trận nữa. Nếu không, sẽ bị đưa vào danh sách đen cho giải tiếp theo."
       />
 
       <Section
-        title="X. Bỏ Giải"
+        title="XI. Bỏ Giải"
         content=" DCN không bắt buộc các bạn đăng kí giải đấu và đóng lệ phí tham gia với mọi hình thức nhưng các bạn vui lòng CÓ TÂM hơn với lượt tham gia của mình qua việc không bỏ giải. Trường hợp bỏ giải đấu vô điều kiện chúng mình phải thu 30k/ đội, nếu các bạn không đóng tiền chúng mình bắt buộc phải giữ thể diện của DCN bằng việc cấm các bạn trong đội hình đó tham gia các giải đấu game thuộc khuôn khổ DCN."
       />
 
