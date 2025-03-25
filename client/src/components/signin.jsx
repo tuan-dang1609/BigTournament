@@ -16,10 +16,10 @@ function LoginForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation(); // To capture the previous link
-  useEffect(()=>{
-    document.title="Đăng nhập"
+  useEffect(() => {
+    document.title = "Đăng nhập"
 
-  },[])
+  }, [])
   // Check if there's a 'from' location or default to home ('/')
   const from = location.state?.from?.pathname || '/arenaofvalor';
 
@@ -51,7 +51,7 @@ function LoginForm() {
       }
 
       dispatch(signInSuccess(data));
-      
+
       // Navigate to the original page or default to '/'
       navigate(from, { replace: true });
     } catch (error) {
@@ -137,6 +137,11 @@ function LoginForm() {
           Chưa có tài khoản?{" "}
           <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
             Đăng kí
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+            Quên mật khẩu?
           </Link>
         </p>
       </div>

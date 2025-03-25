@@ -54,6 +54,7 @@ import CreateMatch from './valorant/test.jsx';
 import TFTMatch from './tft/day1.jsx'
 import CombinedLeaderboard from './tft/test.jsx';
 import GrandFinalTFT from './tft/day2.jsx'
+import ForgotPassword from './components/ForgotPassword.jsx'
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -68,6 +69,7 @@ if (rootElement) {
             <Routes>
               <Route exact path='/rsotest' element={<RSO_Authorization />} />
               <Route exact path='/' element={<Home />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path='/signup' element={<SignUp />} />
               <Route path='/signin' element={<SignIn />} />
               <Route path='/calendar' element={<Calendar />} />
