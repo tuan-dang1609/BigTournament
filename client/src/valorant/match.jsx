@@ -15,24 +15,19 @@ const PlayerStats = ({ data,dictionary,registeredPlayers,teamA,teamB }) => {
   const [selectedMap, setSelectedMap] = useState(null);
   const [imageUrls, setImageUrls] = useState({});
 
-  const images = import.meta.glob('../agent/*.{png,jpg,jpeg,gif}');
 
-  useEffect(() => {
-    const loadImageUrls = async () => {
-      const urls = {};
-      await Promise.all(Object.entries(images).map(async ([path, resolver]) => {
-        try {
-          const module = await resolver();
-          const filename = path.split('/').pop().split('.')[0];
-          urls[filename.replace('%2F', '/')] = module.default;
-        } catch (error) {
-          console.error(`Failed to load image at ${path}`, error);
-        }
-      }));
-      setImageUrls(urls);
-    };
-    loadImageUrls();
-  }, []);
+useEffect(() => {
+  if (!dictionary || !dictionary.characters) return;
+
+  const urls = {};
+  dictionary.characters.forEach(agent => {
+    const name = agent.name;
+    urls[name] = `/agent/${name}.png`; // ảnh nằm trong public/agent/
+  });
+
+  setImageUrls(urls);
+}, [dictionary]);
+
   const getVerificationStatus = (gameName, tagLine) => {
     if (!registeredPlayers || registeredPlayers.length === 0) return '';
     
