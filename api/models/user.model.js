@@ -9,13 +9,11 @@ const userSchema = new mongoose.Schema(
     discordID:{
       type:String,
       required:true,
-      unique: true,
       default:""
     },
     garenaaccount:{
       type:String,
       required: true,
-      unique:true,
       default:"TBD"
     },
     riotID:{
