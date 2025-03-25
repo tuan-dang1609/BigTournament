@@ -301,9 +301,9 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
       
         if (team1.roundsWon > team2.roundsWon) {
           team1.is = "Win";
-          team2.is = "Lose";
+          team2.is = "Loss";
         } else if (team1.roundsWon < team2.roundsWon) {
-          team1.is = "Lose";
+          team1.is = "Loss";
           team2.is = "Win";
         } else {
           team1.is = team2.is = "Draw";
