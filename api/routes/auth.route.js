@@ -47,6 +47,7 @@ router.post('/alluser', async (req, res) => {
       garenaaccount: player.garenaaccount,
       nickname: player.nickname,
       username: player.username,
+      id:player._id,
       profilePicture: player.profilePicture
     }));
     res.json(formattedPlayers);
