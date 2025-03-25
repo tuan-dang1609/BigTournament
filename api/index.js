@@ -197,8 +197,50 @@ app.get('/api/livegame', async (req, res) => {  // Thay đổi để lấy riotI
 });
 // Serve static files
 app.use(express.static(path.join(__dirname, '..', 'client')));
+const calculatePlayerStats = (player, roundResults) => {
+  const { puuid } = player;
+  let firstKills = 0;
+  let multiKills = 0;
+  let headshots = 0;
+  let bodyshots = 0;
+  let legshots = 0;
+
+  roundResults.forEach((round) => {
+    const stats = round.playerStats.find((stat) => stat.puuid === puuid);
+    if (stats) {
+      const allKillTimes = round.playerStats.flatMap((stat) =>
+        stat.kills.map((k) => k.timeSinceRoundStartMillis)
+      );
+      const earliestKillTime = Math.min(...allKillTimes);
+
+      const firstKill = stats.kills.find(
+        (kill) => kill.killer === puuid && kill.timeSinceRoundStartMillis === earliestKillTime
+      );
+      if (firstKill) {
+        firstKills += 1;
+      }
+
+      if (stats.kills.length >= 3) {
+        multiKills += 1;
+      }
+
+      stats.damage.forEach((dmg) => {
+        headshots += dmg.headshots || 0;
+        bodyshots += dmg.bodyshots || 0;
+        legshots += dmg.legshots || 0;
+      });
+    }
+  });
+
+  const totalShots = headshots + bodyshots + legshots;
+  const headshotPercentage = totalShots > 0 ? ((headshots / totalShots) * 100).toFixed(0) : "0";
+
+  return { firstKills, multiKills, headshots, bodyshots, legshots, headshotPercentage };
+};
+
 app.get('/api/valorant/match/:matchId', async (req, res) => {
   const { matchId } = req.params;
+
 
   try {
     // Gọi API lấy danh sách nhân vật
@@ -216,6 +258,7 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
     });
 
     const matchData = response.data;
+    const roundResults = matchData.roundResults || [];
     const rateLimitRemaining = response.headers['x-ratelimit-remaining'];
     const rateLimitReset = response.headers['x-ratelimit-reset'];
 
@@ -227,16 +270,22 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
         const gameName = player.gameName || 'Unknown';
         const tagLine = player.tagLine || 'Unknown';
         player.riotID = `${gameName}#${tagLine}`;
-        
+      
         if (player.stats) {
           const kills = player.stats.kills || 0;
           const deaths = player.stats.deaths || 0;
           const assists = player.stats.assists || 0;
-          const KDA = (kills + deaths) / (assists || 1);  // Tránh chia cho 0
+          const KDA = (kills + deaths) / (assists || 1);
           const acs = (player.stats.score / player.stats.roundsPlayed).toFixed(1);
           player.stats.KD = `${kills}/${deaths}`;
           player.stats.KDA = KDA.toFixed(1);
           player.stats.acs = parseFloat(acs);
+      
+          // 🔥 Thêm các chỉ số mới vào đây
+          const advancedStats = calculatePlayerStats(player, roundResults);
+          player.stats.firstKills = advancedStats.firstKills;
+          player.stats.multiKills = advancedStats.multiKills;
+          player.stats.headshotPercentage = advancedStats.headshotPercentage;
         }
       });
 
