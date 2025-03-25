@@ -223,11 +223,11 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
       matchData.players.forEach(player => {
         const cleanId = player.characterId?.toUpperCase();
         player.characterName = `${characterMap[cleanId]}` || "Unknown";
-
+        player.imgCharacter = `https://dongchuyennghiep.vercel.app/agent/${characterMap[cleanId]}.png` || "Unknown";
         const gameName = player.gameName || 'Unknown';
         const tagLine = player.tagLine || 'Unknown';
         player.riotID = `${gameName}#${tagLine}`;
-
+        
         if (player.stats) {
           const kills = player.stats.kills || 0;
           const deaths = player.stats.deaths || 0;
