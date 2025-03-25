@@ -296,7 +296,19 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
       // Sắp xếp mỗi nhóm theo ACS giảm dần
       redTeam.sort((a, b) => (b.stats?.acs ?? 0) - (a.stats?.acs ?? 0));
       blueTeam.sort((a, b) => (b.stats?.acs ?? 0) - (a.stats?.acs ?? 0));
-
+      if (matchData?.teams?.length === 2) {
+        const [team1, team2] = matchData.teams;
+      
+        if (team1.roundsWon > team2.roundsWon) {
+          team1.is = "Win";
+          team2.is = "Lose";
+        } else if (team1.roundsWon < team2.roundsWon) {
+          team1.is = "Lose";
+          team2.is = "Win";
+        } else {
+          team1.is = team2.is = "Draw";
+        }
+      }
       // Gộp lại
       matchData.players = [ ...redTeam,...blueTeam];
     }
