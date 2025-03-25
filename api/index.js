@@ -298,7 +298,7 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
       blueTeam.sort((a, b) => (b.stats?.acs ?? 0) - (a.stats?.acs ?? 0));
 
       // Gộp lại
-      matchData.players = [ ...blueTeam,...redTeam];
+      matchData.players = [ ...redTeam,...blueTeam];
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');
