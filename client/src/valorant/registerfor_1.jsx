@@ -31,7 +31,11 @@ const TeamRegistrationForm = () => {
     const [suggestions, setSuggestions] = useState([]); // Lưu danh sách gợi ý
     const [activeInputIndex, setActiveInputIndex] = useState(null); // Theo dõi ô input đang nhập
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
-
+    const isAllMembersFilled = () => {
+        return Object.values(formData.gameMembers).every(members =>
+            members.every(member => member.trim() !== "")
+        );
+    };
     const navigate = useNavigate();
     const gameOptions = ["Valorant"];
     const driverObj = driver({
@@ -575,15 +579,18 @@ const TeamRegistrationForm = () => {
                                 )}
                             </div>
                             <div className="pt-4 flex items-center space-x-4">
-                                <motion.button
-                                    type="submit"
-                                    id="submitTeam"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="bg-gradient-to-r from-secondary to-accent hover:from-secondary hover:to-accent text-white flex justify-center items-center w-full px-4 py-3 rounded-md focus:outline-none"
-                                >
-                                    Đăng kí đội
-                                </motion.button>
+                            <motion.button
+    type="submit"
+    id="submitTeam"
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    disabled={!isAllMembersFilled()}
+    className={`${
+        !isAllMembersFilled() ? "opacity-50 cursor-not-allowed" : ""
+    } bg-gradient-to-r from-secondary to-accent hover:from-secondary hover:to-accent text-white flex justify-center items-center w-full px-4 py-3 rounded-md focus:outline-none`}
+>
+    Đăng kí đội
+</motion.button>
                             </div>
                         </form>
 
