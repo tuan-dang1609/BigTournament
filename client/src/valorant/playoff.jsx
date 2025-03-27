@@ -233,7 +233,7 @@ const TournamentBracket = () => {
           </div>
           <div className="w-full lg:hidden relative">
             {renderSection("Chung kết Tổng (BO3)", [
-              [teams[3][0], teams[3][1]]
+              [teams[2][0], teams[2][1]]
             ], 'lg:!mt-[500px] last:!mb-[0px]')}
 
           </div>
