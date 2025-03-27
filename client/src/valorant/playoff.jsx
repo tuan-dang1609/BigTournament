@@ -5,7 +5,7 @@ const TournamentBracket = () => {
   const [teams, setTeams] = useState([[], [], [], []]);
   const [loading, setLoading] = useState(true);
   const [idmatch, setMatchId] = useState([]);
-  
+
   document.title = "Vòng loại Valorant"
   const fetchTeams = async () => {
     try {
@@ -56,14 +56,14 @@ const TournamentBracket = () => {
           'Content-Type': 'application/json',
         }
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       // Parse JSON response
       const data = await response.json(); // Thêm dòng này
-      
+
       // Lọc các trận Valorant
       const filteredGames = data.filter((game) => game.game === "Valorant"); // Sử dụng `data` thay vì `response.data`
       setMatchId(filteredGames);
@@ -71,7 +71,7 @@ const TournamentBracket = () => {
       console.error("Failed to fetch games:", error);
     }
   };
-  
+
 
   useEffect(() => {
     fetchTeams();
@@ -180,70 +180,69 @@ const TournamentBracket = () => {
 
   return (
     <div className="container mx-auto p-4 relative">
-      
+
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
       ) : (<>
-      
-      <div className="flex items-center justify-center min-h-screen flex-col">
-        <img src={Image}className="w-64"/>
-          <span className="font-bold">Bảng đấu sẽ hiện sau khi form đăng ký đóng. Các bạn đọc luật trong lúc này nhé</span>
-        </div>
-      {/*
-      <h1 className="text-3xl font-bold mb-10 mt-20 text-center">Vòng loại VALORANT</h1>
+
+
+        <h1 className="text-3xl font-bold mb-10 mt-20 text-center">DCN VALORANT Double Up</h1>
         <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
-          <div className="w-full lg:w-1/4 relative">
-            {renderSection("Khởi động (BO1)", [
+
+          <div className="w-full lg:w-1/3 relative">
+            {renderSection("Bán kết (BO1)", [
               [teams[0][0], teams[0][1]],
               [teams[0][2], teams[0][3]],
-            ], 'last:!mb-[0px] lg:!mb-[210px]')}
-            <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] w-[25%]  bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[calc(7.9rem)] left-[125%]  h-[327px] w-[2.5px] bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[28.2rem] left-full h-[2px] w-[25%] bg-secondary"></div>
-            <div className="hidden lg:block absolute top-[18.05rem] left-[125%]  h-[2px] w-[25%] bg-secondary"></div>
+            ], 'lg:!mt-[100px] last:!mb-[0px] lg:!mb-[208px]')}
+            <div className="hidden lg:block absolute top-[13.1rem] left-full h-[2px] lg:w-[5%]  bg-secondary"></div>
+            <div className="hidden lg:block absolute top-[calc(13.1rem)] lg:left-[105%] h-[325px] w-[2.3px] bg-secondary"></div>
+            <div className="hidden lg:block absolute top-[33.3rem] left-full h-[2px] lg:w-[5%]  bg-secondary"></div>
+            <div className="hidden lg:block absolute top-[23.2rem] lg:left-[105%]  h-[2px] lg:w-[9%] bg-secondary"></div>
           </div>
-          <div className="w-full lg:w-1/4 relative">
-            {renderSection("Trận quyết định (BO3)", [
+          <div className="w-full lg:w-1/3 relative">
+            {renderSection("CK nhánh thắng (BO3)", [
               [teams[1][0], teams[1][1]]
-            ], 'lg:!mt-[180px]')}
-            <div className="hidden lg:block absolute top-[18.05rem] left-[100%] h-[2px] w-[50%] bg-secondary"></div>
+            ], 'lg:!mt-[262px] last:!mb-[0px]')}
+            <div className="hidden lg:block absolute top-[23.2rem] left-full h-[2px] lg:w-[5%]  bg-secondary"></div>
+            <div className="hidden lg:block absolute top-[calc(23.2rem)] lg:left-[105%] h-[560px] w-[2.3px] bg-secondary"></div>
+            <div className="hidden lg:block absolute top-[58.1rem] left-full h-[2px] lg:w-[5%]  bg-secondary"></div>
+            <div className="hidden lg:block absolute top-[40.0rem] lg:left-[105%]  h-[2px] lg:w-[9%] bg-secondary"></div>
           </div>
-          <div className="w-full lg:w-1/4 relative">
-            {renderAdvanceSection("Đi tiếp", [
-              [teams[2][0]],
-            ], 'lg:!mt-[205px]')}
-
-          </div>
-        </div>
-        <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
-
-          <div className="w-full lg:w-1/4 relative">
-            {renderSection("Vòng loại (BO3)", [
-              [teams[0][4], teams[0][5]],
-            ], 'last:!mb-[0px]')}
-            <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] w-[50%]  bg-secondary"></div>
-          </div>
-          <div className="w-full lg:w-1/4 relative">
-            {renderSection("Trận Last Chance (BO3)", [
-              [teams[1][2], teams[1][3]],
-            ], 'last:!mb-[0px]')}
-            <div className="hidden lg:block absolute  top-[7.9rem] left-full h-[2px] w-[50%]  bg-secondary"></div>
-          </div>
-          <div className="w-full lg:w-1/4 relative">
-            {renderAdvanceSection("Đi tiếp", [
-              [teams[2][1]],
-            ], 'last:!mt-[42px]')}
+          <div className="hidden lg:block lg:w-1/3 relative">
+            {renderSection("Chung kết tổng (BO3)", [
+              [teams[2][0], teams[2][1]]
+            ], 'lg:!mt-[530px]')}
 
           </div>
 
         </div>
-        */}
+        <div className="flex flex-col lg:w-[65.2%] lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
+          <div className="w-full lg:w-1/2 relative">
+            {renderSection("Last Chance (BO3)", [
+              [teams[0][4], teams[0][5]]
+            ], 'lg:first:!mt-[98px]')}
+            <div className="hidden lg:block absolute top-[13rem] lg:left-[100%]  h-[2px] lg:w-[14%] bg-secondary"></div>
+          </div>
+          <div className="w-full lg:w-1/2 relative">
+            {renderSection("CK nhánh thua (BO3)", [
+              [teams[1][2], teams[1][3]]
+            ], 'lg:first:!mt-[98px]')}
+
+          </div>
+          <div className="w-full lg:hidden relative">
+            {renderSection("Chung kết Tổng (BO3)", [
+              [teams[3][0], teams[3][1]]
+            ], 'lg:!mt-[500px] last:!mb-[0px]')}
+
+          </div>
+        </div>
+
       </>
       )}
     </div>
-    
+
   );
 };
 
