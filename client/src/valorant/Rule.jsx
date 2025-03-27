@@ -141,7 +141,7 @@ const RuleBook = () => {
         rules={[
           "Map thi đấu: Ascent.",
           "Site chọn thi đấu: Site A",
-          "Round đấu bắt đầu: Người chơi defender phải AFK tại Chân cầu thang, người Attacker vào đặt spike tại bom site đã đượcc chi định khi đặt spike 2 người chơi attacker phải đứng cùng nhau tại vị trí đặt spike.",
+          "Round đấu bắt đầu: Người chơi defender phải AFK tại Chân cầu thang, người Attacker vào đặt spike tại bom site đã được chi định. Khi đặt spike 2 người chơi attacker phải đứng cùng nhau tại vị trí đặt spike.",
           "Khi đã đặt xong spike: 2 người chơi phía attacker được phép di chuyển thoải mái và 2 người chơi phía defender được phép di chuyển.",
           "Khu vực thi đấu: Site A, Main A , Heaven A, Garden",
           "Agent: tất cả mọi agent",
