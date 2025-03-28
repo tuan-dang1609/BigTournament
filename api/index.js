@@ -274,18 +274,31 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
     // Gọi API lấy danh sách nhân vật
     const dictionaryResponse = await axios.get('https://dongchuyennghiep-backend.vercel.app/api/valorant/dictionary');
     const characterMap = {};
+    const mapMap = {};
 
+    if (dictionaryResponse.data.maps) {
+      dictionaryResponse.data.maps.forEach(map => {
+        if (map.assetPath) {
+          mapMap[map.assetPath.toUpperCase()] = map.name;
+        }
+      });
+    }
     if (dictionaryResponse.data.characters) {
       dictionaryResponse.data.characters.forEach(char => {
         characterMap[char.id] = char.name;
       });
     }
-
+    
     const response = await axios.get(`https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`, {
       headers: { 'X-Riot-Token': apiKeyValorant }
     });
 
     const matchData = response.data;
+
+
+// Map name
+const rawMapId = matchData?.matchInfo?.mapId?.toUpperCase();
+matchData.matchInfo.mapName = mapMap[rawMapId] || "Unknown";
     const roundResults = matchData.roundResults || [];
     const rateLimitRemaining = response.headers['x-ratelimit-remaining'];
     const rateLimitReset = response.headers['x-ratelimit-reset'];
