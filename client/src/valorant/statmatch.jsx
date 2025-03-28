@@ -31,201 +31,100 @@ export default function MatchStat2() {
         return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     };
     useEffect(() => {
-        // Fetch match data (teamA, teamB, matchId)
-        fetchGames();
-    }, [round, Match]);
-    useEffect(() => {
-        const scrollToTop = () => {
-            document.documentElement.scrollTop = 0;
-
-        };
-        setTimeout(scrollToTop, 0);
-
-    }, []);
-    useEffect(() => {
-        // Fetch team logos and colors only when teamA and teamB are set
-        if (teamA.length > 0 && teamB.length > 0) {
-            fetchTeamLogos();
-        }
-    }, [teamA, teamB]);
-
-    const fetchGames = async () => {
-        try {
-            const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findmatchid', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    round: round,
-                    Match: Match,
-                    game: "Valorant"
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            // Đếm số lượng matchid
-            const matchCount = data.matchid.length;
-
-            // Xét trường hợp để trả về BOx
-            let boType;
-            if (matchCount === 1) {
-                boType = 'BO1';
-            } else if (matchCount <= 3) {
-                boType = 'BO3';
-            } else if (matchCount <= 5) {
-                boType = 'BO5';
-            } else if (matchCount <= 7) {
-                boType = 'BO7';
-            } else {
-                boType = `Invalid BO type`; // Trường hợp không hợp lệ
-            }
-
-            // Cập nhật state
-            setMatchid(data.matchid);
-            setteamA(data.teamA);
-            setteamB(data.teamB);
-            setBotype(boType)
-            setbanpickid(data.banpickid)
-
-        } catch (error) {
-            console.error("Failed to fetch game:", error);
-        }
-    };
-
-    const fetchTeamLogos = async () => {
-        try {
-            const teamResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamValorant', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (!teamResponse.ok) {
-                throw new Error(`HTTP error! status: ${teamResponse.status}`);
-            }
-
-            const teamData = await teamResponse.json();
-            setFindteam(teamData)
-            const teamAData = teamData.find(team => team.teamName === teamA);
-            const teamBData = teamData.find(team => team.teamName === teamB);
-
-            setTeamALogo(`https://drive.google.com/thumbnail?id=${teamAData?.logoUrl}`);
-            setTeamBLogo(`https://drive.google.com/thumbnail?id=${teamBData?.logoUrl}`);
-            setTeamABgColor(teamAData?.color || '#ffffff');
-            setTeamBBgColor(teamBData?.color || '#ffffff');
-            setTeamAshort(teamAData?.shortName);
-            setTeamBshort(teamBData?.shortName);
-        } catch (error) {
-            console.error("Failed to fetch team logos:", error);
-        }
-    };
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const fetchDict = async () => {
+        const fetchAllData = async () => {
             try {
-                if (!dictionary) {
-                    const res = await fetch(
-                        `https://dongchuyennghiep-backend.vercel.app/api/valorant/dictionary`
-                    );
-
-                    if (!res.ok) throw new Error(`HTTP error! ${res.status}`);
-
-                    const data = await res.json();
-                    if (isMounted) {
-                        setDictionary(data)
-                        
-
-                    };
-                }
-            } catch (err) {
-                if (isMounted) {
-                    setError(err.message);
-                    console.error("Dictionary fetch error:", err);
-                    
-                }
-            }
-        };
-
-        fetchDict();
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-
-
-    useEffect(() => {
-        if (matchid.length > 0) {
-            const fetchData = async () => {
-                try {
-                    const results = await Promise.all(
-                        matchid.map(async (id) => {
-                            const res = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/valorant/match/${id}`);
-                            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                            const data = await res.json();
-                            return data.matchData; // Lấy trực tiếp matchData
-                        })
-                    );
-    
-                    console.log(results);
-                    setMatchInfo(results);
-                    setTime(results[0].matchInfo.gameStartMillis);
-    
-                    const extractedPlayers = results.flatMap(match =>
-                        match.players
-                            ?.filter(player => player.gameName && player.tagLine)
-                            .map(player => `${player.gameName}#${player.tagLine}`)
-                    );
-    
-                    const uniquePlayers = [...new Set(extractedPlayers)];
-                    setAllPlayer(uniquePlayers);
-                    
-                } catch (err) {
-                    setError(err.message);
-                }
-            };
-    
-            if (matchInfo.length === 0) {
-                fetchData();
-            }
-        }
-    }, [matchid]);
-    useEffect(() => {
-        if (allPlayer.length > 0) {
-            const checkRegisteredPlayers = async () => {
-                try {
-                    const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/check-registered-valorant', {
+                // Step 1: Call 3 API song song
+                const [matchRes, teamRes, dictRes] = await Promise.all([
+                    fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findmatchid', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ riotid: allPlayer }),
-                    });
-
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-                    const result = await response.json();
-                    setRegisteredPlayers(result); // Lưu kết quả vào state
-                    setIsLoading(false);
-                } catch (error) {
-                    console.error("Error checking registered players:", error);
-                    setIsLoading(false);
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ round, Match, game: "Valorant" })
+                    }),
+                    fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamValorant', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    }),
+                    fetch('https://dongchuyennghiep-backend.vercel.app/api/valorant/dictionary')
+                ]);
+    
+                if (!matchRes.ok || !teamRes.ok || !dictRes.ok) {
+                    throw new Error("One or more API calls failed");
                 }
-            };
-
-            checkRegisteredPlayers();
-        }
-    }, [allPlayer]);
+    
+                const [matchData, teamData, dictData] = await Promise.all([
+                    matchRes.json(),
+                    teamRes.json(),
+                    dictRes.json()
+                ]);
+    
+                // Step 2: Process match data
+                const matchCount = matchData.matchid.length;
+                let boType = matchCount === 1 ? 'BO1' : matchCount <= 3 ? 'BO3' : matchCount <= 5 ? 'BO5' : matchCount <= 7 ? 'BO7' : 'Invalid BO type';
+    
+                setMatchid(matchData.matchid);
+                setteamA(matchData.teamA);
+                setteamB(matchData.teamB);
+                setBotype(boType);
+                setbanpickid(matchData.banpickid);
+    
+                // Step 3: Fetch match details song song
+                const matchDetailPromises = matchData.matchid.map(async (id) => {
+                    const res = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/valorant/match/${id}`);
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    const data = await res.json();
+                    return data.matchData;
+                });
+    
+                const matchResults = await Promise.all(matchDetailPromises);
+                setMatchInfo(matchResults);
+                setTime(matchResults[0].matchInfo.gameStartMillis);
+    
+                const extractedPlayers = matchResults.flatMap(match =>
+                    match.players
+                        ?.filter(player => player.gameName && player.tagLine)
+                        .map(player => `${player.gameName}#${player.tagLine}`)
+                );
+                const uniquePlayers = [...new Set(extractedPlayers)];
+                setAllPlayer(uniquePlayers);
+    
+                // Step 4: Team info
+                setFindteam(teamData);
+                const teamAData = teamData.find(team => team.teamName === matchData.teamA);
+                const teamBData = teamData.find(team => team.teamName === matchData.teamB);
+                setTeamALogo(`https://drive.google.com/thumbnail?id=${teamAData?.logoUrl}`);
+                setTeamBLogo(`https://drive.google.com/thumbnail?id=${teamBData?.logoUrl}`);
+                setTeamABgColor(teamAData?.color || '#ffffff');
+                setTeamBBgColor(teamBData?.color || '#ffffff');
+                setTeamAshort(teamAData?.shortName);
+                setTeamBshort(teamBData?.shortName);
+    
+                // Step 5: Dictionary
+                setDictionary(dictData);
+    
+                // Step 6: Check registered players
+                const checkPlayerRes = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/check-registered-valorant', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ riotid: uniquePlayers }),
+                });
+    
+                if (!checkPlayerRes.ok) throw new Error(`HTTP error! status: ${checkPlayerRes.status}`);
+                const playerResult = await checkPlayerRes.json();
+                setRegisteredPlayers(playerResult);
+                setIsLoading(false);
+    
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                setError(error.message);
+                setIsLoading(false);
+            }
+        };
+    
+        fetchAllData();
+    }, [round, Match]);
+    
     // Kiểm tra kết quả
     useEffect(() => {
         console.log("Unique players:", allPlayer);

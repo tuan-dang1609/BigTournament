@@ -53,21 +53,7 @@ const PlayerStats = ({ data, dictionary, registeredPlayers, teamA, teamB }) => {
 
     return map ? map.name : "Unknown";
   };
-  const getagentName = (agentid) => {
-    if (!dictionary || !dictionary.maps || !Array.isArray(dictionary.maps)) {
-      return "Unknown";
-    }
 
-    if (!agentid) {
-      return "Unknown";
-    }
-
-    const agent = dictionary.characters.find(
-      (agent) => agent.id && agent.id.toLowerCase() === agentid.toLowerCase()
-    );
-
-    return agent ? agent.name : "Unknown";
-  };
 
   // Tạo map data
   const mapData = data.reduce((acc, match) => {
@@ -132,7 +118,7 @@ const PlayerStats = ({ data, dictionary, registeredPlayers, teamA, teamB }) => {
                         cellData = (
                           <div className="flex items-center">
                             <img
-                              src={imageUrls[getagentName(row.characterId)]}
+                              src={imageUrls[row.characterName]}
                               alt={row.characterId}
                               className="w-8 h-8 rounded-full mr-2"
                             />
