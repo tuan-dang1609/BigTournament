@@ -142,7 +142,7 @@ export default function MatchStat2() {
                     const data = await res.json();
                     if (isMounted) {
                         setDictionary(data)
-                        setIsLoading(false);
+                        
 
                     };
                 }
@@ -150,7 +150,7 @@ export default function MatchStat2() {
                 if (isMounted) {
                     setError(err.message);
                     console.error("Dictionary fetch error:", err);
-                    setIsLoading(false);
+                    
                 }
             }
         };
@@ -189,7 +189,7 @@ export default function MatchStat2() {
     
                     const uniquePlayers = [...new Set(extractedPlayers)];
                     setAllPlayer(uniquePlayers);
-    
+                    
                 } catch (err) {
                     setError(err.message);
                 }
@@ -216,9 +216,10 @@ export default function MatchStat2() {
 
                     const result = await response.json();
                     setRegisteredPlayers(result); // Lưu kết quả vào state
-
+                    setIsLoading(false);
                 } catch (error) {
                     console.error("Error checking registered players:", error);
+                    setIsLoading(false);
                 }
             };
 

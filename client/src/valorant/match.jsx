@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import Verify from '../image/verified-symbol-icon.png'
 const columns = [
   { key: "name", label: "Người chơi" },
@@ -11,33 +11,33 @@ const columns = [
   { key: "mk", label: "MK" },
 ];
 
-const PlayerStats = ({ data,dictionary,registeredPlayers,teamA,teamB }) => {
+const PlayerStats = ({ data, dictionary, registeredPlayers, teamA, teamB }) => {
   const [selectedMap, setSelectedMap] = useState(null);
   const [imageUrls, setImageUrls] = useState({});
 
 
-useEffect(() => {
-  if (!dictionary || !dictionary.characters) return;
+  useEffect(() => {
+    if (!dictionary || !dictionary.characters) return;
 
-  const urls = {};
-  dictionary.characters.forEach(agent => {
-    const name = agent.name;
-    urls[name] = `/agent/${name}.png`; // ảnh nằm trong public/agent/
-  });
+    const urls = {};
+    dictionary.characters.forEach(agent => {
+      const name = agent.name;
+      urls[name] = `/agent/${name}.png`; // ảnh nằm trong public/agent/
+    });
 
-  setImageUrls(urls);
-}, [dictionary]);
+    setImageUrls(urls);
+  }, [dictionary]);
 
   const getVerificationStatus = (gameName, tagLine) => {
     if (!registeredPlayers || registeredPlayers.length === 0) return '';
-    
+
     const normalizedId = `${gameName}#${tagLine}`.toLowerCase().trim();
-    const player = registeredPlayers.find(p => 
-        p.riotID.toLowerCase().trim() === normalizedId
+    const player = registeredPlayers.find(p =>
+      p.riotID.toLowerCase().trim() === normalizedId
     );
 
     return player?.isregistered ? <img src={Verify} className="w-4 h-4" /> : '';
-};
+  };
   const getMapName = (mapId) => {
     if (!dictionary || !dictionary.maps || !Array.isArray(dictionary.maps)) {
       return "Unknown";
@@ -86,72 +86,17 @@ useEffect(() => {
       setSelectedMap(Object.keys(mapData)[0]);
     }
   }, [mapData]);
-  const calculatePlayerStats = (player) => {
-    const { puuid } = player;
-    let firstKills = 0;
-    let multiKills = 0;
-    let totalDamage = 0;
-    let headshots = 0;
-    let bodyshots = 0;
-    let legshots = 0;
-    const gameName = player.gameName; // Truy cập trực tiếp từ player
-    const tagName = player.tagLine;  // Truy cập trực tiếp từ player
-    const roundPlayed = playerData.teams[0].roundsPlayed;
 
-    playerData.roundResults.forEach((round) => {
-      const stats = round.playerStats.find((stat) => stat.puuid === puuid);
-      if (stats) {
-        const firstKillInRound = stats.kills.find(
-          (kill) =>
-            kill.killer === puuid &&
-            kill.timeSinceRoundStartMillis ===
-            Math.min(
-              ...round.playerStats.flatMap((stat) =>
-                stat.kills.map((k) => k.timeSinceRoundStartMillis)
-              )
-            )
-        );
-        if (firstKillInRound) {
-          firstKills += 1;
-        }
-
-        if (stats.kills.length >= 3) {
-          multiKills += 1;
-        }
-
-        stats.damage.forEach((dmg) => {
-          totalDamage += dmg.damage;
-          headshots += dmg.headshots;
-          bodyshots += dmg.bodyshots;
-          legshots += dmg.legshots;
-        });
-      }
-    });
-
-    const totalShots = headshots + bodyshots + legshots;
-    const headshotPercentage = totalShots > 0 ? ((headshots / totalShots) * 100).toFixed(0) : 0;
-
-    return { tagName, gameName, roundPlayed, firstKills, multiKills, totalDamage, headshots, bodyshots, legshots, headshotPercentage };
-  };
   // Định nghĩa renderTable TRƯỚC khi sử dụng
   const getPlayerTeamName = (player) => {
     const normalizedId = `${player.gameName}#${player.tagLine}`.toLowerCase().trim();
-    const registeredPlayer = registeredPlayers.find(rp => 
-        rp.riotID.toLowerCase().trim() === normalizedId
+    const registeredPlayer = registeredPlayers.find(rp =>
+      rp.riotID.toLowerCase().trim() === normalizedId
     );
     return registeredPlayer?.teamname || null;
-};
+  };
 
   const renderTable = (teamData, teamColor) => {
-    // Sắp xếp teamData dựa trên ACS giảm dần
-    const sortedTeamData = teamData.sort((a, b) => {
-      const statsA = calculatePlayerStats(a);
-      const statsB = calculatePlayerStats(b);
-      const acsA = statsA.roundPlayed > 0 ? (a.stats.score / statsA.roundPlayed) : 0;
-      const acsB = statsB.roundPlayed > 0 ? (b.stats.score / statsB.roundPlayed) : 0;
-      return acsB - acsA; // Sắp xếp giảm dần
-    });
-  
     return (
       <div className="w-full overflow-x-auto shadow-lg rounded-lg mb-8">
         <table className="w-full min-w-max table-auto font-bold text-center">
@@ -171,9 +116,7 @@ useEffect(() => {
             </tr>
           </thead>
           <tbody className="xl:text-[10.75px] text-[10.5px]">
-            {sortedTeamData.map((row, rowIndex) => {
-              const stats = calculatePlayerStats(row);
-  
+            {teamData.map((row, rowIndex) => {
               return (
                 <tr
                   key={rowIndex}
@@ -182,71 +125,71 @@ useEffect(() => {
                   {columns.map((column, columnIndex) => {
                     let cellData;
                     const columnKeys = column.key.split('.');
-  
+
                     // Xử lý từng loại cột
                     switch (column.key) {
                       case "name":
                         cellData = (
-                            <div className="flex items-center">
-                                <img
-                                    src={imageUrls[getagentName(row.characterId)]}
-                                    alt={row.characterId}
-                                    className="w-8 h-8 rounded-full mr-2"
-                                />
-                                <span className="lg:flex lg:flex-row hidden">
-                                    {row.gameName}#{row.tagLine} 
-                                    <span className="text-xs ml-1">
-                                        {getVerificationStatus(row.gameName, row.tagLine)}
-                                    </span>
-                                </span>
-                                <span className="lg:hidden flex flex-row">
-                                    {row.gameName}
-                                    <span className="text-xs ml-1">
-                                        {getVerificationStatus(row.gameName, row.tagLine)}
-                                    </span>
-                                </span>
-                            </div>
+                          <div className="flex items-center">
+                            <img
+                              src={imageUrls[getagentName(row.characterId)]}
+                              alt={row.characterId}
+                              className="w-8 h-8 rounded-full mr-2"
+                            />
+                            <span className="lg:flex lg:flex-row hidden">
+                              {row.gameName}#{row.tagLine}
+                              <span className="text-xs ml-1">
+                                {getVerificationStatus(row.gameName, row.tagLine)}
+                              </span>
+                            </span>
+                            <span className="lg:hidden flex flex-row">
+                              {row.gameName}
+                              <span className="text-xs ml-1">
+                                {getVerificationStatus(row.gameName, row.tagLine)}
+                              </span>
+                            </span>
+                          </div>
                         );
                         break;
-  
+
                       case "performanceScore":
                         cellData = row.stats?.score || 'N/A';
                         break;
-  
+
                       case "acs":
-                        cellData = stats.roundPlayed > 0
-                          ? (row.stats.score / stats.roundPlayed).toFixed(1)
+                        cellData = row.stats.roundsPlayed > 0
+                          ? (row.stats.score / row.stats.roundsPlayed).toFixed(1)
                           : 'N/A';
                         break;
-  
+
                       case "kda":
                         cellData = `${row.stats.kills || 0}/${row.stats.deaths || 0}/${row.stats.assists || 0}`;
                         break;
-  
+
                       case "stats.kills/stats.deaths":
                         cellData = row.stats.deaths === 0
                           ? row.stats.kills
                           : (row.stats.kills / row.stats.deaths).toFixed(1);
                         break;
-  
+
                       case "stats.headshotPercentage":
-                        cellData = `${stats.headshotPercentage}%`;
+                        cellData = `${row.stats.headshotPercentage}%`;
                         break;
-  
+
                       case "adr":
-                        cellData = stats.roundPlayed > 0
-                          ? (stats.totalDamage / stats.roundPlayed).toFixed(1)
+                        cellData = row.stats.roundsPlayed > 0
+                          ? (row.stats.headshotPercentage).toFixed(1)
                           : 'N/A';
                         break;
-  
+
                       case "fk":
-                        cellData = stats.firstKills;
+                        cellData = row.stats.firstKills;
                         break;
-  
+
                       case "mk":
-                        cellData = stats.multiKills;
+                        cellData = row.stats.multiKills;
                         break;
-  
+
                       default:
                         // Xử lý các trường hợp nested object
                         cellData = columnKeys.reduce((acc, key) => {
@@ -254,7 +197,7 @@ useEffect(() => {
                           return 'N/A';
                         }, row);
                     }
-  
+
                     return (
                       <td
                         key={`${rowIndex}-${column.key}`}
@@ -331,9 +274,8 @@ useEffect(() => {
             <button
               key={mapName}
               onClick={() => setSelectedMap(mapName)}
-              className={`px-4 py-2 text-[10px] font-bold rounded ${
-                selectedMap === mapName ? "bg-white text-black" : "bg-[#4A374A] text-white"
-              }`}
+              className={`px-4 py-2 text-[10px] font-bold rounded ${selectedMap === mapName ? "bg-white text-black" : "bg-[#4A374A] text-white"
+                }`}
             >
               {mapName.toUpperCase()} ({scoreDisplay})
             </button>
@@ -341,51 +283,51 @@ useEffect(() => {
         })}
       </div>
     </div>
-);
+  );
   return (
     <>{renderMapTabs()}
-    <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-x-7">
-    {playerData?.players && (
-    <>
-        <div className="w-full xl:w-[49%]">
-            {renderTable(
+      <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-x-7">
+        {playerData?.players && (
+          <>
+            <div className="w-full xl:w-[49%]">
+              {renderTable(
                 playerData.players.filter(p => {
-                    const playerTeamName = getPlayerTeamName(p);
-                    
-                    // Nếu có teamname, nhóm vào đúng teamname
-                    if (playerTeamName === teamA) return true;
+                  const playerTeamName = getPlayerTeamName(p);
 
-                    // Nếu không có teamname, nhóm vào team có cùng teamId với teamA
-                    return playerTeamName === null && 
-                           playerData.players.some(player => 
-                               getPlayerTeamName(player) === teamA && player.teamId === p.teamId
-                           );
+                  // Nếu có teamname, nhóm vào đúng teamname
+                  if (playerTeamName === teamA) return true;
+
+                  // Nếu không có teamname, nhóm vào team có cùng teamId với teamA
+                  return playerTeamName === null &&
+                    playerData.players.some(player =>
+                      getPlayerTeamName(player) === teamA && player.teamId === p.teamId
+                    );
                 }),
                 "red"
-            )}
-        </div>
-        <div className="w-full xl:w-[49%]">
-            {renderTable(
+              )}
+            </div>
+            <div className="w-full xl:w-[49%]">
+              {renderTable(
                 playerData.players.filter(p => {
-                    const playerTeamName = getPlayerTeamName(p);
+                  const playerTeamName = getPlayerTeamName(p);
 
-                    // Nếu có teamname, nhóm vào đúng teamname
-                    if (playerTeamName === teamB) return true;
+                  // Nếu có teamname, nhóm vào đúng teamname
+                  if (playerTeamName === teamB) return true;
 
-                    // Nếu không có teamname, nhóm vào team có cùng teamId với teamB
-                    return playerTeamName === null && 
-                           playerData.players.some(player => 
-                               getPlayerTeamName(player) === teamB && player.teamId === p.teamId
-                           );
+                  // Nếu không có teamname, nhóm vào team có cùng teamId với teamB
+                  return playerTeamName === null &&
+                    playerData.players.some(player =>
+                      getPlayerTeamName(player) === teamB && player.teamId === p.teamId
+                    );
                 }),
                 "blue"
-            )}
-        </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </>
-)}
-  </div>
-    </>
-    
+
   );
 };
 
