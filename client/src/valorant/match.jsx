@@ -134,7 +134,7 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
                         cellData = row.stats.firstKills;
                         break;
                       case "fd":
-                        cellData = row.stats.firstKills;
+                        cellData = row.stats.firstDeaths;
                         break;
                       case "mk":
                         cellData = row.stats.multiKills;
