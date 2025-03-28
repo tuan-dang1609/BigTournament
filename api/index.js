@@ -204,6 +204,7 @@ const calculatePlayerStats = (player, roundResults) => {
   let headshots = 0;
   let bodyshots = 0;
   let legshots = 0;
+  let totalDamage = 0;  
 
   roundResults.forEach((round) => {
     const stats = round.playerStats.find((stat) => stat.puuid === puuid);
@@ -212,7 +213,7 @@ const calculatePlayerStats = (player, roundResults) => {
         stat.kills.map((k) => k.timeSinceRoundStartMillis)
       );
       const earliestKillTime = Math.min(...allKillTimes);
-
+      
       const firstKill = stats.kills.find(
         (kill) => kill.killer === puuid && kill.timeSinceRoundStartMillis === earliestKillTime
       );
@@ -228,14 +229,14 @@ const calculatePlayerStats = (player, roundResults) => {
         headshots += dmg.headshots || 0;
         bodyshots += dmg.bodyshots || 0;
         legshots += dmg.legshots || 0;
+        totalDamage += dmg.damage || 0;
       });
     }
   });
 
   const totalShots = headshots + bodyshots + legshots;
-  const headshotPercentage = totalShots > 0 ? ((headshots / totalShots) * 100).toFixed(0) : "0";
-
-  return { firstKills, multiKills, headshots, bodyshots, legshots, headshotPercentage };
+  const headshotPercentage = totalShots > 0 ? parseFloat(((headshots / totalShots) * 100).toFixed(0)) : 0;
+  return { firstKills, multiKills, headshots, bodyshots, legshots, headshotPercentage, totalDamage };
 };
 
 app.get('/api/valorant/match/:matchId', async (req, res) => {
@@ -275,10 +276,10 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
           const kills = player.stats.kills || 0;
           const deaths = player.stats.deaths || 0;
           const assists = player.stats.assists || 0;
-          const KDA = (kills + deaths) / (assists || 1);
-          const acs = (player.stats.score / player.stats.roundsPlayed).toFixed(0);
+          const KDA = (kills + deaths) / (assists || 1) || 0;
+          const acs = parseFloat((player.stats.score / player.stats.roundsPlayed).toFixed(0));
           player.stats.KD = `${kills}/${deaths}`;
-          player.stats.KDA = KDA.toFixed(1);
+          player.stats.KDA = parseFloat(KDA.toFixed(1));
           player.stats.acs = parseFloat(acs);
       
           // 🔥 Thêm các chỉ số mới vào đây
@@ -286,6 +287,8 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
           player.stats.firstKills = advancedStats.firstKills;
           player.stats.multiKills = advancedStats.multiKills;
           player.stats.headshotPercentage = advancedStats.headshotPercentage;
+          player.stats.totalDamage = advancedStats.totalDamage;
+          player.stats.adr = parseFloat((advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(1));
         }
       });
 
