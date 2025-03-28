@@ -204,18 +204,31 @@ const calculatePlayerStats = (player, roundResults) => {
   let headshots = 0;
   let bodyshots = 0;
   let legshots = 0;
-  let totalDamage = 0;  
+  let totalDamage = 0;
+  let firstDeaths = 0;
 
   roundResults.forEach((round) => {
     const stats = round.playerStats.find((stat) => stat.puuid === puuid);
+    
+    // Tìm first death chính xác
+    const allKills = round.playerStats.flatMap((stat) => stat.kills);
+    const earliestKill = allKills.reduce((min, curr) =>
+      curr.timeSinceRoundStartMillis < min.timeSinceRoundStartMillis ? curr : min,
+      allKills[0]
+    );
+    if (earliestKill?.victim === puuid) {
+      firstDeaths += 1;
+    }
+
     if (stats) {
-      const allKillTimes = round.playerStats.flatMap((stat) =>
-        stat.kills.map((k) => k.timeSinceRoundStartMillis)
+      // First Kill chính xác
+      const earliestKillTime = Math.min(
+        ...allKills.map((k) => k.timeSinceRoundStartMillis)
       );
-      const earliestKillTime = Math.min(...allKillTimes);
-      
       const firstKill = stats.kills.find(
-        (kill) => kill.killer === puuid && kill.timeSinceRoundStartMillis === earliestKillTime
+        (kill) =>
+          kill.killer === puuid &&
+          kill.timeSinceRoundStartMillis === earliestKillTime
       );
       if (firstKill) {
         firstKills += 1;
@@ -235,9 +248,23 @@ const calculatePlayerStats = (player, roundResults) => {
   });
 
   const totalShots = headshots + bodyshots + legshots;
-  const headshotPercentage = totalShots > 0 ? parseFloat(((headshots / totalShots) * 100).toFixed(0)) : 0;
-  return { firstKills, multiKills, headshots, bodyshots, legshots, headshotPercentage, totalDamage };
+  const headshotPercentage =
+    totalShots > 0
+      ? parseFloat(((headshots / totalShots) * 100).toFixed(0))
+      : 0;
+
+  return {
+    firstKills,
+    multiKills,
+    headshots,
+    bodyshots,
+    legshots,
+    headshotPercentage,
+    totalDamage,
+    firstDeaths,
+  };
 };
+
 
 app.get('/api/valorant/match/:matchId', async (req, res) => {
   const { matchId } = req.params;
@@ -285,6 +312,7 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
           // 🔥 Thêm các chỉ số mới vào đây
           const advancedStats = calculatePlayerStats(player, roundResults);
           player.stats.firstKills = advancedStats.firstKills;
+          player.stats.firstDeaths = advancedStats.firstDeaths;
           player.stats.multiKills = advancedStats.multiKills;
           player.stats.headshotPercentage = advancedStats.headshotPercentage;
           player.stats.totalDamage = advancedStats.totalDamage;
