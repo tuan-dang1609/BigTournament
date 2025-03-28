@@ -6,27 +6,13 @@ const columns = [
   { key: "kda", label: "K/D/A" },
   { key: "stats.kills/stats.deaths", label: "KD" },
   { key: "stats.headshotPercentage", label: "HS%" },
-  { key: "adr", label: "ADR" },
   { key: "fk", label: "FK" },
+  { key: "fd", label: "FD" },
   { key: "mk", label: "MK" },
 ];
 
-const PlayerStats = ({ data, dictionary, registeredPlayers, teamA, teamB }) => {
+const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
   const [selectedMap, setSelectedMap] = useState(null);
-  const [imageUrls, setImageUrls] = useState({});
-
-
-  useEffect(() => {
-    if (!dictionary || !dictionary.characters) return;
-
-    const urls = {};
-    dictionary.characters.forEach(agent => {
-      const name = agent.name;
-      urls[name] = `/agent/${name}.png`; // ảnh nằm trong public/agent/
-    });
-
-    setImageUrls(urls);
-  }, [dictionary]);
 
   const getVerificationStatus = (gameName, tagLine) => {
     if (!registeredPlayers || registeredPlayers.length === 0) return '';
@@ -38,41 +24,23 @@ const PlayerStats = ({ data, dictionary, registeredPlayers, teamA, teamB }) => {
 
     return player?.isregistered ? <img src={Verify} className="w-4 h-4" /> : '';
   };
-  const getMapName = (mapId) => {
-    if (!dictionary || !dictionary.maps || !Array.isArray(dictionary.maps)) {
-      return "Unknown";
-    }
-
-    if (!mapId) {
-      return "Unknown";
-    }
-
-    const map = dictionary.maps.find(
-      (map) => map.assetPath && map.assetPath.toLowerCase() === mapId.toLowerCase()
-    );
-
-    return map ? map.name : "Unknown";
-  };
 
 
-  // Tạo map data
   const mapData = data.reduce((acc, match) => {
-    const mapName = getMapName(match.matchInfo?.mapId, dictionary);
+    const mapName = match.matchInfo?.mapName;
     acc[mapName] = true;
     return acc;
   }, {});
 
-  // Lấy dữ liệu match được chọn
-  const playerData = data.find(match =>
-    getMapName(match.matchInfo?.mapId) === selectedMap
-  ) || data[0];
 
   useEffect(() => {
     if (!selectedMap && Object.keys(mapData).length > 0) {
       setSelectedMap(Object.keys(mapData)[0]);
     }
   }, [mapData]);
-
+  const playerData = data.find(match =>
+    match.matchInfo?.mapName === selectedMap
+  ) || data[0];
   // Định nghĩa renderTable TRƯỚC khi sử dụng
   const getPlayerTeamName = (player) => {
     const normalizedId = `${player.gameName}#${player.tagLine}`.toLowerCase().trim();
@@ -118,7 +86,7 @@ const PlayerStats = ({ data, dictionary, registeredPlayers, teamA, teamB }) => {
                         cellData = (
                           <div className="flex items-center">
                             <img
-                              src={imageUrls[row.characterName]}
+                              src={row.imgCharacter}
                               alt={row.characterId}
                               className="w-8 h-8 rounded-full mr-2"
                             />
@@ -162,16 +130,12 @@ const PlayerStats = ({ data, dictionary, registeredPlayers, teamA, teamB }) => {
                         cellData = `${row.stats.headshotPercentage}%`;
                         break;
 
-                      case "adr":
-                        cellData = row.stats.roundsPlayed > 0
-                          ? (row.stats.headshotPercentage).toFixed(1)
-                          : 'N/A';
-                        break;
-
                       case "fk":
                         cellData = row.stats.firstKills;
                         break;
-
+                      case "fd":
+                        cellData = row.stats.firstKills;
+                        break;
                       case "mk":
                         cellData = row.stats.multiKills;
                         break;
@@ -216,7 +180,7 @@ const PlayerStats = ({ data, dictionary, registeredPlayers, teamA, teamB }) => {
         {Object.keys(mapData).map((mapName) => {
           // Tìm match tương ứng với mapName
           const matchForTab = data.find(
-            (match) => getMapName(match.matchInfo?.mapId) === mapName
+            (match) => match.matchInfo?.mapName === mapName
           );
 
           let scoreDisplay = "";

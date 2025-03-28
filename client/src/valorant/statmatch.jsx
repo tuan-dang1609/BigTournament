@@ -18,7 +18,6 @@ export default function MatchStat2() {
     const [isLoading, setIsLoading] = useState(true);
     const [botype, setBotype] = useState('');
     const [banpickid, setbanpickid] = useState('');
-    const [dictionary, setDictionary] = useState(null)
     const [findteam, setFindteam] = useState([]);
     const [allPlayer, setAllPlayer] = useState([]);
     const [registeredPlayers, setRegisteredPlayers] = useState([]);
@@ -34,7 +33,7 @@ export default function MatchStat2() {
         const fetchAllData = async () => {
             try {
                 // Step 1: Call 3 API song song
-                const [matchRes, teamRes, dictRes] = await Promise.all([
+                const [matchRes, teamRes] = await Promise.all([
                     fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findmatchid', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -43,18 +42,17 @@ export default function MatchStat2() {
                     fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamValorant', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
-                    }),
-                    fetch('https://dongchuyennghiep-backend.vercel.app/api/valorant/dictionary')
+                    })
                 ]);
     
-                if (!matchRes.ok || !teamRes.ok || !dictRes.ok) {
+                if (!matchRes.ok || !teamRes.ok) {
                     throw new Error("One or more API calls failed");
                 }
     
-                const [matchData, teamData, dictData] = await Promise.all([
+                const [matchData, teamData] = await Promise.all([
                     matchRes.json(),
                     teamRes.json(),
-                    dictRes.json()
+  
                 ]);
     
                 // Step 2: Process match data
@@ -97,9 +95,6 @@ export default function MatchStat2() {
                 setTeamBBgColor(teamBData?.color || '#ffffff');
                 setTeamAshort(teamAData?.shortName);
                 setTeamBshort(teamBData?.shortName);
-    
-                // Step 5: Dictionary
-                setDictionary(dictData);
     
                 // Step 6: Check registered players
                 const checkPlayerRes = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/check-registered-valorant', {
@@ -300,7 +295,6 @@ export default function MatchStat2() {
                 <div>
                     <PlayerStats
                         data={matchInfo}
-                        dictionary={dictionary}
                         registeredPlayers={registeredPlayers} // Thêm dòng này
                         teamA={teamA}
                         teamB={teamB}
