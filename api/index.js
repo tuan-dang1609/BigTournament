@@ -674,15 +674,29 @@ const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server listening on port ${process.env.PORT || 3000}`);
 });
 
-const io = new Server(server);
+
+const io = new Server(server, {
+  cors: { origin: '*' }
+});
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+app.use('/api/user', userRoutes);
+app.use('/api/auth', authRoutes);
 io.on('connection', (socket) => {
-  console.log('a user connected');
-  socket.emit('match update', { matchId: '1234', status: 'ongoing' });
+  console.log('✅ New client connected:', socket.id);
+
+  socket.on('joinMatch', (matchId) => {
+    socket.join(matchId); // ← Join theo room
+    console.log(`📥 Client ${socket.id} joined room ${matchId}`);
+  });
 
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    console.log('🔌 Client disconnected:', socket.id);
   });
 });
+
 
 // Bull queue for background score processing with limited concurrency
 scoreQueue.process(5, async (job) => {
@@ -705,8 +719,7 @@ app.get('*', (req, res) => {
   });
 });
 
-app.use('/api/user', userRoutes);
-app.use('/api/auth', authRoutes);
+
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
