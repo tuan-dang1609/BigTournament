@@ -17,7 +17,8 @@ import compression from 'compression';
 import Queue from 'bull';
 import https from 'https';
 import request from 'request';
-
+import crypto from 'crypto';
+import session from 'express-session';
 dotenv.config();
 const app = express();
 const apiKey = process.env.TFT_KEY;
@@ -681,8 +682,9 @@ const server = app.listen(process.env.PORT || 3000, () => {
 
 const io = new Server(server, {
   cors: {
-    origin: "*", // ⚠️ Cho phép mọi domain
+    origin: "https://dongchuyennghiep.vercel.app", // ✅ CHỈ frontend
     methods: ["GET", "POST"],
+    credentials: true
   }
 });
 app.use((req, res, next) => {
