@@ -9,7 +9,9 @@ export default function MatchInterface() {
   const socketRef = useRef(null); // 🆕
 
   useEffect(() => {
-    const socket = io('https://dongchuyennghiep-backend.vercel.app/');
+    const socket = io("https://dongchuyennghiep-backend.vercel.app", {
+      transports: ["websocket"],
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {
