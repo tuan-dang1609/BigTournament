@@ -8,6 +8,15 @@ export default {
   ],
   theme: {
     extend: {
+      animation: {
+        progress: 'progressBar 1.5s linear forwards',
+      },
+      keyframes: {
+        progressBar: {
+          '0%': { width: '0%' },
+          '100%': { width: '100%' },
+        },
+      },
       height: {
         '12.5': '50px', // Corrected key name
       },

@@ -23,8 +23,8 @@ const matchSchema = new mongoose.Schema({
   sides: [{
     map: { type: String, required: true },
     pickedBy: { type: String, required: true }, // Thêm trường này
-    team1: { type: String, enum: ["Attacker", "Defender", null], default: null },
-    team2: { type: String, enum: ["Attacker", "Defender", null], default: null }
+    team1: { type: String, enum: ['Attacker', 'Defender', 'TBD', null], default: null },
+    team2: { type: String, enum: ['Attacker', 'Defender', 'TBD', null], default: null }
   }],
   currentPhase: { type: String, enum: ["ban", "pick", "side", "completed"], default: "ban" },
   currentTurn: { type: String, enum: ["team1", "team2"], required: true },
