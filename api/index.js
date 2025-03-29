@@ -17,8 +17,7 @@ import compression from 'compression';
 import Queue from 'bull';
 import https from 'https';
 import request from 'request';
-import crypto from 'crypto';
-import session from 'express-session';
+
 dotenv.config();
 const app = express();
 const apiKey = process.env.TFT_KEY;

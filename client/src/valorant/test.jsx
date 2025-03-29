@@ -8,7 +8,7 @@ export default function CreateMatch() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/create', {
+    const res = await fetch(`${import.meta.env.VITE_DCN_URL}/api/auth/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
