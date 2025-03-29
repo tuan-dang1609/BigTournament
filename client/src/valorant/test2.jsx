@@ -9,7 +9,7 @@ export default function MatchInterface() {
   const socketRef = useRef(null); // 🆕
 
   useEffect(() => {
-    const socket = io('http://localhost:3000');
+    const socket = io('https://dongchuyennghiep-backend.vercel.app/');
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -31,7 +31,7 @@ export default function MatchInterface() {
   useEffect(() => {
     const fetchMatch = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/auth/status', {
+        const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ matchId })
@@ -60,7 +60,7 @@ export default function MatchInterface() {
     });
 
     try {
-      await fetch('http://localhost:3000/api/auth/action', {
+      await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId, action, role, ...data })
