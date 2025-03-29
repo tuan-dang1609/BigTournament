@@ -77,7 +77,7 @@ export default function AllGame() {
     useEffect(() => {
         const fetchGames = async () => {
             try {
-                const response = await fetch('https://bigtournament.onrender.com/api/auth/findallgame', {
+                const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallgame', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

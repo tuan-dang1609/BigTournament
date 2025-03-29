@@ -123,7 +123,7 @@ const SignupPage = () => {
       setLoading(true);
       setErrorMessage("");
 
-      const res = await fetch('https://bigtournament.onrender.com/api/auth/signup', {
+      const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -62,7 +62,7 @@ const TeamRegistrationForm = () => {
     useEffect(() => {
         const fetchAllUsers = async () => {
             try {
-                const response = await axios.post("https://bigtournament.onrender.com/api/auth/alluser"); // POST request
+                const response = await axios.post("https://bigtournament-hq9n.onrender.com/api/auth/alluser"); // POST request
                 const users = Array.isArray(response.data) ? response.data : response.data.users || [];
                 setAllUsers(users); // Lưu vào state
             } catch (error) {
@@ -90,7 +90,7 @@ const TeamRegistrationForm = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const response = await fetch('https://bigtournament.onrender.com/api/auth/checkregisterValorant', {
+                const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/checkregisterValorant', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -296,7 +296,7 @@ const TeamRegistrationForm = () => {
         }
 
         try {
-            const response = await axios.post('https://bigtournament.onrender.com/api/auth/register', formData);
+            const response = await axios.post('https://bigtournament-hq9n.onrender.com/api/auth/register', formData);
             setSubmitStatus({ success: true, message: "Team registered successfully!" });
             setSignupSuccess(true);
 

@@ -25,7 +25,7 @@ export default function Profile() {
     const dispatch = useDispatch();
     const [loggedInUser, setLoggedInUser] = useState("");
     const handleRiotLogin = () => {
-        window.location.href = "https://bigtournament.onrender.com/sso/login-riot";
+        window.location.href = "https://bigtournament-hq9n.onrender.com/sso/login-riot";
         // Set riotID vào formData sau khi người dùng đăng nhập thành công
         setFormData({ ...formData, riotID: loggedInUser });
     }
@@ -71,7 +71,7 @@ export default function Profile() {
         if (buttonName === 'updateProfile') {
             try {
                 dispatch(updateUserStart());
-                const res = await fetch(`https://bigtournament.onrender.com/api/user/update/${currentUser._id}`, {
+                const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/user/update/${currentUser._id}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -28,14 +28,14 @@ const PowerRankingTFTDouble = () => {
     const fetchData = async () => {
       try {
         const allTeamResponse = await axios.post(
-          "https://bigtournament.onrender.com/api/auth/findallteamTFTDouble"
+          "https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFTDouble"
         );
         const allTeams = allTeamResponse.data;
 
         const rankedTeams = await Promise.all(
           allTeams.map(async (team) => {
             const rankResponse = await axios.post(
-              "https://bigtournament.onrender.com/api/auth/tft_double_rank",
+              "https://bigtournament-hq9n.onrender.com/api/auth/tft_double_rank",
               team
             );
             const rankData = rankResponse.data;

@@ -35,7 +35,7 @@ function LoginForm() {
     e.preventDefault();
     dispatch(signInStart());
     try {
-      const res = await fetch('https://bigtournament.onrender.com/api/auth/signin', {
+      const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

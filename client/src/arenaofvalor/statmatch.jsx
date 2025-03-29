@@ -23,7 +23,7 @@ export default function MatchStat() {
     const [teamBGold, setTeamBGold] = useState(0);
     const fetchPlayerProfiles = async (playerIGNs) => {
         try {
-            const response = await fetch('https://bigtournament.onrender.com/api/auth/fetchplayerprofiles', {
+            const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/fetchplayerprofiles', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export default function MatchStat() {
     
     const fetchTeamLogos = async () => {
         try {
-            const teamResponse = await fetch('https://bigtournament.onrender.com/api/auth/findallteamAOV', {
+            const teamResponse = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ export default function MatchStat() {
 
     const fetchMatchData = async () => {
         try {
-            const response = await fetch('https://bigtournament.onrender.com/api/auth/findmatchid', {
+            const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findmatchid', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -153,7 +153,7 @@ export default function MatchStat() {
         try {
             const results = await Promise.all(
                 matchIds.map(id =>
-                    fetch(`https://bigtournament.onrender.com/api/auth/fetchmatchAOV/${id}`, {
+                    fetch(`https://bigtournament-hq9n.onrender.com/api/auth/fetchmatchAOV/${id}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

@@ -20,7 +20,7 @@ const TournamentBracketAOV16 = () => {
             const json = JSON.parse(text.substring(47, text.length - 2));
 
             const teamResponse = await fetch(
-                "https://bigtournament.onrender.com/api/auth/findallteamAOV",
+                "https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV",
                 {
                     method: "POST",
                     headers: {
@@ -77,7 +77,7 @@ const TournamentBracketAOV16 = () => {
     const fetchGames = async () => {
         try {
             const response = await axios.post(
-                "https://bigtournament.onrender.com/api/auth/findallmatchid"
+                "https://bigtournament-hq9n.onrender.com/api/auth/findallmatchid"
             );
             const filteredGames = response.data.filter((game) => game.game === "Arena Of Valor");
 

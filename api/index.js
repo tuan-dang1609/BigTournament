@@ -24,7 +24,7 @@ const apiKey = process.env.TFT_KEY;
 const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT
 const clientID = process.env.RIOT_CLIENT_ID;
 const clientSecret = process.env.RIOT_CLIENT_SECRET;
-const appBaseUrl = "https://bigtournament.onrender.com"
+const appBaseUrl = "https://bigtournament-hq9n.onrender.com"
 const appCallbackUrl = appBaseUrl + "/oauth2-callback";
 const provider = "https://auth.riotgames.com"
 const authorizeUrl = provider + "/authorize";
@@ -32,7 +32,7 @@ const tokenUrl = provider + "/token";
 const URLfrontend = "https://dongchuyennghiep.vercel.app"
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'https://28e7-88-86-155-193.ngrok-free.app', 'https://bigtournament.onrender.com', 'https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
+    origin: ['http://localhost:5173', 'https://28e7-88-86-155-193.ngrok-free.app', 'https://bigtournament-hq9n.onrender.com', 'https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -286,7 +286,7 @@ app.get('/api/valorant/match/:matchId', async (req, res) => {
 
   try {
     // Gọi API lấy danh sách nhân vật
-    const dictionaryResponse = await axios.get('https://bigtournament.onrender.com/api/valorant/dictionary');
+    const dictionaryResponse = await axios.get('https://bigtournament-hq9n.onrender.com/api/valorant/dictionary');
     const characterMap = {};
     const mapMap = {};
 
@@ -751,6 +751,11 @@ app.use((err, req, res, next) => {
     statusCode,
   });
 });
+setInterval(() => {
+  fetch('https://bigtournament-hq9n.onrender.com/')
+    .then(res => console.log('✅ Keep-alive ping success:', res.status))
+    .catch(err => console.error('❌ Keep-alive ping failed:', err.message));
+}, 30000); // mỗi 30 giây
 
 setInterval(async () => {
   try {

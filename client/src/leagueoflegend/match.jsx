@@ -17,7 +17,7 @@ export default function MatchStatLOL() {
         const fetchAllMatches = async () => {
             try {
                 const matchPromises = matchIds.map((matchId) =>
-                    fetch(`https://bigtournament.onrender.com/api/lol/match/${matchId}`).then((res) => {
+                    fetch(`https://bigtournament-hq9n.onrender.com/api/lol/match/${matchId}`).then((res) => {
                         if (!res.ok) {
                             throw new Error(`Failed to fetch data for matchId: ${matchId}`);
                         }
@@ -25,7 +25,7 @@ export default function MatchStatLOL() {
                     })
                 );
                 const timeline = matchIds.map((matchId) =>
-                    fetch(`https://bigtournament.onrender.com/api/lol/match/timeline/${matchId}`).then((res) => {
+                    fetch(`https://bigtournament-hq9n.onrender.com/api/lol/match/timeline/${matchId}`).then((res) => {
                         if (!res.ok) {
                             throw new Error(`Failed to fetch data for matchId: ${matchId}`);
                         }

@@ -11,7 +11,7 @@ export default function MatchInterface() {
   useEffect(() => {
     const socket = io(import.meta.env.DEV
       ? "http://localhost:3000"
-      : "https://bigtournament.onrender.com",
+      : "https://bigtournament-hq9n.onrender.com",
       {
         transports: ["websocket"],     // ✅ bắt buộc
         withCredentials: true

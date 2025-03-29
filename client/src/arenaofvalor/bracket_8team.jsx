@@ -15,7 +15,7 @@ const TournamentBracketAOV = () => {
         const json = JSON.parse(text.substring(47, text.length - 2));
 
         // Fetch dữ liệu logo của các đội từ backend
-        const teamResponse = await fetch('https://bigtournament.onrender.com/api/auth/findallteamAOV', {
+        const teamResponse = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ const TournamentBracketAOV = () => {
 
   const fetchGames = async () => {
     try {
-        const response = await axios.post("https://bigtournament.onrender.com/api/auth/findallmatchid");
+        const response = await axios.post("https://bigtournament-hq9n.onrender.com/api/auth/findallmatchid");
         
         // Lọc dữ liệu nhận được dựa trên điều kiện game: "Arena Of Valor"
         const filteredGames = response.data.filter(game => game.game === "Arena Of Valor");

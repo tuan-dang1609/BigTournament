@@ -58,7 +58,7 @@ const CompetitionPage = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const response = await fetch('https://bigtournament.onrender.com/api/auth/findallteamTFT', {
+                const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

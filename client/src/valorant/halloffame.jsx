@@ -15,7 +15,7 @@ const TeamPageHOF = () => {
         document.title = "Sảnh danh vọng Valorant";
         const fetchLeagues = async () => {
             try {
-                const response = await axios.post("https://bigtournament.onrender.com/api/auth/leagues/list");
+                const response = await axios.post("https://bigtournament-hq9n.onrender.com/api/auth/leagues/list");
                 const filteredLeagues = response.data.filter(league => league.game === "Valorant");
                 setLeagues(filteredLeagues);
             } catch (err) {
@@ -28,7 +28,7 @@ const TeamPageHOF = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const response = await axios.post(`https://bigtournament.onrender.com/api/auth/teams/${selectedLeague}`);
+                const response = await axios.post(`https://bigtournament-hq9n.onrender.com/api/auth/teams/${selectedLeague}`);
                 const arenaTeams = response.data
                     .filter(team => team.game === "Valorant")
                     .sort((a, b) => a.rank - b.rank);

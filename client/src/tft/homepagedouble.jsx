@@ -44,7 +44,7 @@ const CompetitionPage = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const response = await fetch('https://bigtournament.onrender.com/api/auth/findallteamTFTDouble', {
+                const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFTDouble', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
