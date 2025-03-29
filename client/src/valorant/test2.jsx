@@ -10,7 +10,8 @@ export default function MatchInterface() {
 
   useEffect(() => {
     const socket = io("https://dongchuyennghiep-backend.vercel.app", {
-      transports: ["websocket"],
+      transports: ['websocket'], // ✅ Bỏ polling
+      withCredentials: true
     });
     socketRef.current = socket;
 

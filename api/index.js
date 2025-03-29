@@ -170,6 +170,11 @@ const scoreQueue = new Queue('score-processing', {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://dongchuyennghiep.vercel.app');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 app.use(compression());
 
 // Rate limiter
@@ -676,7 +681,11 @@ const server = app.listen(process.env.PORT || 3000, () => {
 
 
 const io = new Server(server, {
-  cors: { origin: '*' }
+  cors: {
+    origin: "https://dongchuyennghiep.vercel.app", // ✅ CHỈ frontend
+    methods: ["GET", "POST"],
+    credentials: true
+  }
 });
 app.use((req, res, next) => {
   req.io = io;
