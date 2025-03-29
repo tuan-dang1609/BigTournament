@@ -9,7 +9,14 @@ export default function MatchInterface() {
   const socketRef = useRef(null); // 🆕
 
   useEffect(() => {
-    const socket = io('https://dongchuyennghiep-backend.vercel.app/');
+    const socket = io(import.meta.env.DEV
+      ? "http://localhost:3000"
+      : "https://dongchuyennghiep-backend.vercel.app",
+      {
+        transports: ["websocket"],     // ✅ bắt buộc
+        withCredentials: true
+      }
+    );
     socketRef.current = socket;
 
     socket.on('connect', () => {

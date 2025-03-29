@@ -682,7 +682,10 @@ const server = app.listen(process.env.PORT || 3000, () => {
 
 const io = new Server(server, {
   cors: {
-    origin: "https://dongchuyennghiep.vercel.app", // ✅ CHỈ frontend
+    origin: [
+      "http://localhost:5173",                 // 👈 local dev
+      "https://dongchuyennghiep.vercel.app"   // 👈 frontend đã deploy
+    ],
     methods: ["GET", "POST"],
     credentials: true
   }
