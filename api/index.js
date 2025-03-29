@@ -682,7 +682,8 @@ app.use((req, res, next) => {
   req.io = io;
   next();
 });
-
+app.use('/api/user', userRoutes);
+app.use('/api/auth', authRoutes);
 io.on('connection', (socket) => {
   console.log('✅ New client connected:', socket.id);
 
@@ -695,8 +696,7 @@ io.on('connection', (socket) => {
     console.log('🔌 Client disconnected:', socket.id);
   });
 });
-app.use('/api/user', userRoutes);
-app.use('/api/auth', authRoutes);
+
 
 // Bull queue for background score processing with limited concurrency
 scoreQueue.process(5, async (job) => {
