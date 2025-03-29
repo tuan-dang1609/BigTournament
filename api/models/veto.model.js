@@ -9,7 +9,7 @@ const matchSchema = new mongoose.Schema({
   deciderMap: { type: String },
   matchType: { type: String, enum: ["BO1", "BO3", "BO5"], required: true },
   maps: {
-    pool: { type: [String], default: ["Bind", "Haven", "Split", "Fracture","Abyss","Pearl","Lotus"] },
+    pool: { type: [String], default: ["Ascent", "Icebox", "Fracture", "Haven","Lotus","Pearl","Split"] },
     banned: [{
       name: { type: String },      // Tên map bị ban
       bannedBy: { type: String }   // Tên đội ban
