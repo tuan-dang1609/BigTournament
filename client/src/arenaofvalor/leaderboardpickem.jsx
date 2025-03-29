@@ -101,14 +101,14 @@ const LeaderboardComponent = () => {
       try {
         setLoading(true);
   
-        const leaderboardResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/leaderboardpickem', {
+        const leaderboardResponse = await fetch('https://bigtournament.onrender.com/api/auth/leaderboardpickem', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
         });
   
-        const maxScoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/maxscore', {
+        const maxScoreResponse = await fetch('https://bigtournament.onrender.com/api/auth/maxscore', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

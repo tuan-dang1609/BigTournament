@@ -100,7 +100,7 @@ const MatchData = () => {
                             return { info: { participants: [] }, isFake: true };
                         }
 
-                        const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/tft/match/${matchId}`);
+                        const response = await fetch(`https://bigtournament.onrender.com/api/tft/match/${matchId}`);
                         if (!response.ok) throw new Error('Failed to fetch match data');
                         return response.json();
                     });
@@ -131,7 +131,7 @@ const MatchData = () => {
                     let accounts = JSON.parse(localStorage.getItem('accounts'));
 
                     if (!accounts) {
-                        const accountResponse = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/accounts`, {
+                        const accountResponse = await fetch(`https://bigtournament.onrender.com/api/accounts`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ puuids })

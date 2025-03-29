@@ -49,7 +49,7 @@ const PickemChallenge = () => {
     const fetchQuestionsAndPredictions = async () => {
       setLoading(true);
       try {
-        const questionResponse = await fetch("https://dongchuyennghiep-backend.vercel.app/api/auth/getquestions", {
+        const questionResponse = await fetch("https://bigtournament.onrender.com/api/auth/getquestions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
         });
@@ -58,7 +58,7 @@ const PickemChallenge = () => {
         setQuestions(filteredQuestions);
 
         if (!currentUser?._id) return;
-        const predictionResponse = await fetch("https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction", {
+        const predictionResponse = await fetch("https://bigtournament.onrender.com/api/auth/checkuserprediction", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: currentUser._id }),
@@ -73,7 +73,7 @@ const PickemChallenge = () => {
           return acc;
         }, {});
         setPredictions(answers || {});
-        const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
+        const scoreResponse = await fetch('https://bigtournament.onrender.com/api/auth/comparepredictions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: currentUser._id })
@@ -169,14 +169,14 @@ const PickemChallenge = () => {
             },
           ],
         };
-        const response = await fetch("https://dongchuyennghiep-backend.vercel.app/api/auth/submitPrediction", {
+        const response = await fetch("https://bigtournament.onrender.com/api/auth/submitPrediction", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
 
         if (response.ok) {
-          const scoreResponse = await fetch("https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions", {
+          const scoreResponse = await fetch("https://bigtournament.onrender.com/api/auth/comparepredictions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: currentUser._id }),

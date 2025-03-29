@@ -17,7 +17,7 @@ const TournamentBracket = () => {
       const json = JSON.parse(text.substring(47, text.length - 2));
 
       const teamResponse = await fetch(
-        "https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamAOV",
+        "https://bigtournament.onrender.com/api/auth/findallteamAOV",
         {
           method: "POST",
           headers: {
@@ -51,7 +51,7 @@ const TournamentBracket = () => {
 
   const fetchGames = async () => {
     try {
-      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
+      const response = await fetch('https://bigtournament.onrender.com/api/auth/findallmatchid', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

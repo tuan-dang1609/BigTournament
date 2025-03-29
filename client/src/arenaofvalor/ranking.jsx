@@ -36,10 +36,10 @@ const PowerRankingAOV = () => {
     const fetchData = async () => {
       try {
         const rankingResponse = await axios.post(
-          "https://dongchuyennghiep-backend.vercel.app/api/auth/powerrankingaov"
+          "https://bigtournament.onrender.com/api/auth/powerrankingaov"
         );
         const allTeamResponse = await axios.post(
-          "https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamAOV"
+          "https://bigtournament.onrender.com/api/auth/findallteamAOV"
         );
 
         const rankingsData = rankingResponse.data.data;
@@ -97,7 +97,7 @@ const PowerRankingAOV = () => {
   const fetchPlayerProfiles = async (playerIGNs) => {
     try {
       const response = await fetch(
-        "https://dongchuyennghiep-backend.vercel.app/api/auth/fetchplayerprofiles",
+        "https://bigtournament.onrender.com/api/auth/fetchplayerprofiles",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

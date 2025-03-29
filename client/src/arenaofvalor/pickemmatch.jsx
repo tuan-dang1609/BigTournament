@@ -50,7 +50,7 @@ const PickemChallenge = () => {
 
       try {
         // Fetch teams
-        const teamsResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/allteamAOVcolor', {
+        const teamsResponse = await fetch('https://bigtournament.onrender.com/api/auth/allteamAOVcolor', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ const PickemChallenge = () => {
 
         const teamsData = await teamsResponse.json();
         setUserRegister(teamsData);
-        const questionsResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/getquestions', {
+        const questionsResponse = await fetch('https://bigtournament.onrender.com/api/auth/getquestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -74,7 +74,7 @@ const PickemChallenge = () => {
         setCategories(uniqueCategories);
 
         setLoading(false);
-        const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
+        const scoreResponse = await fetch('https://bigtournament.onrender.com/api/auth/comparepredictions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: currentUser._id })
@@ -91,7 +91,7 @@ const PickemChallenge = () => {
         setLoading(false);
         // Sau khi teams và questions đã được fetch xong, tiếp tục fetch checkuserprediction
         if (currentUser?._id) {
-          const predictionsResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkuserprediction', {
+          const predictionsResponse = await fetch('https://bigtournament.onrender.com/api/auth/checkuserprediction', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: currentUser._id }),
@@ -176,7 +176,7 @@ const PickemChallenge = () => {
   
     // Gửi yêu cầu lưu dự đoán với cặp `category-id`
     try {
-      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/submitPrediction', {
+      const response = await fetch('https://bigtournament.onrender.com/api/auth/submitPrediction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -191,7 +191,7 @@ const PickemChallenge = () => {
       });
   
       if (response.ok) {
-        const scoreResponse = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/comparepredictions', {
+        const scoreResponse = await fetch('https://bigtournament.onrender.com/api/auth/comparepredictions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: currentUser._id })

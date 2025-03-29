@@ -26,7 +26,7 @@ function App() {
         <div className="flex flex-col space-y-4">
   {!loggedInUser ? (
     <button
-      onClick={() => (window.location.href = "https://dongchuyennghiep-backend.vercel.app/sso/login-riot")}
+      onClick={() => (window.location.href = "https://bigtournament.onrender.com/sso/login-riot")}
       className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
     >
       Đăng nhập với Riot Games

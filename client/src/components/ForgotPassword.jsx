@@ -11,7 +11,7 @@ function ForgotPassword() {
     e.preventDefault();
 
     try {
-      const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/alluser',{method: 'POST'});
+      const res = await fetch('https://bigtournament.onrender.com/api/auth/alluser',{method: 'POST'});
       const users = await res.json();
 
       const matchedUser = users.find(
@@ -25,7 +25,7 @@ function ForgotPassword() {
         return;
       }
       // Gửi yêu cầu reset password
-      const updateRes = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/user/update/${matchedUser.id}`, {
+      const updateRes = await fetch(`https://bigtournament.onrender.com/api/user/update/${matchedUser.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: 'HoangTuan2004' }),

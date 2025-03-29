@@ -34,12 +34,12 @@ export default function MatchStat2() {
             try {
                 // Step 1: Call 3 API song song
                 const [matchRes, teamRes] = await Promise.all([
-                    fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findmatchid', {
+                    fetch('https://bigtournament.onrender.com/api/auth/findmatchid', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ round, Match, game: "Valorant" })
                     }),
-                    fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallteamValorant', {
+                    fetch('https://bigtournament.onrender.com/api/auth/findallteamValorant', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
                     })
@@ -67,7 +67,7 @@ export default function MatchStat2() {
     
                 // Step 3: Fetch match details song song
                 const matchDetailPromises = matchData.matchid.map(async (id) => {
-                    const res = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/valorant/match/${id}`);
+                    const res = await fetch(`https://bigtournament.onrender.com/api/valorant/match/${id}`);
                     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                     const data = await res.json();
                     return data.matchData;
@@ -97,7 +97,7 @@ export default function MatchStat2() {
                 setTeamBshort(teamBData?.shortName);
     
                 // Step 6: Check registered players
-                const checkPlayerRes = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/check-registered-valorant', {
+                const checkPlayerRes = await fetch('https://bigtournament.onrender.com/api/auth/check-registered-valorant', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

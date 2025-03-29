@@ -34,7 +34,7 @@ const TournamentBracketAOV = () => {
 
   const fetchGames = async () => {
     try {
-      const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/findallmatchid', {
+      const response = await fetch('https://bigtournament.onrender.com/api/auth/findallmatchid', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

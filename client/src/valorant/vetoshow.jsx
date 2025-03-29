@@ -29,7 +29,7 @@ const Valoveto = ({ banpickid, teams }) => {
     useEffect(() => {
         const fetchMatch = async () => {
             try {
-                const response = await fetch("https://dongchuyennghiep-backend.vercel.app/api/auth/status", {
+                const response = await fetch("https://bigtournament.onrender.com/api/auth/status", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ matchId: banpickid }),

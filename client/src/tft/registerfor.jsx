@@ -51,7 +51,7 @@ const TeamRegistrationForm = () => {
             try {
                 const bodyjson = JSON.stringify({ usernameregister: currentUser._id })
                 console.log(bodyjson);
-                const response = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/checkregisterTFT', {
+                const response = await fetch('https://bigtournament.onrender.com/api/auth/checkregisterTFT', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ const TeamRegistrationForm = () => {
         }
 
         try {
-            const response = await axios.post('https://dongchuyennghiep-backend.vercel.app/api/auth/register', formData);
+            const response = await axios.post('https://bigtournament.onrender.com/api/auth/register', formData);
             setSubmitStatus({ success: true, message: "Team registered successfully!" });
             setSignupSuccess(true);
 

@@ -133,7 +133,7 @@ const TeamRegistrationTFTDoubleForm = () => {
         console.log("Submitting form data:", formData);
     
         try {
-            const response = await axios.post('https://dongchuyennghiep-backend.vercel.app/api/auth/register', formData);
+            const response = await axios.post('https://bigtournament.onrender.com/api/auth/register', formData);
             setSubmitStatus({ success: true, message: "Team registered successfully!" });
             setSignupSuccess(true);
     

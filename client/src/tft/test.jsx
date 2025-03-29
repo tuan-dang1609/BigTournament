@@ -85,7 +85,7 @@ const CombinedLeaderboard = () => {
                     for (const matchId of lobby.matchIds) {
                         if (matchId === '0') continue; // Bỏ qua trận đấu không có dữ liệu
 
-                        const response = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/tft/match/${matchId}`);
+                        const response = await fetch(`https://bigtournament.onrender.com/api/tft/match/${matchId}`);
                         if (!response.ok) throw new Error('Failed to fetch match data');
 
                         const matchData = await response.json();
@@ -103,7 +103,7 @@ const CombinedLeaderboard = () => {
                     if (puuids.length === 0) continue; // Nếu không có người chơi, bỏ qua
 
                     // Fetch thông tin tài khoản
-                    const accountResponse = await fetch(`https://dongchuyennghiep-backend.vercel.app/api/accounts`, {
+                    const accountResponse = await fetch(`https://bigtournament.onrender.com/api/accounts`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ puuids })

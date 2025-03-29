@@ -16,7 +16,7 @@ const TeamPageHOF = () => {
         document.title = "Sảnh danh vọng Liên Quân";
         const fetchLeagues = async () => {
             try {
-                const response = await axios.post("https://dongchuyennghiep-backend.vercel.app/api/auth/leagues/list");
+                const response = await axios.post("https://bigtournament.onrender.com/api/auth/leagues/list");
     
                 // Lọc danh sách giải đấu dựa trên điều kiện "Arena Of Valor"
                 const filteredLeagues = response.data.filter(league => league.game === "Arena Of Valor");
@@ -33,7 +33,7 @@ const TeamPageHOF = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const response = await axios.post(`https://dongchuyennghiep-backend.vercel.app/api/auth/teams/${selectedLeague}`);
+                const response = await axios.post(`https://bigtournament.onrender.com/api/auth/teams/${selectedLeague}`);
                 
                 // Lọc chỉ các đội thuộc trò chơi "Arena Of Valor" và sắp xếp theo rank
                 const arenaTeams = response.data
