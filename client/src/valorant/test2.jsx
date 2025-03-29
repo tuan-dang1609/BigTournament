@@ -38,7 +38,7 @@ export default function MatchInterface() {
   useEffect(() => {
     const fetchMatch = async () => {
       try {
-        const res = await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/status', {
+        const res = await fetch('http://localhost:3000/api/auth/status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ matchId })
@@ -67,7 +67,7 @@ export default function MatchInterface() {
     });
 
     try {
-      await fetch('https://dongchuyennghiep-backend.vercel.app/api/auth/action', {
+      await fetch('http://localhost:3000/api/auth/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId, action, role, ...data })
