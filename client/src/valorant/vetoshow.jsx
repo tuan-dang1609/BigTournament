@@ -108,7 +108,7 @@ const Valoveto = ({ banpickid, teams }) => {
             <div
                 className="absolute inset-0 bg-cover bg-center"
                 style={{
-                    backgroundImage: `url(${getMapImage(background)})`,
+                    backgroundImage: `url(/image/${background}.jpg)`,
                     filter: "brightness(50%)",
                 }}
             ></div>
@@ -257,18 +257,18 @@ const Valoveto = ({ banpickid, teams }) => {
                                 )}
                         </div>
                         <div className="mt-1">
-                            <div className="grid md:grid-cols-2 grid-cols-1 gap-1 md:text-[16px] text-[14px] text-white">
+                            <div className="grid lg:grid-cols-3 grid-cols-1 gap-1 md:text-[16px] text-[14px] text-white">
                                 {match.sides.map((side) => (
                                     <div
                                         key={side._id}
                                         className="p-4 rounded bg-cover bg-center"
-                                        style={{ backgroundImage: `url(${getMapImage(side.map)})` }}
+                                        style={{ backgroundImage: `url(/image/${side.map}.jpg)` }}
                                     >
                                         <div className="bg-black bg-opacity-60 p-2 rounded font-semibold">
                                             <h3 className="text-lg font-semibold">{side.map}</h3>
                                             <div className="grid grid-cols-3 items-center justify-between mx-auto h-full w-[85%]">
                                                 <div className="flex items-center justify-center flex-col lg:gap-y-0 gap-y-1" >
-                                                    {getTeamDisplay(side.pickedBy)} <p className="lg:text-[14px] text-[12px] ">Team Pick</p>
+                                                    {getTeamDisplay(side.pickedBy)} <p className="lg:text-[12px] text-[12px] ">Team Pick</p>
                                                 </div>
                                                 <div className="flex items-center justify-center flex-col gap-y-2"><div>
                                                     {typeof getSideImage(side.team1) === "string" ? (
@@ -276,7 +276,7 @@ const Valoveto = ({ banpickid, teams }) => {
                                                     ) : (
                                                         getSideImage(side.team1) // Hiển thị component SVG
                                                     )}</div>
-                                                    <p className="lg:hidden block text-[11px]">{getTeamShort(match.team1)}</p><p className="lg:block hidden text-[14px]">{match.team1}</p>
+                                                    <p className="xl:hidden block text-[11px]">{getTeamShort(match.team1)}</p><p className="xl:block hidden text-[12px]">{match.team1}</p>
 
                                                 </div>
                                                 <div className="flex items-center justify-center flex-col gap-y-2">
@@ -285,7 +285,7 @@ const Valoveto = ({ banpickid, teams }) => {
                                                             <span>{getSideImage(side.team2)}</span>
                                                         ) : (
                                                             getSideImage(side.team2) // Hiển thị component SVG
-                                                        )}</div><p className="lg:hidden block text-[11px]">{getTeamShort(match.team2)}</p><p className="lg:block hidden text-[14px]">{match.team2}</p></div>
+                                                        )}</div><p className="xl:hidden block text-[11px]">{getTeamShort(match.team2)}</p><p className="xl:block hidden text-[12px]">{match.team2}</p></div>
                                             </div>
                                         </div>
                                     </div>
