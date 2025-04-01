@@ -35,12 +35,12 @@ export default function MatchStat2() {
                 // Step 1: Call 3 API song song
                 const [matchRes, teamRes] = await Promise.all([
                     fetch('https://bigtournament-hq9n.onrender.com/api/auth/findmatchid', {
-                        method: 'POST',
+                        method: 'GET',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ round, Match, game: "Valorant" })
                     }),
                     fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamValorant', {
-                        method: 'POST',
+                        method: 'GET',
                         headers: { 'Content-Type': 'application/json' }
                     })
                 ]);

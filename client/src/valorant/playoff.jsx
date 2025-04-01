@@ -19,7 +19,7 @@ const TournamentBracket = () => {
       const teamResponse = await fetch(
         "https://bigtournament-hq9n.onrender.com/api/auth/findallteamValorant",
         {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },

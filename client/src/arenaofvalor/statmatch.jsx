@@ -67,7 +67,7 @@ export default function MatchStat() {
     const fetchMatchData = async () => {
         try {
             const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findmatchid', {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 },
