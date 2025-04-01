@@ -11,7 +11,7 @@ function ForgotPassword() {
     e.preventDefault();
 
     try {
-      const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/alluser',{method: 'POST'});
+      const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/alluser',{method: 'GET'});
       const users = await res.json();
 
       const matchedUser = users.find(

@@ -38,7 +38,8 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
-router.post('/alluser', async (req, res) => {
+
+router.get('/alluser', async (req, res) => {
   try {
     const allPlayers = await User.find({});
     const formattedPlayers = allPlayers.map(player => ({
