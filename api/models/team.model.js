@@ -1,73 +1,36 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema(
-    {
-        team: {
-            type: String,
-            unique: true,
-            required:true
-        },
-        logoURL:{
-            type: String,
-            unique: true,
-            required:true
-        },
-        shortname:{
-            type:String,
-            unique: true,
-            required:true
-        },
-        player1: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        player2: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        player3: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        player4: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        player5: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        player6: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        player7: {
-            type: String,
-            default: ""
-        },
-        player8: {
-            type: String,
-            default: ""
-        },
-        player9: {
-            type: String,
-            default: ""
-        },
-        player10: {
-            type: String,
-            default: ""
-        }
+  {
+    team: {
+      type: String,
+      unique: true,
+      required: true,
     },
-    { timestamps: true }
+    logoURL: {
+      type: String,
+      unique: true,
+      required: true,
+    },
+    shortname: {
+      type: String,
+      unique: true,
+      required: true,
+    },
+    players: {
+      type: [String], // mảng các tên người chơi
+      validate: {
+        validator: function (val) {
+          return val.length >= 12 && val.length <= 20;
+        },
+        message: 'Đội phải có từ 12 đến 20 người chơi',
+      },
+      required: true,
+    },
+  },
+  { timestamps: true }
 );
 
 const Team = mongoose.model('Team', userSchema, 'team');
 
 export default Team;
-
