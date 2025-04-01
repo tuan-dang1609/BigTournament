@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema(
       default:
         '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L',
     },
+    team:{
+      type: String,
+      default:""
+    }
   },
   { timestamps: true }
 );
