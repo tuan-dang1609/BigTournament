@@ -13,6 +13,7 @@ import Queue from 'bull';
 import TeamHOF from '../models/teamhof.model.js'
 import LeagueHOF from '../models/league.model.js';
 import QuestionPickem from '../models/question.model.js';
+import Organization from '../models/team.model.js';
 const scoreQueue = new Queue('score-processing');
 
 const pointSystem = {
@@ -800,7 +801,7 @@ export const findAllteamTFTDouble = async (req, res, next) => {
 };
 export const findAllteam = async (req, res, next) => {
   try {
-    const allTeam = await TeamRegister.find();
+    const allTeam = await Organization.find();
 
     if (!allTeam || allTeam.length === 0) {
       return next(errorHandler(404, 'No Game found'));

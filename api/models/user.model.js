@@ -11,6 +11,11 @@ const userSchema = new mongoose.Schema(
       required:true,
       default:""
     },
+    className:{
+      type:String,
+      required:true,
+      default:""
+    },
     garenaaccount:{
       type:String,
       required: true,

@@ -2,6 +2,15 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema(
   {
+    discordID:{
+      type:String
+  },
+  usernameregister:{
+      type:String
+  },
+  color:{
+    type:String
+  },
     team: {
       type: String,
       unique: true,
@@ -17,20 +26,33 @@ const userSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
-    players: {
-      type: [String], // mảng các tên người chơi
-      validate: {
-        validator: function (val) {
-          return val.length >= 12 && val.length <= 20;
-        },
-        message: 'Đội phải có từ 12 đến 20 người chơi',
-      },
+    class: {
+      type: [String],
       required: true,
     },
+    players: {
+      type: [
+        {
+          nickname: { type: String, required: true },
+          class: { type: String, required: true }, // chưa validate ở đây
+        },
+      ],
+      required: true,
+    }
+    ,
+    trophy: {
+      type: [
+        {
+          game: { type: String, },
+          rank: { type: Number,  }, // chưa validate ở đây
+        },
+      ],
+    }
+    ,
   },
   { timestamps: true }
 );
 
-const Team = mongoose.model('Team', userSchema, 'team');
+const Organization = mongoose.model('Organization', userSchema, 'Organization');
 
-export default Team;
+export default Organization;
