@@ -50,7 +50,7 @@ const CompetitionPage = () => {
         const fetchTeams = async () => {
             try {
                 const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV', {
-                    method: 'POST',
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                     }
