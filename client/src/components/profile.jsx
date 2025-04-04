@@ -57,7 +57,18 @@ export default function Profile() {
         document.title = "Cập nhật Profile";
         setTimeout(scrollToTop, 0);
     }, []);
-
+    useEffect(() => {
+        if (currentUser) {
+            setFormData({
+                profilePicture: currentUser.profilePicture || '',
+                riotID: currentUser.riotID || '',
+                garenaaccount: currentUser.garenaaccount || '',
+                discordID: currentUser.discordID || '',
+                className: currentUser.className || '',
+                nickname: currentUser.nickname || ''
+            });
+        }
+    }, [currentUser]);
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.id]: e.target.value ,riotID: loggedInUser});
     };
@@ -67,7 +78,8 @@ export default function Profile() {
     
         // Ensure the button's name attribute is correctly checked
         const buttonName = e.nativeEvent.submitter.name;  // Use submitter to get the button that was clicked
-    
+        console.log("FormData khi submit:", formData); // ✅ In ra dữ liệu gửi đi
+
         if (buttonName === 'updateProfile') {
             try {
                 dispatch(updateUserStart());
@@ -272,7 +284,22 @@ export default function Profile() {
                 />
             </div>
         </div>
-
+        <div>
+            <label htmlFor="className" className="block text-sm font-medium text-base-content">Lớp</label>
+            <div className="relative flex items-center">
+                <FaUser className="absolute left-0 pl-3 pointer-events-none h-7 w-7 text-gray-400" aria-hidden="true" />
+                <input
+                    id="className"
+                    name="className"
+                    type="text"
+                    defaultValue={currentUser.className}
+                    placeholder="Lớp hiện tại của bạn"
+                    onChange={handleChange}
+                    autoComplete="className"
+                    className="appearance-none bg-white rounded-md block w-full pl-10 px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+            </div>
+        </div>
         {/* Nickname Field */}
         <div>
             <label htmlFor="nickname" className="block text-sm font-medium text-base-content">Nickname</label>
