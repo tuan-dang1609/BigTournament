@@ -120,6 +120,10 @@ export default function Profile() {
                 const updatedUser = await userRes.json();
               
                 dispatch(updateUserSuccess(updatedUser));
+                setTimeout(() => {
+                    localStorage.removeItem("persist:root");
+                    window.location.reload();
+                  }, 1000); // Delay 1 giây cho chắc
                 setUpdateSuccess(true);
               }
       
