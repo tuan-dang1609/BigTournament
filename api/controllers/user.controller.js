@@ -8,7 +8,22 @@ export const test = (req, res) => {
 };
 
 // update user
+export const getUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
 
+    const user = await User.findById(userId).select("-password"); // ❌ không trả về password
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User không tồn tại" });
+    }
+
+    res.status(200).json(user);
+  } catch (err) {
+    console.error("Lỗi getUser:", err);
+    res.status(500).json({ success: false, message: "Lỗi server khi lấy user" });
+  }
+};
 export const updateUser = async (req, res, next) => {
 
   try {
