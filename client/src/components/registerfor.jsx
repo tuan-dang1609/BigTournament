@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { FaMinus, FaUserPlus } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axios from 'axios';
 import Image from '../image/waiting.png'
@@ -29,7 +28,7 @@ const TeamRegistrationForm = () => {
     const [allUsers, setAllUsers] = useState([]); // Lưu tất cả người dùng
     const [suggestions, setSuggestions] = useState([]); // Lưu danh sách gợi ý
     const [activeInputIndex, setActiveInputIndex] = useState(null); // Theo dõi ô input đang nhập
-    const [playerCount, setPlayerCount] = useState(1);
+    const [playerCount, setPlayerCount] = useState(6);
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
     const [classTeamInput, setClassTeamInput] = useState("");
     const navigate = useNavigate();
@@ -37,18 +36,16 @@ const TeamRegistrationForm = () => {
     const driverObj = driver({
         showProgress: true,
         steps: [
-            { popover: { title: 'Chào mừng', description: 'Chào mừng bạn tới form đăng ký giải đấu Valorant Dong Chuyen Nghiep. Mình sẽ hướng dẫn chi tiết cách điền nhé.' } },
-            { element: '#teamName', popover: { title: 'Tên đội', description: 'Hãy nhập tên đội của bạn, tối đa là 15 ký tự. Lưu ý là không được đặt tên đội phản cảm, thiếu văn minh nhé.' } },
+            { popover: { title: 'Chào mừng', description: 'Chào mừng bạn tới form đăng ký giải đấu DCN Inter-Class Esport Cup 2025. Mình sẽ hướng dẫn chi tiết cách điền nhé.' } },
+            { element: '#teamName', popover: { title: 'Tên đội', description: 'Hãy nhập tên đội của bạn, tối đa là 25 ký tự. Lưu ý là không được đặt tên đội phản cảm, thiếu văn minh nhé.' } },
             { element: '#shortName', popover: { title: 'Tên viết tắt của đội', description: 'Hãy nhập tên viết tắt đội bạn, tối đa là 5 ký tự. Lưu ý là tên viết tắt đội phải không mang hàm ý xấu hay thiếu văn minh nhé' } },
-            { element: '#classTeam', popover: { title: 'Lớp', description: 'Hãy nhập lớp bạn đang học. Cú pháp: xAy, trong đó x là 10,11,12 và y là thứ tự lớp trong khối. Lưu ý nếu là 1 lớp có 2 đội trở lên phải báo cho admin.' } },
-            { element: '#logoUrl', popover: { title: 'Logo ID', description: 'Ví dụ bạn có link logo: https://drive.google.com/file/d/1_hPEfE40vu TmbCCVUFsVEwMai-B4je3z/view?usp=drive_link thì chỉ cần ghi 1_hPEfE40vuTmbCCVUFsVEwMai-B4je3z là được. Ảnh nhớ để chế độ Công Khai (Public) và có size 256x256 và clear background.' } },
+            { element: '#classTeam', popover: { title: 'Lớp', description: 'Hãy nhập các lớp sẽ có trong tổ chức. Cú pháp: xAy, trong đó x là 10,11,12 và y là thứ tự lớp trong khối. Team cựu học sinh sẽ ghi là Cựu. Lưu ý là tối đa 3 lớp. Cú pháp đăng ký từ 2 lớp trở lên: xAy xAz. Ví dụ: 11A1 12A2 (tổ chức sẽ là 2 lớp)' } },
+            { element: '#logoUrl', popover: { title: 'Logo ID', description: 'Link logo sẽ có dạng này: https://drive.google.com/file/d/1_hPEfE40 vuTmbCCVUFsVEwMai-B4je3z/view?usp=drive_link. Ảnh nhớ để chế độ Công Khai (Public) và có size 256x256 và clear background.' } },
             { element: '#color', popover: { title: 'Màu chủ đạo của đội', description: 'Chọn màu chủ đạo cho đội bạn.' } },
-            { element: '#gameChoose', popover: { title: 'Chọn game', description: 'Chọn vào game Valorant. Click vào để thấy thêm phần điền tên trong game' } },
-            { element: '#ign', popover: { title: 'Nhập IGN', description: 'Điền tên trong game của mỗi thành viên.' } },
-            { element: '#addmember', popover: { title: 'Thêm thành viên', description: 'Bạn có thể add thêm tối đa 2 thành viên.' } },
-            { element: '#removemember', popover: { title: 'Xóa thành viên', description: 'Bạn có thể xóa nếu như lỡ ấn thêm nhiều thành viên. Lưu ý nút này chỉ xuất hiện khi có 6 hoặc 7 người.' } },
+            { element: '#num', popover: { title: 'Ghi số lượng người chơi', description: 'Ghi số lượng người chơi có trong tổ chức. Tối thiểu là 6 người, tối đa là 20 người chơi trong 1 tổ chức' } },
+            { element: '#nickname', popover: { title: 'Nhập IGN', description: 'Điền nickname của các thành viên đăng ký. Lưu ý là các người chơi phải đăng ký tài khoản trên website của DCN thì mới điền đưọc vào đây. Nếu các bạn nhập sai/không có tên thì sẽ tự động xóa.' } },
             { element: '#submitTeam', popover: { title: 'Nộp đội', description: 'Khi bạn đã điền đúng theo yêu cầu, bạn sẽ nộp được. Sau khi nộp, các bạn có thể kiểm tra đội mình bằng cách lướt xuống mục các đội tham dự ở trang chủ nhé.' } },
-            { popover: { title: 'Kết thúc', description: 'Như vậy là mình đã hướng dẫn các bạn cách điền form rồi nhé. Tụi mình sẽ chỉ giải đáp nếu có 2 đội trở lên trong 1 lớp đăng ký hay có lỗi (Bug) trong quá trình đăng ký. Hạn chót đã được thông báo ở Announcement Discord. Hẹn gặp lại các bạn ở giải đấu nhé!' } },
+            { popover: { title: 'Kết thúc', description: 'Như vậy là mình đã hướng dẫn các bạn cách điền form rồi nhé. Các bạn vẫn có thể cập nhật form này trong suốt giai đoạn đăng ký đội hình. Tụi mình sẽ chỉ giải đáp khi có lỗi (Bug) trong quá trình đăng ký. Hạn chót đã được thông báo ở Announcement Discord. Hẹn gặp lại các bạn ở giải đấu nhé!' } },
         ]
     });
 
@@ -59,7 +56,7 @@ const TeamRegistrationForm = () => {
         driverObj.drive();
     };
     useEffect(() => {
-        if (playerCount >= 1 && playerCount <= 20) {
+        if (playerCount >= 6 && playerCount <= 20) {
             const updatedMembers = Array.from({ length: playerCount }, (_, i) => {
                 return formData.gameMembers[i] || { nickname: "", class: "" };
             });
@@ -338,7 +335,7 @@ const TeamRegistrationForm = () => {
                                         onChange={handleInputChange}
                                         className="px-4 py-2 border bg-white focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
                                         placeholder="Tên đội của bạn"
-                                        maxLength="20"
+                                        maxLength="25"
                                     />
                                     {errors.teamName && (
                                         <p className="text-red-500 text-xs italic">{errors.teamName}</p>
@@ -446,15 +443,15 @@ const TeamRegistrationForm = () => {
                                         Số Lượng Thành viên đội bạn                                    </label>
                                     <input
                                         type="number"
-                                        min={1}
+                                        min={6}
                                         max={20}
                                         value={playerCount}
-                                        onChange={(e) => setPlayerCount(parseInt(e.target.value) || 1)}
+                                        onChange={(e) => setPlayerCount(parseInt(e.target.value) || 6)}
                                         className="border p-2 rounded w-32 mb-4 text-base-content"
                                         placeholder="Số lượng thành viên"
                                     />
                                 </div>
-                                <div className="flex flex-col mt-4">
+                                <div className="flex flex-col mt-4" id="nickname">
                                     <label className="leading-loose text-base-content font-bold">Danh sách thành viên</label>
                                     {formData.gameMembers.map((member, index) => (
                                         <div key={index} className="flex gap-2 mb-2 relative">
@@ -490,7 +487,7 @@ const TeamRegistrationForm = () => {
                                                     }
                                                 }}
 
-                                                className="border p-2 rounded w-1/2 text-base-content"
+                                                className="font-semibold text-[14px] border p-2 rounded w-1/2 text-base-content"
                                             />
                                             {suggestions.length > 0 && activeInputIndex === index && (
                                                 <ul className="absolute z-10 bg-white border rounded shadow w-1/2 top-full mt-1">
@@ -505,9 +502,14 @@ const TeamRegistrationForm = () => {
                                                                 setFormData({ ...formData, gameMembers: updated });
                                                                 setSuggestions([]);
                                                             }}
-                                                            className={`p-2 cursor-pointer hover:bg-gray-200 ${i === selectedSuggestionIndex ? "bg-gray-300" : ""
+                                                            className={` flex flex-row font-semibold p-2 cursor-pointer hover:bg-gray-200 ${i === selectedSuggestionIndex ? "bg-gray-300" : ""
                                                                 }`}
                                                         >
+                                                            <img
+                                                                        src={`https://drive.google.com/thumbnail?id=${user.profilePicture}`}
+                                                                        alt="profile"
+                                                                        className="w-8 h-8 rounded-full mr-2"
+                                                                    />
                                                             <strong>{user.nickname}</strong> ({user.className})
                                                         </li>
                                                     ))}
@@ -519,9 +521,9 @@ const TeamRegistrationForm = () => {
                                                 placeholder="Lớp"
                                                 value={member.class}
                                                 disabled
-                                                className="border p-2 rounded w-1/2 text-base-content cursor-not-allowed"
+                                                className="text-[14px] font-semibold border p-2 rounded w-1/2 text-base-content cursor-not-allowed"
                                             />
-                                            {formData.gameMembers.length > 1 && (
+                                            {formData.gameMembers.length > 6 && (
                                                 <button type="button" onClick={() => removeMember(index)} className="text-red-500">X</button>
                                             )}
 
