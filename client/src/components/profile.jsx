@@ -115,7 +115,11 @@ export default function Profile() {
               if (!data.success) {
                 dispatch(updateUserFailure(data));
               } else {
-                dispatch(updateUserSuccess(data));
+                // ✅ Gọi API get user mới
+                const userRes = await fetch(`https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`);
+                const updatedUser = await userRes.json();
+              
+                dispatch(updateUserSuccess(updatedUser));
                 setUpdateSuccess(true);
               }
       
