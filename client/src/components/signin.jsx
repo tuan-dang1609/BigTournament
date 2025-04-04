@@ -21,7 +21,7 @@ function LoginForm() {
 
   }, [])
   // Check if there's a 'from' location or default to home ('/')
-  const from = location.state?.from?.pathname || '/allgame';
+  const from = location.state?.from?.pathname || '/';
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

@@ -39,7 +39,7 @@ export default function Example() {
   const navigationAll = {
     general: [
       { name: "Trang chủ", href: "/", current: location.pathname === "/" },
-      { name: "Game", href: "/allgame", current: location.pathname === "/allgame" },
+      { name: "Đăng ký", href: "/register", current: location.pathname === "/register" },
       { name: "Lịch trình", href: "/calendar", current: location.pathname === "/calendar" },
     ],
     valorant: [

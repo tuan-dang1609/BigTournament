@@ -1049,7 +1049,7 @@ router.post('/registerorz', async (req, res) => {
       const errors = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({ errors });
     }
-    res.status(500).json({ message: 'Lỗi server' });
+    res.status(500).json({ message: error });
   }
 });
 router.post('/checkregisterorz', async (req, res) => {
@@ -1067,7 +1067,7 @@ router.post('/checkregisterorz', async (req, res) => {
 
   } catch (error) {
     // Xử lý lỗi server
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error });
   }
 });
 router.post('/checkregisterAOV', async (req, res) => {

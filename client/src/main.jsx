@@ -77,7 +77,6 @@ if (rootElement) {
               <Route path='/valorant/rule' element={<Rule />} />
               <Route path='/valorant/test/createbanpick' element={<CreateMatch />} />
               <Route path='/match/:matchId/:role' element={<MatchInterface />} />
-              <Route path='/allgame' element={<AllGame />} />
               <Route path='/valorant/test/special' element={<TournamentBracketLOL />} />
               <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
               <Route path="/valorant/inputmatch" element={<Inputmatchid />} />

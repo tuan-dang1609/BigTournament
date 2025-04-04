@@ -31,6 +31,7 @@ const TeamRegistrationForm = () => {
     const [activeInputIndex, setActiveInputIndex] = useState(null); // Theo dõi ô input đang nhập
     const [playerCount, setPlayerCount] = useState(1);
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+    const [classTeamInput, setClassTeamInput] = useState("");
     const navigate = useNavigate();
 
     const driverObj = driver({
@@ -68,7 +69,7 @@ const TeamRegistrationForm = () => {
     useEffect(() => {
         const fetchAllUsers = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/api/auth/alluser"); // POST request
+                const response = await axios.get("https://bigtournament-hq9n.onrender.com/api/auth/alluser"); // POST request
                 const users = Array.isArray(response.data) ? response.data : response.data.users || [];
                 setAllUsers(users); // Lưu vào state
             } catch (error) {
@@ -78,6 +79,7 @@ const TeamRegistrationForm = () => {
 
         fetchAllUsers();
     }, []); // Chỉ chạy một lần khi component mount
+
     useEffect(() => {
         if (userRegister && userRegister._id) {
 
@@ -91,6 +93,7 @@ const TeamRegistrationForm = () => {
                 color: userRegister.color || "",
                 gameMembers: Array.isArray(userRegister.players) ? userRegister.players : []
             });
+            setClassTeamInput(userRegister.class?.join(" ") || "");
             console.log('userRegister.players:', userRegister.players);
         }
     }, [userRegister]);
@@ -185,25 +188,7 @@ const TeamRegistrationForm = () => {
         setPlayerCount(updated.length);
     };
 
-    const handleNicknameChange = (index, value) => {
-        setActiveInputIndex(index);
-        const updated = [...formData.gameMembers];
-        updated[index].nickname = value;
-        setFormData({ ...formData, gameMembers: updated });
 
-        if (value.length > 0) {
-            const filteredUsers = allUsers
-                .filter(user =>
-                    user.nickname.toLowerCase().includes(value.toLowerCase()) ||
-                    user.riotId.toLowerCase().includes(value.toLowerCase())
-                )
-                .slice(0, 5);
-            setSuggestions(filteredUsers);
-            setSelectedSuggestionIndex(0); // ✅ reset highlight về đầu
-        } else {
-            setSuggestions([]);
-        }
-    };
     const handleNicknameBlur = (index) => {
         setTimeout(() => {
             const value = formData.gameMembers[index].nickname;
@@ -256,16 +241,6 @@ const TeamRegistrationForm = () => {
                     newErrors.color = "Bạn phải nhập màu chủ đạo cho đội của mình";
                 } else {
                     delete newErrors.color;
-                }
-                break;
-
-            case "gameMembers":
-                if (formData.gameMembers.length < 1) {
-                    newErrors.gameMembers = "Đội phải có ít nhất 7 người chơi.";
-                } else if (formData.gameMembers.some(p => !p.nickname.trim() || !p.class.trim())) {
-                    newErrors.gameMembers = "Mỗi người chơi cần có nickname và lớp.";
-                } else {
-                    delete newErrors.gameMembers;
                 }
                 break;
             default:
@@ -346,7 +321,7 @@ const TeamRegistrationForm = () => {
                 <div className="relative px-4 py-8 sm:rounded-3xl sm:px-2 sm:py-12 " >
                     <div className="mx-auto">
                         <div>
-                            <h1 className="text-3xl font-bold text-center">Đơn đăng kí giải Valorant Đón Xuân DCN: Season 2</h1>
+                            <h1 className="text-3xl font-bold text-center">Đơn đăng kí tổ chức cho giải DCN Inter-Class Esport Cup 2025</h1>
                         </div>
                         <button onClick={startTour} className="bg-blue-500 text-white px-4 py-2 rounded-md mt-4">
                             Hướng dẫn
@@ -394,21 +369,21 @@ const TeamRegistrationForm = () => {
                                     <input
                                         type="text"
                                         name="classTeam"
-                                        value={formData.classTeam.join(" ")} // hiển thị mảng dưới dạng chuỗi cách nhau bằng dấu cách
+                                        value={classTeamInput} // dùng input riêng, không join trực tiếp từ mảng
                                         onChange={(e) => {
-                                            const value = e.target.value.trim();
+                                            const value = e.target.value;
+                                            setClassTeamInput(value); // luôn giữ nguyên input người dùng
 
-                                            // Nếu nhập đúng duy nhất "Cựu học sinh"
-                                            if (value.toLowerCase() === "cựu học sinh") {
+                                            // Nếu chỉ nhập "Cựu học sinh"
+                                            if (value.trim().toLowerCase() === "cựu học sinh") {
                                                 setFormData({ ...formData, classTeam: ["Cựu học sinh"] });
                                                 return;
                                             }
 
-                                            // Ngược lại, xử lý chuỗi bình thường
                                             const classArray = value
                                                 .split(" ")
-                                                .map(cls => cls.trim())
-                                                .filter(cls => cls.length > 0);
+                                                .map((cls) => cls.trim())
+                                                .filter((cls) => cls.length > 0);
 
                                             setFormData({ ...formData, classTeam: classArray });
                                         }}
