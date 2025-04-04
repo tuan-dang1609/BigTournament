@@ -43,10 +43,10 @@ for (let day = 1; day <= 8; day++) {
   }
 }
 export const signup = async (req, res, next) => {
-  const { garenaaccount,nickname,riotID, username, password, discordID } = req.body;
+  const { garenaaccount,nickname,riotID, username,className, password, discordID } = req.body;
   try {
     const hashedPassword = bcryptjs.hashSync(password, 10);
-    const newUser = new User({ garenaaccount,nickname,riotID, username, discordID, password: hashedPassword });
+    const newUser = new User({ garenaaccount,nickname,riotID, username,className, discordID, password: hashedPassword });
 
     await newUser.save();
     res.status(201).json({ message: 'Tạo tài khoản thành công' });
