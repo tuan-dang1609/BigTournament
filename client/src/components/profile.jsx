@@ -24,19 +24,44 @@ export default function Profile() {
     const { currentUser, loading, error } = useSelector((state) => state.user);
     const dispatch = useDispatch();
     const [loggedInUser, setLoggedInUser] = useState("");
+    const [fetchedUserData, setFetchedUserData] = useState(null);
     const handleRiotLogin = () => {
         window.location.href = "https://bigtournament-hq9n.onrender.com/sso/login-riot";
         // Set riotID vào formData sau khi người dùng đăng nhập thành công
         setFormData({ ...formData, riotID: loggedInUser });
     }
-    const handleLogout = () => {
-        setLoggedInUser(""); // Xóa loggedInUser khi nhấn nút "X"
-        // Sau khi xóa, gán lại riotID vào formData để hiển thị nút đăng nhập lại
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            riotID: "",  // Xóa giá trị riotID trong formData
-        }));
-        // Cập nhật redux state với "Đăng nhập với Riot Games"
+    const handleLogout = async () => {
+        setLoggedInUser(""); // clear RiotID hiển thị
+    
+        const updatedFormData = {
+            ...formData,
+            riotID: "",  // clear RiotID trong form
+        };
+    
+        setFormData(updatedFormData); // update local state
+    
+        // Gửi luôn request lên server
+        try {
+            dispatch(updateUserStart());
+    
+            const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/user/update/${currentUser._id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedFormData),
+            });
+    
+            const data = await res.json();
+            if (data.success === false) {
+                dispatch(updateUserFailure(data));
+                return;
+            }
+    
+            dispatch(updateUserSuccess(data));
+        } catch (error) {
+            console.error("Lỗi khi logout RiotID:", error);
+            dispatch(updateUserFailure(error));
+        }
+    
         dispatch(updateRiotID("Đăng nhập với Riot Games"));
     };
     useEffect(() => {
@@ -49,6 +74,22 @@ export default function Profile() {
             setLoggedInUser(`${gameName}#${tagName}`);
         }
     }, []);
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const userRes = await fetch(`https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`);
+                const data = await userRes.json();
+                console.log("Dữ liệu user mới fetch về:", data);
+                setFetchedUserData(data);
+            } catch (error) {
+                console.error("Lỗi khi fetch user:", error);
+            }
+        };
+    
+        if (currentUser?._id) {
+            fetchUser();
+        }
+    }, [currentUser]);
     useEffect(() => {
         const scrollToTop = () => {
             document.documentElement.scrollTop = 0;
@@ -215,38 +256,37 @@ export default function Profile() {
             <div>
                 <label htmlFor="riotID" className="block text-sm font-medium text-base-content">Riot ID</label>
                 <div className="flex flex-col space-y-4">
-    {!loggedInUser && (currentUser.riotID === "TBD" || !currentUser.riotID || currentUser.riotID === "Đăng nhập với Riot Games") ? (
-        <button
-            id="riotID"
-            name="riotID"
-            onClick={(e) => {
-                e.preventDefault();
-                handleRiotLogin();
-                setFormData((prevFormData) => ({
-                    ...prevFormData,
-                    riotID: loggedInUser,  // Gán giá trị loggedInUser vào riotID trong formData
-                }));
-            }}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
-        >
-            <div className="flex flex-row items-center justify-center gap-x-2">{loggedInUser || "Đăng nhập với Riot Games"} <SiRiotgames /></div>
-        </button>
-    ) : (
-        <button
-            className="bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-between"
-        >
-            <div className="flex flex-row gap-x-1 items-center justify-center">
-            <span>{loggedInUser || currentUser.riotID} </span>
-            <img src = {verifyIcon} className="h-5 w-5"/>
-            </div>
-            <span
-                className="text-white ml-2 cursor-pointer"
-                onClick={handleLogout} // Gọi handleLogout khi nhấn "X"
-            >
-                X
-            </span>
-        </button>
-    )}
+                {fetchedUserData ? (
+  !loggedInUser && (fetchedUserData.riotID === "TBD" || !fetchedUserData.riotID || fetchedUserData.riotID === "Đăng nhập với Riot Games") ? (
+    <button
+      id="riotID"
+      name="riotID"
+      onClick={(e) => {
+        e.preventDefault();
+        handleRiotLogin();
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          riotID: loggedInUser,
+        }));
+      }}
+      className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
+    >
+      <div className="flex flex-row items-center justify-center gap-x-2">
+        {loggedInUser || "Đăng nhập với Riot Games"} <SiRiotgames />
+      </div>
+    </button>
+  ) : (
+    <button className="bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-between">
+      <div className="flex flex-row gap-x-1 items-center justify-center">
+        <span>{loggedInUser || fetchedUserData.riotID}</span>
+        <img src={verifyIcon} className="h-5 w-5" />
+      </div>
+      <span className="text-white ml-2 cursor-pointer" onClick={handleLogout}>
+        X
+      </span>
+    </button>
+  )
+) : null}
 </div>
 
             </div>
