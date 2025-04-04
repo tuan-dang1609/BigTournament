@@ -94,13 +94,42 @@ export default function Profile() {
     
     useEffect(() => {
         if (loggedInUser) {
-            // Khi loggedInUser thay đổi, cập nhật formData với riotID
-            setFormData((prevFormData) => ({
-                ...prevFormData,
+          const updateRiotIDImmediately = async () => {
+            try {
+              const updatedData = {
+                ...formData,
                 riotID: loggedInUser,
-            }));
+              };
+      
+              const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/user/update/${currentUser._id}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedData),
+              });
+      
+              const data = await res.json();
+              console.log('RiotID updated:', data);
+      
+              if (!data.success) {
+                dispatch(updateUserFailure(data));
+              } else {
+                dispatch(updateUserSuccess(data));
+                setUpdateSuccess(true);
+              }
+      
+              setFormData(updatedData); // Cập nhật formData state nếu cần
+            } catch (error) {
+              console.error("Lỗi khi cập nhật RiotID:", error);
+              dispatch(updateUserFailure(error));
+            }
+          };
+      
+          updateRiotIDImmediately();
         }
-    }, [loggedInUser]); // Theo dõi khi loggedInUser thay đổi
+      }, [loggedInUser]);
+       // Theo dõi khi loggedInUser thay đổi
     useEffect(() => {
         if (updateSuccess) {
             const timer = setInterval(() => {

@@ -30,6 +30,7 @@ const TeamRegistrationForm = () => {
     const [suggestions, setSuggestions] = useState([]); // Lưu danh sách gợi ý
     const [activeInputIndex, setActiveInputIndex] = useState(null); // Theo dõi ô input đang nhập
     const [playerCount, setPlayerCount] = useState(1);
+    const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
     const navigate = useNavigate();
 
     const driverObj = driver({
@@ -79,19 +80,20 @@ const TeamRegistrationForm = () => {
     }, []); // Chỉ chạy một lần khi component mount
     useEffect(() => {
         if (userRegister && userRegister._id) {
-            console.log(userRegister);
-          setFormData({
-            discordID: userRegister.discordID || currentUser.discordID,
-      usernameregister: userRegister.usernameregister || currentUser._id,
-      teamName: userRegister.team || "",                // ✅ đúng tên field
-      shortName: userRegister.shortname || "",          // ✅ đúng tên field
-      classTeam: userRegister.class || [],              // ✅ đúng tên field
-      logoUrl: userRegister.logoURL || "",              // ✅ đúng tên field
-      color: userRegister.color || "",
-      gameMembers: userRegister.players || [] 
-          });
+
+            setFormData({
+                discordID: userRegister.discordID || currentUser.discordID,
+                usernameregister: userRegister.usernameregister || currentUser._id,
+                teamName: userRegister.team || "",
+                shortName: userRegister.shortname || "",
+                classTeam: userRegister.class || [],
+                logoUrl: userRegister.logoURL || "",
+                color: userRegister.color || "",
+                gameMembers: Array.isArray(userRegister.players) ? userRegister.players : []
+            });
+            console.log('userRegister.players:', userRegister.players);
         }
-      }, [userRegister]);
+    }, [userRegister]);
     useEffect(() => {
         const fetchTeams = async () => {
             try {
@@ -145,19 +147,37 @@ const TeamRegistrationForm = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-      
+
         let processedValue = value;
-      
+
         if (name === "logoUrl") {
-          // Tìm ID trong link Google Drive (từ /d/ đến /)
-          const match = value.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
-          processedValue = match ? match[1] : value;
+            // Tìm ID trong link Google Drive (từ /d/ đến /)
+            const match = value.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+            processedValue = match ? match[1] : value;
         }
-      
+
         setFormData({ ...formData, [name]: processedValue });
         validateField(name, processedValue);
-      };
+    };
+    const handleMemberChange = (index, value) => {
+        setActiveInputIndex(index);
 
+        const updatedGameMembers = [...formData.gameMembers]; // ✅ clone đúng kiểu array
+        updatedGameMembers[index].nickname = value; // ✅ cập nhật nickname
+        setFormData({ ...formData, gameMembers: updatedGameMembers });
+
+        if (value.length > 0) {
+            const filteredUsers = allUsers
+                .filter(user =>
+                    user.nickname.toLowerCase().includes(value.toLowerCase()) ||
+                    user.riotId.toLowerCase().includes(value.toLowerCase())
+                )
+                .slice(0, 5);
+            setSuggestions(filteredUsers);
+        } else {
+            setSuggestions([]);
+        }
+    };
     // ⚠️ Thay vì removeMember(game, index), dùng:
     const removeMember = (index) => {
         const updated = formData.gameMembers.filter((_, i) => i !== index);
@@ -172,12 +192,14 @@ const TeamRegistrationForm = () => {
         setFormData({ ...formData, gameMembers: updated });
 
         if (value.length > 0) {
-            const filtered = allUsers
+            const filteredUsers = allUsers
                 .filter(user =>
-                    user.nickname.toLowerCase().includes(value.toLowerCase()) 
+                    user.nickname.toLowerCase().includes(value.toLowerCase()) ||
+                    user.riotId.toLowerCase().includes(value.toLowerCase())
                 )
                 .slice(0, 5);
-            setSuggestions(filtered);
+            setSuggestions(filteredUsers);
+            setSelectedSuggestionIndex(0); // ✅ reset highlight về đầu
         } else {
             setSuggestions([]);
         }
@@ -215,13 +237,13 @@ const TeamRegistrationForm = () => {
                     delete newErrors.shortName;
                 }
                 break;
-                case "classTeam":
-                    if (!Array.isArray(value) || value.length === 0) {
-                      newErrors.classTeam = "Bạn phải nhập lớp";
-                    } else {
-                      delete newErrors.classTeam;
-                    }
-                    break;
+            case "classTeam":
+                if (!Array.isArray(value) || value.length === 0) {
+                    newErrors.classTeam = "Bạn phải nhập lớp";
+                } else {
+                    delete newErrors.classTeam;
+                }
+                break;
             case "logoUrl":
                 if (!value.trim()) {
                     newErrors.logoUrl = "Bạn phải nhập Logo ID";
@@ -273,11 +295,11 @@ const TeamRegistrationForm = () => {
 
             setFormData({
                 teamName: "",
-        shortName: "",
-        classTeam: [],
-        logoUrl: "",
-        color: "",
-        gameMembers: []
+                shortName: "",
+                classTeam: [],
+                logoUrl: "",
+                color: "",
+                gameMembers: []
             });
             setErrors({});
         } catch (error) {
@@ -366,37 +388,37 @@ const TeamRegistrationForm = () => {
                                 </div>
 
                                 <div className="flex flex-col" id="classTeam">
-  <label className="leading-loose font-semibold text-base-content" htmlFor="classTeam">
-    Team bạn là của lớp nào
-  </label>
-  <input
-    type="text"
-    name="classTeam"
-    value={formData.classTeam.join(" ")} // hiển thị mảng dưới dạng chuỗi cách nhau bằng dấu cách
-    onChange={(e) => {
-        const value = e.target.value.trim();
-      
-        // Nếu nhập đúng duy nhất "Cựu học sinh"
-        if (value.toLowerCase() === "cựu học sinh") {
-          setFormData({ ...formData, classTeam: ["Cựu học sinh"] });
-          return;
-        }
-      
-        // Ngược lại, xử lý chuỗi bình thường
-        const classArray = value
-          .split(" ")
-          .map(cls => cls.trim())
-          .filter(cls => cls.length > 0);
-      
-        setFormData({ ...formData, classTeam: classArray });
-      }}
-    className="px-4 py-2 border bg-white focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
-    placeholder="Nhập các lớp cách nhau bằng dấu cách, ví dụ: 11A15 12A2"
-  />
-  {errors.classTeam && (
-    <p className="text-red-500 text-xs italic">{errors.classTeam}</p>
-  )}
-</div>
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="classTeam">
+                                        Team bạn là của lớp nào
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="classTeam"
+                                        value={formData.classTeam.join(" ")} // hiển thị mảng dưới dạng chuỗi cách nhau bằng dấu cách
+                                        onChange={(e) => {
+                                            const value = e.target.value.trim();
+
+                                            // Nếu nhập đúng duy nhất "Cựu học sinh"
+                                            if (value.toLowerCase() === "cựu học sinh") {
+                                                setFormData({ ...formData, classTeam: ["Cựu học sinh"] });
+                                                return;
+                                            }
+
+                                            // Ngược lại, xử lý chuỗi bình thường
+                                            const classArray = value
+                                                .split(" ")
+                                                .map(cls => cls.trim())
+                                                .filter(cls => cls.length > 0);
+
+                                            setFormData({ ...formData, classTeam: classArray });
+                                        }}
+                                        className="px-4 py-2 border bg-white focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                                        placeholder="Nhập các lớp cách nhau bằng dấu cách, ví dụ: 11A15 12A2"
+                                    />
+                                    {errors.classTeam && (
+                                        <p className="text-red-500 text-xs italic">{errors.classTeam}</p>
+                                    )}
+                                </div>
 
                                 <div className="flex flex-col" id="logoUrl">
                                     <label className="leading-loose font-semibold text-base-content" htmlFor="logoUrl">
@@ -445,17 +467,17 @@ const TeamRegistrationForm = () => {
                                     )}
                                 </div>
                                 <div className="flex flex-col" id="num">
-                                <label className="leading-loose font-semibold text-base-content" htmlFor="count">
+                                    <label className="leading-loose font-semibold text-base-content" htmlFor="count">
                                         Số Lượng Thành viên đội bạn                                    </label>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={20}
-                                    value={playerCount}
-                                    onChange={(e) => setPlayerCount(parseInt(e.target.value) || 1)}
-                                    className="border p-2 rounded w-32 mb-4 text-base-content"
-                                    placeholder="Số lượng thành viên"
-                                />
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={20}
+                                        value={playerCount}
+                                        onChange={(e) => setPlayerCount(parseInt(e.target.value) || 1)}
+                                        className="border p-2 rounded w-32 mb-4 text-base-content"
+                                        placeholder="Số lượng thành viên"
+                                    />
                                 </div>
                                 <div className="flex flex-col mt-4">
                                     <label className="leading-loose text-base-content font-bold">Danh sách thành viên</label>
@@ -465,28 +487,56 @@ const TeamRegistrationForm = () => {
                                                 type="text"
                                                 placeholder="Nickname"
                                                 value={member.nickname}
-                                                onChange={(e) => handleNicknameChange(index, e.target.value)}
+                                                onChange={(e) => handleMemberChange(index, e.target.value)}
                                                 onBlur={() => handleNicknameBlur(index)}
+                                                onKeyDown={(e) => {
+                                                    if (suggestions.length > 0) {
+                                                        if (e.key === "ArrowDown") {
+                                                            e.preventDefault();
+                                                            setSelectedSuggestionIndex((prev) =>
+                                                                prev < suggestions.length - 1 ? prev + 1 : 0
+                                                            );
+                                                        } else if (e.key === "ArrowUp") {
+                                                            e.preventDefault();
+                                                            setSelectedSuggestionIndex((prev) =>
+                                                                prev > 0 ? prev - 1 : suggestions.length - 1
+                                                            );
+                                                        } else if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            const selectedUser = suggestions[selectedSuggestionIndex];
+                                                            if (selectedUser) {
+                                                                const updated = [...formData.gameMembers];
+                                                                updated[index].nickname = selectedUser.nickname;
+                                                                updated[index].class = selectedUser.className;
+                                                                setFormData({ ...formData, gameMembers: updated });
+                                                                setSuggestions([]);
+                                                            }
+                                                        }
+                                                    }
+                                                }}
+
                                                 className="border p-2 rounded w-1/2 text-base-content"
                                             />
                                             {suggestions.length > 0 && activeInputIndex === index && (
                                                 <ul className="absolute z-10 bg-white border rounded shadow w-1/2 top-full mt-1">
-                                                    {suggestions.map((user) => (
+                                                    {suggestions.map((user, i) => (
                                                         <li
                                                             key={user.id}
                                                             onMouseDown={(e) => e.preventDefault()}
                                                             onClick={() => {
                                                                 const updated = [...formData.gameMembers];
                                                                 updated[index].nickname = user.nickname;
-                                                                updated[index].class = user.className; // ⚠️ Gán nickname vào ô class
+                                                                updated[index].class = user.className;
                                                                 setFormData({ ...formData, gameMembers: updated });
                                                                 setSuggestions([]);
                                                             }}
-                                                            className="p-2 hover:bg-gray-200 cursor-pointer"
+                                                            className={`p-2 cursor-pointer hover:bg-gray-200 ${i === selectedSuggestionIndex ? "bg-gray-300" : ""
+                                                                }`}
                                                         >
                                                             <strong>{user.nickname}</strong> ({user.className})
                                                         </li>
                                                     ))}
+
                                                 </ul>
                                             )}
                                             <input
