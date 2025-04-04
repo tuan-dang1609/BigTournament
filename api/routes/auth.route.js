@@ -910,7 +910,7 @@ router.post('/registerorz', async (req, res) => {
 
     const validClassRegex = /^(10|11|12)(A([1-9]|1[0-8])|TH[1-2])$/;
 
-    const isAllCuuHocSinh = classTeam.length === 1 && classTeam[0] === 'Cựu học sinh';
+    const isAllCuuHocSinh = classTeam.length === 1 && classTeam[0] === 'Cựu';
     const isAllTruongLop = classTeam.every(cls => validClassRegex.test(cls));
 
     const hasCuuHocSinh = classTeam.includes("Cựu học sinh");
