@@ -40,6 +40,7 @@ export const updateUser = async (req, res, next) => {
           nickname:req.body.nickname,
           garenaaccount:req.body.garenaaccount,
           password: req.body.password,
+          className: req.body.className,
           profilePicture: req.body.profilePicture,
         },
       },
