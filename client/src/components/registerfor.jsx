@@ -405,12 +405,6 @@ const TeamRegistrationForm = () => {
                                         className="px-4 py-2 bg-white border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
                                         placeholder="Nhập ID của tệp Google Drive"
                                     />
-                                    <small className="text-base-content mt-1">
-                                        Xem hướng dẫn{" "}
-                                        <Link className="text-primary" to="https://docs.google.com/document/d/1zlei9yIWtSLfukegTeREZd8iwH2EUT1rTECH4F6Ph64/edit?tab=t.0" target="_blank" rel="noopener noreferrer">
-                                            <strong>Tại Đây</strong>
-                                        </Link>.
-                                    </small>
                                     {errors.logoUrl && (
                                         <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
                                     )}
@@ -428,12 +422,6 @@ const TeamRegistrationForm = () => {
                                         onChange={handleInputChange}
                                         className="h-10 border-base-100 w-20"
                                     />
-                                    <small className="text-base-content mt-1">
-                                        Xem hướng dẫn{" "}
-                                        <Link className="text-primary" to="https://docs.google.com/document/d/1zlei9yIWtSLfukegTeREZd8iwH2EUT1rTECH4F6Ph64/edit?tab=t.0" target="_blank" rel="noopener noreferrer">
-                                            <strong>Tại Đây</strong>
-                                        </Link>.
-                                    </small>
                                     {errors.logoUrl && (
                                         <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
                                     )}
