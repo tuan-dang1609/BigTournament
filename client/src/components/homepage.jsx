@@ -108,7 +108,7 @@ export default function Home() {
                             <span className='text-white'>Cập nhật tài khoản thành công!</span>
                         </div>
                     )}
-                    <div className={`mx-auto max-w-7xl px-2 sm:px-6 relative z-0 ${marginTopClass}`}>
+                    <div className={`mx-auto lg:max-w-7xl px-2 max-w-full sm:px-6 relative z-0 ${marginTopClass}`}>
                         <div className="welcome animate__animated animate__fadeIn flex lg:flex-row max-[1024px]:flex-col gap-8 mb-14">
                             <section className="lg:w-6.5/10 max-[1024px]:w-full">
                                 <p className='lg:text-[40px] font-bold font-sans leading-tight max-[1024px]:text-4xl mb-7'>CHÀO MỪNG TỚI GIẢI <span className='text-primary uppercase'>Inter-Class Esport Cup 2025
@@ -146,36 +146,41 @@ export default function Home() {
                             {/* Scroll Container */}
                             <div
                                 ref={scrollRef}
-                                className="flex gap-6 px-6 h-[110%] overflow-x-auto no-scrollbar"
+                                className="flex gap-x-6 px-6 h-[110%] overflow-x-auto no-scrollbar snap-x snap-mandatory"
                             >
-                                {items && items.map((game) => (
-                                    <Link
-                                        key={game._id}
-                                        to={game.url}
-                                        className="relative group min-w-[270px] max-w-[270px] bg-zinc-900 rounded-2xl overflow-hidden shadow transition-transform duration-300"
-                                    >
-                                        <img
-                                            src={imageMap[game.image]}
-                                            alt={game.game}
-                                            draggable={false}
-                                            className="w-full h-[350px] object-cover"
-                                        />
-                                        <div className="p-3 text-white">
-                                            <h3 className="font-bold text-lg mb-1">{game.game}</h3>
-                                            <p className="text-sm whitespace-pre-line text-gray-300">{game.description}</p>
-                                            <div className="mt-2 flex flex-wrap gap-1">
-                                                {game.badges.map((badge, i) => (
-                                                    <span
-                                                        key={i}
-                                                        className="bg-orange-500 text-xs text-black font-semibold px-2 py-0.5 rounded"
-                                                    >
-                                                        {badge}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))}
+                                {items && items.map((game, index) => (
+  <Link
+    key={game._id}
+    to={game.url}
+    className={`
+      relative group snap-start bg-zinc-900 rounded-2xl overflow-hidden shadow transition-transform duration-300
+      min-w-[70vw] sm:min-w-[250px] md:min-w-[220px] lg:min-w-[270px]
+      ${index === 0 ? 'ml-0' : index === items.length - 1 ? 'mr-0' : ''}
+    `}
+  >
+    <img
+      src={imageMap[game.image]}
+      alt={game.game}
+      draggable={false}
+      className="w-full h-[350px] object-cover"
+    />
+    <div className="p-3 text-white">
+      <h3 className="font-bold text-lg mb-1">{game.game}</h3>
+      <p className="text-sm whitespace-pre-line text-gray-300">{game.description}</p>
+      <div className="mt-2 flex flex-wrap gap-1">
+        {game.badges.map((badge, i) => (
+          <span
+            key={i}
+            className="bg-orange-500 text-xs text-black font-semibold px-2 py-0.5 rounded"
+          >
+            {badge}
+          </span>
+        ))}
+      </div>
+    </div>
+  </Link>
+))}
+
                             </div>
 
                             {/* Left Button */}
@@ -194,6 +199,7 @@ export default function Home() {
                                 <ChevronRight size={20} />
                             </button>
                         </div>
+
                         <div className='flex lg:flex-row max-[1024px]:flex-col gap-8 mb-12 tag'>
                             <section className='text w-3/5 max-[1024px]:w-full'>
                                 <p className='lg:text-[40px] font-bold font-sans leading-tight max-[1024px]:text-4xl mb-4 mt-10 uppercase'>Giải thưởng và Livestream</p>
