@@ -122,7 +122,7 @@ router.post('/check-registered-valorant', async (req, res) => {
 // POST: Thêm dữ liệu mới
 router.post('/dcn-league', async (req, res) => {
   try {
-    const { league, season, milestones } = req.body;
+    const { league, season, milestones,prizepool,navigation } = req.body;
 
     // 🔄 Gọi API lấy danh sách team TFT
     const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
@@ -160,6 +160,7 @@ router.post('/dcn-league', async (req, res) => {
         league,
         season: updatedSeason,
         milestones,
+        prizepool,navigation
       },
       { upsert: true, new: true }
     );

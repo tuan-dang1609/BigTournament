@@ -5,11 +5,11 @@ import 'animate.css';
 import MyNavbar2 from "../components/Navbar2";
 // Custom hook to detect screen size
 import { useParams } from 'react-router-dom';
+import LeagueHeader from "../components/header";
 
 
 const CompetitionPage = () => {
     const [loading, setLoading] = useState(true);
-    const [teams, setTeams] = useState([]);
     const [league, setLeague] = useState(null);
     const { currentUser } = useSelector((state) => state.user);
     const [startTime, setStartTime] = useState(null);
@@ -17,24 +17,7 @@ const CompetitionPage = () => {
     const [joinCountdown, setJoinCountdown] = useState('');
     const [registerPhase, setRegisterPhase] = useState('idle');
     const { game, league_id } = useParams();
-    const prizePool = [
-        { place: "1st", prize: "Grand Final", color: "#FFD700" }, // Gold
-        { place: "2nd", prize: "Grand Final", color: "#C0C0C0" },
-        { place: "3rd", prize: "Grand Final", color: "#FFD700" }, // Gold
-        { place: "4th", prize: "Grand Final", color: "#C0C0C0" },  // Silver
-        { place: "5th", prize: "72 Point", color: "#FFD700" }, // Gold
-        { place: "6th", prize: "68 Point", color: "#C0C0C0" },  // Silver
-        { place: "7th", prize: "64 Point", color: "#FFD700" }, // Gold
-        { place: "8th", prize: "60 Point", color: "#C0C0C0" },  // Silver
-        { place: "9th", prize: "57 Point", color: "#FFD700" }, // Gold
-        { place: "10th", prize: "53 Point", color: "#C0C0C0" },
-        { place: "11th", prize: "50 Point", color: "#FFD700" }, // Gold
-        { place: "12th", prize: "48 Point", color: "#C0C0C0" },  // Silver
-        { place: "13th", prize: "45 Point", color: "#FFD700" }, // Gold
-        { place: "14th", prize: "42 Point", color: "#C0C0C0" },  // Silver
-        { place: "15th", prize: "40 Point", color: "#FFD700" }, // Gold
-        { place: "16th-32nd", prize: "32 Point", color: "#C0C0C0" },  // Silver
-    ];
+
     const registered = parseInt(league?.season?.current_team_count) || 0;
     const max = parseInt(league?.season?.max_registration) || 64;
     const percent = Math.min((registered / max) * 100, 100);
@@ -53,7 +36,6 @@ const CompetitionPage = () => {
 
         const updateCountdown = () => {
             const now = new Date();
-
             let diff;
             if (now < regStart) {
                 diff = regStart - now;
@@ -82,7 +64,6 @@ const CompetitionPage = () => {
     }, [league]);
 
 
-
     useEffect(() => {
         const scrollToTop = () => {
             document.documentElement.scrollTop = 0;
@@ -98,12 +79,9 @@ const CompetitionPage = () => {
             setLoading(true);
 
             try {
-                const [teamResult, leagueResult] = await Promise.allSettled([
-                    fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' }
-                    }),
-                    fetch(`https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}/`)
+                const [leagueResult] = await Promise.allSettled([
+
+                    fetch(`https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}`)
                 ]);
 
                 // --- Handle league fetch ---
@@ -116,15 +94,7 @@ const CompetitionPage = () => {
                 }
 
                 // --- Handle teams fetch ---
-                if (teamResult.status === "fulfilled" && teamResult.value.ok) {
-                    const teamData = await teamResult.value.json();
-                    const filteredTeams = teamData.filter(
-                        team => team.games && team.games.includes("Teamfight Tactics")
-                    );
-                    setTeams(filteredTeams);
-                } else {
-                    console.warn("❌ Teams API failed", teamResult.reason || teamResult.value?.status);
-                }
+
 
             } catch (error) {
                 console.error('Unexpected error in fetchAllData:', error);
@@ -138,7 +108,8 @@ const CompetitionPage = () => {
 
     const navigationAll1 = {
         aov: [
-            { name: "Tổng quan", href: "/tft", current: location.pathname === "/tft" },
+            { name: "Tổng quan", href: `/${game}/${league_id}`, current: location.pathname === `/${game}/${league_id}` },
+            { name: "Người chơi", href: `/${game}/${league_id}/players`, current: location.pathname === `/${game}/${league_id}/players` },
         ],
     };
     const getNavigation = () => navigationAll1.aov;
@@ -150,85 +121,20 @@ const CompetitionPage = () => {
         );
     }
 
-
     return (
         <div className="min-h-screen flex flex-col text-white">
             {/* Header Section */}
-            <header>
-                <div
-                    className="inset-0 bg-cover bg-center xl:aspect-[4/1] md:aspect-[3/1] sm:aspect-[2.4/1] aspect-[1.2/1]"
-                    style={{
-                        backgroundImage: `linear-gradient(0deg, rgb(6, 6, 6) 0%, rgba(6, 6, 6, 0.6) 50%, rgba(6, 6, 6, 0.4) 100%), url(${league.season.header_image_url})`,
-                    }}
-                    aria-label="Competition background"
-                >
-                    <div className="sm:relative z-10 h-full items-center flex sm:flex-row flex-col justify-center px-2 sm:text-left  text-center">
-                        <div className="sm:mb-0 mb-4 sm:absolute relative md:left-5 left-0 sm:bottom-10 text-sm md:text-base text-white font-semibold pl-2 xl:pl-8">
-                            <div className="text-sm font-bold mb-2 uppercase">
-                                <p className="text-left">
-                                <span className="text-green-300">SẮP TỚI</span> • {new Date(startTime).toLocaleString('en-GB', {
-                                    weekday: 'short',
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                                    timeZoneName: 'short'
-                                })}
-                                    </p>
-                            </div>
-
-                            <h1 className="md:text-[24px] text-[24px] xl:text-[40px] md:text-5xl text-left font-extrabold text-white sm:mb-4">
-                                {league.league.name}
-                            </h1>
-
-                            <div className="text-sm text-gray-300">
-                                Tổ chức bởi <span className="text-white font-semibold">{league.league.organizer_id}</span>
-                            </div>
-                        </div>
-
-
-                        {registerPhase === 'before' && (
-                            <div className="sm:absolute relative px-4 md:px-8  sm:right-0 sm:bottom-10 text-sm md:text-base text-white font-semibold text-center sm:text-right">
-                                <div className="mb-2">
-                                    Mở form sau: <span className="text-orange-500">{joinCountdown}</span>
-                                </div>
-
-                                {!currentUser ? (
-                                    <Link to="/signin">
-                                        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
-                                            Đăng nhập để tham gia
-                                        </button>
-                                    </Link>
-                                ) : (
-                                    <Link to="https://discord.gg/crP48bD7" target="_blank" rel="noopener noreferrer">
-                                        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
-                                            Discord THPT Phú Nhuận
-                                        </button>
-                                    </Link>
-                                )}
-                            </div>
-                        )}
-
-                        {registerPhase === 'during' && (
-                            <div className="sm:absolute relative px-4 md:px-8  right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
-                                <div className="mb-2">
-                                    Time left to join: <span className="text-orange-500">{joinCountdown}</span>
-                                </div>
-                                <Link to="/tft/register">
-                                    <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
-                                        Đăng ký
-                                    </button>
-                                </Link>
-                            </div>
-                        )}
-
-
-                    </div>
-                </div>
-            </header>
-            <div><MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} /></div>
+            <LeagueHeader
+                league={league}
+                startTime={startTime}
+                registerPhase={registerPhase}
+                joinCountdown={joinCountdown}
+                currentUser={currentUser}
+                isMenuOpen={isMenuOpen}
+                setIsMenuOpen={setIsMenuOpen}
+                getNavigation={getNavigation}
+                MyNavbar2={MyNavbar2}
+            />
             {/* Content Section */}
             <section id="participant" className="py-10 lg:py-16 px-2 md:px-8 flex lg:flex-row flex-col text-white">
                 <div className="xl:w-[68%] lg:w-[70%] w-full  px-2 xl:px-8">
@@ -269,7 +175,7 @@ const CompetitionPage = () => {
                                     <p className="lg:text-[14px]">${league.season.total_prize_pool}</p>
                                 </div>
                             </div>
-                            
+
                             <div className="flex flex-row gap-x-2">
                                 <div><img src="/image/schedule.png" width={48} height={48} /></div>
                                 <div>
@@ -302,7 +208,7 @@ const CompetitionPage = () => {
                                     })}</p>
                                 </div>
                             </div>
-                            
+
                         </div>
                     </div>
                     <section className=" py-12 text-white ">
@@ -351,7 +257,9 @@ const CompetitionPage = () => {
                         {/* TEAMS */}
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Người chơi</h2>
-                            <button className="text-orange-500 font-bold hover:underline text-sm">XEM TẤT CẢ</button>
+                            <Link to={`/${game}/${league_id}/players`}>
+                                <button className="text-orange-500 font-bold hover:underline text-sm">XEM TẤT CẢ</button>
+                            </Link>
                         </div>
 
                         <div className="border border-gray-700 rounded-lg p-4 flex items-center space-x-3 mb-10">
@@ -396,7 +304,7 @@ const CompetitionPage = () => {
                             <div className="flex flex-row items-stretch w-full justify-between">
                                 {/* Skill Level label - align top */}
                                 <div className="flex items-center">
-                                    <p className="text-[14px] text-white font-bold ">Skill Level</p>
+                                    <p className="text-[14px] text-white font-bold ">Mức rank</p>
                                 </div>
 
                                 {/* Image row - align bottom */}
@@ -431,7 +339,7 @@ const CompetitionPage = () => {
                             </div>
                             <hr className="border-gray-700" />
                             <div className="flex flex-row justify-between h-[48px] items-center">
-                                <div className="text-[14px] text-white font-bold">Discord</div>
+                                <div className="text-[14px] text-white font-bold">Vào Discord PN</div>
                                 <div>
 
                                     <span className="font-bold">Có</span>
@@ -456,18 +364,33 @@ const CompetitionPage = () => {
                                 <div className="text-[14px] text-white font-bold">Discord</div>
                                 <div>
 
-                                <a className="text-[14px] font-bold text-orange-500" href="https://discord.gg/crP48bD7">THPT Phú Nhuận</a>
+                                    <a className="text-[14px] font-bold text-orange-500" href="https://discord.gg/crP48bD7">THPT Phú Nhuận</a>
 
                                 </div>
                             </div>
                         </div>
-                        
+                        <h2 className="text-[22px] font-bold mb-4">Giải thưởng</h2>
+                        <div className="border border-gray-700 rounded-lg p-4 space-y-4 mb-10">
+
+                            {league?.prizepool?.slice(0, 4).map((item, index) => (
+                                <div key={index}>
+                                    <div
+                                        className={`flex flex-row justify-between h-[48px] items-center ${index !== 0 ? 'mt-[16px]' : ''
+                                            }`}
+                                    >
+                                        <div className="text-[14px] text-white font-bold">{item.place}</div>
+                                        <div className="text-[14px] font-bold text-orange-500">{item.prize}</div>
+                                    </div>
+                                    {index < 3 && <hr className="border-gray-700 mt-[16px]" />}
+                                </div>
+                            ))}
+
+                        </div>
                     </section>
                 </div>
             </section>
         </div>
     );
 };
-
 
 export default CompetitionPage;

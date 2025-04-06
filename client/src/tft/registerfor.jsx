@@ -112,7 +112,7 @@ const TeamRegistrationForm = () => {
             }, 1000);
 
             if (countdown === 0) {
-                navigate('/tft');
+                navigate('/tft/tft_split_2_2025');
             }
 
             return () => clearInterval(timer);

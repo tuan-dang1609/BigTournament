@@ -39,11 +39,21 @@ const leagueSchema = new mongoose.Schema({
   skill_levels: [String],
   school_allowed: [String]
 }, { _id: false });
+const prizepoolSchema = new mongoose.Schema({
+  place: String,
+  prize: mongoose.Schema.Types.Mixed // dùng Mixed để hỗ trợ cả string và number
+}, { _id: false });
 
+const navigationSchema = new mongoose.Schema({
+  name: String,
+  href: String
+}, { _id: false });
 const DCNLeagueSchema = new mongoose.Schema({
   league: leagueSchema,
   season: seasonSchema,
-  milestones: [milestoneSchema]
+  milestones: [milestoneSchema],
+  prizepool: [prizepoolSchema],
+  navigation: [navigationSchema]
 }, { timestamps: true });
 
 export default mongoose.model('DCN League', DCNLeagueSchema,'DCN League');

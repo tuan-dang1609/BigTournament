@@ -55,6 +55,7 @@ import TFTMatch from './tft/day1.jsx'
 import CombinedLeaderboard from './tft/test.jsx';
 import GrandFinalTFT from './tft/day2.jsx'
 import ForgotPassword from './components/ForgotPassword.jsx'
+import MemberPage from './tft/allplayer.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -68,7 +69,7 @@ if (rootElement) {
         <Routes>
           {/* Route KHÔNG có Navbar */}
           <Route path="/:game/:league_id" element={<TFThompage />} />
-  
+          <Route path="/:game/:league_id/players" element={<MemberPage />} />
           {/* Routes CÓ Navbar + Footer */}
           <Route
             path="*"
@@ -117,7 +118,7 @@ if (rootElement) {
                     <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
                     <Route path="/valorant/register" element={<TeamRegistrationValorantForm />} />
                     <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
-                    <Route path='/tft/register' element={<TFTRegister />} />
+                    <Route path='/tft/:league_id/register' element={<TFTRegister />} />
                     <Route path='/tft/registerdouble' element={<TeamRegistrationTFTDoubleForm />} />
                     <Route path='/arenaofvalor/pickem/leaderboard' element={<LeaderboardComponent />} />
                     <Route path='/profile' element={<Profile />} />
