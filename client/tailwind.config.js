@@ -39,15 +39,10 @@ export default {
   ],
   daisyui: {
     themes: [
-      "light",
-      "dark",
-      "emerald",
 
-      "retro",
-      "cyberpunk",
       "forest",
-      "autumn",
-      "night",
+
+
     ],
   },
 };

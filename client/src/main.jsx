@@ -62,64 +62,77 @@ if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
 
-      <Provider store={store}>
-        <PersistGate persistor={persistor} loading={null}>
-          <BrowserRouter>
-            <Navbar />
-            <Routes>
-              <Route exact path='/rsotest' element={<RSO_Authorization />} />
-              <Route exact path='/' element={<Home />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path='/signup' element={<SignUp />} />
-              <Route path='/signin' element={<SignIn />} />
-              <Route path='/calendar' element={<Calendar />} />
-              <Route path='/valorant' element={<CompetitionPage />} />
-              <Route path='/valorant/rule' element={<Rule />} />
-              <Route path='/valorant/test/createbanpick' element={<CreateMatch />} />
-              <Route path='/match/:matchId/:role' element={<MatchInterface />} />
-              <Route path='/valorant/test/special' element={<TournamentBracketLOL />} />
-              <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
-              <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
-              <Route path="/valorant/swissstage" element={<SwissStage />} />
-              <Route path="/valorant/doubleup" element={<PlayoffValo />} />
-              <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
-              <Route path="/leagueoflegend/match" element={<MatchStatLOL />} />
-              <Route path="/arenaofvalor" element={<HomepageAOV />} />
-              <Route path="/tft" element={<TFThompage />} />
-              <Route path="/tft/grandfinal" element={<GrandFinalTFT />} />
-              <Route path="/tft/ranking/total/:day" element={<CombinedLeaderboard />} />
-              <Route path="/tft/ranking/:day" element={<TFTMatch />} />
-              <Route path="/tftdouble" element={<CompetitionPageDoubleUp />} />
-              <Route path="/tftdouble/ranking" element={<PowerRankingTFTDouble />} />
-              <Route path='/register' element={<TeamRegistrationForm />} />
-              <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
-              <Route path='/arenaofvalor/ranking' element={<PowerRankingAOV />} />
-              <Route path='/arenaofvalor/pickem/welcome' element={<WelcomePage />} />
-              <Route path='/arenaofvalor/playin' element={<PlayinAOV />} />
-              <Route path='/arenaofvalor/playoff' element={<TournamentBracketAOV />} />
-              <Route path='/arenaofvalor/match/:round/:Match' element={<MatchStatAOV />} />
-              <Route path='/privacy' element={<PrivacyPolicy />} />
-              <Route path='/tos' element={<TermsOfService />} />
-              <Route path='/arenaofvalor/halloffame' element={<HallOfFameAOV />} />
-              <Route path='/valorant/halloffame' element={<HallOfFameValo />} />
-              <Route path='/lol/hudgame' element={<LiveGameDataLOL />} />
-              <Route path='/arenaofvalor/vong1' element={<TournamentBracketAOV16_1/>} />
-              <Route path='/arenaofvalor/vong2' element={<TournamentBracketAOV16 />} />
-              <Route element={<PrivateRoute />}>
-              <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
-              <Route path="/valorant/register" element={<TeamRegistrationValorantForm  />} />
-                <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
-                <Route path='/tft/register' element={<TFTRegister />} />
-                <Route path='/tft/registerdouble' element={<TeamRegistrationTFTDoubleForm />} />
-                <Route path='/arenaofvalor/pickem/leaderboard' element={<LeaderboardComponent />} />
-                <Route path='/profile' element={<Profile />} />
-                <Route path='/arenaofvalor/pickem/pickemall' element={<PickemChallenge />} />
-              </Route>
-            </Routes>
-            <Footer />
-          </BrowserRouter>
-        </PersistGate>
-      </Provider>
+    <Provider store={store}>
+    <PersistGate persistor={persistor} loading={null}>
+      <BrowserRouter>
+        <Routes>
+          {/* Route KHÔNG có Navbar */}
+          <Route path="/tft" element={<TFThompage />} />
+  
+          {/* Routes CÓ Navbar + Footer */}
+          <Route
+            path="*"
+            element={
+              <>
+                <Navbar />
+                <Routes>
+                  <Route exact path='/rsotest' element={<RSO_Authorization />} />
+                  <Route exact path='/' element={<Home />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path='/signup' element={<SignUp />} />
+                  <Route path='/signin' element={<SignIn />} />
+                  <Route path='/calendar' element={<Calendar />} />
+                  <Route path='/valorant' element={<CompetitionPage />} />
+                  <Route path='/valorant/rule' element={<Rule />} />
+                  <Route path='/valorant/test/createbanpick' element={<CreateMatch />} />
+                  <Route path='/match/:matchId/:role' element={<MatchInterface />} />
+                  <Route path='/valorant/test/special' element={<TournamentBracketLOL />} />
+                  <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
+                  <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
+                  <Route path="/valorant/swissstage" element={<SwissStage />} />
+                  <Route path="/valorant/doubleup" element={<PlayoffValo />} />
+                  <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
+                  <Route path="/leagueoflegend/match" element={<MatchStatLOL />} />
+                  <Route path="/arenaofvalor" element={<HomepageAOV />} />
+                  <Route path="/tft/grandfinal" element={<GrandFinalTFT />} />
+                  <Route path="/tft/ranking/total/:day" element={<CombinedLeaderboard />} />
+                  <Route path="/tft/ranking/:day" element={<TFTMatch />} />
+                  <Route path="/tftdouble" element={<CompetitionPageDoubleUp />} />
+                  <Route path="/tftdouble/ranking" element={<PowerRankingTFTDouble />} />
+                  <Route path='/register' element={<TeamRegistrationForm />} />
+                  <Route path='/arenaofvalor/luatle' element={<RuleAOV />} />
+                  <Route path='/arenaofvalor/ranking' element={<PowerRankingAOV />} />
+                  <Route path='/arenaofvalor/pickem/welcome' element={<WelcomePage />} />
+                  <Route path='/arenaofvalor/playin' element={<PlayinAOV />} />
+                  <Route path='/arenaofvalor/playoff' element={<TournamentBracketAOV />} />
+                  <Route path='/arenaofvalor/match/:round/:Match' element={<MatchStatAOV />} />
+                  <Route path='/privacy' element={<PrivacyPolicy />} />
+                  <Route path='/tos' element={<TermsOfService />} />
+                  <Route path='/arenaofvalor/halloffame' element={<HallOfFameAOV />} />
+                  <Route path='/valorant/halloffame' element={<HallOfFameValo />} />
+                  <Route path='/lol/hudgame' element={<LiveGameDataLOL />} />
+                  <Route path='/arenaofvalor/vong1' element={<TournamentBracketAOV16_1 />} />
+                  <Route path='/arenaofvalor/vong2' element={<TournamentBracketAOV16 />} />
+                  <Route element={<PrivateRoute />}>
+                    <Route path='/arenaofvalor/pickem/pickemmatch' element={<PickemChallengeMatch />} />
+                    <Route path="/valorant/register" element={<TeamRegistrationValorantForm />} />
+                    <Route path='/arenaofvalor/register' element={<TeamRegistrationFormAOV />} />
+                    <Route path='/tft/register' element={<TFTRegister />} />
+                    <Route path='/tft/registerdouble' element={<TeamRegistrationTFTDoubleForm />} />
+                    <Route path='/arenaofvalor/pickem/leaderboard' element={<LeaderboardComponent />} />
+                    <Route path='/profile' element={<Profile />} />
+                    <Route path='/arenaofvalor/pickem/pickemall' element={<PickemChallenge />} />
+                  </Route>
+                </Routes>
+                <Footer />
+              </>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </PersistGate>
+  </Provider>
+  
   );
 } else {
   console.error("Root element not found. Make sure there is an element with id='root' in your HTML.");

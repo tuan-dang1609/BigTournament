@@ -149,37 +149,37 @@ export default function Home() {
                                 className="flex gap-x-6 px-6 h-[110%] overflow-x-auto no-scrollbar snap-x snap-mandatory"
                             >
                                 {items && items.map((game, index) => (
-  <Link
-    key={game._id}
-    to={game.url}
-    className={`
+                                    <Link
+                                        key={game._id}
+                                        to={game.url}
+                                        className={`
       relative group snap-start bg-zinc-900 rounded-2xl overflow-hidden shadow transition-transform duration-300
       min-w-[70vw] sm:min-w-[250px] md:min-w-[220px] lg:min-w-[270px]
       ${index === 0 ? 'ml-0' : index === items.length - 1 ? 'mr-0' : ''}
     `}
-  >
-    <img
-      src={imageMap[game.image]}
-      alt={game.game}
-      draggable={false}
-      className="w-full h-[350px] object-cover"
-    />
-    <div className="p-3 text-white">
-      <h3 className="font-bold text-lg mb-1">{game.game}</h3>
-      <p className="text-sm whitespace-pre-line text-gray-300">{game.description}</p>
-      <div className="mt-2 flex flex-wrap gap-1">
-        {game.badges.map((badge, i) => (
-          <span
-            key={i}
-            className="bg-orange-500 text-xs text-black font-semibold px-2 py-0.5 rounded"
-          >
-            {badge}
-          </span>
-        ))}
-      </div>
-    </div>
-  </Link>
-))}
+                                    >
+                                        <img
+                                            src={imageMap[game.image]}
+                                            alt={game.game}
+                                            draggable={false}
+                                            className="w-full h-[350px] object-cover"
+                                        />
+                                        <div className="p-3 text-white">
+                                            <h3 className="font-bold text-lg mb-1">{game.game}</h3>
+                                            <p className="text-sm whitespace-pre-line text-gray-300">{game.description}</p>
+                                            <div className="mt-2 flex flex-wrap gap-1">
+                                                {game.badges.map((badge, i) => (
+                                                    <span
+                                                        key={i}
+                                                        className="bg-orange-500 text-xs text-black font-semibold px-2 py-0.5 rounded"
+                                                    >
+                                                        {badge}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
 
                             </div>
 

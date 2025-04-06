@@ -8,6 +8,8 @@ import Match from '../models/match.model.js';
 import User from '../models/user.model.js';
 import BanPickValo from '../models/veto.model.js';
 import Organization from '../models/team.model.js';
+import DCNLeague from '../models/tournament.model.js';
+import TeamTFT from '../models/registergame.model.js'
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -117,6 +119,110 @@ router.post('/check-registered-valorant', async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+// POST: Thêm dữ liệu mới
+router.post('/dcn-league', async (req, res) => {
+  try {
+    const { league, season, milestones } = req.body;
+
+    // 🔄 Gọi API lấy danh sách team TFT
+    const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const teamData = await response.json();
+
+    // ✅ An toàn: nếu không phải array, fallback = 0
+    let currentTeamCount = 0;
+
+    if (Array.isArray(teamData)) {
+      currentTeamCount = teamData.filter(
+        (team) => team.games && team.games.includes("Teamfight Tactics")
+      ).length;
+    } else {
+      console.warn("⚠️ /findallteamTFT API did not return array. Response:", teamData);
+    }
+
+    // 👇 Gán vào season
+    const updatedSeason = {
+      ...season,
+      current_team_count: currentTeamCount,
+    };
+
+    // 🔁 Upsert DCN League
+    const updatedLeague = await DCNLeague.findOneAndUpdate(
+      {
+        'league.game_name': league.game_name,
+        'league.league_id': league.league_id,
+        'season.season_number': season.season_number,
+      },
+      {
+        league,
+        season: updatedSeason,
+        milestones,
+      },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({
+      message: 'DCN League saved or updated successfully!',
+      data: updatedLeague,
+    });
+
+  } catch (err) {
+    console.error('❌ Error in /dcn-league:', err);
+    res.status(400).json({
+      message: 'Error saving/updating DCN League',
+      error: err.message,
+    });
+  }
+});
+
+
+
+router.get('/:game/:league_id/:season', async (req, res) => {
+  const { game, league_id, season } = req.params;
+
+  try {
+    const data = await DCNLeague.findOne({
+      'league.game_name': game,
+      'league.league_id': league_id,
+      'season.season_number': season
+    }).lean(); // 👈 Trả về plain object luôn
+
+    if (!data) {
+      return res.status(404).json({ message: 'League not found' });
+    }
+
+    // 👇 Gọi API lấy danh sách team TFT
+    const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const teamData = await response.json();
+
+    let currentTeamCount = 0;
+
+    if (Array.isArray(teamData)) {
+      currentTeamCount = teamData.filter(
+        (team) => team.games && team.games.includes("Teamfight Tactics")
+      ).length;
+    } else {
+      console.warn("⚠️ /findallteamTFT API did not return array. Response:", teamData);
+    }
+
+    // 👇 Gán lại team count vào season
+    data.season.current_team_count = currentTeamCount;
+
+    res.status(200).json(data);
+
+  } catch (err) {
+    console.error('❌ Error in GET league route:', err);
+    res.status(500).json({ message: 'Error fetching data', error: err.message });
+  }
+});
+
 
 router.get('/:team', async (req, res) => {
   try {

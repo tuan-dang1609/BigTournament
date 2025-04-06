@@ -29,6 +29,9 @@ const TeamRegistrationForm = () => {
     const navigate = useNavigate();
     const [loadingSubmit, setLoadingSubmit] = useState(false);
     const gameOptions = ["Teamfight Tactics"];
+        const [me,setMe] =useState(null)
+       
+    
     const driverObj = driver({
         showProgress: true,
         steps: [
@@ -75,9 +78,25 @@ const TeamRegistrationForm = () => {
 
         fetchTeams();
     }, [currentUser]);
-    if (!currentUser.riotID || currentUser.riotID.trim() === '' || currentUser.riotID === 'Đăng nhập với Riot Games') {  
-        navigate('/profile');  
-    }
+    useEffect(() => {
+        const fetchMe = async () => {
+            try {
+                const response = await axios.get("https://bigtournament-hq9n.onrender.com/api/user/" + currentUser._id);
+                setMe(response.data); // set đúng object user
+            } catch (error) {
+                console.error("Lỗi khi lấy người dùng:", error);
+            }
+        };
+    
+        fetchMe();
+    }, []);
+    useEffect(() => {
+        if (!me) return; // chưa fetch xong
+    
+        if (!me.riotID || me.riotID.trim() === '' || me.riotID === 'Đăng nhập với Riot Games') {
+            navigate('/profile');
+        }
+    }, [me]);
     useEffect(() => {
         const scrollToTop = () => {
             document.documentElement.scrollTop = 0;
@@ -100,8 +119,38 @@ const TeamRegistrationForm = () => {
         }
     }, [signupSuccess, countdown, navigate]);
 
+    useEffect(() => {
+        if (!me) return;
     
+        // Tự động chọn Teamfight Tactics
+        const game = "Teamfight Tactics";
+        const updatedGames = [game];
+        const updatedGameMembers = { [game]: [me.riotID] };
+    
+        // Tự động gán logo là ID từ riotID (tùy bạn muốn cắt phần # hay không)
+        const defaultLogo = me.profilePicture|| "defaultLogoId"; // ví dụ: Beacon3553
+    
+        setFormData((prevData) => ({
+            ...prevData,
+            games: updatedGames,
+            gameMembers: updatedGameMembers,
+            logoUrl: defaultLogo
+        }));
+    }, [me]);
+    
+    useEffect(() => {
+        if (userRegister && userRegister.gameMembers["Teamfight Tactics"][0]) {
 
+            setFormData({
+                discordID: userRegister.discordID || currentUser.discordID,
+                usernameregister: userRegister.usernameregister || currentUser._id,
+                logoUrl: userRegister.logoUrl || "",
+                games: userRegister.games || [],
+                gameMembers: userRegister.gameMembers || {}
+            });
+            console.log('userRegister.players:', userRegister.players);
+        }
+    }, [userRegister]);
     const handleGameToggle = (game) => {
         let updatedGames = [...formData.games];
         let updatedGameMembers = { ...formData.gameMembers };
@@ -111,7 +160,7 @@ const TeamRegistrationForm = () => {
             delete updatedGameMembers[game];
         } else {
             updatedGames.push(game);
-            updatedGameMembers[game] = [`${currentUser.riotID}`]; // Tự động điền riotID
+            updatedGameMembers[game] = [`${me.riotID}`]; // Tự động điền riotID
         }
 
         setFormData({ ...formData, games: updatedGames, gameMembers: updatedGameMembers });
@@ -134,36 +183,7 @@ const TeamRegistrationForm = () => {
         let newErrors = { ...errors };
 
         switch (name) {
-            case "teamName":
-                if (!value.trim()) {
-                    newErrors.teamName = "Bạn phải nhập tên đội";
-                } else {
-                    delete newErrors.teamName;
-                }
-                break;
-            case "shortName":
-                if (!value.trim()) {
-                    newErrors.shortName = "Bạn phải nhập tên viết tắt của đội";
-                } else if (value.length > 5) {
-                    newErrors.shortName = "Tên viết tắt của đội không được quá 5 kí tự";
-                } else {
-                    delete newErrors.shortName;
-                }
-                break;
-
-            case "logoUrl":
-                if (!value) {
-                    newErrors.logoUrl = "Bạn phải tải lên logo của đội hợp lệ (PNG, tỷ lệ 1:1, kích thước không quá 500x500px).";
-                }
-                break;
-
-            case "color":
-                if (!value.trim()) {
-                    newErrors.color = "Bạn phải nhập màu chủ đạo cho đội của mình";
-                } else {
-                    delete newErrors.color;
-                }
-                break;
+            
             case "games":
                 if (value.length === 0) {
                     newErrors.games = "Hãy chọn ít nhất 1 game";
@@ -238,27 +258,7 @@ const TeamRegistrationForm = () => {
         return <div>Loading...</div>;
     }
 
-    if (userRegister && userRegister.gameMembers["Teamfight Tactics"][0]) {
-        return (
-            <>
-                <div className="min-h-screen flex flex-col sm:mx-96 mx-5 ">
-                    <Link to='/tft' className="!justify-start flex mt-28 font-bold hover:underline text-lg lg:mb-2 mb-1">&lt; Quay lại</Link>
-                    <div className="bg-white p-8 rounded-lg shadow-md w-full flex justify-center items-center flex-col">
-                        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Bạn đã đăng kí đội</h2>
 
-                        {/* Hiển thị logo từ chuỗi Base64 */}
-                        <img
-                            src={`https://drive.google.com/thumbnail?id=${userRegister.logoUrl}`}
-                            className="w-28 h-28 mb-5"
-                            alt="Logo của đội"
-                        />
-                        <p className="text-gray-600">Riot ID: {userRegister.gameMembers["Teamfight Tactics"][0]}</p>
-                        <p className="text-gray-600">Game sẽ tham gia: {userRegister.games[0]}</p>
-                    </div>
-                </div>
-            </>
-        );
-    }
 
     if (signupSuccess) {
         return (

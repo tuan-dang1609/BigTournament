@@ -1,34 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { IoMdArrowDown } from "react-icons/io";
-import ImageDCN from '../image/waiting.png';
 import LQ from '../image/tft_bg.jpg';
 import { Link } from "react-router-dom";
 import { FaMedal } from "react-icons/fa";
+import { useSelector } from "react-redux";
 import 'animate.css';
-import $ from 'jquery';
+import MyNavbar2 from "../components/Navbar2";
 // Custom hook to detect screen size
-const useMediaQuery = (query) => {
-    const [matches, setMatches] = useState(false);
 
-    useEffect(() => {
-        const mediaQuery = window.matchMedia(query);
-        const handleChange = () => setMatches(mediaQuery.matches);
-        handleChange();
-        mediaQuery.addEventListener('change', handleChange);
-        return () => mediaQuery.removeEventListener('change', handleChange);
-    }, [query]);
-
-    return matches;
-};
 
 const CompetitionPage = () => {
     const [loading, setLoading] = useState(true);
     const [teams, setTeams] = useState([]);
-    const [showPlayers, setShowPlayers] = useState(false);
-
+    const [league, setLeague] = useState(null);
+    const { currentUser } = useSelector((state) => state.user);
+    const [startTime, setStartTime] = useState(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [joinCountdown, setJoinCountdown] = useState('');
+    const [registerPhase, setRegisterPhase] = useState('idle');
     const prizePool = [
         { place: "1st", prize: "Grand Final", color: "#FFD700" }, // Gold
-        { place: "2nd", prize: "Grand Final", color: "#C0C0C0" },  
+        { place: "2nd", prize: "Grand Final", color: "#C0C0C0" },
         { place: "3rd", prize: "Grand Final", color: "#FFD700" }, // Gold
         { place: "4th", prize: "Grand Final", color: "#C0C0C0" },  // Silver
         { place: "5th", prize: "72 Point", color: "#FFD700" }, // Gold
@@ -36,7 +27,7 @@ const CompetitionPage = () => {
         { place: "7th", prize: "64 Point", color: "#FFD700" }, // Gold
         { place: "8th", prize: "60 Point", color: "#C0C0C0" },  // Silver
         { place: "9th", prize: "57 Point", color: "#FFD700" }, // Gold
-        { place: "10th", prize: "53 Point", color: "#C0C0C0" },  
+        { place: "10th", prize: "53 Point", color: "#C0C0C0" },
         { place: "11th", prize: "50 Point", color: "#FFD700" }, // Gold
         { place: "12th", prize: "48 Point", color: "#C0C0C0" },  // Silver
         { place: "13th", prize: "45 Point", color: "#FFD700" }, // Gold
@@ -44,6 +35,53 @@ const CompetitionPage = () => {
         { place: "15th", prize: "40 Point", color: "#FFD700" }, // Gold
         { place: "16th-32nd", prize: "32 Point", color: "#C0C0C0" },  // Silver
     ];
+    const registered = parseInt(league?.season?.current_team_count) || 0;
+    const max = parseInt(league?.season?.max_registration) || 64;
+    const percent = Math.min((registered / max) * 100, 100);
+    useEffect(() => {
+        if (league?.league?.starts_at) {
+            setStartTime(new Date(league.season.time_start));
+        }
+    }, [league]);
+    // GMT+0 => GMT+3 = 15:00
+    useEffect(() => {
+        if (!startTime) return;
+        if (!league?.season?.registration_start || !league?.season?.registration_end) return;
+
+        const regStart = new Date(league.season.registration_start);
+        const regEnd = new Date(league.season.registration_end);
+
+        const updateCountdown = () => {
+            const now = new Date();
+
+            let diff;
+            if (now < regStart) {
+                diff = regStart - now;
+                setRegisterPhase('before');
+            } else if (now >= regStart && now <= regEnd) {
+                diff = regEnd - now;
+                setRegisterPhase('during');
+            } else {
+                setRegisterPhase('after');
+                return;
+            }
+
+            if (diff <= 0) return;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+            setJoinCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        };
+
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+        return () => clearInterval(interval);
+    }, [league]);
+
+
 
     useEffect(() => {
         const scrollToTop = () => {
@@ -56,186 +94,378 @@ const CompetitionPage = () => {
     }, []);
 
     useEffect(() => {
-        const fetchTeams = async () => {
+        const fetchAllData = async () => {
+            setLoading(true);
+
             try {
-                const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-        
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                const [teamResult, leagueResult] = await Promise.allSettled([
+                    fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    }),
+                    fetch('http://localhost:3000/api/auth/Teamfight Tactics/tft_split_2_2025/1')
+                ]);
+
+                // --- Handle league fetch ---
+                if (leagueResult.status === "fulfilled" && leagueResult.value.ok) {
+                    const leagueData = await leagueResult.value.json();
+                    setLeague(leagueData);
+                    setStartTime(new Date(leagueData.season.time_start));
+                } else {
+                    console.warn("❌ League API failed", leagueResult.reason || leagueResult.value?.status);
                 }
-        
-                const data = await response.json();
-        
-                // Lọc dữ liệu để chỉ giữ lại các đội có "Liên Quân Mobile" trong games
-                const filteredTeams = data.filter(team => team.games && team.games.includes("Teamfight Tactics"));
-        
-                setTeams(filteredTeams); // Lưu lại các đội đã lọc vào state
+
+                // --- Handle teams fetch ---
+                if (teamResult.status === "fulfilled" && teamResult.value.ok) {
+                    const teamData = await teamResult.value.json();
+                    const filteredTeams = teamData.filter(
+                        team => team.games && team.games.includes("Teamfight Tactics")
+                    );
+                    setTeams(filteredTeams);
+                } else {
+                    console.warn("❌ Teams API failed", teamResult.reason || teamResult.value?.status);
+                }
+
             } catch (error) {
-                console.error("Error fetching teams:", error);
+                console.error('Unexpected error in fetchAllData:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchTeams();
+        fetchAllData();
     }, []);
 
-    const scrollToContent = () => {
-        const contentSection = document.getElementById("participant");
-        contentSection.scrollIntoView({ behavior: "smooth" });
+    const navigationAll1 = {
+        aov: [
+            { name: "Tổng quan", href: "/tft", current: location.pathname === "/tft" },
+        ],
     };
+    const getNavigation = () => navigationAll1.aov;
+    if (!league) {
+        return (
+            <div className="min-h-screen flex justify-center items-center text-white ">
+                <span className="loading loading-dots loading-lg text-primary">Loading league...</span>
+            </div>
+        );
+    }
+
 
     return (
         <div className="min-h-screen flex flex-col text-white">
             {/* Header Section */}
-            <header className="relative h-screen">
+            <header>
                 <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${LQ})` }}
-                    aria-label="Competition arena with spotlights"
+                    className="inset-0 bg-cover bg-center aspect-[4/1]"
+                    style={{
+                        backgroundImage: `linear-gradient(0deg, rgb(6, 6, 6) 0%, rgba(6, 6, 6, 0.6) 50%, rgba(6, 6, 6, 0.4) 100%), url(${LQ})`,
+                    }}
+                    aria-label="Competition background"
                 >
-                    <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-                </div>
-                <div className="relative z-10 h-full flex flex-col justify-center items-center text-center px-4">
-                    <div className="text-6xl animate__animated animate__fadeIn mb-6 text-red-500 flex items-center justify-center">
-                        <img src={ImageDCN} alt="DCN logo" className="h-32 w-32" />
+                    <div className="relative z-10 h-full flex flex-row justify-center px-4">
+                        <div className="absolute left-5 bottom-10 text-sm md:text-base text-white font-semibold px-4 md:px-8">
+                            <div className="text-sm text-green-500 font-bold mb-2 uppercase">
+                                SẮP TỚI • {new Date(startTime).toLocaleString('en-GB', {
+                                    weekday: 'short',
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                    timeZoneName: 'short'
+                                })}
+                            </div>
+
+                            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+                                {league.league.name}
+                            </h1>
+
+                            <div className="text-sm text-gray-300">
+                                Tổ chức bởi <span className="text-white font-semibold">{league.league.organizer_id}</span>
+                            </div>
+                        </div>
+
+
+                        {registerPhase === 'before' && (
+                            <div className="px-4 md:px-8 absolute right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
+                                <div className="mb-2">
+                                    Mở form sau: <span className="text-orange-500">{joinCountdown}</span>
+                                </div>
+
+                                {!currentUser ? (
+                                    <Link to="/signin">
+                                        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
+                                            Đăng nhập để tham gia
+                                        </button>
+                                    </Link>
+                                ) : (
+                                    <Link to="https://discord.gg/crP48bD7" target="_blank" rel="noopener noreferrer">
+                                        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
+                                            Discord THPT Phú Nhuận
+                                        </button>
+                                    </Link>
+                                )}
+                            </div>
+                        )}
+
+                        {registerPhase === 'during' && (
+                            <div className="px-4 md:px-8 absolute right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
+                                <div className="mb-2">
+                                    Time left to join: <span className="text-orange-500">{joinCountdown}</span>
+                                </div>
+                                <Link to="/tft/register">
+                                    <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
+                                        Đăng ký
+                                    </button>
+                                </Link>
+                            </div>
+                        )}
+
+
                     </div>
-                    <h1 className="text-6xl md:text-7xl animate__animated animate__fadeIn font-extrabold mb-6 animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                        Vòng loại 1 giải TFT DCN: Season 2025
-                    </h1>
-                    <p className="animate__animated animate__fadeIn text-xl md:text-xl mb-8 animate-fade-in-up">
-                       Thắng bại tại kĩ năng !!!
-                    </p>
-                    <Link to="/tft/register">
-                                            <button className="animate__animated animate__fadeInUp bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent text-white font-bold py-4 px-10 rounded-full text-xl transform hover:scale-105 shadow-lg">
-                                                Đăng ký ngay
-                                            </button>
-                                        </Link>
-                </div>
-                <div className="absolute bottom-8 left-0 right-0 flex justify-center">
-                    <button
-                        onClick={scrollToContent}
-                        className="absolute bottom-8 text-secondary hover:text-secondary transform -translate-x-1/2 text-4xl animate-bounce z-20 flex justify-center items-center"
-                    >
-                        <IoMdArrowDown />
-                    </button>
                 </div>
             </header>
-            { /* Timeline Section */}
-
-
+            <div><MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} /></div>
             {/* Content Section */}
-            <section id="participant" className="py-12 lg:py-16 px-4 md:px-8 bg-gradient-to-b text-white">
-                <div className="mx-auto">
-                    <h2 className="animate__animated animate__fadeInUp text-4xl md:text-5xl font-bold mb-6 text-center text-primary">Người chơi tham dự giải đấu</h2>
-
-                    {loading ? (
-                        <div className="flex items-center justify-center mt-24">
-                            <span className="loading loading-dots loading-lg text-primary"></span>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="tag flex items-center text-base-content space-x-2 gap-x-3 justify-end my-5 lg:text-[17px] text-[14px]">
-                                Hiện toàn bộ thành viên{" "}
-                                <div className="flex items-center">
-                                    <label className="relative inline-block w-14 h-8">
-                                        <input
-                                            type="checkbox"
-                                            checked={showPlayers}
-                                            onChange={() => setShowPlayers(!showPlayers)} // Toggle the state
-                                            className="sr-only" // Visually hide the checkbox
-                                        />
-                                        <div
-                                            className={`block bg-gray-300 w-14 h-8 rounded-full ${showPlayers ? 'bg-green-500' : 'bg-gray-300'} transition duration-300 ease-in-out`}
-                                        ></div>
-                                        <div
-                                            className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${showPlayers ? 'transform translate-x-6' : ''}`}
-                                        ></div>
-                                    </label>
+            <section id="participant" className="py-12 lg:py-16 px-4 md:px-8 flex flex-row text-white">
+                <div className="w-[68%] px-4 md:px-8">
+                    <div className="font-semibold">
+                        <h2 className="text-3xl md:text-2xl font-bold mb-8">Thông tin</h2>
+                        <div className="grid grid-cols-3 gap-y-10 uppercase ">
+                            <div className="flex flex-row gap-x-1">
+                                <div>
+                                    <img src="image/tft_icon.png" width={50} height={48} />
+                                </div>
+                                <div>
+                                    <p className="text-[#a7a7a7]">Game</p>
+                                    <p>{league.league.game_name}</p>
                                 </div>
                             </div>
-                            <div className="tag grid grid-cols-2 lg:grid-cols-4 lg:gap-8 gap-1">
-                                {teams.map((team, index) => (
-                                    <TeamCard key={index} team={team} showPlayers={showPlayers} />
-                                ))}
+                            <div className="flex flex-row gap-x-2">
+                                <div>
+                                    <img src="image/team_icon.png" width={48} height={48} />
+                                </div>
+                                <div>
+                                    <p className="text-[#a7a7a7]">Số người trong đội</p>
+                                    <p>{league.league.players_per_team}</p>
+                                </div>
                             </div>
-                        </>
-                    )}
+                            <div className="flex flex-row gap-x-2">
+                                <div><svg xmlns="http://www.w3.org/2000/svg" fill="#fff" viewBox="0 0 24 24" width="48" height="48">
+                                    <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 2.239-7 5v2h14v-2c0-2.761-3.134-5-7-5z" />
+                                </svg></div>
+                                <div>
+                                    <p className="text-[#a7a7a7]">Giới hạn người chơi</p>
+                                    <p>{league.season.max_registration}</p>
+                                </div>
+                            </div>
+                            <div className="flex flex-row gap-x-2">
+                                <div><img src="image/prize.png" width={48} height={48} /></div>
+                                <div>
+                                    <p className="text-[#a7a7a7]">Tổng giải thưởng</p>
+                                    <p>${league.season.total_prize_pool}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-row gap-x-2">
+                                <div><img src="image/schedule.png" width={48} height={48} /></div>
+                                <div>
+                                    <p className="text-[#a7a7a7]">Bắt đầu</p>
+                                    <p>{new Date(startTime).toLocaleString('en-GB', {
+                                        weekday: 'short',
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                        timeZoneName: 'short'
+                                    })}</p>
+                                </div>
+                            </div>
+                            <div className="flex flex-row gap-x-2">
+                                <div><img src="image/schedule.png" width={48} height={48} /></div>
+                                <div>
+                                    <p className="text-[#a7a7a7]">Kết thúc</p>
+                                    <p>{new Date(league.season.time_end).toLocaleString('en-GB', {
+                                        weekday: 'short',
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                        timeZoneName: 'short'
+                                    })}</p>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <section className=" py-12 text-white ">
+                        <h2 className="text-3xl md:text-2xl font-bold mb-8">Tiến Trình</h2>
+                        <div className="space-y-8">
+                            {league?.milestones.map((item, index) => {
+                                const date = new Date(item.date);
+                                const isPast = date < new Date();
+
+                                return (
+                                    <div key={index} className="flex flex-col md:flex-row md:items-start gap-4">
+                                        <div className="text-orange-500 text-xl">
+                                            {isPast ? (
+                                                <img src="/image/completed.png" width={24} height={24} />
+                                            ) : (
+                                                <img src="/image/ongoing.png" width={24} height={24} />
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="text-sm text-gray-400 mb-1">
+                                                {date.toLocaleString('en-GB', {
+                                                    weekday: 'short',
+                                                    day: '2-digit',
+                                                    month: 'short',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                                    timeZoneName: 'short'
+                                                })}
+                                            </div>
+                                            <div className="font-bold text-lg mb-1">{item.title}</div>
+                                            {item.content && (
+                                                <p className="text-sm text-gray-300 whitespace-pre-line">{item.content}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+
+                </div>
+                <div className="w-[32%] px-4 md:px-8">
+                    <section className=" text-white ">
+                        {/* TEAMS */}
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-bold">Người chơi</h2>
+                            <button className="text-orange-500 font-bold hover:underline text-sm">XEM TẤT CẢ</button>
+                        </div>
+
+                        <div className="border border-gray-700 rounded-lg p-4 flex items-center space-x-3 mb-10">
+                            <div className="relative w-8 h-8">
+                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                    <circle
+                                        cx="18"
+                                        cy="18"
+                                        r="16"
+                                        stroke="#333"
+                                        strokeWidth="4"
+                                        fill="none"
+                                    />
+                                    <circle
+                                        cx="18"
+                                        cy="18"
+                                        r="16"
+                                        stroke="#ff6600"
+                                        strokeWidth="4"
+                                        fill="none"
+                                        strokeDasharray={`${(percent / 100) * 100} 100`}
+                                        strokeLinecap="round"
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center text-white">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="#fff" viewBox="0 0 24 24" width="16" height="16">
+                                        <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 2.239-7 5v2h14v-2c0-2.761-3.134-5-7-5z" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <span className="text-lg font-medium">
+                                {parseInt(league?.season?.current_team_count).toLocaleString()} /{" "}
+                                {parseInt(league?.season?.max_registration).toLocaleString()}
+                            </span>
+                        </div>
+
+                        {/* REQUIREMENTS */}
+                        <h2 className="text-2xl font-bold mb-4">YÊU CẦU</h2>
+                        <div className="border border-gray-700 rounded-lg p-4 space-y-4 mb-10">
+                            {/* Skill Level */}
+                            <div className="flex flex-row items-stretch w-full justify-between">
+                                {/* Skill Level label - align top */}
+                                <div className="flex items-center">
+                                    <p className=" text-white font-bold ">Skill Level</p>
+                                </div>
+
+                                {/* Image row - align bottom */}
+                                <div className="flex items-center space-x-2 self-end">
+                                    <img
+                                        src={`ranklol/${league?.league?.skill_levels?.[0]}.png`}
+                                        width={60}
+                                        height={60}
+                                        alt="Min Rank"
+                                    />
+                                    <span className="text-white text-xl">-</span>
+                                    <img
+                                        src={`ranklol/${league?.league?.skill_levels?.slice(-1)[0]}.png`}
+                                        width={48}
+                                        height={48}
+                                        alt="Max Rank"
+                                    />
+                                </div>
+                            </div>
+
+
+                            <hr className="border-gray-700" />
+
+                            {/* Subscription */}
+                            <div className="flex flex-row justify-between h-[48px] items-center">
+                                <div className=" text-white font-bold">Trường</div>
+                                <div>
+
+                                    <span className="font-bold">{league.league.school_allowed}</span>
+
+                                </div>
+                            </div>
+                            <hr className="border-gray-700" />
+                            <div className="flex flex-row justify-between h-[48px] items-center">
+                                <div className=" text-white font-bold">Discord</div>
+                                <div>
+
+                                    <span className="font-bold">Có</span>
+
+                                </div>
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-bold mb-4">THÔNG TIN</h2>
+                        <div className="border border-gray-700 rounded-lg p-4 space-y-4 mb-4">
+
+                            {/* Subscription */}
+                            <div className="flex flex-row justify-between h-[48px] items-center">
+                                <div className=" text-white font-bold">Facebook</div>
+                                <div>
+
+                                    <a className="font-bold text-orange-500" href="https://www.facebook.com/dongchuyennghiep">Dong Chuyen Nghiep</a>
+
+                                </div>
+                            </div>
+                            <hr className="border-gray-700" />
+                            <div className="flex flex-row justify-between h-[48px] items-center">
+                                <div className=" text-white font-bold">Discord</div>
+                                <div>
+
+                                <a className="font-bold text-orange-500" href="https://discord.gg/crP48bD7">THPT Phú Nhuận</a>
+
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </section>
                 </div>
             </section>
-
-            {/* Prize Pool Section */}
-            <div className="lg:my-12 px-4 my-10 tag">
-                <h2 className="max-w-xl mx-auto text-4xl md:text-5xl font-bold mb-10 text-center text-primary">
-                    Điểm hạng
-                </h2>
-                <div className="mx-auto">
-                    <div className="grid grid-cols-2 lg:grid-cols-8 md:grid-cols-4 gap-1">
-                        {prizePool.map((prize, index) => (
-                            <div key={index} className="text-center bg-gray-800 rounded-lg p-6 shadow-xl">
-                                <div className="text-5xl mb-4 flex justify-center" style={{ color: prize.color }}>
-                                    <FaMedal />
-                                </div>
-                                <h3 className="text-2xl font-bold mb-2">{prize.place}</h3>
-                                <p className="text-xl font-semibold text-green-400">{prize.prize}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };
 
-const TeamCard = ({ team, showPlayers }) => {
-    const [isHovered, setIsHovered] = useState(false);
 
-    // Check if the screen size is smaller than `lg`
-    const isSmallScreen = useMediaQuery('(max-width: 1024px)');
-    // Limit players based on screen size
-    const playersToShow = isSmallScreen ? team.gameMembers["Teamfight Tactics"].slice(0, 5) : team.gameMembers["Teamfight Tactics"];
-
-    return (
-        <div
-            className="bg-gray-700 py-1 lg:p-5 rounded-lg shadow-lg text-center transition duration-300 ease-in-out"
-        >
-            <div className="w-full lg:h-48 h-24 lg:p-0 p-2 overflow-hidden relative">
-                <img
-                    src={`https://drive.google.com/thumbnail?id=${team.logoUrl}`} 
-                    alt={`${team.teamName} logo`}
-                    className={`h-full flex w-full justify-center items-center lg:block object-contain transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-[.19]' : 'opacity-100'}`}
-                />
-                <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-100' : 'opacity-0'}`}>
-                    {playersToShow.map((player, playerIndex) => (
-                        <div key={playerIndex} className="h-1/3 flex items-center font-semibold justify-center text-[10px] lg:text-[15px]">
-                            {player}
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <p className="font-bold animate-fade-in-down bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent text-[12.5px] lg:text-[18px] lg:pt-4 lg:pb-2">
-  {team.gameMembers["Teamfight Tactics"][0]}
-</p>
-        </div>
-    );
-};
-$(document).on("scroll", function () {
-    var pageTop = $(document).scrollTop();
-    var pageBottom = pageTop + $(window).height();
-    var tags = $(".tag");
-
-    for (var i = 0; i < tags.length; i++) {
-        var tag = tags[i];
-        if ($(tag).position().top < pageBottom) {
-            $(tag).addClass("visible");
-        } else {
-            $(tag).removeClass("visible");
-        }
-    }
-});
 export default CompetitionPage;

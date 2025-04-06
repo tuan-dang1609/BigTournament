@@ -17,7 +17,7 @@ function classNames(...classes) {
 }
 
 export default function Example() {
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "autumn");
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "forest");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -178,50 +178,7 @@ export default function Example() {
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-              <div className="dropdown dropdown-end hidden sm:block">
-                <label
-                  tabIndex={0}
-                  className="btn m-1 w-24 max-lg:w-auto rounded-2xl"
-                >
-                  {theme === "autumn" && "🌞 Light"}
-                  {theme === "forest" && "🌙 Dark"}
-                </label>
-                <ul
-                  tabIndex={0}
-                  className="dropdown-content menu p-2 shadow bg-base-300 rounded-box w-44"
-                >
-                  <li>
-                    <a onClick={() => handleToggle({ target: { value: "autumn" } })}>🌞 Light</a>
-                  </li>
-                  <li>
-                    <a onClick={() => handleToggle({ target: { value: "forest" } })}>🌙 Dark</a>
-                  </li>
-                </ul>
-              </div>
-              <div className="dropdown dropdown-end block sm:hidden">
-                <label
-                  tabIndex={0}
-                  className="btn w-32 text-xl max-lg:w-auto rounded-2xl"
-                >
-                  {theme === "autumn" && "🌞"}
-                  {theme === "forest" && "🌙"}
-                  {theme === "valentine" && "💘"}
-                </label>
-                <ul
-                  tabIndex={0}
-                  className="dropdown-content menu p-2 shadow bg-base-300 rounded-box w-52"
-                >
-                  <li>
-                    <a onClick={() => handleToggle({ target: { value: "autumn" } })}>🌞 Light</a>
-                  </li>
-                  <li>
-                    <a onClick={() => handleToggle({ target: { value: "forest" } })}>🌙 Dark</a>
-                  </li>
-                  <li>
-                    <a onClick={() => handleToggle({ target: { value: "valentine" } })}>💘 Cute</a>
-                  </li>
-                </ul>
-              </div>
+
 
 
               {currentUser ? (
