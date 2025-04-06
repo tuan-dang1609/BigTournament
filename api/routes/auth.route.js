@@ -180,14 +180,13 @@ router.post('/dcn-league', async (req, res) => {
 
 
 
-router.get('/:game/:league_id/:season', async (req, res) => {
-  const { game, league_id, season } = req.params;
+router.get('/:game/:league_id', async (req, res) => {
+  const { game, league_id } = req.params;
 
   try {
     const data = await DCNLeague.findOne({
-      'league.game_name': game,
+      'league.game_short': game,
       'league.league_id': league_id,
-      'season.season_number': season
     }).lean(); // 👈 Trả về plain object luôn
 
     if (!data) {

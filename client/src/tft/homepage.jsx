@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import LQ from '../image/tft_bg.jpg';
-import { Link } from "react-router-dom";
-import { FaMedal } from "react-icons/fa";
+import { Link } from "react-router-dom";;
 import { useSelector } from "react-redux";
 import 'animate.css';
 import MyNavbar2 from "../components/Navbar2";
 // Custom hook to detect screen size
+import { useParams } from 'react-router-dom';
 
 
 const CompetitionPage = () => {
@@ -17,6 +16,7 @@ const CompetitionPage = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [joinCountdown, setJoinCountdown] = useState('');
     const [registerPhase, setRegisterPhase] = useState('idle');
+    const { game, league_id } = useParams();
     const prizePool = [
         { place: "1st", prize: "Grand Final", color: "#FFD700" }, // Gold
         { place: "2nd", prize: "Grand Final", color: "#C0C0C0" },
@@ -103,7 +103,7 @@ const CompetitionPage = () => {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' }
                     }),
-                    fetch('http://localhost:3000/api/auth/Teamfight Tactics/tft_split_2_2025/1')
+                    fetch(`https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}/`)
                 ]);
 
                 // --- Handle league fetch ---
@@ -156,16 +156,17 @@ const CompetitionPage = () => {
             {/* Header Section */}
             <header>
                 <div
-                    className="inset-0 bg-cover bg-center aspect-[4/1]"
+                    className="inset-0 bg-cover bg-center xl:aspect-[4/1] md:aspect-[3/1] sm:aspect-[2.4/1] aspect-[1.2/1]"
                     style={{
-                        backgroundImage: `linear-gradient(0deg, rgb(6, 6, 6) 0%, rgba(6, 6, 6, 0.6) 50%, rgba(6, 6, 6, 0.4) 100%), url(${LQ})`,
+                        backgroundImage: `linear-gradient(0deg, rgb(6, 6, 6) 0%, rgba(6, 6, 6, 0.6) 50%, rgba(6, 6, 6, 0.4) 100%), url(${league.season.header_image_url})`,
                     }}
                     aria-label="Competition background"
                 >
-                    <div className="relative z-10 h-full flex flex-row justify-center px-4">
-                        <div className="absolute left-5 bottom-10 text-sm md:text-base text-white font-semibold px-4 md:px-8">
-                            <div className="text-sm text-green-500 font-bold mb-2 uppercase">
-                                SẮP TỚI • {new Date(startTime).toLocaleString('en-GB', {
+                    <div className="sm:relative z-10 h-full items-center flex sm:flex-row flex-col justify-center px-2 sm:text-left  text-center">
+                        <div className="sm:mb-0 mb-4 sm:absolute relative md:left-5 left-0 sm:bottom-10 text-sm md:text-base text-white font-semibold pl-2 xl:pl-8">
+                            <div className="text-sm font-bold mb-2 uppercase">
+                                <p className="text-left">
+                                <span className="text-green-300">SẮP TỚI</span> • {new Date(startTime).toLocaleString('en-GB', {
                                     weekday: 'short',
                                     day: '2-digit',
                                     month: 'short',
@@ -175,9 +176,10 @@ const CompetitionPage = () => {
                                     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                                     timeZoneName: 'short'
                                 })}
+                                    </p>
                             </div>
 
-                            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+                            <h1 className="md:text-[24px] text-[24px] xl:text-[40px] md:text-5xl text-left font-extrabold text-white sm:mb-4">
                                 {league.league.name}
                             </h1>
 
@@ -188,7 +190,7 @@ const CompetitionPage = () => {
 
 
                         {registerPhase === 'before' && (
-                            <div className="px-4 md:px-8 absolute right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
+                            <div className="sm:absolute relative px-4 md:px-8  sm:right-0 sm:bottom-10 text-sm md:text-base text-white font-semibold text-center sm:text-right">
                                 <div className="mb-2">
                                     Mở form sau: <span className="text-orange-500">{joinCountdown}</span>
                                 </div>
@@ -210,7 +212,7 @@ const CompetitionPage = () => {
                         )}
 
                         {registerPhase === 'during' && (
-                            <div className="px-4 md:px-8 absolute right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
+                            <div className="sm:absolute relative px-4 md:px-8  right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
                                 <div className="mb-2">
                                     Time left to join: <span className="text-orange-500">{joinCountdown}</span>
                                 </div>
@@ -228,27 +230,27 @@ const CompetitionPage = () => {
             </header>
             <div><MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} /></div>
             {/* Content Section */}
-            <section id="participant" className="py-12 lg:py-16 px-4 md:px-8 flex flex-row text-white">
-                <div className="w-[68%] px-4 md:px-8">
+            <section id="participant" className="py-10 lg:py-16 px-2 md:px-8 flex lg:flex-row flex-col text-white">
+                <div className="xl:w-[68%] lg:w-[70%] w-full  px-2 xl:px-8">
                     <div className="font-semibold">
                         <h2 className="text-3xl md:text-2xl font-bold mb-8">Thông tin</h2>
-                        <div className="grid grid-cols-3 gap-y-10 uppercase ">
+                        <div className="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-y-10 uppercase ">
                             <div className="flex flex-row gap-x-1">
                                 <div>
-                                    <img src="image/tft_icon.png" width={50} height={48} />
+                                    <img src="/image/tft_icon.png" width={50} height={48} />
                                 </div>
                                 <div>
-                                    <p className="text-[#a7a7a7]">Game</p>
-                                    <p>{league.league.game_name}</p>
+                                    <p className="lg:text-[14px] text-[#a7a7a7]">Game</p>
+                                    <p className="lg:text-[14px]">{league.league.game_name}</p>
                                 </div>
                             </div>
                             <div className="flex flex-row gap-x-2">
                                 <div>
-                                    <img src="image/team_icon.png" width={48} height={48} />
+                                    <img src="/image/team_icon.png" width={48} height={48} />
                                 </div>
                                 <div>
-                                    <p className="text-[#a7a7a7]">Số người trong đội</p>
-                                    <p>{league.league.players_per_team}</p>
+                                    <p className="lg:text-[14px] text-[#a7a7a7]">Số người trong đội</p>
+                                    <p className="lg:text-[14px]">{league.league.players_per_team}</p>
                                 </div>
                             </div>
                             <div className="flex flex-row gap-x-2">
@@ -256,23 +258,23 @@ const CompetitionPage = () => {
                                     <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 2.239-7 5v2h14v-2c0-2.761-3.134-5-7-5z" />
                                 </svg></div>
                                 <div>
-                                    <p className="text-[#a7a7a7]">Giới hạn người chơi</p>
-                                    <p>{league.season.max_registration}</p>
+                                    <p className="lg:text-[14px] text-[#a7a7a7]">Giới hạn người chơi</p>
+                                    <p className="lg:text-[14px]">{league.season.max_registration}</p>
                                 </div>
                             </div>
                             <div className="flex flex-row gap-x-2">
-                                <div><img src="image/prize.png" width={48} height={48} /></div>
+                                <div><img src="/image/prize.png" width={48} height={48} /></div>
                                 <div>
-                                    <p className="text-[#a7a7a7]">Tổng giải thưởng</p>
-                                    <p>${league.season.total_prize_pool}</p>
+                                    <p className="lg:text-[14px] text-[#a7a7a7]">Tổng giải thưởng</p>
+                                    <p className="lg:text-[14px]">${league.season.total_prize_pool}</p>
                                 </div>
                             </div>
                             
                             <div className="flex flex-row gap-x-2">
-                                <div><img src="image/schedule.png" width={48} height={48} /></div>
+                                <div><img src="/image/schedule.png" width={48} height={48} /></div>
                                 <div>
-                                    <p className="text-[#a7a7a7]">Bắt đầu</p>
-                                    <p>{new Date(startTime).toLocaleString('en-GB', {
+                                    <p className="lg:text-[14px] text-[#a7a7a7]">Bắt đầu</p>
+                                    <p className="lg:text-[14px]">{new Date(startTime).toLocaleString('en-GB', {
                                         weekday: 'short',
                                         day: '2-digit',
                                         month: 'short',
@@ -285,10 +287,10 @@ const CompetitionPage = () => {
                                 </div>
                             </div>
                             <div className="flex flex-row gap-x-2">
-                                <div><img src="image/schedule.png" width={48} height={48} /></div>
+                                <div><img src="/image/schedule.png" width={48} height={48} /></div>
                                 <div>
-                                    <p className="text-[#a7a7a7]">Kết thúc</p>
-                                    <p>{new Date(league.season.time_end).toLocaleString('en-GB', {
+                                    <p className="lg:text-[14px] text-[#a7a7a7]">Kết thúc</p>
+                                    <p className="lg:text-[14px]">{new Date(league.season.time_end).toLocaleString('en-GB', {
                                         weekday: 'short',
                                         day: '2-digit',
                                         month: 'short',
@@ -311,7 +313,7 @@ const CompetitionPage = () => {
                                 const isPast = date < new Date();
 
                                 return (
-                                    <div key={index} className="flex flex-col md:flex-row md:items-start gap-4">
+                                    <div key={index} className="flex flex-row md:items-start gap-4">
                                         <div className="text-orange-500 text-xl">
                                             {isPast ? (
                                                 <img src="/image/completed.png" width={24} height={24} />
@@ -344,7 +346,7 @@ const CompetitionPage = () => {
                     </section>
 
                 </div>
-                <div className="w-[32%] px-4 md:px-8">
+                <div className="xl:w-[32%] lg:w-[30%] w-full px-2 xl:px-8">
                     <section className=" text-white ">
                         {/* TEAMS */}
                         <div className="flex justify-between items-center mb-4">
@@ -381,33 +383,33 @@ const CompetitionPage = () => {
                                 </div>
                             </div>
 
-                            <span className="text-lg font-medium">
+                            <span className="text-[14px] font-medium">
                                 {parseInt(league?.season?.current_team_count).toLocaleString()} /{" "}
                                 {parseInt(league?.season?.max_registration).toLocaleString()}
                             </span>
                         </div>
 
                         {/* REQUIREMENTS */}
-                        <h2 className="text-2xl font-bold mb-4">YÊU CẦU</h2>
+                        <h2 className="text-[22px] font-bold mb-4">Yêu cầu</h2>
                         <div className="border border-gray-700 rounded-lg p-4 space-y-4 mb-10">
                             {/* Skill Level */}
                             <div className="flex flex-row items-stretch w-full justify-between">
                                 {/* Skill Level label - align top */}
                                 <div className="flex items-center">
-                                    <p className=" text-white font-bold ">Skill Level</p>
+                                    <p className="text-[14px] text-white font-bold ">Skill Level</p>
                                 </div>
 
                                 {/* Image row - align bottom */}
                                 <div className="flex items-center space-x-2 self-end">
                                     <img
-                                        src={`ranklol/${league?.league?.skill_levels?.[0]}.png`}
+                                        src={`/ranklol/${league?.league?.skill_levels?.[0]}.png`}
                                         width={60}
                                         height={60}
                                         alt="Min Rank"
                                     />
-                                    <span className="text-white text-xl">-</span>
+                                    <span className="text-white text-[14px]">-</span>
                                     <img
-                                        src={`ranklol/${league?.league?.skill_levels?.slice(-1)[0]}.png`}
+                                        src={`/ranklol/${league?.league?.skill_levels?.slice(-1)[0]}.png`}
                                         width={48}
                                         height={48}
                                         alt="Max Rank"
@@ -420,7 +422,7 @@ const CompetitionPage = () => {
 
                             {/* Subscription */}
                             <div className="flex flex-row justify-between h-[48px] items-center">
-                                <div className=" text-white font-bold">Trường</div>
+                                <div className="text-[14px] text-white font-bold">Trường</div>
                                 <div>
 
                                     <span className="font-bold">{league.league.school_allowed}</span>
@@ -429,7 +431,7 @@ const CompetitionPage = () => {
                             </div>
                             <hr className="border-gray-700" />
                             <div className="flex flex-row justify-between h-[48px] items-center">
-                                <div className=" text-white font-bold">Discord</div>
+                                <div className="text-[14px] text-white font-bold">Discord</div>
                                 <div>
 
                                     <span className="font-bold">Có</span>
@@ -437,24 +439,24 @@ const CompetitionPage = () => {
                                 </div>
                             </div>
                         </div>
-                        <h2 className="text-2xl font-bold mb-4">THÔNG TIN</h2>
+                        <h2 className="text-[22px] font-bold mb-4">Thông tin</h2>
                         <div className="border border-gray-700 rounded-lg p-4 space-y-4 mb-4">
 
                             {/* Subscription */}
                             <div className="flex flex-row justify-between h-[48px] items-center">
-                                <div className=" text-white font-bold">Facebook</div>
+                                <div className="text-[14px] text-white font-bold">Facebook</div>
                                 <div>
 
-                                    <a className="font-bold text-orange-500" href="https://www.facebook.com/dongchuyennghiep">Dong Chuyen Nghiep</a>
+                                    <a className="text-[14px] font-bold text-orange-500" href="https://www.facebook.com/dongchuyennghiep">Dong Chuyen Nghiep</a>
 
                                 </div>
                             </div>
                             <hr className="border-gray-700" />
                             <div className="flex flex-row justify-between h-[48px] items-center">
-                                <div className=" text-white font-bold">Discord</div>
+                                <div className="text-[14px] text-white font-bold">Discord</div>
                                 <div>
 
-                                <a className="font-bold text-orange-500" href="https://discord.gg/crP48bD7">THPT Phú Nhuận</a>
+                                <a className="text-[14px] font-bold text-orange-500" href="https://discord.gg/crP48bD7">THPT Phú Nhuận</a>
 
                                 </div>
                             </div>

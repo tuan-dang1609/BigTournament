@@ -67,7 +67,7 @@ if (rootElement) {
       <BrowserRouter>
         <Routes>
           {/* Route KHÔNG có Navbar */}
-          <Route path="/tft" element={<TFThompage />} />
+          <Route path="/:game/:league_id" element={<TFThompage />} />
   
           {/* Routes CÓ Navbar + Footer */}
           <Route

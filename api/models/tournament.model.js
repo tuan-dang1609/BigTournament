@@ -31,6 +31,7 @@ const leagueSchema = new mongoose.Schema({
   name: String,
   season_number: String,
   game_name: String,
+  game_short:String,
   banner_image_url: String,
   players_per_team: Number,
   starts_at: Date,
