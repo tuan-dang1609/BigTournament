@@ -122,7 +122,15 @@ router.post('/check-registered-valorant', async (req, res) => {
 // POST: Thêm dữ liệu mới
 router.post('/dcn-league', async (req, res) => {
   try {
-    const { league, season, milestones,prizepool,navigation } = req.body;
+    const {
+      league,
+      season,
+      milestones,
+      prizepool,
+      navigation,
+      players = [], // có thể rỗng
+      matches = {}
+    } = req.body;
 
     // 🔄 Gọi API lấy danh sách team TFT
     const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
@@ -132,24 +140,51 @@ router.post('/dcn-league', async (req, res) => {
 
     const teamData = await response.json();
 
-    // ✅ An toàn: nếu không phải array, fallback = 0
+    // ✅ Đếm số team TFT
     let currentTeamCount = 0;
+    let updatedPlayers = players;
 
     if (Array.isArray(teamData)) {
-      currentTeamCount = teamData.filter(
+      const filteredTeams = teamData.filter(
         (team) => team.games && team.games.includes("Teamfight Tactics")
-      ).length;
+      );
+
+      currentTeamCount = filteredTeams.length;
+
+      // ✅ Nếu không truyền players từ client → lấy từ teamData
+      if (players.length === 0) {
+        updatedPlayers = filteredTeams.map(team => ({
+          discordID: team.discordID || '',
+          ign: team.gameMembers?.["Teamfight Tactics"]?.[0] || '',
+          usernameregister: team.usernameregister || '',
+          logoUrl: team.logoUrl || '',
+          game: "Teamfight Tactics",
+          isCheckedin: false
+        }));
+      }
     } else {
       console.warn("⚠️ /findallteamTFT API did not return array. Response:", teamData);
     }
 
-    // 👇 Gán vào season
+    // ✅ Tính check-in time
+    const timeStart = new Date(season.time_start);
+    const checkinStart = new Date(timeStart.getTime() - 3 * 60 * 60 * 1000);      // -3h
+    const checkinEnd = new Date(timeStart.getTime() - 30 * 60 * 1000);            // -30min
+
     const updatedSeason = {
       ...season,
       current_team_count: currentTeamCount,
+      checkin_start: checkinStart,
+      checkin_end: checkinEnd
     };
 
-    // 🔁 Upsert DCN League
+    // ✅ Đảm bảo tất cả player có field isCheckedin
+    const finalPlayers = updatedPlayers.map(player => ({
+      ...player,
+      isCheckedin: typeof player.isCheckedin === 'boolean' ? player.isCheckedin : false,
+    }));
+
+    // ✅ Upsert DCN League
     const updatedLeague = await DCNLeague.findOneAndUpdate(
       {
         'league.game_name': league.game_name,
@@ -160,7 +195,10 @@ router.post('/dcn-league', async (req, res) => {
         league,
         season: updatedSeason,
         milestones,
-        prizepool,navigation
+        prizepool,
+        navigation,
+        players: finalPlayers,
+        matches
       },
       { upsert: true, new: true }
     );
@@ -180,7 +218,6 @@ router.post('/dcn-league', async (req, res) => {
 });
 
 
-
 router.get('/:game/:league_id', async (req, res) => {
   const { game, league_id } = req.params;
 
@@ -188,38 +225,72 @@ router.get('/:game/:league_id', async (req, res) => {
     const data = await DCNLeague.findOne({
       'league.game_short': game,
       'league.league_id': league_id,
-    }).lean(); // 👈 Trả về plain object luôn
+    }).lean();
 
     if (!data) {
       return res.status(404).json({ message: 'League not found' });
     }
 
-    // 👇 Gọi API lấy danh sách team TFT
-    const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
+    // ✅ Tính số lượng team dựa vào players có game đúng
+    const currentTeamCount = (data.players || []).filter(
+      (p) => p.game === "Teamfight Tactics"
+    ).length;
 
-    const teamData = await response.json();
-
-    let currentTeamCount = 0;
-
-    if (Array.isArray(teamData)) {
-      currentTeamCount = teamData.filter(
-        (team) => team.games && team.games.includes("Teamfight Tactics")
-      ).length;
-    } else {
-      console.warn("⚠️ /findallteamTFT API did not return array. Response:", teamData);
-    }
-
-    // 👇 Gán lại team count vào season
     data.season.current_team_count = currentTeamCount;
 
     res.status(200).json(data);
-
   } catch (err) {
     console.error('❌ Error in GET league route:', err);
     res.status(500).json({ message: 'Error fetching data', error: err.message });
+  }
+});
+
+router.post('/league/checkin', async (req, res) => {
+  const { league_id, game_short, userId } = req.body;
+
+  console.log("📥 Check-in request received:");
+  console.log("➡️ league_id:", league_id);
+  console.log("➡️ game_short:", game_short);
+  console.log("➡️ userId:", userId);
+  try {
+    const leagueDoc = await DCNLeague.findOne({
+      'league.league_id': league_id,
+      'league.game_short': game_short
+    });
+    
+  console.log("📄 Full leagueDoc:", JSON.stringify(leagueDoc, null, 2));
+    if (!leagueDoc) {
+      console.warn("❌ League not found");
+      return res.status(404).json({ message: 'League not found' });
+    }
+
+    console.log("✅ League found:", leagueDoc.league.name);
+
+    // log danh sách usernameregister trong players
+    const usernames = leagueDoc.players.map(p => String(p.usernameregister));
+    console.log("👥 Players usernameregister:", usernames);
+
+    const playerIndex = leagueDoc.players.findIndex(
+      (p) => String(p.usernameregister) === String(userId)
+    );
+
+    if (playerIndex === -1) {
+      console.warn("❌ Player not found with userId:", userId);
+      return res.status(404).json({ message: 'Player not found' });
+    }
+
+    console.log("✅ Player matched:", leagueDoc.players[playerIndex]);
+
+    // update isCheckedin
+    leagueDoc.players[playerIndex].isCheckedin = true;
+    await leagueDoc.save();
+
+    console.log("✅ Check-in updated for user:", userId);
+
+    res.status(200).json({ message: 'Check-in success' });
+  } catch (err) {
+    console.error('❌ Error in /league/checkin:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
@@ -1001,167 +1072,89 @@ router.post('/register', async (req, res) => {
 });
 
 
-router.post('/registerorz', async (req, res) => {
+router.post('/register/:league_id', async (req, res) => {
+  const { league_id } = req.params;
+  const {
+    teamName,
+    shortName,
+    classTeam,
+    logoUrl,
+    games,
+    gameMembers,
+    usernameregister,
+    discordID,
+    color
+  } = req.body;
+
   try {
-    const {
-      teamName,
-      shortName,
-      classTeam,
-      logoUrl,
-      gameMembers,
+    // 🧩 Check tồn tại team
+    const existingTeam = await TeamRegister.findOne({
       usernameregister,
-      discordID,
-      color
-    } = req.body;
-
-    const validClassRegex = /^(10|11|12)(A([1-9]|1[0-8])|TH[1-2])$/;
-
-    const isAllCuuHocSinh = classTeam.length === 1 && classTeam[0] === 'Cựu';
-    const isAllTruongLop = classTeam.every(cls => validClassRegex.test(cls));
-
-    const hasCuuHocSinh = classTeam.includes("Cựu học sinh");
-    const hasLopKhac = classTeam.some(cls => cls !== "Cựu học sinh");
-
-    if (hasCuuHocSinh && hasLopKhac) {
-      return res.status(400).json({
-        message: 'classTeam không được chứa cả "Cựu học sinh" và lớp khác.'
-      });
-    }
-
-    if (!isAllCuuHocSinh && !isAllTruongLop) {
-      return res.status(400).json({
-        message: 'classTeam phải là ["Cựu học sinh"] hoặc các lớp hợp lệ trong trường.'
-      });
-    }
-
-    let outsiderCount = 0;
-
-    for (let player of gameMembers) {
-      const playerClass = player.class;
-
-      if (!player.nickname || !playerClass) {
-        return res.status(400).json({
-          message: `Người chơi ${player.nickname || 'không tên'} thiếu thông tin nickname hoặc class.`
-        });
-      }
-
-      if (isAllCuuHocSinh) {
-        if (playerClass !== 'Cựu học sinh') outsiderCount++;
-      } else if (isAllTruongLop) {
-        if (
-          !classTeam.includes(playerClass) &&
-          playerClass !== 'Học sinh ngoài trường' &&
-          playerClass !== 'Cựu học sinh'
-        ) {
-          return res.status(400).json({
-            message: `Người chơi ${player.nickname} có lớp không thuộc classTeam và không phải là cựu học sinh hoặc học sinh ngoài trường.`
-          });
-        }
-        if (
-          playerClass === 'Cựu học sinh' ||
-          playerClass === 'Học sinh ngoài trường'
-        ) {
-          outsiderCount++;
-        }
-      }
-    }
-
-    if (outsiderCount > 3) {
-      return res.status(400).json({
-        message: `Tối đa chỉ được 3 người là học sinh ngoài trường hoặc học sinh khác lớp (với classTeam hiện tại). Hiện có ${outsiderCount} người.`
-      });
-    }
-
-    // ✅ Tìm đội hiện tại của user
-    const existingTeam = await Organization.findOne({ usernameregister });
-    const oldTeamName = existingTeam ? existingTeam.team : null;
-
-    // ✅ Kiểm tra trùng team
-    const nicknames = gameMembers.map(p => p.nickname);
-    const users = await User.find({ nickname: { $in: nicknames } });
-
-    for (let user of users) {
-      if (
-        user.team &&
-        user.team !== teamName &&
-        user.team !== oldTeamName
-      ) {
-        return res.status(400).json({
-          message: `Người chơi ${user.nickname} đã được đăng ký vào đội ${user.team}.`
-        });
-      }
-    }
-
-    if (existingTeam) {
-      // ✅ Tách danh sách thành viên cũ & mới
-      const oldNicknames = existingTeam.players.map(p => p.nickname);
-      const newNicknames = gameMembers.map(p => p.nickname);
-      const removedMembers = oldNicknames.filter(name => !newNicknames.includes(name));
-      const addedOrKeptMembers = newNicknames;
-
-      // ✅ Cập nhật đội
-      existingTeam.team = teamName;
-      existingTeam.shortname = shortName;
-      existingTeam.class = classTeam;
-      existingTeam.logoURL = logoUrl;
-      existingTeam.players = gameMembers;
-      existingTeam.color = color;
-
-      const updatedTeam = await existingTeam.save();
-
-      // ✅ Gỡ team của người bị xóa
-      await Promise.all(
-        removedMembers.map(name =>
-          User.findOneAndUpdate({ nickname: name }, { team: "" })
-        )
-      );
-
-      // ✅ Cập nhật team mới cho thành viên
-      await Promise.all(
-        addedOrKeptMembers.map(name =>
-          User.findOneAndUpdate({ nickname: name }, { team: teamName })
-        )
-      );
-
-      return res.status(200).json({ message: 'Cập nhật đội thành công!', team: updatedTeam });
-    }
-
-    // ✅ Nếu chưa có đội, tạo mới
-    const newTeam = new Organization({
-      discordID,
-      usernameregister,
-      team: teamName,
-      shortname: shortName,
-      class: classTeam,
-      logoURL: logoUrl,
-      players: gameMembers,
-      color: color,
+      games: { $in: games }
     });
 
-    const savedTeam = await newTeam.save();
+    if (existingTeam) {
+      existingTeam.teamName = teamName;
+      existingTeam.shortName = shortName;
+      existingTeam.classTeam = classTeam;
+      existingTeam.logoUrl = logoUrl;
+      existingTeam.color = color;
+      existingTeam.gameMembers = gameMembers;
 
-    // ✅ Cập nhật team cho thành viên mới
-    await Promise.all(
-      gameMembers.map(member =>
-        User.findOneAndUpdate({ nickname: member.nickname }, { team: teamName })
-      )
+      await existingTeam.save();
+    } else {
+      const newTeam = new TeamRegister({
+        discordID,
+        usernameregister,
+        teamName,
+        shortName,
+        classTeam,
+        logoUrl,
+        color,
+        games,
+        gameMembers,
+      });
+
+      await newTeam.save();
+    }
+
+    // ✅ Tìm giải đấu tương ứng
+    const leagueDoc = await DCNLeague.findOne({
+      'league.league_id': league_id,
+    });
+
+    if (!leagueDoc) {
+      return res.status(404).json({ message: 'League not found' });
+    }
+
+    // 🧠 Check nếu player đã tồn tại thì không thêm lại
+    const alreadyExists = leagueDoc.players.some(
+      (p) => String(p.usernameregister) === String(usernameregister)
     );
 
-    res.status(201).json({ message: 'Đăng ký đội thành công!', team: savedTeam });
+    if (!alreadyExists) {
+      leagueDoc.players.push({
+        discordID,
+        ign: gameMembers?.["Teamfight Tactics"]?.[0] || '',
+        usernameregister,
+        logoUrl,
+        game: "Teamfight Tactics",
+        isCheckedin: false
+      });
 
-  } catch (error) {
-    console.error('Error registering team:', error);
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json({ errors });
+      await leagueDoc.save();
     }
-    res.status(500).json({ message: error });
+
+    res.status(200).json({ message: 'Đăng ký thành công và đã thêm vào giải đấu!' });
+  } catch (error) {
+    console.error('❌ Error registering team:', error);
+    res.status(500).json({ message: 'Lỗi server' });
   }
 });
 router.post('/checkregisterorz', async (req, res) => {
   try {
     const { usernameregister } = req.body;
-    const existingTeam = await Organization.findOne({ usernameregister});
+    const existingTeam = await Organization.findOne({ usernameregister });
 
     if (existingTeam) {
       // Nếu tìm thấy đội, trả lại thông tin đội

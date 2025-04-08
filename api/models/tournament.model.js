@@ -22,7 +22,9 @@ const seasonSchema = new mongoose.Schema({
   updated_at: Date,
   header_image_url: String,
   thumbnail_url: String,
-  season_name: String
+  season_name: String,
+  checkin_start:Date,
+  checkin_end: Date, 
 }, { _id: false });
 
 const leagueSchema = new mongoose.Schema({
@@ -34,7 +36,6 @@ const leagueSchema = new mongoose.Schema({
   game_short:String,
   banner_image_url: String,
   players_per_team: Number,
-  starts_at: Date,
   description: String,
   skill_levels: [String],
   school_allowed: [String]
@@ -48,12 +49,36 @@ const navigationSchema = new mongoose.Schema({
   name: String,
   href: String
 }, { _id: false });
+const allplayerSchema = new mongoose.Schema({
+  discordID: String,
+  ign: String,
+  usernameregister: String,
+  logoUrl: String,
+  game: String,
+  isCheckedin: { type: Boolean, default: false }
+}, { _id: false });
+
+const matchGroupSchema = new mongoose.Schema({
+  id: String,
+  matchIds: [String]
+}, { _id: false });
+
+
+
 const DCNLeagueSchema = new mongoose.Schema({
   league: leagueSchema,
   season: seasonSchema,
   milestones: [milestoneSchema],
   prizepool: [prizepoolSchema],
-  navigation: [navigationSchema]
+  navigation: [navigationSchema],
+  players:[allplayerSchema],
+  matches: {
+    type: Map,
+    of: [matchGroupSchema], // 👈 mỗi key (ví dụ: "day1") sẽ chứa một array của matchGroup
+    default: {}
+  }
 }, { timestamps: true });
+
+
 
 export default mongoose.model('DCN League', DCNLeagueSchema,'DCN League');

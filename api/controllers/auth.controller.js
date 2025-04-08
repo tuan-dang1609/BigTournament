@@ -777,7 +777,7 @@ export const findAllteamTFT = async (req, res, next) => {
     const allTeam = await TeamRegister.find({ games: { $in: ["Teamfight Tactics"] } });
 
     if (!allTeam || allTeam.length === 0) {
-      return next(errorHandler(404, 'No teams found for "Teamfight Tactics"'));
+      return res.status(200).json([]);
     }
 
     res.status(200).json(allTeam);
