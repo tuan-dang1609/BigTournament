@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
         '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L',
     },
     team:{
-      type: String,
+      type: [String],
       default:""
     }
   },

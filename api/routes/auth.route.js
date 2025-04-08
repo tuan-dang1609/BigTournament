@@ -1312,7 +1312,163 @@ router.post('/upsertquestions', async (req, res) => {
   }
 });
 
+router.post('/registerorz', async (req, res) => {
+  try {
+    const {
+      teamName,
+      shortName,
+      classTeam,
+      logoUrl,
+      gameMembers,
+      usernameregister,
+      discordID,
+      color
+    } = req.body;
 
+    const validClassRegex = /^(10|11|12)(A([1-9]|1[0-8])|TH[1-2])$/;
+
+    const isAllCuuHocSinh = classTeam.length === 1 && classTeam[0] === 'Cựu';
+    const isAllTruongLop = classTeam.every(cls => validClassRegex.test(cls));
+
+    const hasCuuHocSinh = classTeam.includes("Cựu học sinh");
+    const hasLopKhac = classTeam.some(cls => cls !== "Cựu học sinh");
+
+    if (hasCuuHocSinh && hasLopKhac) {
+      return res.status(400).json({
+        message: 'classTeam không được chứa cả "Cựu học sinh" và lớp khác.'
+      });
+    }
+
+    if (!isAllCuuHocSinh && !isAllTruongLop) {
+      return res.status(400).json({
+        message: 'classTeam phải là ["Cựu học sinh"] hoặc các lớp hợp lệ trong trường.'
+      });
+    }
+
+    let outsiderCount = 0;
+
+    for (let player of gameMembers) {
+      const playerClass = player.class;
+
+      if (!player.nickname || !playerClass) {
+        return res.status(400).json({
+          message: `Người chơi ${player.nickname || 'không tên'} thiếu thông tin nickname hoặc class.`
+        });
+      }
+
+      if (isAllCuuHocSinh) {
+        if (playerClass !== 'Cựu học sinh') outsiderCount++;
+      } else if (isAllTruongLop) {
+        if (
+          !classTeam.includes(playerClass) &&
+          playerClass !== 'Học sinh ngoài trường' &&
+          playerClass !== 'Cựu học sinh'
+        ) {
+          return res.status(400).json({
+            message: `Người chơi ${player.nickname} có lớp không thuộc classTeam và không phải là cựu học sinh hoặc học sinh ngoài trường.`
+          });
+        }
+        if (
+          playerClass === 'Cựu học sinh' ||
+          playerClass === 'Học sinh ngoài trường'
+        ) {
+          outsiderCount++;
+        }
+      }
+    }
+
+    if (outsiderCount > 3) {
+      return res.status(400).json({
+        message: `Tối đa chỉ được 3 người là học sinh ngoài trường hoặc học sinh khác lớp (với classTeam hiện tại). Hiện có ${outsiderCount} người.`
+      });
+    }
+
+    // ✅ Tìm đội hiện tại của user
+    const existingTeam = await Organization.findOne({ usernameregister });
+    const oldTeamName = existingTeam ? existingTeam.team : null;
+
+    // ✅ Kiểm tra trùng team
+    const nicknames = gameMembers.map(p => p.nickname);
+    const users = await User.find({ nickname: { $in: nicknames } });
+
+    for (let user of users) {
+      if (
+        user.team &&
+        user.team !== teamName &&
+        user.team !== oldTeamName
+      ) {
+        return res.status(400).json({
+          message: `Người chơi ${user.nickname} đã được đăng ký vào đội ${user.team}.`
+        });
+      }
+    }
+
+    if (existingTeam) {
+      // ✅ Tách danh sách thành viên cũ & mới
+      const oldNicknames = existingTeam.players.map(p => p.nickname);
+      const newNicknames = gameMembers.map(p => p.nickname);
+      const removedMembers = oldNicknames.filter(name => !newNicknames.includes(name));
+      const addedOrKeptMembers = newNicknames;
+
+      // ✅ Cập nhật đội
+      existingTeam.team = teamName;
+      existingTeam.shortname = shortName;
+      existingTeam.class = classTeam;
+      existingTeam.logoURL = logoUrl;
+      existingTeam.players = gameMembers;
+      existingTeam.color = color;
+
+      const updatedTeam = await existingTeam.save();
+
+      // ✅ Gỡ team của người bị xóa
+      await Promise.all(
+        removedMembers.map(name =>
+          User.findOneAndUpdate({ nickname: name }, { team: "" })
+        )
+      );
+
+      // ✅ Cập nhật team mới cho thành viên
+      await Promise.all(
+        addedOrKeptMembers.map(name =>
+          User.findOneAndUpdate({ nickname: name }, { team: teamName })
+        )
+      );
+
+      return res.status(200).json({ message: 'Cập nhật đội thành công!', team: updatedTeam });
+    }
+
+    // ✅ Nếu chưa có đội, tạo mới
+    const newTeam = new Organization({
+      discordID,
+      usernameregister,
+      team: teamName,
+      shortname: shortName,
+      class: classTeam,
+      logoURL: logoUrl,
+      players: gameMembers,
+      color: color,
+    });
+
+    const savedTeam = await newTeam.save();
+
+    // ✅ Cập nhật team cho thành viên mới
+    await Promise.all(
+      gameMembers.map(member =>
+        User.findOneAndUpdate({ nickname: member.nickname }, { team: teamName })
+      )
+    );
+
+    res.status(201).json({ message: 'Đăng ký đội thành công!', team: savedTeam });
+
+  } catch (error) {
+    console.error('Error registering team:', error);
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ errors });
+    }
+    res.status(500).json({ message: error });
+  }
+});
 router.post('/getquestions', async (req, res) => {
   try {
     const questions = await QuestionPickem.find(); // Fetch all questions

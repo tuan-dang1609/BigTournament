@@ -49,9 +49,15 @@ const navigationSchema = new mongoose.Schema({
   name: String,
   href: String
 }, { _id: false });
+const teamSchema = new mongoose.Schema({
+  name: String,
+  logoTeam: String
+}, { _id: false });
 const allplayerSchema = new mongoose.Schema({
   discordID: String,
-  ign: String,
+  ign: [String],
+  classTeam: String,
+  team:[teamSchema],
   usernameregister: String,
   logoUrl: String,
   game: String,
