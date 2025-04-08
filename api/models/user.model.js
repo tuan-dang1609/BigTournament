@@ -1,5 +1,13 @@
 import mongoose from 'mongoose';
 
+const teamSchema = new mongoose.Schema(
+  {name:{
+    type:String
+  },
+   logoTeam: String 
+  },
+  { timestamps: true }
+);
 const userSchema = new mongoose.Schema(
   {nickname:{
     type:String,
@@ -40,9 +48,9 @@ const userSchema = new mongoose.Schema(
       default:
         '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L',
     },
-    team:{
-      type: [String],
-      default:""
+    team: {
+      type: teamSchema,   // ✅ Chỉ là một object, không phải array
+      default: {}
     }
   },
   { timestamps: true }

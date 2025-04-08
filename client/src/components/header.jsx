@@ -1,10 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from 'axios'
 
-const LeagueHeader = ({ league,league_id, startTime, currentUser, isMenuOpen, setIsMenuOpen, getNavigation, MyNavbar2 }) => {
+const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, setIsMenuOpen, getNavigation, MyNavbar2 }) => {
     const [registerPhase, setRegisterPhase] = useState('idle');
     const [joinCountdown, setJoinCountdown] = useState('');
     const [isCheckinPhase, setIsCheckinPhase] = useState(false);
+    const handleAutoRegister = async () => {
+        try {
+            const userRes = await axios.get(`https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`);
+
+            const userInfo = userRes.data;
+
+            const formData = {
+                shortName: "",
+                logoUrl:  userInfo.profilePicture,
+                color: "",
+                team: {
+                  name: userInfo.team?.name || "",
+                  logoTeam: userInfo.team?.logoTeam || ""
+                },
+                games: ["Teamfight Tactics"],
+                gameMembers: {
+                  "Teamfight Tactics": [userInfo.riotID || ""]
+                },
+                usernameregister: userInfo._id,
+                discordID: userInfo.discordID || "",
+              };
+
+            const response = await axios.post(
+                `https://bigtournament-hq9n.onrender.com/api/auth/register/${league_id}`,
+                formData
+            );  
+            console.log("✅ Server phản hồi:", response.data); 
+            alert("✅ Đăng ký thành công!");
+            // hoặc: navigate(`/tft/${league_id}`); nếu muốn redirect
+
+        } catch (err) {
+            console.error("❌ Error auto registering:", err);
+            alert("❌ Đăng ký thất bại!");
+        }
+    };
     useEffect(() => {
         if (!league?.season?.checkin_start || !league?.season?.checkin_end) return;
 
@@ -50,30 +86,36 @@ const LeagueHeader = ({ league,league_id, startTime, currentUser, isMenuOpen, se
         const interval = setInterval(updateCountdown, 1000);
         return () => clearInterval(interval);
     }, [league, startTime]);
+    const currentPlayer = league?.players?.find(
+        (p) => String(p.usernameregister) === String(currentUser?._id)
+    );
+
+    const isCheckedin = currentPlayer?.isCheckedin === true;
+
     const handleCheckin = async () => {
         try {
-          const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/league/checkin`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              league_id: league.league.league_id,
-              game_short: league.league.game_short,
-              userId: currentUser._id
-            })
-          });
-      
-          const result = await res.json();
-          if (res.ok) {
-            alert("✅ Check-in thành công!");
-            window.location.reload(); // hoặc gọi lại API lấy league mới
-          } else {
-            alert("❌ Check-in thất bại: " + result.message);
-          }
+            const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/league/checkin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    league_id: league.league.league_id,
+                    game_short: league.league.game_short,
+                    userId: currentUser._id
+                })
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                alert("✅ Check-in thành công!");
+                window.location.reload(); // hoặc gọi lại API lấy league mới
+            } else {
+                alert("❌ Check-in thất bại: " + result.message);
+            }
         } catch (err) {
-          console.error("❌ Check-in error:", err);
-          alert("Lỗi khi check-in.");
+            console.error("❌ Check-in error:", err);
+            alert("Lỗi khi check-in.");
         }
-      };
+    };
 
     return (
         <>
@@ -138,11 +180,12 @@ const LeagueHeader = ({ league,league_id, startTime, currentUser, isMenuOpen, se
                                 <div className="mb-2">
                                     Time left to join: <span className="text-orange-500">{joinCountdown}</span>
                                 </div>
-                                <Link to={`/tft/${league_id}/register`}>
-                                    <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
-                                        Đăng ký
-                                    </button>
-                                </Link>
+                                <button
+                                    onClick={handleAutoRegister}
+                                    className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
+                                >
+                                    Đăng ký
+                                </button>
                             </div>
                         )}
                         {isCheckinPhase && currentUser && (
@@ -150,14 +193,25 @@ const LeagueHeader = ({ league,league_id, startTime, currentUser, isMenuOpen, se
                                 <div className="mb-2">
                                     Đang trong thời gian check-in!
                                 </div>
-                                <button
-                                    className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
-                                    onClick={handleCheckin}
-                                >
-                                    Check-in
-                                </button>
+
+                                {isCheckedin ? (
+                                    <button
+                                        disabled
+                                        className="bg-gray-400 text-white font-bold px-4 py-2 rounded-md cursor-not-allowed"
+                                    >
+                                        ✅ Đã check-in
+                                    </button>
+                                ) : (
+                                    <button
+                                        className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
+                                        onClick={handleCheckin}
+                                    >
+                                        Check-in
+                                    </button>
+                                )}
                             </div>
                         )}
+
 
                     </div>
                 </div>

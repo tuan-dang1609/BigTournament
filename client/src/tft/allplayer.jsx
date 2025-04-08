@@ -18,7 +18,11 @@ const MemberPage = () => {
         const { league,  startTime } = useLeagueData(game, league_id);
     const registered = parseInt(league?.season?.current_team_count) || 0;
     const max = parseInt(league?.season?.max_registration) || 64;
-
+    const currentPlayer = league?.players?.find(
+        (p) => String(p.usernameregister) === String(currentUser?._id)
+      );
+      
+      const isCheckedin = currentPlayer?.isCheckedin === true;
 
     // GMT+0 => GMT+3 = 15:00
     useEffect(() => {
@@ -110,7 +114,7 @@ const MemberPage = () => {
                         </thead>
                         <tbody>
                         {league.players.map((team, index) => {
-  console.log(`👤 Rendering team ${index + 1}:`, team.ign, '| isCheckedin:', team.isCheckedin);
+
 
   return (
     <tr
@@ -124,6 +128,11 @@ const MemberPage = () => {
           className="w-10 h-10 rounded-full object-cover"
         />
         <span className="text-white font-semibold">{team.ign}</span>
+        <img
+          src={`https://lh3.googleusercontent.com/d/${team.team.logoTeam}`}
+          alt="logo"
+          className="w-10 h-10 rounded-full object-cover"
+        />
       </td>
       <td className={`font-bold text-right pr-2 ${team.isCheckedin === true ? 'text-green-500' : 'text-red-500'}`}>
         {team.isCheckedin === true ? 'Checked-in' : 'Chưa check-in'}

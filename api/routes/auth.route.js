@@ -1076,7 +1076,7 @@ router.post('/register/:league_id', async (req, res) => {
   const { league_id } = req.params;
   const {
     logoUrl,
-    games,
+    teamName,
     gameMembers,
     usernameregister,
     discordID
@@ -1104,7 +1104,11 @@ router.post('/register/:league_id', async (req, res) => {
       usernameregister,
       logoUrl,
       game: "Teamfight Tactics",
-      isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false
+      isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false,
+      team: {
+        name: req.body.team?.name || '',
+        logoTeam: req.body.team?.logoTeam || ''
+      }
     };
 
     // ✅ 4. Thêm mới hoặc cập nhật
@@ -1120,7 +1124,10 @@ router.post('/register/:league_id', async (req, res) => {
     // ✅ 5. Lưu lại
     await leagueDoc.save();
 
-    res.status(200).json({ message: 'Đăng ký thành công và đã thêm/cập nhật vào giải đấu!' });
+    res.status(200).json({
+      message: 'Đăng ký thành công và đã thêm/cập nhật vào giải đấu!',
+      player: playerData // 👈 Gửi lại player đã thêm
+    });
 
   } catch (error) {
     console.error('❌ Error registering player:', error);
@@ -1330,18 +1337,18 @@ router.post('/registerorz', async (req, res) => {
     const isAllCuuHocSinh = classTeam.length === 1 && classTeam[0] === 'Cựu';
     const isAllTruongLop = classTeam.every(cls => validClassRegex.test(cls));
 
-    const hasCuuHocSinh = classTeam.includes("Cựu học sinh");
-    const hasLopKhac = classTeam.some(cls => cls !== "Cựu học sinh");
+    const hasCuuHocSinh = classTeam.includes("Cựu");
+    const hasLopKhac = classTeam.some(cls => cls !== "Cựu");
 
     if (hasCuuHocSinh && hasLopKhac) {
       return res.status(400).json({
-        message: 'classTeam không được chứa cả "Cựu học sinh" và lớp khác.'
+        message: 'classTeam không được chứa cả "Cựu" và lớp khác.'
       });
     }
 
     if (!isAllCuuHocSinh && !isAllTruongLop) {
       return res.status(400).json({
-        message: 'classTeam phải là ["Cựu học sinh"] hoặc các lớp hợp lệ trong trường.'
+        message: 'classTeam phải là ["Cựu"] hoặc các lớp hợp lệ trong trường.'
       });
     }
 
@@ -1362,14 +1369,14 @@ router.post('/registerorz', async (req, res) => {
         if (
           !classTeam.includes(playerClass) &&
           playerClass !== 'Học sinh ngoài trường' &&
-          playerClass !== 'Cựu học sinh'
+          playerClass !== 'Cựu'
         ) {
           return res.status(400).json({
             message: `Người chơi ${player.nickname} có lớp không thuộc classTeam và không phải là cựu học sinh hoặc học sinh ngoài trường.`
           });
         }
         if (
-          playerClass === 'Cựu học sinh' ||
+          playerClass === 'Cựu' ||
           playerClass === 'Học sinh ngoài trường'
         ) {
           outsiderCount++;
@@ -1391,17 +1398,7 @@ router.post('/registerorz', async (req, res) => {
     const nicknames = gameMembers.map(p => p.nickname);
     const users = await User.find({ nickname: { $in: nicknames } });
 
-    for (let user of users) {
-      if (
-        user.team &&
-        user.team !== teamName &&
-        user.team !== oldTeamName
-      ) {
-        return res.status(400).json({
-          message: `Người chơi ${user.nickname} đã được đăng ký vào đội ${user.team}.`
-        });
-      }
-    }
+    
 
     if (existingTeam) {
       // ✅ Tách danh sách thành viên cũ & mới
@@ -1430,13 +1427,21 @@ router.post('/registerorz', async (req, res) => {
       // ✅ Cập nhật team mới cho thành viên
       await Promise.all(
         addedOrKeptMembers.map(name =>
-          User.findOneAndUpdate({ nickname: name }, { team: teamName })
+          User.findOneAndUpdate(
+            { nickname: name },
+            {
+              team: {
+                name: teamName,
+                logoTeam: logoUrl
+              }
+            }
+          )
         )
       );
 
       return res.status(200).json({ message: 'Cập nhật đội thành công!', team: updatedTeam });
     }
-
+    
     // ✅ Nếu chưa có đội, tạo mới
     const newTeam = new Organization({
       discordID,
@@ -1454,7 +1459,15 @@ router.post('/registerorz', async (req, res) => {
     // ✅ Cập nhật team cho thành viên mới
     await Promise.all(
       gameMembers.map(member =>
-        User.findOneAndUpdate({ nickname: member.nickname }, { team: teamName })
+        User.findOneAndUpdate(
+          { nickname: member.nickname },
+          {
+            team: {
+              name: teamName,
+              logoTeam: logoUrl
+            }
+          }
+        )
       )
     );
 

@@ -57,7 +57,10 @@ const allplayerSchema = new mongoose.Schema({
   discordID: String,
   ign: [String],
   classTeam: String,
-  team:[teamSchema],
+  team: {
+    name: String,
+    logoTeam: String
+  },
   usernameregister: String,
   logoUrl: String,
   game: String,
