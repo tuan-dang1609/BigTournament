@@ -68,9 +68,12 @@ const MemberPage = () => {
             setLoading(false);
         };
         setTimeout(scrollToTop, 0);
-        document.title = "Giải Teamfight Tactics DCN";
+        if(league){
+            document.title = `${league.league.name}`;
 
-    }, []);
+        }
+
+    }, [league]);
 
 
     const navigationAll1 = {
@@ -132,6 +135,10 @@ const MemberPage = () => {
                                                     className="w-10 h-10 rounded-full object-cover"
                                                 />
                                                 <span className="text-white font-semibold">{team.ign}</span>
+                                            </div>
+                                            <div className="flex items-center text-right justify-end">
+                                                
+                                                <span className="text-white font-semibold">{team.classTeam}</span>
                                             </div>
                                         </td>
 

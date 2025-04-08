@@ -65,9 +65,12 @@ const CompetitionPage = () => {
             setLoading(false);
         };
         setTimeout(scrollToTop, 0);
-        document.title = "Giải Teamfight Tactics DCN";
+        if(league){
+            document.title = `${league.league.name}`;
 
-    }, []);
+        }
+        
+    }, [league]);
 
 
 
@@ -295,10 +298,19 @@ const CompetitionPage = () => {
 
                             {/* Subscription */}
                             <div className="flex flex-row justify-between h-[48px] items-center">
-                                <div className="text-[14px] text-white font-bold">Trường</div>
+  <div className="text-[14px] text-white font-bold">Trường</div>
+  <div>
+    <span className="font-bold">
+      {league.league.school_allowed?.join(', ')}
+    </span>
+  </div>
+</div>
+                            <hr className="border-gray-700" />
+                            <div className="flex flex-row justify-between h-[48px] items-center">
+                                <div className="text-[14px] text-white font-bold">Thiết bị</div>
                                 <div>
 
-                                    <span className="font-bold">{league.league.school_allowed}</span>
+                                    <span className="font-bold">{league.league.device?.join(', ')}</span>
 
                                 </div>
                             </div>

@@ -16,6 +16,7 @@ const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, s
                 shortName: "",
                 logoUrl: userInfo.profilePicture,
                 color: "",
+                classTeam: userInfo.className,
                 team: {
                     name: userInfo.team?.name || "",
                     logoTeam: userInfo.team?.logoTeam || ""
@@ -45,7 +46,7 @@ const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, s
     const handleUnregister = async () => {
       
         try {
-          const res = await axios.delete(`http://localhost:3000/api/auth/unregister/${league?.league?.league_id}`, {
+          const res = await axios.delete(`https://bigtournament-hq9n.onrender.com/api/auth/unregister/${league?.league?.league_id}`, {
             data: {
               usernameregister: currentUser._id,
             }
