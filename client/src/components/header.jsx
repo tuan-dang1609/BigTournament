@@ -52,7 +52,7 @@ const LeagueHeader = ({ league,league_id, startTime, currentUser, isMenuOpen, se
     }, [league, startTime]);
     const handleCheckin = async () => {
         try {
-          const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/register/api/auth/league/checkin`, {
+          const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/league/checkin`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
