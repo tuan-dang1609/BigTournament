@@ -128,43 +128,12 @@ router.post('/dcn-league', async (req, res) => {
       milestones,
       prizepool,
       navigation,
-      players = [], // có thể rỗng
+      players = [],
       matches = {}
     } = req.body;
 
-    // 🔄 Gọi API lấy danh sách team TFT
-    const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamTFT', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const teamData = await response.json();
-
-    // ✅ Đếm số team TFT
-    let currentTeamCount = 0;
-    let updatedPlayers = players;
-
-    if (Array.isArray(teamData)) {
-      const filteredTeams = teamData.filter(
-        (team) => team.games && team.games.includes("Teamfight Tactics")
-      );
-
-      currentTeamCount = filteredTeams.length;
-
-      // ✅ Nếu không truyền players từ client → lấy từ teamData
-      if (players.length === 0) {
-        updatedPlayers = filteredTeams.map(team => ({
-          discordID: team.discordID || '',
-          ign: team.gameMembers?.["Teamfight Tactics"]?.[0] || '',
-          usernameregister: team.usernameregister || '',
-          logoUrl: team.logoUrl || '',
-          game: "Teamfight Tactics",
-          isCheckedin: false
-        }));
-      }
-    } else {
-      console.warn("⚠️ /findallteamTFT API did not return array. Response:", teamData);
-    }
+    // ✅ Tính current_team_count dựa vào players có game là TFT
+    const currentTeamCount = players.filter(p => p.game === "Teamfight Tactics").length;
 
     // ✅ Tính check-in time
     const timeStart = new Date(season.time_start);
@@ -178,8 +147,8 @@ router.post('/dcn-league', async (req, res) => {
       checkin_end: checkinEnd
     };
 
-    // ✅ Đảm bảo tất cả player có field isCheckedin
-    const finalPlayers = updatedPlayers.map(player => ({
+    // ✅ Đảm bảo player nào cũng có isCheckedin
+    const finalPlayers = players.map(player => ({
       ...player,
       isCheckedin: typeof player.isCheckedin === 'boolean' ? player.isCheckedin : false,
     }));
@@ -1076,7 +1045,6 @@ router.post('/register/:league_id', async (req, res) => {
   const { league_id } = req.params;
   const {
     logoUrl,
-    teamName,
     gameMembers,
     usernameregister,
     discordID

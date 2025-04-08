@@ -15,14 +15,14 @@ const MemberPage = () => {
     const [joinCountdown, setJoinCountdown] = useState('');
     const [registerPhase, setRegisterPhase] = useState('idle');
     const { game, league_id } = useParams();
-        const { league,  startTime } = useLeagueData(game, league_id);
+    const { league, startTime } = useLeagueData(game, league_id);
     const registered = parseInt(league?.season?.current_team_count) || 0;
     const max = parseInt(league?.season?.max_registration) || 64;
     const currentPlayer = league?.players?.find(
         (p) => String(p.usernameregister) === String(currentUser?._id)
-      );
-      
-      const isCheckedin = currentPlayer?.isCheckedin === true;
+    );
+
+    const isCheckedin = currentPlayer?.isCheckedin === true;
 
     // GMT+0 => GMT+3 = 15:00
     useEffect(() => {
@@ -92,15 +92,15 @@ const MemberPage = () => {
         <div className="min-h-screen flex flex-col text-white">
             {/* Header Section */}
             <LeagueHeader
-  league={league}
-  startTime={league.season.time_start}
-  currentUser={currentUser}
-  isMenuOpen={isMenuOpen}
-  setIsMenuOpen={setIsMenuOpen}
-  getNavigation={getNavigation}
-  MyNavbar2={MyNavbar2}
-  league_id={league_id}
-/>
+                league={league}
+                startTime={league.season.time_start}
+                currentUser={currentUser}
+                isMenuOpen={isMenuOpen}
+                setIsMenuOpen={setIsMenuOpen}
+                getNavigation={getNavigation}
+                MyNavbar2={MyNavbar2}
+                league_id={league_id}
+            />
 
             <div className="p-4 md:px-8">
                 <h2 className="text-2xl font-bold mb-4">Người chơi đã đăng ký</h2>
@@ -108,41 +108,45 @@ const MemberPage = () => {
                     <table className="table-auto w-full border-separate border-spacing-y-2">
                         <thead>
                             <tr className="text-left text-gray-400 uppercase text-sm">
-                                <th className="pl-2">Người chơi</th>
+                                <th className="pl-16">Người chơi</th>
                                 <th className="text-right pr-2">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
-                        {league.players.map((team, index) => {
+                            {league.players.map((team, index) => {
+                                return (
+                                    <tr key={index} className="hover:bg-gray-800 transition duration-200">
+                                        <td className="flex items-center space-x-4 py-2 pl-2">
+                                            {/* Logo đội */}
+                                            <img
+                                                src={team.team?.logoTeam ? `https://lh3.googleusercontent.com/d/${team.team.logoTeam}` : ""}
+                                                alt="team-logo"
+                                                className={`w-10 h-10 rounded-full object-cover ${team.team?.logoTeam ? '' : 'invisible'}`}
+                                            />
 
+                                            {/* Logo người chơi + tên */}
+                                            <div className="flex items-center space-x-4">
+                                                <img
+                                                    src={`https://lh3.googleusercontent.com/d/${team.logoUrl}`}
+                                                    alt="player-logo"
+                                                    className="w-10 h-10 rounded-full object-cover"
+                                                />
+                                                <span className="text-white font-semibold">{team.ign}</span>
+                                            </div>
+                                        </td>
 
-  return (
-    <tr
-      key={index}
-      className="hover:bg-gray-800 transition duration-200"
-    >
-      <td className="flex items-center space-x-4 py-2 pl-2">
-        <img
-          src={`https://lh3.googleusercontent.com/d/${team.logoUrl}`}
-          alt="logo"
-          className="w-10 h-10 rounded-full object-cover"
-        />
-        <span className="text-white font-semibold">{team.ign}</span>
-        <img
-          src={`https://lh3.googleusercontent.com/d/${team.team.logoTeam}`}
-          alt="logo"
-          className="w-10 h-10 rounded-full object-cover"
-        />
-      </td>
-      <td className={`font-bold text-right pr-2 ${team.isCheckedin === true ? 'text-green-500' : 'text-red-500'}`}>
-        {team.isCheckedin === true ? 'Checked-in' : 'Chưa check-in'}
-      </td>
-    </tr>
-  );
-})}
-
+                                        <td
+                                            className={`font-bold text-right pr-2 ${team.isCheckedin ? 'text-green-500' : 'text-red-500'
+                                                }`}
+                                        >
+                                            {team.isCheckedin ? 'Checked-in' : 'Chưa check-in'}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
+
                 </div>
             </div>
 

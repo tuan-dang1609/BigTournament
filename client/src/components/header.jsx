@@ -35,6 +35,7 @@ const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, s
             console.log("✅ Server phản hồi:", response.data); 
             alert("✅ Đăng ký thành công!");
             // hoặc: navigate(`/tft/${league_id}`); nếu muốn redirect
+            window.location.reload();
 
         } catch (err) {
             console.error("❌ Error auto registering:", err);
