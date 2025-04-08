@@ -1118,7 +1118,6 @@ router.post('/register/:league_id', async (req, res) => {
       await newTeam.save();
     }
 
-    // ✅ Tìm giải đấu tương ứng
     // ✅ 2. Tìm giải đấu DCNLeague theo league_id
     const leagueDoc = await DCNLeague.findOne({
       'league.league_id': league_id,
