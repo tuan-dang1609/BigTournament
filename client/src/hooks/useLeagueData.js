@@ -21,7 +21,7 @@ export const useLeagueData = (game, league_id) => {
 
       setLoading(true);
       try {
-        const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/register/api/auth/${game}/${league_id}`);
+        const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}`);
         if (res.ok) {
           const data = await res.json();
           setLeague(data);

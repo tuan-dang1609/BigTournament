@@ -229,7 +229,7 @@ const [countdown, setCountdown] = useState(5);
         }
 
         try {
-            const response = await axios.post(`https://bigtournament-hq9n.onrender.com/api/auth/register/api/auth/register/${league_id}` , formData);
+            const response = await axios.post(`https://bigtournament-hq9n.onrender.com/api/auth/register/${league_id}` , formData);
             setSubmitStatus({ success: true, message: "Team registered successfully!" });
             setSignupSuccess(true);
 
