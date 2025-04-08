@@ -1075,50 +1075,15 @@ router.post('/register', async (req, res) => {
 router.post('/register/:league_id', async (req, res) => {
   const { league_id } = req.params;
   const {
-    teamName,
-    shortName,
-    classTeam,
     logoUrl,
     games,
     gameMembers,
     usernameregister,
-    discordID,
-    color
+    discordID
   } = req.body;
 
   try {
-    // ✅ 1. Cập nhật hoặc tạo mới trong TeamRegister
-    const existingTeam = await TeamRegister.findOne({
-      usernameregister,
-      games: { $in: games }
-    });
-
-    if (existingTeam) {
-      existingTeam.teamName = teamName;
-      existingTeam.shortName = shortName;
-      existingTeam.classTeam = classTeam;
-      existingTeam.logoUrl = logoUrl;
-      existingTeam.color = color;
-      existingTeam.gameMembers = gameMembers;
-
-      await existingTeam.save();
-    } else {
-      const newTeam = new TeamRegister({
-        discordID,
-        usernameregister,
-        teamName,
-        shortName,
-        classTeam,
-        logoUrl,
-        color,
-        games,
-        gameMembers,
-      });
-
-      await newTeam.save();
-    }
-
-    // ✅ 2. Tìm giải đấu DCNLeague theo league_id
+    // ✅ 1. Tìm giải đấu DCNLeague theo league_id
     const leagueDoc = await DCNLeague.findOne({
       'league.league_id': league_id,
     });
@@ -1127,12 +1092,12 @@ router.post('/register/:league_id', async (req, res) => {
       return res.status(404).json({ message: 'League not found' });
     }
 
-    // ✅ 3. Tìm player đã tồn tại trong DCNLeague.players chưa
+    // ✅ 2. Tìm player đã tồn tại trong DCNLeague.players chưa
     const existingPlayerIndex = leagueDoc.players.findIndex(
       (p) => String(p.usernameregister) === String(usernameregister)
     );
 
-    // ✅ 4. Tạo player object mới từ form
+    // ✅ 3. Tạo player object mới từ form
     const playerData = {
       discordID,
       ign: gameMembers?.["Teamfight Tactics"]?.[0] || '',
@@ -1142,7 +1107,7 @@ router.post('/register/:league_id', async (req, res) => {
       isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false
     };
 
-    // ✅ 5. Thêm mới hoặc cập nhật
+    // ✅ 4. Thêm mới hoặc cập nhật
     if (existingPlayerIndex === -1) {
       leagueDoc.players.push(playerData);
     } else {
@@ -1152,13 +1117,13 @@ router.post('/register/:league_id', async (req, res) => {
       };
     }
 
-    // ✅ 6. Lưu lại
+    // ✅ 5. Lưu lại
     await leagueDoc.save();
 
     res.status(200).json({ message: 'Đăng ký thành công và đã thêm/cập nhật vào giải đấu!' });
 
   } catch (error) {
-    console.error('❌ Error registering team:', error);
+    console.error('❌ Error registering player:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
@@ -1235,6 +1200,39 @@ router.post('/checkregisterTFT', async (req, res) => {
 
   } catch (error) {
     // Xử lý lỗi server
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+router.post('/:league_id/checkregisterTFT', async (req, res) => {
+  const { league_id } = req.params;
+  const { usernameregister } = req.body;
+
+  try {
+    const game = "Teamfight Tactics";
+
+    // ✅ Tìm đúng giải theo league_id và game TFT
+    const league = await DCNLeague.findOne({
+      'league.league_id': league_id,
+      'league.game_name': game
+    });
+
+    if (!league) {
+      return res.status(404).json({ message: 'League not found' });
+    }
+
+    // ✅ Kiểm tra xem player có trong players không
+    const player = league.players.find(
+      (p) => String(p.usernameregister) === String(usernameregister)
+    );
+
+    if (player) {
+      return res.status(200).json(player);
+    }
+
+    return res.status(404).json({ message: 'Player not found in this TFT league' });
+
+  } catch (error) {
+    console.error("❌ Error in /:league_id/checkregisterTFT:", error);
     res.status(500).json({ message: 'Server error' });
   }
 });
