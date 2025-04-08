@@ -132,8 +132,34 @@ router.post('/dcn-league', async (req, res) => {
       matches = {}
     } = req.body;
 
-    // ✅ Tính current_team_count dựa vào players có game là TFT
-    const currentTeamCount = players.filter(p => p.game === "Teamfight Tactics").length;
+    // ✅ Lấy dữ liệu hiện tại nếu đã tồn tại
+    const existingLeague = await DCNLeague.findOne({
+      'league.game_name': league.game_name,
+      'league.league_id': league.league_id,
+      'season.season_number': season.season_number,
+    });
+
+    let finalPlayers = [];
+
+    if (players.length === 0 && existingLeague) {
+      // ✅ Nếu không truyền players từ client → giữ nguyên players cũ
+      finalPlayers = existingLeague.players;
+    } else {
+      // ✅ Nếu có truyền thì dùng players mới, nhưng giữ nguyên trạng thái check-in cũ nếu có
+      const existingMap = new Map(
+        (existingLeague?.players || []).map(p => [String(p.usernameregister), p])
+      );
+
+      finalPlayers = players.map(player => ({
+        ...player,
+        isCheckedin: typeof player.isCheckedin === 'boolean'
+          ? player.isCheckedin
+          : existingMap.get(String(player.usernameregister))?.isCheckedin || false,
+      }));
+    }
+
+    // ✅ Tính current_team_count
+    const currentTeamCount = finalPlayers.filter(p => p.game === "Teamfight Tactics").length;
 
     // ✅ Tính check-in time
     const timeStart = new Date(season.time_start);
@@ -146,12 +172,6 @@ router.post('/dcn-league', async (req, res) => {
       checkin_start: checkinStart,
       checkin_end: checkinEnd
     };
-
-    // ✅ Đảm bảo player nào cũng có isCheckedin
-    const finalPlayers = players.map(player => ({
-      ...player,
-      isCheckedin: typeof player.isCheckedin === 'boolean' ? player.isCheckedin : false,
-    }));
 
     // ✅ Upsert DCN League
     const updatedLeague = await DCNLeague.findOneAndUpdate(
@@ -213,7 +233,30 @@ router.get('/:game/:league_id', async (req, res) => {
     res.status(500).json({ message: 'Error fetching data', error: err.message });
   }
 });
+router.delete('/unregister/:league_id', async (req, res) => {
+  const { league_id } = req.params;
+  const { usernameregister } = req.body;
 
+  try {
+    const leagueDoc = await DCNLeague.findOne({ 'league.league_id': league_id });
+
+    if (!leagueDoc) {
+      return res.status(404).json({ message: 'League not found' });
+    }
+
+    // Xoá player khỏi danh sách
+    leagueDoc.players = leagueDoc.players.filter(
+      (p) => String(p.usernameregister) !== String(usernameregister)
+    );
+
+    await leagueDoc.save();
+
+    res.status(200).json({ message: 'Player đã được xoá khỏi giải đấu.' });
+  } catch (err) {
+    console.error('❌ Error unregistering:', err);
+    res.status(500).json({ message: 'Lỗi server khi xoá player' });
+  }
+});
 router.post('/league/checkin', async (req, res) => {
   const { league_id, game_short, userId } = req.body;
 

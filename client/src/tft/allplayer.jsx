@@ -119,7 +119,7 @@ const MemberPage = () => {
                                         <td className="flex items-center space-x-4 py-2 pl-2">
                                             {/* Logo đội */}
                                             <img
-                                                src={team.team?.logoTeam ? `https://lh3.googleusercontent.com/d/${team.team.logoTeam}` : ""}
+                                                src={team.team?.logoTeam ? `https://drive.google.com/thumbnail?id=${team.team.logoTeam}` : ""}
                                                 alt="team-logo"
                                                 className={`w-10 h-10 rounded-full object-cover ${team.team?.logoTeam ? '' : 'invisible'}`}
                                             />
@@ -127,7 +127,7 @@ const MemberPage = () => {
                                             {/* Logo người chơi + tên */}
                                             <div className="flex items-center space-x-4">
                                                 <img
-                                                    src={`https://lh3.googleusercontent.com/d/${team.logoUrl}`}
+                                                    src={`https://drive.google.com/thumbnail?id=${team.logoUrl}`}
                                                     alt="player-logo"
                                                     className="w-10 h-10 rounded-full object-cover"
                                                 />

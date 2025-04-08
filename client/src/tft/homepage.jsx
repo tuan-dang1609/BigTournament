@@ -137,7 +137,7 @@ const CompetitionPage = () => {
                                 <div><img src="/image/prize.png" width={48} height={48} /></div>
                                 <div>
                                     <p className="lg:text-[14px] text-[#a7a7a7]">Tổng giải thưởng</p>
-                                    <p className="lg:text-[14px]">${league.season.total_prize_pool}</p>
+                                    <p className="lg:text-[14px]">{league.season.total_prize_pool} VND</p>
                                 </div>
                             </div>
 

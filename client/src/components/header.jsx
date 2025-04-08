@@ -14,26 +14,26 @@ const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, s
 
             const formData = {
                 shortName: "",
-                logoUrl:  userInfo.profilePicture,
+                logoUrl: userInfo.profilePicture,
                 color: "",
                 team: {
-                  name: userInfo.team?.name || "",
-                  logoTeam: userInfo.team?.logoTeam || ""
+                    name: userInfo.team?.name || "",
+                    logoTeam: userInfo.team?.logoTeam || ""
                 },
                 games: ["Teamfight Tactics"],
                 gameMembers: {
-                  "Teamfight Tactics": [userInfo.riotID || ""]
+                    "Teamfight Tactics": [userInfo.riotID || ""]
                 },
                 usernameregister: userInfo._id,
                 discordID: userInfo.discordID || "",
-              };
+            };
 
             const response = await axios.post(
                 `https://bigtournament-hq9n.onrender.com/api/auth/register/${league_id}`,
                 formData
-            );  
-            console.log("✅ Server phản hồi:", response.data); 
-            alert("✅ Đăng ký thành công!");
+            );
+            console.log("✅ Server phản hồi:", response.data);
+
             // hoặc: navigate(`/tft/${league_id}`); nếu muốn redirect
             window.location.reload();
 
@@ -42,6 +42,22 @@ const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, s
             alert("❌ Đăng ký thất bại!");
         }
     };
+    const handleUnregister = async () => {
+      
+        try {
+          const res = await axios.delete(`http://localhost:3000/api/auth/unregister/${league?.league?.league_id}`, {
+            data: {
+              usernameregister: currentUser._id,
+            }
+          });
+      
+          window.location.reload();
+        } catch (err) {
+          console.error("❌ Lỗi khi hủy đăng ký:", err);
+          alert("Có lỗi xảy ra khi hủy đăng ký.");
+        }
+      };
+      
     useEffect(() => {
         if (!league?.season?.checkin_start || !league?.season?.checkin_end) return;
 
@@ -107,7 +123,6 @@ const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, s
 
             const result = await res.json();
             if (res.ok) {
-                alert("✅ Check-in thành công!");
                 window.location.reload(); // hoặc gọi lại API lấy league mới
             } else {
                 alert("❌ Check-in thất bại: " + result.message);
@@ -132,7 +147,7 @@ const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, s
                         <div className="sm:mb-0 mb-4 sm:absolute relative md:left-5 left-0 sm:bottom-10 text-sm md:text-base text-white font-semibold pl-2 xl:pl-8">
                             <div className="text-sm font-bold mb-2 uppercase">
                                 <p className="text-left">
-                                    <span className="text-green-300">SẮP TỚI</span> • {new Date(startTime).toLocaleString('en-GB', {
+                                    <span className="text-[#00ff5c]">SẮP TỚI</span> • {new Date(startTime).toLocaleString('en-GB', {
                                         weekday: 'short',
                                         day: '2-digit',
                                         month: 'short',
@@ -176,19 +191,30 @@ const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, s
                             </div>
                         )}
 
-                        {registerPhase === 'during' && (
-                            <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
-                                <div className="mb-2">
-                                    Time left to join: <span className="text-orange-500">{joinCountdown}</span>
-                                </div>
-                                <button
-                                    onClick={handleAutoRegister}
-                                    className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
-                                >
-                                    Đăng ký
-                                </button>
-                            </div>
-                        )}
+{registerPhase === 'during' && (
+  <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
+    <div className="mb-2 sm:mt-0 mt-12">
+        Thời gian còn lại: <span className="text-orange-500">{joinCountdown}</span>   
+    </div>
+
+    <div className={`flex ${currentPlayer ? "sm:justify-end justify-center gap-2" : "sm:justify-end justify-center"}`}>
+      {currentPlayer && (
+        <button
+          onClick={handleUnregister}
+          className="bg-red-500 text-white font-bold px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
+        >
+          Hủy đăng ký
+        </button>
+      )}
+      <button
+        onClick={handleAutoRegister}
+        className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
+      >
+        {currentPlayer ? "Cập nhật" : "Đăng ký"}
+      </button>
+    </div>
+  </div>
+)}
                         {isCheckinPhase && currentUser && (
                             <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
                                 <div className="mb-2">
