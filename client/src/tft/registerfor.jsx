@@ -58,7 +58,7 @@ const [countdown, setCountdown] = useState(5);
             try {
                 const bodyjson = JSON.stringify({ usernameregister: currentUser._id })
                 console.log(bodyjson);
-                const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/checkregisterTFT', {
+                const response = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/${league_id}/checkregisterTFT`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -147,18 +147,21 @@ const [countdown, setCountdown] = useState(5);
     }, [me]);
     
     useEffect(() => {
-        if (userRegister && userRegister.gameMembers["Teamfight Tactics"][0]) {
-
-            setFormData({
-                discordID: userRegister.discordID || currentUser.discordID,
-                usernameregister: userRegister.usernameregister || currentUser._id,
-                logoUrl: userRegister.logoUrl || "",
-                games: userRegister.games || [],
-                gameMembers: userRegister.gameMembers || {}
-            });
-            console.log('userRegister.players:', userRegister.players);
-        }
-    }, [userRegister]);
+        if (!userRegister) return;
+      
+        const game = "Teamfight Tactics";
+      
+        setFormData({
+          discordID: userRegister.discordID || currentUser.discordID,
+          usernameregister: userRegister.usernameregister || currentUser._id,
+          logoUrl: userRegister.logoUrl || "",
+          games: [game],
+          gameMembers: {
+            [game]: [userRegister.ign || ""]
+          }
+        });
+      
+      }, [userRegister]);
     const handleGameToggle = (game) => {
         let updatedGames = [...formData.games];
         let updatedGameMembers = { ...formData.gameMembers };
