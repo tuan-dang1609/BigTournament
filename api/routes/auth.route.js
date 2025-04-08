@@ -1090,7 +1090,8 @@ router.post('/register/:league_id', async (req, res) => {
     logoUrl,
     gameMembers,
     usernameregister,
-    discordID
+    discordID,
+    classTeam
   } = req.body;
 
   try {
@@ -1114,6 +1115,7 @@ router.post('/register/:league_id', async (req, res) => {
       ign: gameMembers?.["Teamfight Tactics"]?.[0] || '',
       usernameregister,
       logoUrl,
+      classTeam,
       game: "Teamfight Tactics",
       isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false,
       team: {

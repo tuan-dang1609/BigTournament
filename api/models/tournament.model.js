@@ -31,6 +31,7 @@ const leagueSchema = new mongoose.Schema({
   league_id: String,
   organizer_id: String,
   name: String,
+  device: [String],
   season_number: String,
   game_name: String,
   game_short:String,
@@ -49,10 +50,7 @@ const navigationSchema = new mongoose.Schema({
   name: String,
   href: String
 }, { _id: false });
-const teamSchema = new mongoose.Schema({
-  name: String,
-  logoTeam: String
-}, { _id: false });
+
 const allplayerSchema = new mongoose.Schema({
   discordID: String,
   ign: [String],
