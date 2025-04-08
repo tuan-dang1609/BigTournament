@@ -7,7 +7,11 @@ import Image from '../image/waiting.png'
 import { useNavigate, Link } from 'react-router-dom';
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
+import { useParams } from 'react-router-dom';
+import { resetLeagueCache } from '../hooks/useLeagueData';
+
 const TeamRegistrationForm = () => {
+    const { league_id } = useParams();
     const { currentUser } = useSelector((state) => state.user);
     const [formData, setFormData] = useState({
         discordID: currentUser.discordID,
@@ -23,7 +27,7 @@ const TeamRegistrationForm = () => {
     const [errors, setErrors] = useState({});
     const [submitStatus, setSubmitStatus] = useState(null);
     const [signupSuccess, setSignupSuccess] = useState(false);
-    const [countdown, setCountdown] = useState(5);
+const [countdown, setCountdown] = useState(5);
     const [loading, setLoading] = useState(true); // Loading state
     const [checkingRegistration, setCheckingRegistration] = useState(true); // New state for checking registration
     const navigate = useNavigate();
@@ -106,18 +110,22 @@ const TeamRegistrationForm = () => {
     }, []);
 
     useEffect(() => {
-        if (signupSuccess) {
-            const timer = setInterval(() => {
-                setCountdown((prevCountdown) => prevCountdown - 1);
-            }, 1000);
-
-            if (countdown === 0) {
-                navigate('/tft/tft_split_2_2025');
+        if (!signupSuccess) return;
+      
+        const timer = setInterval(() => {
+          setCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              resetLeagueCache();
+              navigate('/tft/tft_split_2_2025');
+              return 0;
             }
-
-            return () => clearInterval(timer);
-        }
-    }, [signupSuccess, countdown, navigate]);
+            return prev - 1;
+          });
+        }, 1000);
+      
+        return () => clearInterval(timer);
+      }, [signupSuccess]);
 
     useEffect(() => {
         if (!me) return;
@@ -221,7 +229,7 @@ const TeamRegistrationForm = () => {
         }
 
         try {
-            const response = await axios.post('https://bigtournament-hq9n.onrender.com/api/auth/register', formData);
+            const response = await axios.post(`https://bigtournament-hq9n.onrender.com/api/auth/register/api/auth/register/${league_id}` , formData);
             setSubmitStatus({ success: true, message: "Team registered successfully!" });
             setSignupSuccess(true);
 
@@ -262,15 +270,17 @@ const TeamRegistrationForm = () => {
 
     if (signupSuccess) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-                    <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Đăng kí thành công!</h2>
-                    <p className="text-center text-gray-600">Cảm ơn bạn đã đăng kí đội cho lớp.</p>
-                    <p className="text-center text-gray-600 mt-4">Tự động chuyển tới trang chủ trong {countdown} giây...</p>
-                </div>
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+              <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Đăng kí thành công!</h2>
+              <p className="text-center text-gray-600">Cảm ơn bạn đã đăng kí đội cho lớp.</p>
+              <p className="text-center text-gray-600 mt-4">
+                Tự động chuyển tới trang chủ trong {countdown} giây...
+              </p>
             </div>
+          </div>
         );
-    }
+      }
 
     return (
         <div className="min-h-screen py-6 flex flex-col justify-center sm:py-12">

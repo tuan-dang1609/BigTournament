@@ -6,26 +6,21 @@ import MyNavbar2 from "../components/Navbar2";
 // Custom hook to detect screen size
 import { useParams } from 'react-router-dom';
 import LeagueHeader from "../components/header";
+import { useLeagueData } from "../hooks/useLeagueData";
 
 
 const CompetitionPage = () => {
     const [loading, setLoading] = useState(true);
-    const [league, setLeague] = useState(null);
     const { currentUser } = useSelector((state) => state.user);
-    const [startTime, setStartTime] = useState(null);
+
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [joinCountdown, setJoinCountdown] = useState('');
     const [registerPhase, setRegisterPhase] = useState('idle');
     const { game, league_id } = useParams();
-
+    const { league,  startTime } = useLeagueData(game, league_id);
     const registered = parseInt(league?.season?.current_team_count) || 0;
     const max = parseInt(league?.season?.max_registration) || 64;
     const percent = Math.min((registered / max) * 100, 100);
-    useEffect(() => {
-        if (league?.league?.starts_at) {
-            setStartTime(new Date(league.season.time_start));
-        }
-    }, [league]);
     // GMT+0 => GMT+3 = 15:00
     useEffect(() => {
         if (!startTime) return;
@@ -74,37 +69,7 @@ const CompetitionPage = () => {
 
     }, []);
 
-    useEffect(() => {
-        const fetchAllData = async () => {
-            setLoading(true);
 
-            try {
-                const [leagueResult] = await Promise.allSettled([
-
-                    fetch(`https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}`)
-                ]);
-
-                // --- Handle league fetch ---
-                if (leagueResult.status === "fulfilled" && leagueResult.value.ok) {
-                    const leagueData = await leagueResult.value.json();
-                    setLeague(leagueData);
-                    setStartTime(new Date(leagueData.season.time_start));
-                } else {
-                    console.warn("❌ League API failed", leagueResult.reason || leagueResult.value?.status);
-                }
-
-                // --- Handle teams fetch ---
-
-
-            } catch (error) {
-                console.error('Unexpected error in fetchAllData:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchAllData();
-    }, []);
 
     const navigationAll1 = {
         aov: [
@@ -125,16 +90,16 @@ const CompetitionPage = () => {
         <div className="min-h-screen flex flex-col text-white">
             {/* Header Section */}
             <LeagueHeader
-                league={league}
-                startTime={startTime}
-                registerPhase={registerPhase}
-                joinCountdown={joinCountdown}
-                currentUser={currentUser}
-                isMenuOpen={isMenuOpen}
-                setIsMenuOpen={setIsMenuOpen}
-                getNavigation={getNavigation}
-                MyNavbar2={MyNavbar2}
-            />
+  league={league}
+  startTime={league.season.time_start}
+  currentUser={currentUser}
+  isMenuOpen={isMenuOpen}
+  setIsMenuOpen={setIsMenuOpen}
+  getNavigation={getNavigation}
+  MyNavbar2={MyNavbar2}
+  league_id={league_id}
+/>
+
             {/* Content Section */}
             <section id="participant" className="py-10 lg:py-16 px-2 md:px-8 flex lg:flex-row flex-col text-white">
                 <div className="xl:w-[68%] lg:w-[70%] w-full  px-2 xl:px-8">
@@ -180,7 +145,7 @@ const CompetitionPage = () => {
                                 <div><img src="/image/schedule.png" width={48} height={48} /></div>
                                 <div>
                                     <p className="lg:text-[14px] text-[#a7a7a7]">Bắt đầu</p>
-                                    <p className="lg:text-[14px]">{new Date(startTime).toLocaleString('en-GB', {
+                                    <p className="lg:text-[14px]">{new Date(league.season.time_start).toLocaleString('en-GB', {
                                         weekday: 'short',
                                         day: '2-digit',
                                         month: 'short',

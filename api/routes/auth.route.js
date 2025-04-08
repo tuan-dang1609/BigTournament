@@ -1087,7 +1087,7 @@ router.post('/register/:league_id', async (req, res) => {
   } = req.body;
 
   try {
-    // 🧩 Check tồn tại team
+    // ✅ 1. Cập nhật hoặc tạo mới trong TeamRegister
     const existingTeam = await TeamRegister.findOne({
       usernameregister,
       games: { $in: games }
@@ -1119,6 +1119,7 @@ router.post('/register/:league_id', async (req, res) => {
     }
 
     // ✅ Tìm giải đấu tương ứng
+    // ✅ 2. Tìm giải đấu DCNLeague theo league_id
     const leagueDoc = await DCNLeague.findOne({
       'league.league_id': league_id,
     });
@@ -1127,30 +1128,42 @@ router.post('/register/:league_id', async (req, res) => {
       return res.status(404).json({ message: 'League not found' });
     }
 
-    // 🧠 Check nếu player đã tồn tại thì không thêm lại
-    const alreadyExists = leagueDoc.players.some(
+    // ✅ 3. Tìm player đã tồn tại trong DCNLeague.players chưa
+    const existingPlayerIndex = leagueDoc.players.findIndex(
       (p) => String(p.usernameregister) === String(usernameregister)
     );
 
-    if (!alreadyExists) {
-      leagueDoc.players.push({
-        discordID,
-        ign: gameMembers?.["Teamfight Tactics"]?.[0] || '',
-        usernameregister,
-        logoUrl,
-        game: "Teamfight Tactics",
-        isCheckedin: false
-      });
+    // ✅ 4. Tạo player object mới từ form
+    const playerData = {
+      discordID,
+      ign: gameMembers?.["Teamfight Tactics"]?.[0] || '',
+      usernameregister,
+      logoUrl,
+      game: "Teamfight Tactics",
+      isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false
+    };
 
-      await leagueDoc.save();
+    // ✅ 5. Thêm mới hoặc cập nhật
+    if (existingPlayerIndex === -1) {
+      leagueDoc.players.push(playerData);
+    } else {
+      leagueDoc.players[existingPlayerIndex] = {
+        ...leagueDoc.players[existingPlayerIndex],
+        ...playerData
+      };
     }
 
-    res.status(200).json({ message: 'Đăng ký thành công và đã thêm vào giải đấu!' });
+    // ✅ 6. Lưu lại
+    await leagueDoc.save();
+
+    res.status(200).json({ message: 'Đăng ký thành công và đã thêm/cập nhật vào giải đấu!' });
+
   } catch (error) {
     console.error('❌ Error registering team:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
+
 router.post('/checkregisterorz', async (req, res) => {
   try {
     const { usernameregister } = req.body;

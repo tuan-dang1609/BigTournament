@@ -7,7 +7,7 @@ const LiveGameDataLOL = () => {
         // Hàm fetch dữ liệu từ API
         const fetchGameData = async () => {
             try {
-                const response = await fetch('http://localhost:3000/api/livegame'); // Proxy backend
+                const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/register/api/livegame'); // Proxy backend
                 const data = await response.json();
                 setGameData(data);
             } catch (error) {

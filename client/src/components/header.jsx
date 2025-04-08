@@ -1,7 +1,80 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-const LeagueHeader = ({ league, startTime, registerPhase, joinCountdown, currentUser, isMenuOpen, setIsMenuOpen, getNavigation, MyNavbar2 }) => {
+const LeagueHeader = ({ league,league_id, startTime, currentUser, isMenuOpen, setIsMenuOpen, getNavigation, MyNavbar2 }) => {
+    const [registerPhase, setRegisterPhase] = useState('idle');
+    const [joinCountdown, setJoinCountdown] = useState('');
+    const [isCheckinPhase, setIsCheckinPhase] = useState(false);
+    useEffect(() => {
+        if (!league?.season?.checkin_start || !league?.season?.checkin_end) return;
+
+        const checkinStart = new Date(league.season.checkin_start);
+        const checkinEnd = new Date(league.season.checkin_end);
+        const now = new Date();
+
+        if (now >= checkinStart && now <= checkinEnd) {
+            setIsCheckinPhase(true);
+        } else {
+            setIsCheckinPhase(false);
+        }
+    }, [league]);
+    useEffect(() => {
+        if (!league || !startTime) return;
+
+        const regStart = new Date(league.season.registration_start);
+        const regEnd = new Date(league.season.registration_end);
+
+        const updateCountdown = () => {
+            const now = new Date();
+            let diff;
+
+            if (now < regStart) {
+                diff = regStart - now;
+                setRegisterPhase('before');
+            } else if (now >= regStart && now <= regEnd) {
+                diff = regEnd - now;
+                setRegisterPhase('during');
+            } else {
+                setRegisterPhase('after');
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+            setJoinCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+        return () => clearInterval(interval);
+    }, [league, startTime]);
+    const handleCheckin = async () => {
+        try {
+          const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/register/api/auth/league/checkin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              league_id: league.league.league_id,
+              game_short: league.league.game_short,
+              userId: currentUser._id
+            })
+          });
+      
+          const result = await res.json();
+          if (res.ok) {
+            alert("✅ Check-in thành công!");
+            window.location.reload(); // hoặc gọi lại API lấy league mới
+          } else {
+            alert("❌ Check-in thất bại: " + result.message);
+          }
+        } catch (err) {
+          console.error("❌ Check-in error:", err);
+          alert("Lỗi khi check-in.");
+        }
+      };
+
     return (
         <>
             <header>
@@ -38,9 +111,8 @@ const LeagueHeader = ({ league, startTime, registerPhase, joinCountdown, current
                             </div>
                         </div>
 
-
                         {registerPhase === 'before' && (
-                            <div className="sm:absolute relative px-4 md:px-8  sm:right-0 sm:bottom-10 text-sm md:text-base text-white font-semibold text-center sm:text-right">
+                            <div className="sm:absolute relative px-4 md:px-8 sm:right-0 sm:bottom-10 text-sm md:text-base text-white font-semibold text-center sm:text-right">
                                 <div className="mb-2">
                                     Mở form sau: <span className="text-orange-500">{joinCountdown}</span>
                                 </div>
@@ -62,22 +134,35 @@ const LeagueHeader = ({ league, startTime, registerPhase, joinCountdown, current
                         )}
 
                         {registerPhase === 'during' && (
-                            <div className="sm:absolute relative px-4 md:px-8  right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
+                            <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
                                 <div className="mb-2">
                                     Time left to join: <span className="text-orange-500">{joinCountdown}</span>
                                 </div>
-                                <Link to="/tft/register">
+                                <Link to={`/tft/${league_id}/register`}>
                                     <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
                                         Đăng ký
                                     </button>
                                 </Link>
                             </div>
                         )}
-
+                        {isCheckinPhase && currentUser && (
+                            <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
+                                <div className="mb-2">
+                                    Đang trong thời gian check-in!
+                                </div>
+                                <button
+                                    className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
+                                    onClick={handleCheckin}
+                                >
+                                    Check-in
+                                </button>
+                            </div>
+                        )}
 
                     </div>
                 </div>
             </header>
+
             <div><MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} /></div>
         </>
     );
