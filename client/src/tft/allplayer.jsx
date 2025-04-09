@@ -134,13 +134,13 @@ const MemberPage = () => {
                                                     alt="player-logo"
                                                     className="w-10 h-10 rounded-full object-cover"
                                                 />
-                                                <span className="text-white font-semibold">{team.ign}</span>
+                                                <span className="text-white font-semibold sm:text-[15px] text-[12px]">{team.ign}</span>
                                             </div>
                                     
                                         </td>
 
                                         <td
-                                            className={`font-bold text-right pr-2 ${team.isCheckedin ? 'text-green-500' : 'text-red-500'
+                                            className={`font-bold text-right sm:text-[15px] text-[12px] pr-2 ${team.isCheckedin ? 'text-green-500' : 'text-red-500'
                                                 }`}
                                         >
                                             {team.isCheckedin ? 'Checked-in' : 'Chưa check-in'}
