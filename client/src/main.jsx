@@ -56,6 +56,7 @@ import CombinedLeaderboard from './tft/test.jsx';
 import GrandFinalTFT from './tft/day2.jsx'
 import ForgotPassword from './components/ForgotPassword.jsx'
 import MemberPage from './tft/allplayer.jsx';
+import RulebookAll from './components/rule.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -70,6 +71,7 @@ if (rootElement) {
           {/* Route KHÔNG có Navbar */}
           <Route path="/:game/:league_id" element={<TFThompage />} />
           <Route path="/:game/:league_id/players" element={<MemberPage />} />
+          <Route path="/:game/:league_id/rule" element={<RulebookAll />} />
           {/* Routes CÓ Navbar + Footer */}
           <Route
             path="*"

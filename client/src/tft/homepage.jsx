@@ -78,7 +78,8 @@ const CompetitionPage = () => {
         aov: [
             { name: "Tổng quan", href: `/${game}/${league_id}`, current: location.pathname === `/${game}/${league_id}` },
             { name: "Người chơi", href: `/${game}/${league_id}/players`, current: location.pathname === `/${game}/${league_id}/players` },
-        ],
+            { name: "Luật", href: `/${game}/${league_id}/rule`, current: location.pathname === `/${game}/${league_id}/rule` },
+        ]
     };
     const getNavigation = () => navigationAll1.aov;
     if (!league) {

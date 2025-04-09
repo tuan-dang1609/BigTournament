@@ -16,7 +16,6 @@ const MemberPage = () => {
     const [registerPhase, setRegisterPhase] = useState('idle');
     const { game, league_id } = useParams();
     const { league, startTime } = useLeagueData(game, league_id);
-    const registered = parseInt(league?.season?.current_team_count) || 0;
     const max = parseInt(league?.season?.max_registration) || 64;
     const currentPlayer = league?.players?.find(
         (p) => String(p.usernameregister) === String(currentUser?._id)
@@ -80,6 +79,7 @@ const MemberPage = () => {
         aov: [
             { name: "Tổng quan", href: `/${game}/${league_id}`, current: location.pathname === `/${game}/${league_id}` },
             { name: "Người chơi", href: `/${game}/${league_id}/players`, current: location.pathname === `/${game}/${league_id}/players` },
+            { name: "Luật", href: `/${game}/${league_id}/rule`, current: location.pathname === `/${game}/${league_id}/rule` },
         ],
     };
     const getNavigation = () => navigationAll1.aov;

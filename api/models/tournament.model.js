@@ -8,7 +8,10 @@ const milestoneSchema = new mongoose.Schema({
   subtitle: String,
   content: String,
 }, { _id: false });
-
+const ruleSchema = new mongoose.Schema({
+  title: String,         // Tên mục lớn (ví dụ: "1. Universal Rules")
+  content: String        // Nội dung markdown (có thể dùng ReactMarkdown để hiển thị đẹp)
+}, { _id: false });
 const seasonSchema = new mongoose.Schema({
   season_number: String,
   time_start: Date,
@@ -25,6 +28,7 @@ const seasonSchema = new mongoose.Schema({
   season_name: String,
   checkin_start:Date,
   checkin_end: Date, 
+  
 }, { _id: false });
 
 const leagueSchema = new mongoose.Schema({
@@ -39,12 +43,15 @@ const leagueSchema = new mongoose.Schema({
   players_per_team: Number,
   description: String,
   skill_levels: [String],
-  school_allowed: [String]
+  school_allowed: [String],
+  rules: [ruleSchema]
 }, { _id: false });
 const prizepoolSchema = new mongoose.Schema({
   place: String,
   prize: mongoose.Schema.Types.Mixed // dùng Mixed để hỗ trợ cả string và number
 }, { _id: false });
+
+
 
 const navigationSchema = new mongoose.Schema({
   name: String,
@@ -62,7 +69,8 @@ const allplayerSchema = new mongoose.Schema({
   usernameregister: String,
   logoUrl: String,
   game: String,
-  isCheckedin: { type: Boolean, default: false }
+  isCheckedin: { type: Boolean, default: false },
+  
 }, { _id: false });
 
 const matchGroupSchema = new mongoose.Schema({

@@ -1,6 +1,6 @@
 import daisyui from "daisyui";
 import scrollbar from "tailwind-scrollbar";
-
+import typography from '@tailwindcss/typography'
 export default {
   content: [
     "./index.html",
@@ -36,6 +36,7 @@ export default {
   plugins: [
     daisyui,
     scrollbar({ nocompatible: true }), // Properly loading scrollbar with option
+    typography
   ],
   daisyui: {
     themes: [
