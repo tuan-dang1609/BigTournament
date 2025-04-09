@@ -31,9 +31,7 @@ export default function Profile() {
         window.location.href = "https://bigtournament-hq9n.onrender.com/sso/login-riot";
         // Set riotID vào formData sau khi người dùng đăng nhập thành công
         setFormData({ ...formData, riotID: loggedInUser });
-        if (loggedInUser && loggedInUser !== "Đăng nhập với Riot Games") {
-            navigate("/tft/tft_road_to_iec_2025");
-          }
+        
     }
     const handleLogout = async () => {
         setLoggedInUser(""); // clear RiotID hiển thị
@@ -79,6 +77,11 @@ export default function Profile() {
             setLoggedInUser(`${gameName}#${tagName}`);
         }
     }, []);
+    useEffect(() => {
+        if (loggedInUser && loggedInUser !== "Đăng nhập với Riot Games") {
+          navigate("/tft/tft_road_to_iec_2025");
+        }
+      }, [loggedInUser]);
     useEffect(() => {
         const fetchUser = async () => {
             try {
