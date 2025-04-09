@@ -136,10 +136,7 @@ const MemberPage = () => {
                                                 />
                                                 <span className="text-white font-semibold">{team.ign}</span>
                                             </div>
-                                            <div className="flex items-center text-right justify-end">
-                                                
-                                                <span className="text-white font-semibold">{team.classTeam}</span>
-                                            </div>
+                                    
                                         </td>
 
                                         <td
