@@ -2,31 +2,29 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from 'axios'
 
-const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, setIsMenuOpen, getNavigation, MyNavbar2 }) => {
+const LeagueHeader = ({me,league, league_id, startTime, currentUser, isMenuOpen, setIsMenuOpen, getNavigation, MyNavbar2 }) => {
     const [registerPhase, setRegisterPhase] = useState('idle');
     const [joinCountdown, setJoinCountdown] = useState('');
     const [isCheckinPhase, setIsCheckinPhase] = useState(false);
+    
     const handleAutoRegister = async () => {
-        try {
-            const userRes = await axios.get(`https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`);
-
-            const userInfo = userRes.data;
-
+        try {      
+            
             const formData = {
                 shortName: "",
-                logoUrl: userInfo.profilePicture,
+                logoUrl: me.profilePicture,
                 color: "",
-                classTeam: userInfo.className,
+                classTeam: me.className,
                 team: {
-                    name: userInfo.team?.name || "",
-                    logoTeam: userInfo.team?.logoTeam || ""
+                    name: me.team?.name || "",
+                    logoTeam: me.team?.logoTeam || ""
                 },
                 games: ["Teamfight Tactics"],
                 gameMembers: {
-                    "Teamfight Tactics": [userInfo.riotID || ""]
+                    "Teamfight Tactics": [me.riotID || ""]
                 },
-                usernameregister: userInfo._id,
-                discordID: userInfo.discordID || "",
+                usernameregister: me._id,
+                discordID: me.discordID || "",
             };
 
             const response = await axios.post(
@@ -171,74 +169,92 @@ const LeagueHeader = ({ league, league_id, startTime, currentUser, isMenuOpen, s
                         </div>
 
                         {registerPhase === 'before' && (
-                            <div className="sm:absolute relative px-4 md:px-8 sm:right-0 sm:bottom-10 text-sm md:text-base text-white font-semibold text-center sm:text-right">
-                                <div className="mb-2">
-                                    Mở form sau: <span className="text-orange-500">{joinCountdown}</span>
-                                </div>
+  <div className="sm:absolute relative px-4 md:px-8 sm:right-0 sm:bottom-10 text-sm md:text-base text-white font-semibold text-center sm:text-right">
+    <div className="mb-2">
+      Mở form sau: <span className="text-orange-500">{joinCountdown}</span>
+    </div>
 
-                                {!currentUser ? (
-                                    <Link to="/signin">
-                                        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
-                                            Đăng nhập để tham gia
-                                        </button>
-                                    </Link>
-                                ) : (
-                                    <Link to="https://discord.gg/crP48bD7" target="_blank" rel="noopener noreferrer">
-                                        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
-                                            Discord THPT Phú Nhuận
-                                        </button>
-                                    </Link>
-                                )}
-                            </div>
-                        )}
+    {!currentUser ? (
+      <Link to="/signin">
+        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
+          Đăng nhập để tham gia
+        </button>
+      </Link>
+    ) : (
+      <Link to="https://discord.gg/crP48bD7" target="_blank" rel="noopener noreferrer">
+        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
+          Discord THPT Phú Nhuận
+        </button>
+      </Link>
+    )}
+  </div>
+)}
 
 {registerPhase === 'during' && (
   <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
     <div className="mb-2 sm:mt-0 mt-12">
-        Thời gian còn lại: <span className="text-orange-500">{joinCountdown}</span>   
+      Thời gian còn lại: <span className="text-orange-500">{joinCountdown}</span>   
     </div>
 
-    <div className={`flex ${currentPlayer ? "sm:justify-end justify-center gap-2" : "sm:justify-end justify-center"}`}>
-      {currentPlayer && (
-        <button
-          onClick={handleUnregister}
-          className="bg-red-500 text-white font-bold px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
-        >
-          Hủy đăng ký
+    {!currentUser ? (
+      <Link to="/signin">
+        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
+          Đăng nhập để tham gia
         </button>
-      )}
-      <button
-        onClick={handleAutoRegister}
-        className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
-      >
-        {currentPlayer ? "Cập nhật" : "Đăng ký"}
-      </button>
-    </div>
+      </Link>
+    ) : me?.riotID === '' || me?.riotID === 'Đăng nhập bằng Riot Games' ? (
+      <Link to="/profile">
+        <button className="bg-yellow-400 text-black font-bold px-4 py-2 rounded-md hover:bg-yellow-500 transition duration-200">
+          Cập nhật Riot ID
+        </button>
+      </Link>
+    ) : (
+      <div className={`flex ${currentPlayer ? "sm:justify-end justify-center gap-2" : "sm:justify-end justify-center"}`}>
+        {currentPlayer && (
+          <button
+            onClick={handleUnregister}
+            className="bg-red-500 text-white font-bold px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
+          >
+            Hủy đăng ký
+          </button>
+        )}
+        <button
+          onClick={handleAutoRegister}
+          className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
+        >
+          {currentPlayer ? "Cập nhật" : "Đăng ký"}
+        </button>
+      </div>
+    )}
   </div>
 )}
-                        {isCheckinPhase && currentUser && (
-                            <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
-                                <div className="mb-2">
-                                    Đang trong thời gian check-in!
-                                </div>
 
-                                {isCheckedin ? (
-                                    <button
-                                        disabled
-                                        className="bg-gray-400 text-white font-bold px-4 py-2 rounded-md cursor-not-allowed"
-                                    >
-                                        ✅ Đã check-in
-                                    </button>
-                                ) : (
-                                    <button
-                                        className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
-                                        onClick={handleCheckin}
-                                    >
-                                        Check-in
-                                    </button>
-                                )}
-                            </div>
-                        )}
+{isCheckinPhase && currentUser && currentPlayer && (
+  <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
+    <div className="mb-2">
+      Đang trong thời gian check-in!
+    </div>
+
+    {currentPlayer.isCheckedin ? (
+      <button
+        disabled
+        className="bg-gray-400 text-white font-bold px-4 py-2 rounded-md cursor-not-allowed"
+      >
+        ✅ Đã check-in
+      </button>
+    ) : (
+      <button
+        className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
+        onClick={handleCheckin}
+      >
+        Check-in
+      </button>
+    )}
+  </div>
+)}
+
+
+
 
 
                     </div>
