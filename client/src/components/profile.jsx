@@ -6,6 +6,7 @@ import { SiRiotgames } from "react-icons/si";
 import { MdLock } from "react-icons/md";
 import garenaLogo from '../image/AOVLogo.png';
 import verifyIcon from '../image/verified-symbol-icon.png'
+
 import {
     updateUserStart,
     updateUserSuccess,
@@ -25,10 +26,14 @@ export default function Profile() {
     const dispatch = useDispatch();
     const [loggedInUser, setLoggedInUser] = useState("");
     const [fetchedUserData, setFetchedUserData] = useState(null);
+    
     const handleRiotLogin = () => {
         window.location.href = "https://bigtournament-hq9n.onrender.com/sso/login-riot";
         // Set riotID vào formData sau khi người dùng đăng nhập thành công
         setFormData({ ...formData, riotID: loggedInUser });
+        if (loggedInUser && loggedInUser !== "Đăng nhập với Riot Games") {
+            navigate("/tft/tft_road_to_iec_2025");
+          }
     }
     const handleLogout = async () => {
         setLoggedInUser(""); // clear RiotID hiển thị
@@ -111,7 +116,7 @@ export default function Profile() {
         }
     }, [currentUser]);
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.id]: e.target.value ,riotID: loggedInUser});
+        setFormData({ ...formData, [e.target.id]: e.target.value });
     };
 
     const handleSubmit = async (e) => {
@@ -120,7 +125,9 @@ export default function Profile() {
         // Ensure the button's name attribute is correctly checked
         const buttonName = e.nativeEvent.submitter.name;  // Use submitter to get the button that was clicked
         console.log("FormData khi submit:", formData); // ✅ In ra dữ liệu gửi đi
-
+        if (formData.riotID === "Đăng nhập với Riot Games") {
+            delete formData.riotID; // không gửi giá trị lỗi
+          }
         if (buttonName === 'updateProfile') {
             try {
                 dispatch(updateUserStart());
@@ -264,10 +271,7 @@ export default function Profile() {
       onClick={(e) => {
         e.preventDefault();
         handleRiotLogin();
-        setFormData((prevFormData) => ({
-          ...prevFormData,
-          riotID: loggedInUser,
-        }));
+        
       }}
       className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
     >

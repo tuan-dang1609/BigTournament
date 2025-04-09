@@ -21,7 +21,7 @@ function LoginForm() {
 
   }, [])
   // Check if there's a 'from' location or default to home ('/')
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname || '/tft/tft_road_to_iec_2025';
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

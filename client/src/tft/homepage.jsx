@@ -17,10 +17,15 @@ const CompetitionPage = () => {
     const [joinCountdown, setJoinCountdown] = useState('');
     const [registerPhase, setRegisterPhase] = useState('idle');
     const { game, league_id } = useParams();
-    const { league,  startTime } = useLeagueData(game, league_id);
+    const { league,  startTime, me } = useLeagueData(game, league_id,currentUser);
     const registered = parseInt(league?.season?.current_team_count) || 0;
     const max = parseInt(league?.season?.max_registration) || 64;
     const percent = Math.min((registered / max) * 100, 100);
+    useEffect(() => {
+        if (me) {
+            console.log("✅ Thông tin user:", me);
+        }
+    }, [me]);
     // GMT+0 => GMT+3 = 15:00
     useEffect(() => {
         if (!startTime) return;
@@ -102,6 +107,7 @@ const CompetitionPage = () => {
   getNavigation={getNavigation}
   MyNavbar2={MyNavbar2}
   league_id={league_id}
+  me={me}
 />
 
             {/* Content Section */}
