@@ -15,7 +15,7 @@ const MemberPage = () => {
     const [joinCountdown, setJoinCountdown] = useState('');
     const [registerPhase, setRegisterPhase] = useState('idle');
     const { game, league_id } = useParams();
-    const { league, startTime } = useLeagueData(game, league_id);
+    const { league, startTime, me } = useLeagueData(game, league_id, currentUser);
     const max = parseInt(league?.season?.max_registration) || 64;
     const currentPlayer = league?.players?.find(
         (p) => String(p.usernameregister) === String(currentUser?._id)

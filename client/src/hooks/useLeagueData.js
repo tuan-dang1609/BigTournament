@@ -2,23 +2,23 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 let cachedLeague = null;
-let cachedParams = { game: null, league_id: null };
+let cachedMe = null; // cache user luôn
+let cachedParams = { game: null, league_id: null, user_id: null };
 
 export const useLeagueData = (game, league_id, currentUser) => {
   const [league, setLeague] = useState(cachedLeague);
   const [loading, setLoading] = useState(!cachedLeague);
   const [startTime, setStartTime] = useState(null);
-  const [me, setMe] = useState(null);
+  const [me, setMe] = useState(cachedMe);
 
-  // Fetch league
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchLeague = async () => {
       if (
         cachedLeague &&
         cachedParams.game === game &&
         cachedParams.league_id === league_id
       ) {
-        return;
+        return; // Đã cache league rồi
       }
 
       setLoading(true);
@@ -30,34 +30,40 @@ export const useLeagueData = (game, league_id, currentUser) => {
           const data = await res.json();
           setLeague(data);
           setStartTime(new Date(data.season.time_start));
-
           cachedLeague = data;
-          cachedParams = { game, league_id };
-        } else {
-          console.warn("❌ API failed:", res.status);
+          cachedParams.game = game;
+          cachedParams.league_id = league_id;
         }
       } catch (err) {
-        console.error("❌ Fetch error:", err);
+        console.error("❌ Fetch League Error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchLeague();
   }, [game, league_id]);
 
-  // Fetch user
   useEffect(() => {
     const fetchMe = async () => {
       if (!currentUser?._id) return;
+
+      if (
+        cachedMe &&
+        cachedParams.user_id === currentUser._id
+      ) {
+        return; // Đã cache user rồi
+      }
 
       try {
         const res = await axios.get(
           `https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`
         );
         setMe(res.data);
+        cachedMe = res.data;
+        cachedParams.user_id = currentUser._id;
       } catch (err) {
-        console.error("❌ Failed to fetch user:", err);
+        console.error("❌ Fetch Me Error:", err);
       }
     };
 
@@ -69,5 +75,6 @@ export const useLeagueData = (game, league_id, currentUser) => {
 
 export const resetLeagueCache = () => {
   cachedLeague = null;
-  cachedParams = { game: null, league_id: null };
+  cachedMe = null;
+  cachedParams = { game: null, league_id: null, user_id: null };
 };

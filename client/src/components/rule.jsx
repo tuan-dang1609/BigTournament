@@ -10,8 +10,9 @@ export default function Rulebook() {
     const [loading, setLoading] = useState(true);
     const sectionRefs = useRef({});
     const { game, league_id } = useParams(); // Lấy tham số từ URL
-    const { league, startTime } = useLeagueData(game, league_id); // Lấy dữ liệu giải đấu
+    
     const { currentUser } = useSelector((state) => state.user);
+    const { league, startTime, me } = useLeagueData(game, league_id, currentUser);
     const [joinCountdown, setJoinCountdown] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [registerPhase, setRegisterPhase] = useState('idle');
