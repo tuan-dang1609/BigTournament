@@ -103,6 +103,7 @@ const MemberPage = () => {
                 getNavigation={getNavigation}
                 MyNavbar2={MyNavbar2}
                 league_id={league_id}
+                me={me}
             />
 
             <div className="p-4 md:px-8">

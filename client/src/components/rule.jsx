@@ -102,6 +102,7 @@ export default function Rulebook() {
                 getNavigation={getNavigation}
                 MyNavbar2={MyNavbar2}
                 league_id={league_id}
+                me={me}
             />
             <div className="flex flex-col md:flex-row w-full  text-white p-4">
                 {/* Sidebar */}
