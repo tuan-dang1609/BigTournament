@@ -284,9 +284,7 @@ router.get('/:game/:league_id', async (req, res) => {
     }
 
     // ✅ Tính số lượng team dựa vào players có game đúng
-    const currentTeamCount = (data.players || []).filter(
-      (p) => p.game === "Teamfight Tactics"
-    ).length;
+    const currentTeamCount = (data.players || []).length;
 
     data.season.current_team_count = currentTeamCount;
 
