@@ -10,6 +10,7 @@ import BanPickValo from '../models/veto.model.js';
 import Organization from '../models/team.model.js';
 import DCNLeague from '../models/tournament.model.js';
 import TeamTFT from '../models/registergame.model.js'
+import Bracket from '../models/bracket.model.js';
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -41,6 +42,67 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
+router.get('/:game/:league_id/:bracket', async (req, res) => {
+  const { game, league_id } = req.params;
+  try {
+    const bracket = await Bracket.findOne({ game, league_id });
+    if (!bracket) return res.status(404).json({ message: 'Bracket not found' });
+
+    res.json({
+      payload: {
+        type: bracket.type,
+        rounds: bracket.rounds,
+        matches: Object.fromEntries(bracket.matches)
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// POST /:game/:league_id/:bracket
+router.get('/:game/:league_id/bracket', async (req, res) => {
+  const { game, league_id } = req.params;
+  try {
+    const bracket = await Bracket.findOne({ game, league_id });
+    if (!bracket) return res.status(404).json({ message: 'Bracket not found' });
+
+    res.json({
+      payload: {
+        type: bracket.type,
+        rounds: bracket.rounds,
+        matches: Object.fromEntries(bracket.matches)
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// POST /:game/:league_id/bracket
+router.post('/:game/:league_id/bracket', async (req, res) => {
+  const { game, league_id } = req.params;
+  const { type, rounds, matches } = req.body.payload;
+
+  try {
+    const updated = await Bracket.findOneAndUpdate(
+      { game, league_id },
+      {
+        $set: {
+          type,
+          rounds,
+          matches
+        }
+      },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({ message: 'Bracket saved', data: updated });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to save bracket', error: err.message });
+  }
+});
+
 
 router.get('/alluser', async (req, res) => {
   try {
@@ -1092,11 +1154,13 @@ router.post('/register/:league_id', async (req, res) => {
     gameMembers,
     usernameregister,
     discordID,
-    classTeam
+    classTeam,
+    games, // <- lấy danh sách game từ body
+    teamName,
+    shortName
   } = req.body;
 
   try {
-    // ✅ 1. Tìm giải đấu DCNLeague theo league_id
     const leagueDoc = await DCNLeague.findOne({
       'league.league_id': league_id,
     });
@@ -1105,27 +1169,26 @@ router.post('/register/:league_id', async (req, res) => {
       return res.status(404).json({ message: 'League not found' });
     }
 
-    // ✅ 2. Tìm player đã tồn tại trong DCNLeague.players chưa
     const existingPlayerIndex = leagueDoc.players.findIndex(
       (p) => String(p.usernameregister) === String(usernameregister)
     );
 
-    // ✅ 3. Tạo player object mới từ form
+    const selectedGame = games?.[0]; // 👈 lấy game thực sự mà người dùng chọn
+
     const playerData = {
       discordID,
-      ign: gameMembers?.["Teamfight Tactics"]?.[0] || '',
+      ign: (gameMembers?.[selectedGame] || []).filter((m) => m.trim() !== ""), // ⬅ lưu toàn bộ
       usernameregister,
       logoUrl,
       classTeam,
-      game: "Teamfight Tactics",
+      game: selectedGame,
       isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false,
       team: {
-        name: req.body.team?.name || '',
-        logoTeam: req.body.team?.logoTeam || ''
+        name: teamName || '',
+        logoTeam: logoUrl || ''
       }
     };
 
-    // ✅ 4. Thêm mới hoặc cập nhật
     if (existingPlayerIndex === -1) {
       leagueDoc.players.push(playerData);
     } else {
@@ -1135,12 +1198,11 @@ router.post('/register/:league_id', async (req, res) => {
       };
     }
 
-    // ✅ 5. Lưu lại
     await leagueDoc.save();
 
     res.status(200).json({
       message: 'Đăng ký thành công và đã thêm/cập nhật vào giải đấu!',
-      player: playerData // 👈 Gửi lại player đã thêm
+      player: playerData
     });
 
   } catch (error) {
@@ -1148,6 +1210,7 @@ router.post('/register/:league_id', async (req, res) => {
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
+
 
 router.post('/checkregisterorz', async (req, res) => {
   try {
@@ -1251,6 +1314,39 @@ router.post('/:league_id/checkregisterTFT', async (req, res) => {
     }
 
     return res.status(404).json({ message: 'Player not found in this TFT league' });
+
+  } catch (error) {
+    console.error("❌ Error in /:league_id/checkregisterTFT:", error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+router.post('/:game_name/:league_id/checkregister', async (req, res) => {
+  const { game_name,league_id } = req.params;
+  const { usernameregister } = req.body;
+
+  try {
+    const game = game_name;
+
+    // ✅ Tìm đúng giải theo league_id và game TFT
+    const league = await DCNLeague.findOne({
+      'league.league_id': league_id,
+      'league.game_short': game
+    });
+
+    if (!league) {
+      return res.status(404).json({ message: 'League not found' });
+    }
+
+    // ✅ Kiểm tra xem player có trong players không
+    const player = league.players.find(
+      (p) => String(p.usernameregister) === String(usernameregister)
+    );
+
+    if (player) {
+      return res.status(200).json(player);
+    }
+
+    return res.status(404).json({ message: 'Player not found in this league' });
 
   } catch (error) {
     console.error("❌ Error in /:league_id/checkregisterTFT:", error);
@@ -1446,7 +1542,8 @@ router.post('/registerorz', async (req, res) => {
             {
               team: {
                 name: teamName,
-                logoTeam: logoUrl
+                logoTeam: logoUrl,
+                shortName : shortName
               }
             }
           )

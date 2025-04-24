@@ -4,7 +4,8 @@ const teamSchema = new mongoose.Schema(
   {name:{
     type:String
   },
-   logoTeam: String 
+   logoTeam: String,
+   shortName: String 
   },
   { timestamps: true }
 );
