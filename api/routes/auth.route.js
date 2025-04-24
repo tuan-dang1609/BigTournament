@@ -1185,7 +1185,8 @@ router.post('/register/:league_id', async (req, res) => {
       isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false,
       team: {
         name: teamName || '',
-        logoTeam: logoUrl || ''
+        logoTeam: logoUrl || '',
+        shortName: shortName || ''
       }
     };
 

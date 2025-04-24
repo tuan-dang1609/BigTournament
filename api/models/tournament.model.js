@@ -64,7 +64,8 @@ const allplayerSchema = new mongoose.Schema({
   classTeam: String,
   team: {
     name: String,
-    logoTeam: String
+    logoTeam: String,
+    shortName: String
   },
   usernameregister: String,
   logoUrl: String,
