@@ -6,7 +6,7 @@ import "driver.js/dist/driver.css";
 import DCN from '../image/LOGO.png'
 const lobbies = {
     day1: [
-        { id: 'Lobby 1', matchIds: ['0', '0', '0'] },
+        { id: 'Lobby 1', matchIds: ['VN2_838453360', '0', '0'] },
         { id: 'Lobby 2', matchIds: ['0', '0', '0'] }
     ],
     day2: [

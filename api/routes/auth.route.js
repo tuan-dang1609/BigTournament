@@ -42,64 +42,249 @@ router.post('/teams/:league', findteamHOF)
 router.post('/leagues/list', findleagueHOF)
 router.post('/leagues', leagueHOF)
 router.post('/myrankpickem', getUserPickemScore)
-router.get('/:game/:league_id/:bracket', async (req, res) => {
+router.post("/:game/:league_id/bracket/create", async (req, res) => {
   const { game, league_id } = req.params;
-  try {
-    const bracket = await Bracket.findOne({ game, league_id });
-    if (!bracket) return res.status(404).json({ message: 'Bracket not found' });
+  const { type, team } = req.body;
 
-    res.json({
-      payload: {
-        type: bracket.type,
-        rounds: bracket.rounds,
-        matches: Object.fromEntries(bracket.matches)
-      }
+  if (type !== "singleElimination" || team !== 8) {
+    return res.status(400).json({ message: "Currently only supports singleElimination 8 teams." });
+  }
+
+  try {
+    const bracket = new Bracket({
+      game,
+      leagueId: league_id,
+      type,
+      rounds: []
     });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+
+    // Quarter-finals
+    const quarterFinalMatches = [];
+    for (let i = 1; i <= 4; i++) {
+      quarterFinalMatches.push({
+        matchId: `quarter-final-${i}`,
+        ifWin: `semi-final-${Math.ceil(i / 2)}`,
+        ifLose: "eliminate",
+        factions: [],
+      });
+    }
+    bracket.rounds.push({ number: 1, name: "Quarter Finals", matches: quarterFinalMatches });
+
+    // Semi-finals
+    const semiFinalMatches = [];
+    for (let i = 1; i <= 2; i++) {
+      semiFinalMatches.push({
+        matchId: `semi-final-${i}`,
+        ifWin: "final",
+        ifLose: "third-place",
+        factions: [],
+      });
+    }
+    bracket.rounds.push({ number: 2, name: "Semi Finals", matches: semiFinalMatches });
+
+    // Final
+    bracket.rounds.push({
+      number: 3,
+      name: "Finals",
+      matches: [
+        {
+          matchId: "final",
+          ifWin: "champion",
+          ifLose: "runner-up",
+          factions: [],
+        }
+      ]
+    });
+
+    // Third-place (Optional)
+    bracket.rounds.push({
+      number: 3,
+      name: "Third Place",
+      matches: [
+        {
+          matchId: "third-place",
+          ifWin: "third",
+          ifLose: "fourth",
+          factions: [],
+        }
+      ]
+    });
+
+    await bracket.save();
+    return res.json({ message: "Bracket created successfully", bracket });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
+
+router.post("/:game/:league_id/bracket", async (req, res) => {
+  const { game, league_id } = req.params;
+  const matchesPayload = Array.isArray(req.body) ? req.body : [req.body];
+
+  try {
+    let bracket = await Bracket.findOne({ game, leagueId: league_id });
+
+    if (!bracket) {
+      return res.status(404).json({ message: "Bracket not found" });
+    }
+
+    const leagueData = await DCNLeague.findOne({ "league.league_id": league_id });
+    const playersFromLeague = leagueData?.players || [];
+
+    // Step 1: Cập nhật matchIds trước
+    for (const { matchId, matchIds } of matchesPayload) {
+      const match = bracket.rounds.flatMap(r => r.matches).find(m => m.matchId === matchId);
+      if (match) {
+        match.matchIds = matchIds;
+      }
+    }
+
+    await bracket.save();
+
+    // Step 2: Fetch match data và xác định winner/loser
+    for (const { matchId } of matchesPayload) {
+      const match = bracket.rounds.flatMap(r => r.matches).find(m => m.matchId === matchId);
+      if (!match || !match.matchIds || match.matchIds.length === 0) continue;
+
+      let score = {};
+      let allTeamIds = new Set();
+
+      for (const mId of match.matchIds) {
+        try {
+          const response = await fetch(`https://bigtournament-hq9n.onrender.com/api/valorant/match/${mId}`);
+          const apiData = await response.json();
+          const matchData = apiData.matchData;
+          if (!matchData) continue;
+
+          const players = matchData.players || [];
+          const blueTeam = players.filter(p => p.teamId === "Blue");
+          const redTeam = players.filter(p => p.teamId === "Red");
+
+          let blueTeamId = null, redTeamId = null;
+
+          for (const p of blueTeam) {
+            const ignFull = `${p.gameName}#${p.tagLine}`.toLowerCase();
+            const found = playersFromLeague.find(player => player.ign.some(ign => ign.toLowerCase() === ignFull));
+            if (found) {
+              blueTeamId = found.team.name;
+              break;
+            }
+          }
+
+          for (const p of redTeam) {
+            const ignFull = `${p.gameName}#${p.tagLine}`.toLowerCase();
+            const found = playersFromLeague.find(player => player.ign.some(ign => ign.toLowerCase() === ignFull));
+            if (found) {
+              redTeamId = found.team.name;
+              break;
+            }
+          }
+
+          if (!blueTeamId || !redTeamId) continue;
+
+          allTeamIds.add(blueTeamId);
+          allTeamIds.add(redTeamId);
+
+          let blueScore = blueTeam.reduce((acc, p) => acc + (p.stats?.score || 0), 0);
+          let redScore = redTeam.reduce((acc, p) => acc + (p.stats?.score || 0), 0);
+
+          if (blueScore > redScore) {
+            score[blueTeamId] = (score[blueTeamId] || 0) + 1;
+          } else {
+            score[redTeamId] = (score[redTeamId] || 0) + 1;
+          }
+        } catch (err) {
+          console.error(`Error fetching match ${mId}:`, err.message);
+        }
+      }
+
+      const teamsInMatch = [...allTeamIds].map(teamId => ({
+        teamId,
+        score: score[teamId] || 0
+      })).sort((a, b) => b.score - a.score);
+
+      if (teamsInMatch.length > 0) {
+        match.factions = teamsInMatch.map((team, idx) => ({
+          number: idx + 1,
+          teamId: team.teamId,
+          teamName: team.teamId,
+          score: team.score,
+          winner: idx === 0,
+        }));
+
+        match.winner = teamsInMatch[0].teamId; // team thắng
+        const loserTeamId = teamsInMatch[1]?.teamId; // team thua
+
+        // Step 3: Update vào trận ifWin và ifLose
+        if (match.ifWin) {
+          const nextMatch = bracket.rounds.flatMap(r => r.matches).find(m => m.matchId === match.ifWin);
+          if (nextMatch) {
+            const emptyFaction = nextMatch.factions.find(f => !f.teamId);
+            if (emptyFaction) {
+              emptyFaction.teamId = match.winner;
+              emptyFaction.teamName = match.winner;
+            } else {
+              nextMatch.factions.push({
+                number: nextMatch.factions.length + 1,
+                teamId: match.winner,
+                teamName: match.winner,
+                score: 0,
+                winner: false
+              });
+            }
+          }
+        }
+
+        if (match.ifLose && loserTeamId) {
+          const nextMatchLose = bracket.rounds.flatMap(r => r.matches).find(m => m.matchId === match.ifLose);
+          if (nextMatchLose) {
+            const emptyFaction = nextMatchLose.factions.find(f => !f.teamId);
+            if (emptyFaction) {
+              emptyFaction.teamId = loserTeamId;
+              emptyFaction.teamName = loserTeamId;
+            } else {
+              nextMatchLose.factions.push({
+                number: nextMatchLose.factions.length + 1,
+                teamId: loserTeamId,
+                teamName: loserTeamId,
+                score: 0,
+                winner: false
+              });
+            }
+          }
+        }
+      }
+    }
+
+    await bracket.save();
+
+    return res.json({ message: "Bracket updated successfully", bracket });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to update bracket", error: error.message });
+  }
+});
+
 
 // POST /:game/:league_id/:bracket
 router.get('/:game/:league_id/bracket', async (req, res) => {
   const { game, league_id } = req.params;
   try {
-    const bracket = await Bracket.findOne({ game, league_id });
+    const bracket = await Bracket.findOne({ game, leagueId: league_id });
     if (!bracket) return res.status(404).json({ message: 'Bracket not found' });
 
     res.json({
       payload: {
         type: bracket.type,
         rounds: bracket.rounds,
-        matches: Object.fromEntries(bracket.matches)
+        matches: bracket.matches ? Object.fromEntries(bracket.matches) : {}
       }
     });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-// POST /:game/:league_id/bracket
-router.post('/:game/:league_id/bracket', async (req, res) => {
-  const { game, league_id } = req.params;
-  const { type, rounds, matches } = req.body.payload;
-
-  try {
-    const updated = await Bracket.findOneAndUpdate(
-      { game, league_id },
-      {
-        $set: {
-          type,
-          rounds,
-          matches
-        }
-      },
-      { upsert: true, new: true }
-    );
-
-    res.status(200).json({ message: 'Bracket saved', data: updated });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to save bracket', error: err.message });
   }
 });
 

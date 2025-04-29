@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from 'axios'
 
-const LeagueHeader = ({me,league, league_id, startTime, currentUser, isMenuOpen, setIsMenuOpen, getNavigation, MyNavbar2 }) => {
+const LeagueHeader = ({me,league, league_id, startTime, currentUser, isMenuOpen, setIsMenuOpen, getNavigation, MyNavbar2,game }) => {
     const [registerPhase, setRegisterPhase] = useState('idle');
     const [joinCountdown, setJoinCountdown] = useState('');
     const [isCheckinPhase, setIsCheckinPhase] = useState(false);
@@ -208,6 +208,12 @@ const LeagueHeader = ({me,league, league_id, startTime, currentUser, isMenuOpen,
           Cập nhật Riot ID
         </button>
       </Link>
+    ) : game !== 'tft' ? (
+      <Link to={`/${game}/${league_id}/register`}>
+        <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
+          Đăng ký tham gia
+        </button>
+      </Link>
     ) : (
       <div className={`flex ${currentPlayer ? "sm:justify-end justify-center gap-2" : "sm:justify-end justify-center"}`}>
         {currentPlayer && (
@@ -228,6 +234,7 @@ const LeagueHeader = ({me,league, league_id, startTime, currentUser, isMenuOpen,
     )}
   </div>
 )}
+
 
 {isCheckinPhase && currentUser && currentPlayer && (
   <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">

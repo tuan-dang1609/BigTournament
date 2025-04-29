@@ -1,43 +1,36 @@
-// models/Bracket.js
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const factionSchema = new mongoose.Schema({
-  number: Number,
-  score: Number,
-  winner: Boolean,
-  entity: {
-    id: String,
-    name: String,
-    avatar: String,
-  },
-  previousMatch: {
-    group: Number,
-    round: Number,
-    placement: Number
-  }
-}, { _id: false });
 
-const matchDetailSchema = new mongoose.Schema({
-  id: String,
-  number: Number,
-  originId: String,
-  status: String,
-  schedule: Number,
-  bestOf: Number,
-  factions: [factionSchema]
-}, { _id: false });
+
+const matchSchema = new mongoose.Schema({
+  matchId: String,
+  bestOf: { type: Number, default: 1 },
+  matchIds: [String], // Các match thực tế
+  factions: [
+    {
+      number: Number,
+      teamId: { type: String, default: null },
+      teamName: { type: String, default: null },
+      score: { type: Number, default: 0 },
+      winner: { type: Boolean, default: false },
+    }
+  ],
+  winner: { type: String, default: null },
+  ifWin: { type: String, default: null }, // matchId tiếp theo nếu thắng
+  ifLose: { type: String, default: null }, // matchId tiếp theo nếu thua
+});
 
 const roundSchema = new mongoose.Schema({
   number: Number,
-  matches: [String]
-}, { _id: false });
+  name: String, // quarter-final, semi-final, etc.
+  matches: [matchSchema]
+});
 
 const bracketSchema = new mongoose.Schema({
   game: String,
-  league_id: String,
-  type: String,
+  leagueId: String,
+  type: { type: String, default: "singleElimination" },
   rounds: [roundSchema],
-  matches: { type: Map, of: matchDetailSchema }
 }, { timestamps: true });
 
-export default mongoose.model('Bracket', bracketSchema,'Bracket');
+export default mongoose.model("Bracket", bracketSchema,"Bracket");

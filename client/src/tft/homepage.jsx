@@ -84,7 +84,8 @@ const CompetitionPage = () => {
             { name: "Tổng quan", href: `/${game}/${league_id}`, current: location.pathname === `/${game}/${league_id}` },
             { name: "Người chơi", href: `/${game}/${league_id}/players`, current: location.pathname === `/${game}/${league_id}/players` },
             { name: "Luật", href: `/${game}/${league_id}/rule`, current: location.pathname === `/${game}/${league_id}/rule` },
-        ]
+            { name: "BXH", href: `/${game}/${league_id}/leaderboard`, current: location.pathname === `/${game}/${league_id}/leaderboard` }
+        ],
     };
     const getNavigation = () => navigationAll1.aov;
     if (!league) {
@@ -108,6 +109,7 @@ const CompetitionPage = () => {
   MyNavbar2={MyNavbar2}
   league_id={league_id}
   me={me}
+  game={game}
 />
 
             {/* Content Section */}

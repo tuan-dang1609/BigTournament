@@ -38,7 +38,7 @@ export default function MatchInterface() {
   useEffect(() => {
     const fetchMatch = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_DCN_URL}/api/auth/status`, {
+        const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ matchId })

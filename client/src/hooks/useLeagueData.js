@@ -3,6 +3,7 @@ import axios from "axios";
 
 let cachedLeague = null;
 let cachedMe = null; // cache user luôn
+let cachedMatchData = {}; // cache từng trận
 let cachedParams = { game: null, league_id: null, user_id: null };
 
 export const useLeagueData = (game, league_id, currentUser) => {
@@ -10,6 +11,7 @@ export const useLeagueData = (game, league_id, currentUser) => {
   const [loading, setLoading] = useState(!cachedLeague);
   const [startTime, setStartTime] = useState(null);
   const [me, setMe] = useState(cachedMe);
+  const [allMatchData, setAllMatchData] = useState({});
 
   useEffect(() => {
     const fetchLeague = async () => {
@@ -18,7 +20,7 @@ export const useLeagueData = (game, league_id, currentUser) => {
         cachedParams.game === game &&
         cachedParams.league_id === league_id
       ) {
-        return; // Đã cache league rồi
+        return;
       }
 
       setLoading(true);
@@ -48,11 +50,8 @@ export const useLeagueData = (game, league_id, currentUser) => {
     const fetchMe = async () => {
       if (!currentUser?._id) return;
 
-      if (
-        cachedMe &&
-        cachedParams.user_id === currentUser._id
-      ) {
-        return; // Đã cache user rồi
+      if (cachedMe && cachedParams.user_id === currentUser._id) {
+        return;
       }
 
       try {
@@ -70,11 +69,48 @@ export const useLeagueData = (game, league_id, currentUser) => {
     fetchMe();
   }, [currentUser]);
 
-  return { league, loading, startTime, me };
+  useEffect(() => {
+    const fetchAllMatches = async () => {
+      if (!league || !league.matches) return;
+
+      const matchIdSet = new Set();
+      Object.values(league.matches).forEach(day => {
+        day.forEach(lobby => {
+          lobby.matchIds.forEach(id => {
+            if (id !== "0") matchIdSet.add(id);
+          });
+        });
+      });
+
+      const allMatchDataTemp = {};
+      for (const matchId of matchIdSet) {
+        if (cachedMatchData[matchId]) {
+          allMatchDataTemp[matchId] = cachedMatchData[matchId];
+          continue;
+        }
+
+        try {
+          const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/tft/match/${matchId}`);
+          const data = await res.json();
+          allMatchDataTemp[matchId] = data;
+          cachedMatchData[matchId] = data;
+        } catch (err) {
+          console.error("❌ Fetch match", matchId, "error:", err);
+        }
+      }
+
+      setAllMatchData(allMatchDataTemp);
+    };
+
+    fetchAllMatches();
+  }, [league]);
+
+  return { league, loading, startTime, me, allMatchData };
 };
 
 export const resetLeagueCache = () => {
   cachedLeague = null;
   cachedMe = null;
+  cachedMatchData = {};
   cachedParams = { game: null, league_id: null, user_id: null };
 };

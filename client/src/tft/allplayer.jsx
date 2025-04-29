@@ -80,6 +80,7 @@ const MemberPage = () => {
             { name: "Tổng quan", href: `/${game}/${league_id}`, current: location.pathname === `/${game}/${league_id}` },
             { name: "Người chơi", href: `/${game}/${league_id}/players`, current: location.pathname === `/${game}/${league_id}/players` },
             { name: "Luật", href: `/${game}/${league_id}/rule`, current: location.pathname === `/${game}/${league_id}/rule` },
+            { name: "BXH", href: `/${game}/${league_id}/leaderboard`, current: location.pathname === `/${game}/${league_id}/leaderboard` }
         ],
     };
     const getNavigation = () => navigationAll1.aov;
@@ -104,6 +105,7 @@ const MemberPage = () => {
                 MyNavbar2={MyNavbar2}
                 league_id={league_id}
                 me={me}
+                game={game}
             />
 
             <div className="p-4 md:px-8">
@@ -122,11 +124,7 @@ const MemberPage = () => {
                                     <tr key={index} className="hover:bg-gray-800 transition duration-200">
                                         <td className="flex items-center space-x-4 py-2 pl-2">
                                             {/* Logo đội */}
-                                            <img
-                                                src={team.team?.logoTeam ? `https://drive.google.com/thumbnail?id=${team.team.logoTeam}` : ""}
-                                                alt="team-logo"
-                                                className={`w-10 h-10 rounded-full object-cover ${team.team?.logoTeam ? '' : 'invisible'}`}
-                                            />
+                                           
 
                                             {/* Logo người chơi + tên */}
                                             <div className="flex items-center space-x-4">
@@ -135,7 +133,18 @@ const MemberPage = () => {
                                                     alt="player-logo"
                                                     className="w-10 h-10 rounded-full object-cover"
                                                 />
-                                                <span className="text-white font-semibold sm:text-[15px] text-[12px]">{team.ign}</span>
+                                                <span className="text-white font-semibold sm:text-[15px] text-[12px]">
+  {game === 'tft'
+    ? Array.isArray(team.ign) ? team.ign.join(", ") : team.ign
+    : team.team?.name || "Tên đội"}
+</span>
+{game === "tft" && team.team?.logoTeam && (
+  <img
+    src={`https://drive.google.com/thumbnail?id=${team.team.logoTeam}`}
+    alt="team-logo"
+    className={`w-10 h-10 rounded-full object-cover ${team.team?.logoTeam ? '' : 'invisible'}`}
+  />
+)}
                                             </div>
                                     
                                         </td>
