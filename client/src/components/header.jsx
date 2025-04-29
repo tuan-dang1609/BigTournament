@@ -8,39 +8,40 @@ const LeagueHeader = ({me,league, league_id, startTime, currentUser, isMenuOpen,
     const [isCheckinPhase, setIsCheckinPhase] = useState(false);
     
     const handleAutoRegister = async () => {
-        try {      
-            
-            const formData = {
-                shortName: "",
-                logoUrl: me.profilePicture,
-                color: "",
-                classTeam: me.className,
-                team: {
-                    name: me.team?.name || "",
-                    logoTeam: me.team?.logoTeam || ""
-                },
-                games: ["Teamfight Tactics"],
-                gameMembers: {
-                    "Teamfight Tactics": [me.riotID || ""]
-                },
-                usernameregister: me._id,
-                discordID: me.discordID || "",
-            };
-
-            const response = await axios.post(
-                `https://bigtournament-hq9n.onrender.com/api/auth/register/${league_id}`,
-                formData
-            );
-            console.log("✅ Server phản hồi:", response.data);
-
-            // hoặc: navigate(`/tft/${league_id}`); nếu muốn redirect
-            window.location.reload();
-
-        } catch (err) {
-            console.error("❌ Error auto registering:", err);
-            alert("❌ Đăng ký thất bại!");
-        }
-    };
+      try {      
+          const formData = {
+              shortName: "",
+              logoUrl: me.profilePicture || "", // Avatar cá nhân
+              color: "",
+              classTeam: me.className || "",
+              games: ["Teamfight Tactics"],
+              gameMembers: {
+                  "Teamfight Tactics": [me.riotID || ""]
+              },
+              usernameregister: me._id,
+              discordID: me.discordID || "",
+              teamName: me.team?.name || "",        // 👈 thêm vào đây cho chuẩn
+              shortName: me.team?.shortName || "",   // 👈 thêm nếu có
+              // Không cần "team: { name, logoTeam }" nữa
+          };
+  
+          // Nếu muốn tự chọn logo team riêng (khác avatar cá nhân):
+          if (me.team?.logoTeam) {
+              formData.teamLogo = me.team.logoTeam; // 👈 thêm trường mới nếu cần
+          }
+  
+          const response = await axios.post(
+              `https://bigtournament-hq9n.onrender.com/api/auth/register/${league_id}`,
+              formData
+          );
+          console.log("✅ Server phản hồi:", response.data);
+  
+          // window.location.reload(); // Reload lại nếu cần
+      } catch (err) {
+          console.error("❌ Error auto registering:", err);
+          alert("❌ Đăng ký thất bại!");
+      }
+  };
     const handleUnregister = async () => {
       
         try {

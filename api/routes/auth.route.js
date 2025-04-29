@@ -1334,11 +1334,12 @@ router.post('/register/:league_id', async (req, res) => {
   const { league_id } = req.params;
   const {
     logoUrl,
+    teamLogo, // 👈 thêm dòng này
     gameMembers,
     usernameregister,
     discordID,
     classTeam,
-    games, // <- lấy danh sách game từ body
+    games,
     teamName,
     shortName
   } = req.body;
@@ -1360,7 +1361,7 @@ router.post('/register/:league_id', async (req, res) => {
 
     const playerData = {
       discordID,
-      ign: (gameMembers?.[selectedGame] || []).filter((m) => m.trim() !== ""), // ⬅ lưu toàn bộ
+      ign: (gameMembers?.[selectedGame] || []).filter((m) => m.trim() !== ""),
       usernameregister,
       logoUrl,
       classTeam,
@@ -1368,7 +1369,7 @@ router.post('/register/:league_id', async (req, res) => {
       isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false,
       team: {
         name: teamName || '',
-        logoTeam: logoUrl || '',
+        logoTeam: teamLogo || '', // 👈 lấy logo team riêng
         shortName: shortName || ''
       }
     };
