@@ -36,7 +36,7 @@ const LeagueHeader = ({me,league, league_id, startTime, currentUser, isMenuOpen,
           );
           console.log("✅ Server phản hồi:", response.data);
   
-          // window.location.reload(); // Reload lại nếu cần
+          window.location.reload(); // Reload lại nếu cần
       } catch (err) {
           console.error("❌ Error auto registering:", err);
           alert("❌ Đăng ký thất bại!");
