@@ -207,6 +207,7 @@ const Leaderboard = () => {
                 MyNavbar2={MyNavbar2}
                 league_id={league_id}
                 me={me}
+                game={game}
             />
 
             <div className="flex justify-center mt-4">
