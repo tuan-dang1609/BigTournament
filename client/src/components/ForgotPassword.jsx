@@ -11,7 +11,9 @@ function ForgotPassword() {
     e.preventDefault();
 
     try {
-      const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/alluser',{method: 'GET'});
+      const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/alluser', {
+        method: 'GET',
+      });
       const users = await res.json();
 
       const matchedUser = users.find(
@@ -25,11 +27,14 @@ function ForgotPassword() {
         return;
       }
       // Gửi yêu cầu reset password
-      const updateRes = await fetch(`https://bigtournament-hq9n.onrender.com/api/user/update/${matchedUser.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: 'HoangTuan2004' }),
-      });
+      const updateRes = await fetch(
+        `https://bigtournament-hq9n.onrender.com/api/user/update/${matchedUser.id}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: 'HoangTuan2004' }),
+        }
+      );
 
       const updateData = await updateRes.json();
 
@@ -50,7 +55,9 @@ function ForgotPassword() {
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Quên Mật Khẩu</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              Username
+            </label>
             <input
               type="text"
               id="username"
@@ -61,7 +68,9 @@ function ForgotPassword() {
             />
           </div>
           <div>
-            <label htmlFor="nickname" className="block text-sm font-medium text-gray-700">Nickname</label>
+            <label htmlFor="nickname" className="block text-sm font-medium text-gray-700">
+              Nickname
+            </label>
             <input
               type="text"
               id="nickname"
@@ -80,7 +89,9 @@ function ForgotPassword() {
         </form>
 
         {message && (
-          <p className={`mt-4 text-center text-sm ${message.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+          <p
+            className={`mt-4 text-center text-sm ${message.type === 'error' ? 'text-red-600' : 'text-green-600'}`}
+          >
             {message.text}
           </p>
         )}

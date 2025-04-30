@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import MyNavbar2 from "../components/Navbar2";
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import MyNavbar2 from '../components/Navbar2';
 import { Line } from 'react-chartjs-2';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import 'chart.js/auto';
-import Image from '../image/waiting.png'
+import Image from '../image/waiting.png';
 // Register the annotation plugin
 import { Chart } from 'chart.js';
 Chart.register(annotationPlugin);
@@ -33,26 +33,43 @@ const LeaderboardComponent = () => {
   useEffect(() => {
     const scrollToTop = () => {
       document.documentElement.scrollTop = 0;
-    
     };
     setTimeout(scrollToTop, 0);
-    document.title = "Bảng xếp hạng Dự đoán";
+    document.title = 'Bảng xếp hạng Dự đoán';
   }, []);
 
   const navigationAll1 = {
     aov: [
-      { name: "Đoán theo trận", href: "/arenaofvalor/pickem/pickemmatch", current: location.pathname === "/arenaofvalor/pickem/pickemmatch" },
-      { name: "Đoán tổng thể", href: "/arenaofvalor/pickem/pickemall", current: location.pathname === "/arenaofvalor/pickem/pickemall" },
-      { name: "Bảng xếp hạng", href: "/arenaofvalor/pickem/leaderboard", current: location.pathname === "/arenaofvalor/pickem/leaderboard" },
+      {
+        name: 'Đoán theo trận',
+        href: '/arenaofvalor/pickem/pickemmatch',
+        current: location.pathname === '/arenaofvalor/pickem/pickemmatch',
+      },
+      {
+        name: 'Đoán tổng thể',
+        href: '/arenaofvalor/pickem/pickemall',
+        current: location.pathname === '/arenaofvalor/pickem/pickemall',
+      },
+      {
+        name: 'Bảng xếp hạng',
+        href: '/arenaofvalor/pickem/leaderboard',
+        current: location.pathname === '/arenaofvalor/pickem/leaderboard',
+      },
     ],
   };
 
   const getNavigation = () => navigationAll1.aov;
 
-  const LeaderboardRow = ({ user, className, isSticky = false, highlightUser = false, tierColor }) => (
+  const LeaderboardRow = ({
+    user,
+    className,
+    isSticky = false,
+    highlightUser = false,
+    tierColor,
+  }) => (
     <tr
       className={`border-b-[0.1px] ${className} first:border-t-[0.1px] border-opacity-20 ${
-        isSticky ? "border-white text-white" : "border-base-content text-base-content"
+        isSticky ? 'border-white text-white' : 'border-base-content text-base-content'
       } transition duration-300 ease-in-out`}
       style={highlightUser ? { color: tierColor } : {}}
     >
@@ -100,24 +117,30 @@ const LeaderboardComponent = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-  
-        const leaderboardResponse = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/leaderboardpickem', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-  
-        const maxScoreResponse = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/maxscore', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-  
+
+        const leaderboardResponse = await fetch(
+          'https://bigtournament-hq9n.onrender.com/api/auth/leaderboardpickem',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        const maxScoreResponse = await fetch(
+          'https://bigtournament-hq9n.onrender.com/api/auth/maxscore',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
         const leaderboardResult = await leaderboardResponse.json();
         const maxScoreResult = await maxScoreResponse.json();
-  
+
         if (leaderboardResult.leaderboard && leaderboardResult.leaderboard.length > 0) {
           const scoretop1 = leaderboardResult.leaderboard[0].score;
           setScoreTop1(scoretop1);
@@ -125,17 +148,17 @@ const LeaderboardComponent = () => {
         } else {
           setLeaderboardData([]); // Không có dữ liệu
         }
-  
+
         if (maxScoreResult.totalMaxPoints) {
           SetMaxScore(maxScoreResult.totalMaxPoints);
         }
       } catch (error) {
         setError(error.message);
-      } finally{
-        setLoading(false)
+      } finally {
+        setLoading(false);
       }
     };
-  
+
     fetchData();
   }, []);
 
@@ -169,29 +192,83 @@ const LeaderboardComponent = () => {
 
   const TierRewardsTable = ({ userScore, tierScores }) => {
     const tiers = [
-      { name: 'Perfect Picks', score: maxScore, reward: 'Perfecto + TBD', highlight: userScore === maxScore, color: '#D4AF37' },
-      { name: 'Hạng 1', score: scoretop1, reward: 'Danh hiệu 1ST + TBD', highlight: userScore === scoretop1, color: '#C0A240' },
-      { name: 'S', score: tierScores.sTierScore, top: 'Top 5%', reward: 'Danh hiệu Tier S', highlight: userScore >= tierScores.sTierScore && userScore < maxScore && userScore < scoretop1, color: '#ff9800' },
-      { name: 'A', score: tierScores.aTierScore, top: 'Top 20%', reward: 'Danh hiệu Tier A', highlight: userScore >= tierScores.aTierScore && userScore < tierScores.sTierScore, color: '#CC52CE' },
-      { name: 'B', score: tierScores.bTierScore, top: 'Top 40%', reward: '', highlight: userScore >= tierScores.bTierScore && userScore < tierScores.aTierScore, color: '#00bcd4' },
-      { name: 'C', score: tierScores.cTierScore, top: 'Top 70%', reward: '', highlight: userScore >= tierScores.cTierScore && userScore < tierScores.bTierScore, color: '#4caf50' },
+      {
+        name: 'Perfect Picks',
+        score: maxScore,
+        reward: 'Perfecto + TBD',
+        highlight: userScore === maxScore,
+        color: '#D4AF37',
+      },
+      {
+        name: 'Hạng 1',
+        score: scoretop1,
+        reward: 'Danh hiệu 1ST + TBD',
+        highlight: userScore === scoretop1,
+        color: '#C0A240',
+      },
+      {
+        name: 'S',
+        score: tierScores.sTierScore,
+        top: 'Top 5%',
+        reward: 'Danh hiệu Tier S',
+        highlight:
+          userScore >= tierScores.sTierScore && userScore < maxScore && userScore < scoretop1,
+        color: '#ff9800',
+      },
+      {
+        name: 'A',
+        score: tierScores.aTierScore,
+        top: 'Top 20%',
+        reward: 'Danh hiệu Tier A',
+        highlight: userScore >= tierScores.aTierScore && userScore < tierScores.sTierScore,
+        color: '#CC52CE',
+      },
+      {
+        name: 'B',
+        score: tierScores.bTierScore,
+        top: 'Top 40%',
+        reward: '',
+        highlight: userScore >= tierScores.bTierScore && userScore < tierScores.aTierScore,
+        color: '#00bcd4',
+      },
+      {
+        name: 'C',
+        score: tierScores.cTierScore,
+        top: 'Top 70%',
+        reward: '',
+        highlight: userScore >= tierScores.cTierScore && userScore < tierScores.bTierScore,
+        color: '#4caf50',
+      },
     ];
 
     return (
       <div className="mx-auto mb-8 lg:w-[92%] w-full">
-        <h3 className="text-2xl font-bold text-base-content mb-4 text-center">Phần thưởng các Bậc</h3>
+        <h3 className="text-2xl font-bold text-base-content mb-4 text-center">
+          Phần thưởng các Bậc
+        </h3>
         <table className="mx-auto text-left border-collapse border-base-content w-[98%]">
           <tbody>
             {tiers.map((tier, index) => (
               <tr
                 key={index}
                 className={`border-b-2 border-base-content px-4 ${tier.highlight ? 'font-semibold' : ''}`}
-                style={{ color: tier.highlight ? tier.color : 'inherit', borderBottomColor: tier.highlight ? tier.color : 'rgba(128, 128, 128, 0.18)' }}
+                style={{
+                  color: tier.highlight ? tier.color : 'inherit',
+                  borderBottomColor: tier.highlight ? tier.color : 'rgba(128, 128, 128, 0.18)',
+                }}
               >
-                <td className="border-base-content xl:px-4 px-1 py-3 w-[80px] md:w-[20%] lg:text-[16px] text-[12px]">{tier.name}</td>
-                <td className="border-base-content lg:px-5 px-2 py-3 lg:text-[16px] text-[12px]">{tier.top}</td>
-                <td className="border-base-content lg:px-5 px-2 py-3 lg:text-[16px] text-[12px]">{tier.score} PTS</td>
-                <td className="border-base-content lg:px-5 px-2 py-3 text-right lg:text-[16px] text-[12px]">{tier.reward}</td>
+                <td className="border-base-content xl:px-4 px-1 py-3 w-[80px] md:w-[20%] lg:text-[16px] text-[12px]">
+                  {tier.name}
+                </td>
+                <td className="border-base-content lg:px-5 px-2 py-3 lg:text-[16px] text-[12px]">
+                  {tier.top}
+                </td>
+                <td className="border-base-content lg:px-5 px-2 py-3 lg:text-[16px] text-[12px]">
+                  {tier.score} PTS
+                </td>
+                <td className="border-base-content lg:px-5 px-2 py-3 text-right lg:text-[16px] text-[12px]">
+                  {tier.reward}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -223,14 +300,14 @@ const LeaderboardComponent = () => {
         return rankedLeaderboardData[index]?.score || 0;
       };
 
-      const sTierScore = getPercentileScore(5);  // Top 5%
+      const sTierScore = getPercentileScore(5); // Top 5%
       const aTierScore = getPercentileScore(20); // Top 20%
       const bTierScore = getPercentileScore(40); // Top 40%
       const cTierScore = getPercentileScore(70); // Top 70%
 
       // Map tier scores to the closest index on the X-axis
       const getClosestIndex = (score) => {
-        let closestIndex = pointsData.findIndex(point => point >= score);
+        let closestIndex = pointsData.findIndex((point) => point >= score);
         return closestIndex !== -1 ? closestIndex : pointsData.length - 1;
       };
 
@@ -248,7 +325,7 @@ const LeaderboardComponent = () => {
         sTierIndex,
         aTierIndex,
         bTierIndex,
-        cTierIndex
+        cTierIndex,
       });
 
       // Log for debugging
@@ -282,9 +359,7 @@ const LeaderboardComponent = () => {
           pointBackgroundColor: points.map((point, index) =>
             index === userScoreIndex ? '#6A5ACD' : ''
           ),
-          pointRadius: points.map((point, index) =>
-            index === userScoreIndex ? 6 : 0
-          ),
+          pointRadius: points.map((point, index) => (index === userScoreIndex ? 6 : 0)),
           segment: {
             borderColor: (ctx) => getPointColor(points[ctx.p0DataIndex]),
           },
@@ -351,7 +426,7 @@ const LeaderboardComponent = () => {
       legend: {
         labels: {
           filter: (legendItem) => legendItem.text !== 'Number of Users',
-          color: "rgba(128, 128, 128,1)",
+          color: 'rgba(128, 128, 128,1)',
           usePointStyle: true,
         },
         onClick: (e) => {},
@@ -363,7 +438,7 @@ const LeaderboardComponent = () => {
         annotations: {
           sTierLine: {
             type: 'line',
-            xMin: tierScores.sTierIndex,  // Use the calculated index
+            xMin: tierScores.sTierIndex, // Use the calculated index
             xMax: tierScores.sTierIndex,
             borderColor: '#ff9800',
             borderWidth: 2,
@@ -443,7 +518,7 @@ const LeaderboardComponent = () => {
     scales: {
       x: {
         ticks: {
-          color: "rgba(128, 128, 128,1)",
+          color: 'rgba(128, 128, 128,1)',
           callback: function (value) {
             if (
               value === tierScores.sTierIndex ||
@@ -462,39 +537,48 @@ const LeaderboardComponent = () => {
         title: {
           display: true,
           text: 'Điểm', // Tiêu đề trục X
-          color: "rgba(128, 128, 128,1)", // Màu trắng cho tiêu đề trục X
+          color: 'rgba(128, 128, 128,1)', // Màu trắng cho tiêu đề trục X
         },
         border: {
-          color: "rgba(128, 128, 128,1)", // Màu trắng cho đường trục X
+          color: 'rgba(128, 128, 128,1)', // Màu trắng cho đường trục X
         },
         display: true, // Hiển thị trục X
       },
       y: {
         display: false, // Ẩn trục Y
+      },
     },
-    }
-    
   };
-  
-  
+
   if (loading) {
     return (
       <>
-        <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+        <MyNavbar2
+          navigation={getNavigation()}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+        />
         <div className="flex justify-center items-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
       </>
     );
   }
-  
+
   if (!loading && leaderboardData.length === 0) {
     return (
       <>
-        <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+        <MyNavbar2
+          navigation={getNavigation()}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+        />
         <div className="flex items-center min-h-screen flex-col justify-center align-center w-full text-center text-lg font-semibold text-base-content">
           <img src={Image} className="h-28 w-28 mb-10" alt="Thông báo" />
-          <p>Bảng xếp hạng sẽ hiện khi có kết quả của trận đấu đầu tiên. Các bạn vui lòng quay lại sau nhé.</p>
+          <p>
+            Bảng xếp hạng sẽ hiện khi có kết quả của trận đấu đầu tiên. Các bạn vui lòng quay lại
+            sau nhé.
+          </p>
         </div>
       </>
     );
@@ -502,14 +586,23 @@ const LeaderboardComponent = () => {
 
   return (
     <>
-      <MyNavbar2 navigation={getNavigation()} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+      <MyNavbar2
+        navigation={getNavigation()}
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+      />
       <div className="container mx-auto px-4 py-8 mt-40 mb-2">
-        <h2 className="text-3xl font-bold mb-6 text-center text-base-content">Bảng xếp hạng Pick'em Challenge</h2>
+        <h2 className="text-3xl font-bold mb-6 text-center text-base-content">
+          Bảng xếp hạng Pick'em Challenge
+        </h2>
         <div className="container mx-auto flex xl:flex-row xl:gap-2 lg:gap-5 flex-col lg:mb-10">
           <div className="bg-base-100 w-full rounded-lg lg:my-0 my-5">
             {points.length > 0 && (
               <div className="xl:w-[100%] w-[98%] lg:h-[320px] h-[250px] mt-16 mx-auto">
-                <Line data={prepareChartData()} options={{ ...chartOptions, maintainAspectRatio: false }} />
+                <Line
+                  data={prepareChartData()}
+                  options={{ ...chartOptions, maintainAspectRatio: false }}
+                />
               </div>
             )}
           </div>
@@ -530,7 +623,7 @@ const LeaderboardComponent = () => {
           </table>
         </div>
       </div>
-      
+
       {userRank && (
         <div className="fixed bottom-0 w-full bg-black border-opacity-20 py-1 text-white flex items-center justify-between border-t-[0.1px] border-white">
           <div className="container mx-auto px-4">
@@ -545,14 +638,14 @@ const LeaderboardComponent = () => {
                     userRank.score === maxScore
                       ? '#D4AF37'
                       : userRank.score >= tierScores.sTierScore
-                      ? '#ff9800'
-                      : userRank.score >= tierScores.aTierScore
-                      ? '#CC52CE'
-                      : userRank.score >= tierScores.bTierScore
-                      ? '#00bcd4'
-                      : userRank.score >= tierScores.cTierScore
-                      ? '#4caf50'
-                      : '#6A5ACD'
+                        ? '#ff9800'
+                        : userRank.score >= tierScores.aTierScore
+                          ? '#CC52CE'
+                          : userRank.score >= tierScores.bTierScore
+                            ? '#00bcd4'
+                            : userRank.score >= tierScores.cTierScore
+                              ? '#4caf50'
+                              : '#6A5ACD'
                   }
                 />
               </tbody>
@@ -563,6 +656,5 @@ const LeaderboardComponent = () => {
     </>
   );
 };
-
 
 export default LeaderboardComponent;

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
-import MyNavbar2 from "../components/Navbar2";
-import LeagueHeader from "../components/header";
-import { useLeagueData } from "../hooks/useLeagueData";
-import Bracket from "../valorant/bracket-2"; // Giả sử bạn để file Bracket.jsx riêng
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
+import MyNavbar2 from '../components/Navbar2';
+import LeagueHeader from '../components/header';
+import { useLeagueData } from '../hooks/useLeagueData';
+import Bracket from '../valorant/bracket-2'; // Giả sử bạn để file Bracket.jsx riêng
 
 const BracketPage = () => {
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ const BracketPage = () => {
   const [registerPhase, setRegisterPhase] = useState('idle');
   const { game, league_id } = useParams();
   const { league, startTime, me } = useLeagueData(game, league_id, currentUser);
-  
+
   const max = parseInt(league?.season?.max_registration) || 64;
   const currentPlayer = league?.players?.find(
     (p) => String(p.usernameregister) === String(currentUser?._id)
@@ -91,10 +91,26 @@ const BracketPage = () => {
 
   const navigationAll1 = {
     aov: [
-      { name: "Tổng quan", href: `/${game}/${league_id}`, current: location.pathname === `/${game}/${league_id}` },
-      { name: "Người chơi", href: `/${game}/${league_id}/players`, current: location.pathname === `/${game}/${league_id}/players` },
-      { name: "Luật", href: `/${game}/${league_id}/rule`, current: location.pathname === `/${game}/${league_id}/rule` },
-      { name: "BXH", href: `/${game}/${league_id}/leaderboard`, current: location.pathname === `/${game}/${league_id}/leaderboard` }
+      {
+        name: 'Tổng quan',
+        href: `/${game}/${league_id}`,
+        current: location.pathname === `/${game}/${league_id}`,
+      },
+      {
+        name: 'Người chơi',
+        href: `/${game}/${league_id}/players`,
+        current: location.pathname === `/${game}/${league_id}/players`,
+      },
+      {
+        name: 'Luật',
+        href: `/${game}/${league_id}/rule`,
+        current: location.pathname === `/${game}/${league_id}/rule`,
+      },
+      {
+        name: 'BXH',
+        href: `/${game}/${league_id}/leaderboard`,
+        current: location.pathname === `/${game}/${league_id}/leaderboard`,
+      },
     ],
   };
 

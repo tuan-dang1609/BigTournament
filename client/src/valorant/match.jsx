@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
-import Verify from '../image/verified-symbol-icon.png'
+import React, { useState, useEffect } from 'react';
+import Verify from '../image/verified-symbol-icon.png';
 const columns = [
-  { key: "name", label: "Người chơi" },
-  { key: "acs", label: "ACS" },
-  { key: "kda", label: "K/D/A" },
-  { key: "stats.kills/stats.deaths", label: "KD" },
-  { key: "stats.headshotPercentage", label: "HS%" },
-  { key: "fk", label: "FK" },
-  { key: "fd", label: "FD" },
-  { key: "mk", label: "MK" },
+  { key: 'name', label: 'Người chơi' },
+  { key: 'acs', label: 'ACS' },
+  { key: 'kda', label: 'K/D/A' },
+  { key: 'stats.kills/stats.deaths', label: 'KD' },
+  { key: 'stats.headshotPercentage', label: 'HS%' },
+  { key: 'fk', label: 'FK' },
+  { key: 'fd', label: 'FD' },
+  { key: 'mk', label: 'MK' },
 ];
 
 const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
@@ -18,13 +18,10 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
     if (!registeredPlayers || registeredPlayers.length === 0) return '';
 
     const normalizedId = `${gameName}#${tagLine}`.toLowerCase().trim();
-    const player = registeredPlayers.find(p =>
-      p.riotID.toLowerCase().trim() === normalizedId
-    );
+    const player = registeredPlayers.find((p) => p.riotID.toLowerCase().trim() === normalizedId);
 
     return player?.isregistered ? <img src={Verify} className="w-4 h-4" /> : '';
   };
-
 
   const mapData = data.reduce((acc, match) => {
     const mapName = match.matchInfo?.mapName;
@@ -32,20 +29,17 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
     return acc;
   }, {});
 
-
   useEffect(() => {
     if (!selectedMap && Object.keys(mapData).length > 0) {
       setSelectedMap(Object.keys(mapData)[0]);
     }
   }, [mapData]);
-  const playerData = data.find(match =>
-    match.matchInfo?.mapName === selectedMap
-  ) || data[0];
+  const playerData = data.find((match) => match.matchInfo?.mapName === selectedMap) || data[0];
   // Định nghĩa renderTable TRƯỚC khi sử dụng
   const getPlayerTeamName = (player) => {
     const normalizedId = `${player.gameName}#${player.tagLine}`.toLowerCase().trim();
-    const registeredPlayer = registeredPlayers.find(rp =>
-      rp.riotID.toLowerCase().trim() === normalizedId
+    const registeredPlayer = registeredPlayers.find(
+      (rp) => rp.riotID.toLowerCase().trim() === normalizedId
     );
     return registeredPlayer?.teamname || null;
   };
@@ -59,8 +53,9 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
               {columns.map((column, index) => (
                 <th
                   key={column.key}
-                  className={`py-[6px] bg-[#362431] px-2 text-center text-[10.5px] xl:text-[10.75px] text-white transition-colors ${index === 0 ? `sticky left-0 z-10` : ""
-                    }`}
+                  className={`py-[6px] bg-[#362431] px-2 text-center text-[10.5px] xl:text-[10.75px] text-white transition-colors ${
+                    index === 0 ? `sticky left-0 z-10` : ''
+                  }`}
                 >
                   <div className="flex items-center justify-center">
                     <span>{column.label}</span>
@@ -82,7 +77,7 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
 
                     // Xử lý từng loại cột
                     switch (column.key) {
-                      case "name":
+                      case 'name':
                         cellData = (
                           <div className="flex items-center">
                             <img
@@ -106,37 +101,39 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
                         );
                         break;
 
-                      case "performanceScore":
+                      case 'performanceScore':
                         cellData = row.stats?.score || 'N/A';
                         break;
 
-                      case "acs":
-                        cellData = row.stats.roundsPlayed > 0
-                          ? (row.stats.score / row.stats.roundsPlayed).toFixed(1)
-                          : 'N/A';
+                      case 'acs':
+                        cellData =
+                          row.stats.roundsPlayed > 0
+                            ? (row.stats.score / row.stats.roundsPlayed).toFixed(1)
+                            : 'N/A';
                         break;
 
-                      case "kda":
+                      case 'kda':
                         cellData = `${row.stats.kills || 0}/${row.stats.deaths || 0}/${row.stats.assists || 0}`;
                         break;
 
-                      case "stats.kills/stats.deaths":
-                        cellData = row.stats.deaths === 0
-                          ? row.stats.kills
-                          : (row.stats.kills / row.stats.deaths).toFixed(1);
+                      case 'stats.kills/stats.deaths':
+                        cellData =
+                          row.stats.deaths === 0
+                            ? row.stats.kills
+                            : (row.stats.kills / row.stats.deaths).toFixed(1);
                         break;
 
-                      case "stats.headshotPercentage":
+                      case 'stats.headshotPercentage':
                         cellData = `${row.stats.headshotPercentage}%`;
                         break;
 
-                      case "fk":
+                      case 'fk':
                         cellData = row.stats.firstKills;
                         break;
-                      case "fd":
+                      case 'fd':
                         cellData = row.stats.firstDeaths;
                         break;
-                      case "mk":
+                      case 'mk':
                         cellData = row.stats.multiKills;
                         break;
 
@@ -151,14 +148,19 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
                     return (
                       <td
                         key={`${rowIndex}-${column.key}`}
-                        className={`py-2 px-3 text-center ${columnIndex === 0 ? "sticky left-0 z-10 bg-base-100" : ""
-                          }`}
-                        style={columnIndex === 0 ? {
-                          width: '150px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        } : { width: '50px' }}
+                        className={`py-2 px-3 text-center ${
+                          columnIndex === 0 ? 'sticky left-0 z-10 bg-base-100' : ''
+                        }`}
+                        style={
+                          columnIndex === 0
+                            ? {
+                                width: '150px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }
+                            : { width: '50px' }
+                        }
                       >
                         {cellData}
                       </td>
@@ -179,11 +181,9 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
       <div className="flex gap-2">
         {Object.keys(mapData).map((mapName) => {
           // Tìm match tương ứng với mapName
-          const matchForTab = data.find(
-            (match) => match.matchInfo?.mapName === mapName
-          );
+          const matchForTab = data.find((match) => match.matchInfo?.mapName === mapName);
 
-          let scoreDisplay = "";
+          let scoreDisplay = '';
           if (matchForTab && matchForTab.teams) {
             // Lấy teamId thực tế của teamA và teamB
             const sortedPlayers = matchForTab.players.reduce((acc, player) => {
@@ -195,17 +195,16 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
             }, {});
 
             // Xác định đúng teamName cho Red và Blue
-            let actualTeamA = Object.keys(sortedPlayers).find(
-              (team) => sortedPlayers[team] === "Red"
-            ) || "Đội Đỏ";
+            let actualTeamA =
+              Object.keys(sortedPlayers).find((team) => sortedPlayers[team] === 'Red') || 'Đội Đỏ';
 
-            let actualTeamB = Object.keys(sortedPlayers).find(
-              (team) => sortedPlayers[team] === "Blue"
-            ) || "Đội Xanh";
+            let actualTeamB =
+              Object.keys(sortedPlayers).find((team) => sortedPlayers[team] === 'Blue') ||
+              'Đội Xanh';
 
             // Lấy điểm số đúng của từng team
-            const redTeam = matchForTab.teams.find(team => team.teamId === "Red");
-            const blueTeam = matchForTab.teams.find(team => team.teamId === "Blue");
+            const redTeam = matchForTab.teams.find((team) => team.teamId === 'Red');
+            const blueTeam = matchForTab.teams.find((team) => team.teamId === 'Blue');
 
             let scoreA = redTeam ? redTeam.roundsWon : 0;
             let scoreB = blueTeam ? blueTeam.roundsWon : 0;
@@ -224,8 +223,9 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
             <button
               key={mapName}
               onClick={() => setSelectedMap(mapName)}
-              className={`px-4 py-2 text-[10px] font-bold rounded ${selectedMap === mapName ? "bg-white text-black" : "bg-[#4A374A] text-white"
-                }`}
+              className={`px-4 py-2 text-[10px] font-bold rounded ${
+                selectedMap === mapName ? 'bg-white text-black' : 'bg-[#4A374A] text-white'
+              }`}
             >
               {mapName.toUpperCase()} ({scoreDisplay})
             </button>
@@ -235,49 +235,53 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
     </div>
   );
   return (
-    <>{renderMapTabs()}
+    <>
+      {renderMapTabs()}
       <div className="w-full overflow-x-auto flex flex-col xl:flex-row gap-x-7">
         {playerData?.players && (
           <>
             <div className="w-full xl:w-[49%]">
               {renderTable(
-                playerData.players.filter(p => {
+                playerData.players.filter((p) => {
                   const playerTeamName = getPlayerTeamName(p);
 
                   // Nếu có teamname, nhóm vào đúng teamname
                   if (playerTeamName === teamA) return true;
 
                   // Nếu không có teamname, nhóm vào team có cùng teamId với teamA
-                  return playerTeamName === null &&
-                    playerData.players.some(player =>
-                      getPlayerTeamName(player) === teamA && player.teamId === p.teamId
-                    );
+                  return (
+                    playerTeamName === null &&
+                    playerData.players.some(
+                      (player) => getPlayerTeamName(player) === teamA && player.teamId === p.teamId
+                    )
+                  );
                 }),
-                "red"
+                'red'
               )}
             </div>
             <div className="w-full xl:w-[49%]">
               {renderTable(
-                playerData.players.filter(p => {
+                playerData.players.filter((p) => {
                   const playerTeamName = getPlayerTeamName(p);
 
                   // Nếu có teamname, nhóm vào đúng teamname
                   if (playerTeamName === teamB) return true;
 
                   // Nếu không có teamname, nhóm vào team có cùng teamId với teamB
-                  return playerTeamName === null &&
-                    playerData.players.some(player =>
-                      getPlayerTeamName(player) === teamB && player.teamId === p.teamId
-                    );
+                  return (
+                    playerTeamName === null &&
+                    playerData.players.some(
+                      (player) => getPlayerTeamName(player) === teamB && player.teamId === p.teamId
+                    )
+                  );
                 }),
-                "blue"
+                'blue'
               )}
             </div>
           </>
         )}
       </div>
     </>
-
   );
 };
 

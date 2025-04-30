@@ -11,7 +11,7 @@ export default function CreateMatch() {
     const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: JSON.stringify(form),
     });
     const match = await res.json();
     navigate(`/match/${match.id}/spectator`);
@@ -25,19 +25,19 @@ export default function CreateMatch() {
           placeholder="Team 1 Name"
           className="w-full p-2 border rounded"
           value={form.team1}
-          onChange={(e) => setForm({...form, team1: e.target.value})}
+          onChange={(e) => setForm({ ...form, team1: e.target.value })}
         />
         <input
           type="text"
           placeholder="Team 2 Name"
           className="w-full p-2 border rounded"
           value={form.team2}
-          onChange={(e) => setForm({...form, team2: e.target.value})}
+          onChange={(e) => setForm({ ...form, team2: e.target.value })}
         />
         <select
           className="w-full p-2 border rounded"
           value={form.matchType}
-          onChange={(e) => setForm({...form, matchType: e.target.value})}
+          onChange={(e) => setForm({ ...form, matchType: e.target.value })}
         >
           <option value="BO1">BO1</option>
           <option value="BO3">BO3</option>

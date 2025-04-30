@@ -1,21 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-const SingleEliminationBracket = ({bracketData}) => {
-
-
+const SingleEliminationBracket = ({ bracketData }) => {
   if (!bracketData) {
     return (
-      <div className="flex justify-center items-center min-h-screen text-white">
-        Loading...
-      </div>
+      <div className="flex justify-center items-center min-h-screen text-white">Loading...</div>
     );
   }
 
   const getRoundName = (number) => {
-    if (number === 1) return "Quarter Finals";
-    if (number === 2) return "Semi Finals";
-    if (number === 3) return "Finals";
-    if (number === 4) return "Third Place";
+    if (number === 1) return 'Quarter Finals';
+    if (number === 2) return 'Semi Finals';
+    if (number === 3) return 'Finals';
+    if (number === 4) return 'Third Place';
     return `Round ${number}`;
   };
 
@@ -28,16 +24,17 @@ const SingleEliminationBracket = ({bracketData}) => {
             <h2 className="mb-6 text-lg font-bold">{getRoundName(round.number)}</h2>
             <div className="flex flex-col space-y-10">
               {round.matches.map((match, idx) => (
-                <div key={match._id} className="flex flex-col space-y-1 bg-[#1e293b] rounded-lg p-3 w-56 relative">
+                <div
+                  key={match._id}
+                  className="flex flex-col space-y-1 bg-[#1e293b] rounded-lg p-3 w-56 relative"
+                >
                   {match.factions && match.factions.length > 0 ? (
                     match.factions.map((faction, fIdx) => (
                       <div
                         key={faction._id}
                         className={`flex items-center justify-between px-2 py-1 ${faction.winner ? 'bg-[#22c55e]/30 border-2 border-[#22c55e]' : ''} rounded`}
                       >
-                        <span className="truncate w-36 text-sm">
-                          {faction.teamName || 'TBD'}
-                        </span>
+                        <span className="truncate w-36 text-sm">{faction.teamName || 'TBD'}</span>
                         <span className="text-sm">{faction.score}</span>
                       </div>
                     ))
@@ -55,7 +52,6 @@ const SingleEliminationBracket = ({bracketData}) => {
                   )}
 
                   {/* Draw Line except for Third Place round */}
-
                 </div>
               ))}
             </div>

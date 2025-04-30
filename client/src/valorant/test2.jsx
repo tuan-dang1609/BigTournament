@@ -9,12 +9,11 @@ export default function MatchInterface() {
   const socketRef = useRef(null); // 🆕
 
   useEffect(() => {
-    const socket = io(import.meta.env.DEV
-      ? "http://localhost:3000"
-      : "https://bigtournament-hq9n.onrender.com",
+    const socket = io(
+      import.meta.env.DEV ? 'http://localhost:3000' : 'https://bigtournament-hq9n.onrender.com',
       {
-        transports: ["websocket"],     // ✅ bắt buộc
-        withCredentials: true
+        transports: ['websocket'], // ✅ bắt buộc
+        withCredentials: true,
       }
     );
     socketRef.current = socket;
@@ -41,7 +40,7 @@ export default function MatchInterface() {
         const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ matchId })
+          body: JSON.stringify({ matchId }),
         });
         const data = await res.json();
         setMatch(data);
@@ -63,14 +62,14 @@ export default function MatchInterface() {
       matchId,
       role,
       currentPhase: match?.currentPhase,
-      currentTurn: match?.currentTurn
+      currentTurn: match?.currentTurn,
     });
 
     try {
       await fetch(`${import.meta.env.VITE_DCN_URL}/api/auth/action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId, action, role, ...data })
+        body: JSON.stringify({ matchId, action, role, ...data }),
       });
 
       // ✅ Không cần fetchMatch vì socket sẽ update
@@ -89,9 +88,7 @@ export default function MatchInterface() {
       {/* Thêm hướng dẫn pick cho BO3 */}
       {match.matchType === 'BO3' && match.pickPhase === 1 && (
         <div className="text-sm text-gray-500 mb-2">
-          {match.maps.picked.length === 0
-            ? "Team 1 pick first"
-            : "Team 2 pick second"}
+          {match.maps.picked.length === 0 ? 'Team 1 pick first' : 'Team 2 pick second'}
         </div>
       )}
 
@@ -129,11 +126,11 @@ export default function MatchInterface() {
   const BanPickSection = ({ title, maps, type, sides, team1, team2 }) => (
     <div>
       <h3>{title}</h3>
-      <ul className='grid grid-cols-2 gap-1'>
+      <ul className="grid grid-cols-2 gap-1">
         {maps.map((item) => {
-          const mapName = typeof item === "string" ? item : item?.name;
-          const pickedBy = typeof item === "object" ? item.pickedBy : "";
-          const bannedBy = typeof item === "object" ? item.bannedBy : "";
+          const mapName = typeof item === 'string' ? item : item?.name;
+          const pickedBy = typeof item === 'object' ? item.pickedBy : '';
+          const bannedBy = typeof item === 'object' ? item.bannedBy : '';
 
           return (
             <li
@@ -146,36 +143,42 @@ export default function MatchInterface() {
               <div className="absolute inset-0 bg-black bg-opacity-40 z-0 font-bold " />
               <div className="relative z-10">
                 <strong className="block text-lg">{mapName}</strong>
-                <div style={{ marginLeft: "1rem" }}>
+                <div style={{ marginLeft: '1rem' }}>
                   {pickedBy && sides && (
                     <div className="mt-1 text-sm font-bold">
-                      {
-                        (() => {
-                          const sideInfo = sides.find((s) => s.map === mapName);
-                          if (!sideInfo) return "Chưa rõ";
+                      {(() => {
+                        const sideInfo = sides.find((s) => s.map === mapName);
+                        if (!sideInfo) return 'Chưa rõ';
 
-                          const bothSidesEmpty = !sideInfo.team1 || !sideInfo.team2;
+                        const bothSidesEmpty = !sideInfo.team1 || !sideInfo.team2;
 
-                          if (pickedBy === "Decider") {
-                            if (bothSidesEmpty) return "Chưa rõ";
+                        if (pickedBy === 'Decider') {
+                          if (bothSidesEmpty) return 'Chưa rõ';
 
-                            return (
-                              <>
-                                <div>Đội {match?.team1} đã chọn {sideInfo.team1}</div>
-                                <div>Đội {match?.team2} đã chọn {sideInfo.team2}</div>
-                              </>
-                            );
-                          }
+                          return (
+                            <>
+                              <div>
+                                Đội {match?.team1} đã chọn {sideInfo.team1}
+                              </div>
+                              <div>
+                                Đội {match?.team2} đã chọn {sideInfo.team2}
+                              </div>
+                            </>
+                          );
+                        }
 
-                          if (pickedBy === team1) return `Chọn bởi đội: ${match?.team1} (${sideInfo.team1 || "Chưa rõ"})`;
-                          if (pickedBy === team2) return `Chọn bởi đội: ${match?.team2} (${sideInfo.team2 || "Chưa rõ"})`;
-                          return "Chưa rõ";
-                        })()
-                      }
+                        if (pickedBy === team1)
+                          return `Chọn bởi đội: ${match?.team1} (${sideInfo.team1 || 'Chưa rõ'})`;
+                        if (pickedBy === team2)
+                          return `Chọn bởi đội: ${match?.team2} (${sideInfo.team2 || 'Chưa rõ'})`;
+                        return 'Chưa rõ';
+                      })()}
                     </div>
                   )}
-                  {type === "banned" && (
-                    <div className='font-bold text-sm'>Cấm bởi đội: {bannedBy || "Chưa xác định"}</div>
+                  {type === 'banned' && (
+                    <div className="font-bold text-sm">
+                      Cấm bởi đội: {bannedBy || 'Chưa xác định'}
+                    </div>
                   )}
                 </div>
               </div>
@@ -186,11 +189,8 @@ export default function MatchInterface() {
     </div>
   );
 
-
   const SideSelection = ({ match, role, onSelect }) => {
-    const currentMapSide = match.sides.find(
-      (side) => side.team1 === null || side.team2 === null
-    );
+    const currentMapSide = match.sides.find((side) => side.team1 === null || side.team2 === null);
 
     if (!currentMapSide) return null;
 
@@ -200,7 +200,8 @@ export default function MatchInterface() {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white rounded-lg p-6 w-[90%] max-w-md shadow-xl">
           <h3 className="font-bold text-lg mb-4 text-center">
-            {currentTeam === "team1" ? match.team1 : match.team2} đang chọn bên cho bản đồ {currentMapSide.map}
+            {currentTeam === 'team1' ? match.team1 : match.team2} đang chọn bên cho bản đồ{' '}
+            {currentMapSide.map}
           </h3>
 
           <div className="bg-blue-50 p-4 rounded-lg">
@@ -208,31 +209,29 @@ export default function MatchInterface() {
             <div className="flex gap-1">
               <button
                 onClick={() =>
-                  onSelect("side", {
+                  onSelect('side', {
                     map: currentMapSide.map,
-                    side: "Attacker",
+                    side: 'Attacker',
                   })
                 }
                 disabled={role !== currentTeam}
-                className={`flex-1 bg-orange-500 text-white p-2 rounded ${role !== currentTeam
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-orange-600"
-                  }`}
+                className={`flex-1 bg-orange-500 text-white p-2 rounded ${
+                  role !== currentTeam ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-600'
+                }`}
               >
                 Tấn công
               </button>
               <button
                 onClick={() =>
-                  onSelect("side", {
+                  onSelect('side', {
                     map: currentMapSide.map,
-                    side: "Defender",
+                    side: 'Defender',
                   })
                 }
                 disabled={role !== currentTeam}
-                className={`flex-1 bg-blue-500 text-white p-2 rounded ${role !== currentTeam
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-blue-600"
-                  }`}
+                className={`flex-1 bg-blue-500 text-white p-2 rounded ${
+                  role !== currentTeam ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+                }`}
               >
                 Phòng thủ
               </button>
@@ -243,17 +242,21 @@ export default function MatchInterface() {
     );
   };
 
-  if (loading || !match || !match.maps) return (
-    <div className="text-center p-8">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-      <p className="mt-4 text-gray-600">Đang tải dữ liệu match...</p>
-    </div>
-  );
+  if (loading || !match || !match.maps)
+    return (
+      <div className="text-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Đang tải dữ liệu match...</p>
+      </div>
+    );
   const deciderMap =
-    match.matchType === 'BO3' ? match.maps.selected[2] :
-      match.matchType === 'BO1' ? match.maps.selected[0] :
-        match.matchType === 'BO5' ? match.maps.selected[4] :
-          null;
+    match.matchType === 'BO3'
+      ? match.maps.selected[2]
+      : match.matchType === 'BO1'
+        ? match.maps.selected[0]
+        : match.matchType === 'BO5'
+          ? match.maps.selected[4]
+          : null;
   return (
     <div className="container mx-auto p-4 mt-16">
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -278,14 +281,17 @@ export default function MatchInterface() {
 
           {(() => {
             const deciderMap =
-              match?.matchType === 'BO3' ? match.maps.selected[2] :
-                match?.matchType === 'BO1' ? match.maps.selected[0] :
-                  match?.matchType === 'BO5' ? match.maps.selected[4] :
-                    null;
+              match?.matchType === 'BO3'
+                ? match.maps.selected[2]
+                : match?.matchType === 'BO1'
+                  ? match.maps.selected[0]
+                  : match?.matchType === 'BO5'
+                    ? match.maps.selected[4]
+                    : null;
 
             const combinedMaps = [
               ...match.maps.picked,
-              ...(deciderMap ? [{ name: deciderMap, pickedBy: 'Decider' }] : [])
+              ...(deciderMap ? [{ name: deciderMap, pickedBy: 'Decider' }] : []),
             ];
 
             return (
@@ -300,12 +306,11 @@ export default function MatchInterface() {
             );
           })()}
 
-
           <BanPickSection
             title="Picked Maps"
             maps={[
               ...match.maps.picked,
-              ...(deciderMap ? [{ name: deciderMap, pickedBy: 'Decider' }] : [])
+              ...(deciderMap ? [{ name: deciderMap, pickedBy: 'Decider' }] : []),
             ]}
             type="picked"
             sides={match.sides}
@@ -317,12 +322,7 @@ export default function MatchInterface() {
         {/* Kiểm tra sides tồn tại */}
         {match.currentPhase === 'side' && (
           <>
-
-            <SideSelection
-              match={match}
-              role={role}
-              onSelect={handleAction}
-            />
+            <SideSelection match={match} role={role} onSelect={handleAction} />
           </>
         )}
       </div>

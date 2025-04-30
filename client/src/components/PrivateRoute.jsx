@@ -1,6 +1,6 @@
-import React from "react";
-import { useSelector } from "react-redux";
-import { Outlet, Navigate, useLocation } from "react-router-dom";
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 
 export default function PrivateRoute() {
   const { currentUser } = useSelector((state) => state.user);

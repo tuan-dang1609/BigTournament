@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const PowerRankingAOV = () => {
   const [rankings, setRankings] = useState([]);
@@ -9,37 +9,35 @@ const PowerRankingAOV = () => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [playersData, setPlayersData] = useState({});
   useEffect(() => {
-          const scrollToTop = () => {
-              document.documentElement.scrollTop = 0;
-          };
-          setTimeout(scrollToTop, 0);
-          document.title = "Bảng xếp hạng";
-  
-      }, []);
+    const scrollToTop = () => {
+      document.documentElement.scrollTop = 0;
+    };
+    setTimeout(scrollToTop, 0);
+    document.title = 'Bảng xếp hạng';
+  }, []);
   // Kiểm tra kích thước màn hình
   useEffect(() => {
     const handleResize = () => {
       setIsSmallScreen(window.innerWidth < 540);
     };
 
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
     handleResize();
 
-    return () => window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Fetch thông tin người chơi
-  
 
   // Fetch bảng xếp hạng và thông tin
   useEffect(() => {
     const fetchData = async () => {
       try {
         const rankingResponse = await axios.post(
-          "https://bigtournament-hq9n.onrender.com/api/auth/powerrankingaov"
+          'https://bigtournament-hq9n.onrender.com/api/auth/powerrankingaov'
         );
         const allTeamResponse = await axios.post(
-          "https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV"
+          'https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV'
         );
 
         const rankingsData = rankingResponse.data.data;
@@ -48,14 +46,12 @@ const PowerRankingAOV = () => {
         // Kết hợp và sắp xếp dữ liệu
         const combinedData = rankingsData
           .map((team) => {
-            const matchedTeam = allTeams.find(
-              (t) => t.teamName === team.teamName
-            );
+            const matchedTeam = allTeams.find((t) => t.teamName === team.teamName);
             return {
               ...team,
               logoUrl: matchedTeam ? matchedTeam.logoUrl : null,
               shortName: matchedTeam ? matchedTeam.shortName : team.teamName,
-              players: matchedTeam?.gameMembers?.["Liên Quân Mobile"] || [],
+              players: matchedTeam?.gameMembers?.['Liên Quân Mobile'] || [],
             };
           })
           .sort((a, b) => b.points - a.points);
@@ -86,8 +82,8 @@ const PowerRankingAOV = () => {
 
         setLoading(false);
       } catch (err) {
-        console.error("Lỗi API:", err);
-        setError(err.response?.data?.message || "Có lỗi xảy ra khi lấy dữ liệu.");
+        console.error('Lỗi API:', err);
+        setError(err.response?.data?.message || 'Có lỗi xảy ra khi lấy dữ liệu.');
         setLoading(false);
       }
     };
@@ -97,16 +93,16 @@ const PowerRankingAOV = () => {
   const fetchPlayerProfiles = async (playerIGNs) => {
     try {
       const response = await fetch(
-        "https://bigtournament-hq9n.onrender.com/api/auth/fetchplayerprofiles",
+        'https://bigtournament-hq9n.onrender.com/api/auth/fetchplayerprofiles',
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ players: playerIGNs }),
         }
       );
       return await response.json();
     } catch (error) {
-      console.error("Error fetching player profiles:", error);
+      console.error('Error fetching player profiles:', error);
       return [];
     }
   };
@@ -139,24 +135,41 @@ const PowerRankingAOV = () => {
           <span className="loading loading-dots loading-lg text-primary"></span>
         </div>
       ) : error ? (
-        <p style={{ color: "red" }}>{error}</p>
+        <p style={{ color: 'red' }}>{error}</p>
       ) : (
         <>
           <div className="lg:mt-32 mt-24 flex lg:flex-row flex-col lg:gap-y-1 gap-y-2 items-center justify-center mb-2 gap-x-2">
             <h1 className="text-center font-bold text-3xl text-primary ">Bảng Xếp Hạng Các Đội </h1>
-            <div class="badge badge-primary badge-outline p-2 mt-1 font-bold">BETA</div></div>
-          <div >
+            <div class="badge badge-primary badge-outline p-2 mt-1 font-bold">BETA</div>
+          </div>
+          <div>
             <div className="max-w-[900px] justify-center flex flex-col mx-auto">
-              <p>Hiii! Xin chào tất cả các bạn, chào mừng các bạn đã đến với bảng xếp hạng các đội, và đây là một số thông tin về bảng xếp hạng này nhé: </p>
+              <p>
+                Hiii! Xin chào tất cả các bạn, chào mừng các bạn đã đến với bảng xếp hạng các đội,
+                và đây là một số thông tin về bảng xếp hạng này nhé:{' '}
+              </p>
               <ul class="list-disc">
                 <li>Bảng xếp hạng này là BETA, nghĩa là đang trong quá trình thử nghiệm.</li>
-                <li>Tất cả các đội đều có điểm khởi điểm (ELO) ban đầu là 500. Điểm này cũng sẽ áp dụng cho các đội tham gia sau này.</li>
-                <li>Điểm số cộng/trừ dựa trên khoảng cách thứ hạng giữa 2 đội đấu và số ván đấu thắng chênh lệch trong 1 trận.</li>
+                <li>
+                  Tất cả các đội đều có điểm khởi điểm (ELO) ban đầu là 500. Điểm này cũng sẽ áp
+                  dụng cho các đội tham gia sau này.
+                </li>
+                <li>
+                  Điểm số cộng/trừ dựa trên khoảng cách thứ hạng giữa 2 đội đấu và số ván đấu thắng
+                  chênh lệch trong 1 trận.
+                </li>
                 <li>Bảng xếp hạng này cũng sẽ áp dụng để xếp hạt giống cho các giải sau này.</li>
                 <li>Ấn vào dòng của đội đó để hiện lineup. Riêng đội hạng nhất sẽ tự động hiện.</li>
-                <li>Nếu muốn hiện Avatar thành viên như team with'u thì các bạn update ảnh đại diện ở tài khoản của mình. Lưu ý là tài khoản đó phải trùng IGN thì mới đổi được avatar.</li>
+                <li>
+                  Nếu muốn hiện Avatar thành viên như team with'u thì các bạn update ảnh đại diện ở
+                  tài khoản của mình. Lưu ý là tài khoản đó phải trùng IGN thì mới đổi được avatar.
+                </li>
               </ul>
-              <p> Mọi thông tin thắc mắc hay gợi ý hay về cách tính điểm (ELO) thì có thể nhắn lên kênh Suggestion hoặc nhắn riêng Beacon nhé. </p>
+              <p>
+                {' '}
+                Mọi thông tin thắc mắc hay gợi ý hay về cách tính điểm (ELO) thì có thể nhắn lên
+                kênh Suggestion hoặc nhắn riêng Beacon nhé.{' '}
+              </p>
             </div>
           </div>
           <table
@@ -164,8 +177,8 @@ const PowerRankingAOV = () => {
             cellPadding="4"
             className="font-semibold bg-white bg-opacity-20 rounded-lg mt-5 mb-10"
             style={{
-              width: "100%",
-              textAlign: "center",
+              width: '100%',
+              textAlign: 'center',
             }}
           >
             <thead className="bg-gray-800 text-white">
@@ -191,11 +204,7 @@ const PowerRankingAOV = () => {
                           className="aspect-square lg:w-20 lg:h-20 w-12 h-12"
                         />
                       )}
-                      <span>
-                        {isSmallScreen
-                          ? team.shortName.toUpperCase()
-                          : team.teamName}
-                      </span>
+                      <span>{isSmallScreen ? team.shortName.toUpperCase() : team.teamName}</span>
                     </td>
                     <td className="py-3">{team.points}</td>
                   </tr>
@@ -212,23 +221,18 @@ const PowerRankingAOV = () => {
                           className="grid gap-2 justify-items-center transition-all duration-500 ease-in-out lg:p-2 p-1"
                         >
                           {playersData[team.teamName]?.length > 0 ? (
-                            playersData[team.teamName].map(
-                              (player, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex flex-col items-center"
-                                >
-                                  <img
-                                    src={`https://drive.google.com/thumbnail?id=${player.avatar}`}
-                                    alt={player.name}
-                                    className="lg:w-20 lg:h-20 w-14 h-14 rounded-full"
-                                  />
-                                  <span className="lg:text-base text-[11.5px] mt-3">
-                                    {player.name}
-                                  </span>
-                                </div>
-                              )
-                            )
+                            playersData[team.teamName].map((player, idx) => (
+                              <div key={idx} className="flex flex-col items-center">
+                                <img
+                                  src={`https://drive.google.com/thumbnail?id=${player.avatar}`}
+                                  alt={player.name}
+                                  className="lg:w-20 lg:h-20 w-14 h-14 rounded-full"
+                                />
+                                <span className="lg:text-base text-[11.5px] mt-3">
+                                  {player.name}
+                                </span>
+                              </div>
+                            ))
                           ) : (
                             <span className="loading loading-dots loading-lg text-primary"></span>
                           )}

@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect, useState } from 'react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { useDispatch, useSelector } from 'react-redux';
 import { signInStart, signInFailure, signInSuccess } from '../../redux/user/userSlice';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
+    username: '',
+    password: '',
   });
 
   const { loading, error } = useSelector((state) => state.user);
@@ -17,9 +17,8 @@ function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation(); // To capture the previous link
   useEffect(() => {
-    document.title = "Đăng nhập"
-
-  }, [])
+    document.title = 'Đăng nhập';
+  }, []);
   // Check if there's a 'from' location or default to home ('/')
   const from = location.state?.from?.pathname || '/tft/tft_road_to_iec_2025';
 
@@ -62,7 +61,9 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-800">Đăng Nhập</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-800">
+          Đăng Nhập
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700">
@@ -89,7 +90,7 @@ function LoginForm() {
             </label>
             <div className="mt-1 relative rounded-md shadow-sm">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 value={formData.password}
@@ -121,10 +122,8 @@ function LoginForm() {
               disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
             >
-              {loading ? "Đăng nhập vào " : "Đăng nhập"}
-              {loading ? (
-                <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 ml-2" />
-              ) : null}
+              {loading ? 'Đăng nhập vào ' : 'Đăng nhập'}
+              {loading ? <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 ml-2" /> : null}
             </button>
           </div>
         </form>
@@ -134,7 +133,7 @@ function LoginForm() {
           </p>
         )}
         <p className="mt-4 text-center text-sm text-gray-600">
-          Chưa có tài khoản?{" "}
+          Chưa có tài khoản?{' '}
           <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
             Đăng kí
           </Link>

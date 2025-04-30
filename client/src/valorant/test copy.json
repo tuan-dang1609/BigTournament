@@ -1,281 +1,283 @@
-[{
+[
+  {
     "matchInfo": {
-        "matchId": "9b3b3119-cc2d-469b-9065-2441f8151f6e",
-        "mapId": "/Game/Maps/Ascent/Ascent",
-        "gameVersion": "release-09.10-shipping-16-2953141",
-        "gameLengthMillis": 1493121,
-        "region": "ap",
-        "gameStartMillis": 1732891339870,
-        "provisioningFlowId": "CustomGame",
-        "isCompleted": true,
-        "customGameName": "",
-        "queueId": "",
-        "gameMode": "/Game/GameModes/Bomb/BombGameMode.BombGameMode_C",
-        "isRanked": false,
-        "seasonId": "dcde7346-4085-de4f-c463-2489ed47983b",
-        "premierMatchInfo": {}
+      "matchId": "9b3b3119-cc2d-469b-9065-2441f8151f6e",
+      "mapId": "/Game/Maps/Ascent/Ascent",
+      "gameVersion": "release-09.10-shipping-16-2953141",
+      "gameLengthMillis": 1493121,
+      "region": "ap",
+      "gameStartMillis": 1732891339870,
+      "provisioningFlowId": "CustomGame",
+      "isCompleted": true,
+      "customGameName": "",
+      "queueId": "",
+      "gameMode": "/Game/GameModes/Bomb/BombGameMode.BombGameMode_C",
+      "isRanked": false,
+      "seasonId": "dcde7346-4085-de4f-c463-2489ed47983b",
+      "premierMatchInfo": {}
     },
     "players": [
-        {
-            "puuid": "bDhU6ok32ar3ijt3NGTM0SDtE69Dv6jyUoUuahv8cCPn34bTwiN_im_efY0pKsVRUddKuTDrfL9xkQ",
-            "gameName": "PRX s0metime",
-            "tagLine": "Skadi",
-            "teamId": "Blue",
-            "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
-            "characterId": "117ed9e3-49f3-6512-3ccf-0cada7e3823b",
-            "stats": {
-                "score": 3352,
-                "roundsPlayed": 17,
-                "kills": 12,
-                "deaths": 9,
-                "assists": 3,
-                "playtimeMillis": 1493121,
-                "abilityCasts": {
-                    "grenadeCasts": 29,
-                    "ability1Casts": 34,
-                    "ability2Casts": 16,
-                    "ultimateCasts": 1
-                }
-            },
-            "competitiveTier": 0,
-            "isObserver": false,
-            "playerCard": "775db197-4f88-12f8-8ccf-3591a13d7ec5",
-            "playerTitle": "ca0895c6-412b-0f14-0fa4-5dafb9b9fb15",
-            "accountLevel": 0
+      {
+        "puuid": "bDhU6ok32ar3ijt3NGTM0SDtE69Dv6jyUoUuahv8cCPn34bTwiN_im_efY0pKsVRUddKuTDrfL9xkQ",
+        "gameName": "PRX s0metime",
+        "tagLine": "Skadi",
+        "teamId": "Blue",
+        "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
+        "characterId": "117ed9e3-49f3-6512-3ccf-0cada7e3823b",
+        "stats": {
+          "score": 3352,
+          "roundsPlayed": 17,
+          "kills": 12,
+          "deaths": 9,
+          "assists": 3,
+          "playtimeMillis": 1493121,
+          "abilityCasts": {
+            "grenadeCasts": 29,
+            "ability1Casts": 34,
+            "ability2Casts": 16,
+            "ultimateCasts": 1
+          }
         },
-        {
-            "puuid": "RcAYJtZxSHjSfTX2NCG-XJpUvjNEbi9ADykFxu8X-9K1VXLnXIRtL9gntMCU2igR7lPC63fobgIcaA",
-            "gameName": "NhanCuuTao",
-            "tagLine": "VN2",
-            "teamId": "Red",
-            "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
-            "characterId": "117ed9e3-49f3-6512-3ccf-0cada7e3823b",
-            "stats": {
-                "score": 3716,
-                "roundsPlayed": 17,
-                "kills": 15,
-                "deaths": 14,
-                "assists": 4,
-                "playtimeMillis": 1493121,
-                "abilityCasts": {
-                    "grenadeCasts": 25,
-                    "ability1Casts": 21,
-                    "ability2Casts": 17,
-                    "ultimateCasts": 1
-                }
-            },
-            "competitiveTier": 0,
-            "isObserver": false,
-            "playerCard": "f9214f21-45aa-f41b-798b-279f6c08b535",
-            "playerTitle": "129190d4-42fa-4e79-75e3-ffb5679d1dc2",
-            "accountLevel": 47
+        "competitiveTier": 0,
+        "isObserver": false,
+        "playerCard": "775db197-4f88-12f8-8ccf-3591a13d7ec5",
+        "playerTitle": "ca0895c6-412b-0f14-0fa4-5dafb9b9fb15",
+        "accountLevel": 0
+      },
+      {
+        "puuid": "RcAYJtZxSHjSfTX2NCG-XJpUvjNEbi9ADykFxu8X-9K1VXLnXIRtL9gntMCU2igR7lPC63fobgIcaA",
+        "gameName": "NhanCuuTao",
+        "tagLine": "VN2",
+        "teamId": "Red",
+        "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
+        "characterId": "117ed9e3-49f3-6512-3ccf-0cada7e3823b",
+        "stats": {
+          "score": 3716,
+          "roundsPlayed": 17,
+          "kills": 15,
+          "deaths": 14,
+          "assists": 4,
+          "playtimeMillis": 1493121,
+          "abilityCasts": {
+            "grenadeCasts": 25,
+            "ability1Casts": 21,
+            "ability2Casts": 17,
+            "ultimateCasts": 1
+          }
         },
-        {
-            "puuid": "Zt1Fi1djnSc9g-ribRsY8Adodct75RxtNDGx1Nvb1-Y9y9wMwO4EiKGrSb2gY5KiK_vu8zEd7o0i-w",
-            "gameName": "Hanopool",
-            "tagLine": "5375",
-            "teamId": "Red",
-            "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
-            "characterId": "a3bfb853-43b2-7238-a4f1-ad90e9e46bcc",
-            "stats": {
-                "score": 2059,
-                "roundsPlayed": 17,
-                "kills": 8,
-                "deaths": 13,
-                "assists": 1,
-                "playtimeMillis": 1493121,
-                "abilityCasts": {
-                    "grenadeCasts": 10,
-                    "ability1Casts": 2,
-                    "ability2Casts": 4,
-                    "ultimateCasts": 0
-                }
-            },
-            "competitiveTier": 0,
-            "isObserver": false,
-            "playerCard": "8e488d06-4b6d-f294-a803-cbbafed3c077",
-            "playerTitle": "d67cef9b-43cd-bc8c-840d-039582975c2a",
-            "accountLevel": 0
+        "competitiveTier": 0,
+        "isObserver": false,
+        "playerCard": "f9214f21-45aa-f41b-798b-279f6c08b535",
+        "playerTitle": "129190d4-42fa-4e79-75e3-ffb5679d1dc2",
+        "accountLevel": 47
+      },
+      {
+        "puuid": "Zt1Fi1djnSc9g-ribRsY8Adodct75RxtNDGx1Nvb1-Y9y9wMwO4EiKGrSb2gY5KiK_vu8zEd7o0i-w",
+        "gameName": "Hanopool",
+        "tagLine": "5375",
+        "teamId": "Red",
+        "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
+        "characterId": "a3bfb853-43b2-7238-a4f1-ad90e9e46bcc",
+        "stats": {
+          "score": 2059,
+          "roundsPlayed": 17,
+          "kills": 8,
+          "deaths": 13,
+          "assists": 1,
+          "playtimeMillis": 1493121,
+          "abilityCasts": {
+            "grenadeCasts": 10,
+            "ability1Casts": 2,
+            "ability2Casts": 4,
+            "ultimateCasts": 0
+          }
         },
-        {
-            "puuid": "QmlYYyaTzQPfaOpIRhoRwQzJOFsuL7B_oKOnWk59bUhD_St3gXOe7u92Pg1Hziw4JIE_N5fSAwWFag",
-            "gameName": "Beacon",
-            "tagLine": "DCN3",
-            "teamId": "Red",
-            "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
-            "characterId": "dade69b4-4f5a-8528-247b-219e5a1facd6",
-            "stats": {
-                "score": 2093,
-                "roundsPlayed": 17,
-                "kills": 8,
-                "deaths": 15,
-                "assists": 2,
-                "playtimeMillis": 1493121,
-                "abilityCasts": {
-                    "grenadeCasts": 13,
-                    "ability1Casts": 1,
-                    "ability2Casts": 17,
-                    "ultimateCasts": 1
-                }
-            },
-            "competitiveTier": 0,
-            "isObserver": false,
-            "playerCard": "9fb348bc-41a0-91ad-8a3e-818035c4e561",
-            "playerTitle": "d13e579c-435e-44d4-cec2-6eae5a3c5ed4",
-            "accountLevel": 0
+        "competitiveTier": 0,
+        "isObserver": false,
+        "playerCard": "8e488d06-4b6d-f294-a803-cbbafed3c077",
+        "playerTitle": "d67cef9b-43cd-bc8c-840d-039582975c2a",
+        "accountLevel": 0
+      },
+      {
+        "puuid": "QmlYYyaTzQPfaOpIRhoRwQzJOFsuL7B_oKOnWk59bUhD_St3gXOe7u92Pg1Hziw4JIE_N5fSAwWFag",
+        "gameName": "Beacon",
+        "tagLine": "DCN3",
+        "teamId": "Red",
+        "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
+        "characterId": "dade69b4-4f5a-8528-247b-219e5a1facd6",
+        "stats": {
+          "score": 2093,
+          "roundsPlayed": 17,
+          "kills": 8,
+          "deaths": 15,
+          "assists": 2,
+          "playtimeMillis": 1493121,
+          "abilityCasts": {
+            "grenadeCasts": 13,
+            "ability1Casts": 1,
+            "ability2Casts": 17,
+            "ultimateCasts": 1
+          }
         },
-        {
-            "puuid": "XgfgSAPIjcS8b2597uxagpJvnfV4KhIDuCMrJ1I7AcyqPwBNnOWNi1iO7hauJKxHSNSIThnXCkBqQA",
-            "gameName": "BigFatNuts",
-            "tagLine": "2130",
-            "teamId": "Blue",
-            "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
-            "characterId": "cc8b64c8-4b25-4ff9-6e7f-37b4da43d235",
-            "stats": {
-                "score": 5678,
-                "roundsPlayed": 17,
-                "kills": 21,
-                "deaths": 11,
-                "assists": 3,
-                "playtimeMillis": 1493121,
-                "abilityCasts": {
-                    "grenadeCasts": 6,
-                    "ability1Casts": 23,
-                    "ability2Casts": 10,
-                    "ultimateCasts": 2
-                }
-            },
-            "competitiveTier": 0,
-            "isObserver": false,
-            "playerCard": "aa7261e8-49b3-a489-d23f-39b935122f09",
-            "playerTitle": "bc6a30d8-4d83-82aa-dfe9-7389c776f312",
-            "accountLevel": 0
+        "competitiveTier": 0,
+        "isObserver": false,
+        "playerCard": "9fb348bc-41a0-91ad-8a3e-818035c4e561",
+        "playerTitle": "d13e579c-435e-44d4-cec2-6eae5a3c5ed4",
+        "accountLevel": 0
+      },
+      {
+        "puuid": "XgfgSAPIjcS8b2597uxagpJvnfV4KhIDuCMrJ1I7AcyqPwBNnOWNi1iO7hauJKxHSNSIThnXCkBqQA",
+        "gameName": "BigFatNuts",
+        "tagLine": "2130",
+        "teamId": "Blue",
+        "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
+        "characterId": "cc8b64c8-4b25-4ff9-6e7f-37b4da43d235",
+        "stats": {
+          "score": 5678,
+          "roundsPlayed": 17,
+          "kills": 21,
+          "deaths": 11,
+          "assists": 3,
+          "playtimeMillis": 1493121,
+          "abilityCasts": {
+            "grenadeCasts": 6,
+            "ability1Casts": 23,
+            "ability2Casts": 10,
+            "ultimateCasts": 2
+          }
         },
-        {
-            "puuid": "sxSaBVi6XrwsssZ23b_C4_U6NgJKHwVC6pRQnO_bFjBLYOxlZVoTDiyF0CDoc5XPmH69Xvoz5k0JfQ",
-            "gameName": "john",
-            "tagLine": "Meoww",
-            "teamId": "Blue",
-            "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
-            "characterId": "1e58de9c-4950-5125-93e9-a0aee9f98746",
-            "stats": {
-                "score": 3394,
-                "roundsPlayed": 17,
-                "kills": 12,
-                "deaths": 11,
-                "assists": 2,
-                "playtimeMillis": 1493121,
-                "abilityCasts": {
-                    "grenadeCasts": 10,
-                    "ability1Casts": 7,
-                    "ability2Casts": 1,
-                    "ultimateCasts": 1
-                }
-            },
-            "competitiveTier": 0,
-            "isObserver": false,
-            "playerCard": "bb6ae873-43ec-efb4-3ea6-93ac00a82d4e",
-            "playerTitle": "1b4e3bf6-4850-3d9b-a02e-8182caf29b76",
-            "accountLevel": 0
+        "competitiveTier": 0,
+        "isObserver": false,
+        "playerCard": "aa7261e8-49b3-a489-d23f-39b935122f09",
+        "playerTitle": "bc6a30d8-4d83-82aa-dfe9-7389c776f312",
+        "accountLevel": 0
+      },
+      {
+        "puuid": "sxSaBVi6XrwsssZ23b_C4_U6NgJKHwVC6pRQnO_bFjBLYOxlZVoTDiyF0CDoc5XPmH69Xvoz5k0JfQ",
+        "gameName": "john",
+        "tagLine": "Meoww",
+        "teamId": "Blue",
+        "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
+        "characterId": "1e58de9c-4950-5125-93e9-a0aee9f98746",
+        "stats": {
+          "score": 3394,
+          "roundsPlayed": 17,
+          "kills": 12,
+          "deaths": 11,
+          "assists": 2,
+          "playtimeMillis": 1493121,
+          "abilityCasts": {
+            "grenadeCasts": 10,
+            "ability1Casts": 7,
+            "ability2Casts": 1,
+            "ultimateCasts": 1
+          }
         },
-        {
-            "puuid": "f0jhE-VG3qsmi7RwnbmeXGUFwxQQ6aAykPn_eXebGFksKrN9NnU1RlbQY6pniV3xgbnBS5RGkf6IJA",
-            "gameName": "Tu4n",
-            "tagLine": "0405",
-            "teamId": "Blue",
-            "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
-            "characterId": "320b2a48-4d9b-a075-30f1-1f93a9b638fa",
-            "stats": {
-                "score": 7845,
-                "roundsPlayed": 17,
-                "kills": 28,
-                "deaths": 9,
-                "assists": 4,
-                "playtimeMillis": 1493121,
-                "abilityCasts": {
-                    "grenadeCasts": 6,
-                    "ability1Casts": 13,
-                    "ability2Casts": 23,
-                    "ultimateCasts": 2
-                }
-            },
-            "competitiveTier": 0,
-            "isObserver": false,
-            "playerCard": "98887855-41a4-89ef-4631-79ac5ea06b33",
-            "playerTitle": "129190d4-42fa-4e79-75e3-ffb5679d1dc2",
-            "accountLevel": 0
+        "competitiveTier": 0,
+        "isObserver": false,
+        "playerCard": "bb6ae873-43ec-efb4-3ea6-93ac00a82d4e",
+        "playerTitle": "1b4e3bf6-4850-3d9b-a02e-8182caf29b76",
+        "accountLevel": 0
+      },
+      {
+        "puuid": "f0jhE-VG3qsmi7RwnbmeXGUFwxQQ6aAykPn_eXebGFksKrN9NnU1RlbQY6pniV3xgbnBS5RGkf6IJA",
+        "gameName": "Tu4n",
+        "tagLine": "0405",
+        "teamId": "Blue",
+        "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
+        "characterId": "320b2a48-4d9b-a075-30f1-1f93a9b638fa",
+        "stats": {
+          "score": 7845,
+          "roundsPlayed": 17,
+          "kills": 28,
+          "deaths": 9,
+          "assists": 4,
+          "playtimeMillis": 1493121,
+          "abilityCasts": {
+            "grenadeCasts": 6,
+            "ability1Casts": 13,
+            "ability2Casts": 23,
+            "ultimateCasts": 2
+          }
         },
-        {
-            "puuid": "TFY45ZdWoW1RgObRAGSp1H90zQa_7MkE7CEWXLmWVHSd8AcRNDjkUwRq2WeD6HBU-DKJ3HmtjDWScQ",
-            "gameName": "NGLong2489",
-            "tagLine": "1809",
-            "teamId": "Red",
-            "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
-            "characterId": "bb2a4828-46eb-8cd1-e765-15848195d751",
-            "stats": {
-                "score": 2712,
-                "roundsPlayed": 17,
-                "kills": 8,
-                "deaths": 16,
-                "assists": 5,
-                "playtimeMillis": 1493121,
-                "abilityCasts": {
-                    "grenadeCasts": 4,
-                    "ability1Casts": 8,
-                    "ability2Casts": 16,
-                    "ultimateCasts": 1
-                }
-            },
-            "competitiveTier": 0,
-            "isObserver": false,
-            "playerCard": "5e86e82b-443c-e969-ae13-f4be9e085f95",
-            "playerTitle": "129190d4-42fa-4e79-75e3-ffb5679d1dc2",
-            "accountLevel": 0
+        "competitiveTier": 0,
+        "isObserver": false,
+        "playerCard": "98887855-41a4-89ef-4631-79ac5ea06b33",
+        "playerTitle": "129190d4-42fa-4e79-75e3-ffb5679d1dc2",
+        "accountLevel": 0
+      },
+      {
+        "puuid": "TFY45ZdWoW1RgObRAGSp1H90zQa_7MkE7CEWXLmWVHSd8AcRNDjkUwRq2WeD6HBU-DKJ3HmtjDWScQ",
+        "gameName": "NGLong2489",
+        "tagLine": "1809",
+        "teamId": "Red",
+        "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
+        "characterId": "bb2a4828-46eb-8cd1-e765-15848195d751",
+        "stats": {
+          "score": 2712,
+          "roundsPlayed": 17,
+          "kills": 8,
+          "deaths": 16,
+          "assists": 5,
+          "playtimeMillis": 1493121,
+          "abilityCasts": {
+            "grenadeCasts": 4,
+            "ability1Casts": 8,
+            "ability2Casts": 16,
+            "ultimateCasts": 1
+          }
         },
-        {
-            "puuid": "PG_WDVZMkwzMZtM9iX8NAAV1H27Rvd6txZNZvdH_u5EbmqY6y9eYUKXaY16FsPsnP98xs17yx7dV4A",
-            "gameName": "ken",
-            "tagLine": "203",
-            "teamId": "Red",
-            "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
-            "characterId": "8e253930-4c05-31dd-1b6c-968525494517",
-            "stats": {
-                "score": 544,
-                "roundsPlayed": 17,
-                "kills": 1,
-                "deaths": 15,
-                "assists": 3,
-                "playtimeMillis": 1493121,
-                "abilityCasts": {
-                    "grenadeCasts": 7,
-                    "ability1Casts": 9,
-                    "ability2Casts": 29,
-                    "ultimateCasts": 1
-                }
-            },
-            "competitiveTier": 0,
-            "isObserver": false,
-            "playerCard": "99ef7fbc-444c-1edd-f986-65afc7fe4f21",
-            "playerTitle": "d873aef3-49be-277d-7966-d0a2d9d9ad22",
-            "accountLevel": 5
-        }
+        "competitiveTier": 0,
+        "isObserver": false,
+        "playerCard": "5e86e82b-443c-e969-ae13-f4be9e085f95",
+        "playerTitle": "129190d4-42fa-4e79-75e3-ffb5679d1dc2",
+        "accountLevel": 0
+      },
+      {
+        "puuid": "PG_WDVZMkwzMZtM9iX8NAAV1H27Rvd6txZNZvdH_u5EbmqY6y9eYUKXaY16FsPsnP98xs17yx7dV4A",
+        "gameName": "ken",
+        "tagLine": "203",
+        "teamId": "Red",
+        "partyId": "5b2d17f0-7afc-4ca4-89e4-314b2bad7d9c",
+        "characterId": "8e253930-4c05-31dd-1b6c-968525494517",
+        "stats": {
+          "score": 544,
+          "roundsPlayed": 17,
+          "kills": 1,
+          "deaths": 15,
+          "assists": 3,
+          "playtimeMillis": 1493121,
+          "abilityCasts": {
+            "grenadeCasts": 7,
+            "ability1Casts": 9,
+            "ability2Casts": 29,
+            "ultimateCasts": 1
+          }
+        },
+        "competitiveTier": 0,
+        "isObserver": false,
+        "playerCard": "99ef7fbc-444c-1edd-f986-65afc7fe4f21",
+        "playerTitle": "d873aef3-49be-277d-7966-d0a2d9d9ad22",
+        "accountLevel": 5
+      }
     ],
     "coaches": [],
     "teams": [
-        {
-            "teamId": "Red",
-            "won": false,
-            "roundsPlayed": 17,
-            "roundsWon": 4,
-            "numPoints": 4
-        },
-        {
-            "teamId": "Blue",
-            "won": true,
-            "roundsPlayed": 17,
-            "roundsWon": 13,
-            "numPoints": 13
-        }
+      {
+        "teamId": "Red",
+        "won": false,
+        "roundsPlayed": 17,
+        "roundsWon": 4,
+        "numPoints": 4
+      },
+      {
+        "teamId": "Blue",
+        "won": true,
+        "roundsPlayed": 17,
+        "roundsWon": 13,
+        "numPoints": 13
+      }
     ],
     "roundResults": []
-}]
+  }
+]

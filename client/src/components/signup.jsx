@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
-import { SiRiotgames, SiDiscord } from "react-icons/si";
+import React, { useState, useEffect } from 'react';
+import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { SiRiotgames, SiDiscord } from 'react-icons/si';
 import { Link, useNavigate } from 'react-router-dom';
 import garenaLogo from '../image/AOVLogo.png';
 const SignupPage = () => {
   const [formData, setFormData] = useState({
-    discordID: "",
-    riotID: "",
-    nickname: "",
-    username: "",
-    password: "",
-    garenaaccount: "",
-    retypePassword: "",
+    discordID: '',
+    riotID: '',
+    nickname: '',
+    username: '',
+    password: '',
+    garenaaccount: '',
+    retypePassword: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -19,14 +19,13 @@ const SignupPage = () => {
   const [showRetypePassword, setShowRetypePassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState('');
   const [countdown, setCountdown] = useState(4); // Initialize countdown state
 
   const navigate = useNavigate();
   useEffect(() => {
-    document.title = "Đăng ký tài khoản"
-
-  }, [])
+    document.title = 'Đăng ký tài khoản';
+  }, []);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -42,53 +41,54 @@ const SignupPage = () => {
     let newErrors = { ...errors };
 
     switch (name) {
-      case "discordID":
+      case 'discordID':
         if (!value.trim()) {
-          newErrors.discordID = "Phải nhập Discord ID";
+          newErrors.discordID = 'Phải nhập Discord ID';
         } else {
           delete newErrors.discordID;
         }
         break;
-      case "nickname":
+      case 'nickname':
         if (!value.trim()) {
-          newErrors.nickname = "Phải nhập Nickname";
+          newErrors.nickname = 'Phải nhập Nickname';
         } else {
           delete newErrors.nickname;
         }
         break;
-      case "username":
+      case 'username':
         if (!value.trim()) {
-          newErrors.username = "Phải nhập tên người dùng";
+          newErrors.username = 'Phải nhập tên người dùng';
         } else {
           delete newErrors.username;
         }
         break;
-      case "garenaaccount":
+      case 'garenaaccount':
         if (!value.trim()) {
-          newErrors.garenaaccount = "Phải nhập tên acc Garena";
+          newErrors.garenaaccount = 'Phải nhập tên acc Garena';
         } else {
           delete newErrors.garenaaccount;
         }
         break;
-      case "password":
+      case 'password':
         if (!value) {
-          newErrors.password = "Phải nhập mật khẩu";
+          newErrors.password = 'Phải nhập mật khẩu';
         } else if (!validatePassword(value)) {
-          newErrors.password = "Mật khẩu phải có ít nhất 7 ký tự, bao gồm một chữ cái viết hoa và một số";
+          newErrors.password =
+            'Mật khẩu phải có ít nhất 7 ký tự, bao gồm một chữ cái viết hoa và một số';
         } else {
           delete newErrors.password;
         }
         if (formData.retypePassword && value !== formData.retypePassword) {
-          newErrors.retypePassword = "Mật khẩu không khớp";
+          newErrors.retypePassword = 'Mật khẩu không khớp';
         } else {
           delete newErrors.retypePassword;
         }
         break;
-      case "retypePassword":
+      case 'retypePassword':
         if (!value) {
-          newErrors.retypePassword = "Nhập lại mật khẩu";
+          newErrors.retypePassword = 'Nhập lại mật khẩu';
         } else if (value !== formData.password) {
-          newErrors.retypePassword = "Mật khẩu không khớp";
+          newErrors.retypePassword = 'Mật khẩu không khớp';
         } else {
           delete newErrors.retypePassword;
         }
@@ -114,14 +114,14 @@ const SignupPage = () => {
 
     // If any error exists, prevent submission and display error message
     if (Object.keys(newErrors).length > 0 || !formData.password) {
-      setErrorMessage("Please fix the errors before submitting.");
+      setErrorMessage('Please fix the errors before submitting.');
       setErrors(newErrors); // Update the errors state to display the latest errors
       return;
     }
 
     try {
       setLoading(true);
-      setErrorMessage("");
+      setErrorMessage('');
 
       const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/signup', {
         method: 'POST',
@@ -135,20 +135,19 @@ const SignupPage = () => {
       setLoading(false);
 
       if (data.success === false) {
-        setErrorMessage(data.message || "Something went wrong!");
+        setErrorMessage(data.message || 'Something went wrong!');
         return;
       }
 
       setSignupSuccess(true);
     } catch (error) {
       setLoading(false);
-      setErrorMessage("An error occurred. Please try again.");
+      setErrorMessage('An error occurred. Please try again.');
     }
   };
 
-
   const togglePasswordVisibility = (field) => {
-    if (field === "password") {
+    if (field === 'password') {
       setShowPassword(!showPassword);
     } else {
       setShowRetypePassword(!showRetypePassword);
@@ -176,7 +175,8 @@ const SignupPage = () => {
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
           <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Đăng kí thành công!</h2>
           <p className="text-center text-gray-600">
-            Cảm ơn bạn đã tạo tài khoản. Bây giờ bạn có thể đăng nhập bằng thông tin đăng nhập của mình.
+            Cảm ơn bạn đã tạo tài khoản. Bây giờ bạn có thể đăng nhập bằng thông tin đăng nhập của
+            mình.
           </p>
           <p className="text-center text-gray-600 mt-4">
             Tự động chuyển tới trang chủ trong {countdown} giây...
@@ -207,7 +207,7 @@ const SignupPage = () => {
                 placeholder="Nhập Garena ID của bạn"
                 value={formData.garenaaccount}
                 onChange={handleChange}
-                aria-invalid={errors.garenaaccount ? "true" : "false"}
+                aria-invalid={errors.garenaaccount ? 'true' : 'false'}
                 aria-describedby="garenaaccount-error"
               />
             </div>
@@ -234,7 +234,7 @@ const SignupPage = () => {
                 placeholder="Nhập Discord ID của bạn"
                 value={formData.discordID}
                 onChange={handleChange}
-                aria-invalid={errors.discordID ? "true" : "false"}
+                aria-invalid={errors.discordID ? 'true' : 'false'}
                 aria-describedby="discordID-error"
               />
             </div>
@@ -261,7 +261,7 @@ const SignupPage = () => {
                 placeholder="Nhập Nickname của bạn"
                 value={formData.nickname}
                 onChange={handleChange}
-                aria-invalid={errors.nickname ? "true" : "false"}
+                aria-invalid={errors.nickname ? 'true' : 'false'}
                 aria-describedby="nickname-error"
               />
             </div>
@@ -307,7 +307,7 @@ const SignupPage = () => {
                 placeholder="Điền username"
                 value={formData.username}
                 onChange={handleChange}
-                aria-invalid={errors.username ? "true" : "false"}
+                aria-invalid={errors.username ? 'true' : 'false'}
                 aria-describedby="username-error"
                 autoComplete="username"
               />
@@ -319,8 +319,6 @@ const SignupPage = () => {
             )}
           </div>
 
-
-
           {/* Password Input */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -331,14 +329,14 @@ const SignupPage = () => {
                 <FaLock className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </div>
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 name="password"
                 id="password"
                 className={`bg-white text-black block w-full pl-10 pr-10 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Nhập mật khẩu"
                 value={formData.password}
                 onChange={handleChange}
-                aria-invalid={errors.password ? "true" : "false"}
+                aria-invalid={errors.password ? 'true' : 'false'}
                 aria-describedby="password-error"
                 autoComplete="new-password"
               />
@@ -346,9 +344,13 @@ const SignupPage = () => {
                 <button
                   type="button"
                   className="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500"
-                  onClick={() => togglePasswordVisibility("password")}
+                  onClick={() => togglePasswordVisibility('password')}
                 >
-                  {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <FaEyeSlash className="h-5 w-5" />
+                  ) : (
+                    <FaEye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -369,14 +371,14 @@ const SignupPage = () => {
                 <FaLock className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </div>
               <input
-                type={showRetypePassword ? "text" : "password"}
+                type={showRetypePassword ? 'text' : 'password'}
                 name="retypePassword"
                 id="retypePassword"
                 className={`bg-white text-black block w-full pl-10 pr-10 py-2 border ${errors.retypePassword ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Nhập lại mật khẩu"
                 value={formData.retypePassword}
                 onChange={handleChange}
-                aria-invalid={errors.retypePassword ? "true" : "false"}
+                aria-invalid={errors.retypePassword ? 'true' : 'false'}
                 aria-describedby="retypePassword-error"
                 autoComplete="new-password"
               />
@@ -384,9 +386,13 @@ const SignupPage = () => {
                 <button
                   type="button"
                   className="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500"
-                  onClick={() => togglePasswordVisibility("retypePassword")}
+                  onClick={() => togglePasswordVisibility('retypePassword')}
                 >
-                  {showRetypePassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                  {showRetypePassword ? (
+                    <FaEyeSlash className="h-5 w-5" />
+                  ) : (
+                    <FaEye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -408,15 +414,11 @@ const SignupPage = () => {
             </button>
           </div>
 
-          {errorMessage && (
-            <p className="mt-2 text-sm text-red-600 text-center">
-              {errorMessage}
-            </p>
-          )}
+          {errorMessage && <p className="mt-2 text-sm text-red-600 text-center">{errorMessage}</p>}
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          Đã có tài khoản?{" "}
+          Đã có tài khoản?{' '}
           <Link to="/signin" className="font-medium text-indigo-600 hover:text-indigo-500">
             Đăng nhập
           </Link>

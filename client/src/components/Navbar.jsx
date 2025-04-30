@@ -2,22 +2,26 @@ import {
   Disclosure,
   Menu,
   Transition,
-  MenuItem,MenuItems,DisclosurePanel,MenuButton,DisclosureButton
-} from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Link, useLocation } from "react-router-dom";
-import { useState, useEffect, Fragment } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { signOut } from "../../redux/user/userSlice.js";
-const images = import.meta.glob("../image/*.{png,jpg,jpeg,gif}");
+  MenuItem,
+  MenuItems,
+  DisclosurePanel,
+  MenuButton,
+  DisclosureButton,
+} from '@headlessui/react';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect, Fragment } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { signOut } from '../../redux/user/userSlice.js';
+const images = import.meta.glob('../image/*.{png,jpg,jpeg,gif}');
 
 function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
+  return classes.filter(Boolean).join(' ');
 }
 
 export default function Example() {
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "forest");
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'forest');
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,9 +29,9 @@ export default function Example() {
 
   const handleSignOut = async () => {
     try {
-      await fetch("https://valosplit2-backend.vercel.app/api/auth/signout");
+      await fetch('https://valosplit2-backend.vercel.app/api/auth/signout');
       dispatch(signOut());
-      navigate("/arenaofvalor");
+      navigate('/arenaofvalor');
     } catch (error) {
       console.log(error);
     }
@@ -38,58 +42,126 @@ export default function Example() {
 
   const navigationAll = {
     general: [
-      { name: "Trang chủ", href: "/", current: location.pathname === "/" },
-      { name: "Đăng ký tổ chức", href: "/register", current: location.pathname === "/register" },
-      { name: "Lịch trình", href: "/calendar", current: location.pathname === "/calendar" },
+      { name: 'Trang chủ', href: '/', current: location.pathname === '/' },
+      { name: 'Đăng ký tổ chức', href: '/register', current: location.pathname === '/register' },
+      { name: 'Lịch trình', href: '/calendar', current: location.pathname === '/calendar' },
     ],
     valorant: [
-      { name: "VALORANT", href: "/valorant", current: location.pathname === "/valorant", logo: "val_icon" },
-      { name: "Nhánh đấu", href: "/valorant/doubleup", current: location.pathname === "/valorant/doubleup" },
-      { name: "HOF", href: "/valorant/halloffame", current: location.pathname === "/valorant/halloffame" },
-      { name: "Luật lệ", href: "/valorant/rule", current: location.pathname === "/valorant/rule" }
+      {
+        name: 'VALORANT',
+        href: '/valorant',
+        current: location.pathname === '/valorant',
+        logo: 'val_icon',
+      },
+      {
+        name: 'Nhánh đấu',
+        href: '/valorant/doubleup',
+        current: location.pathname === '/valorant/doubleup',
+      },
+      {
+        name: 'HOF',
+        href: '/valorant/halloffame',
+        current: location.pathname === '/valorant/halloffame',
+      },
+      { name: 'Luật lệ', href: '/valorant/rule', current: location.pathname === '/valorant/rule' },
     ],
     aov: [
-      { name: "Liên Quân Mobile", href: "/arenaofvalor", current: location.pathname === "/arenaofvalor", logo: "aov_icon" },
-      { name: "Nhánh đấu", href: "/arenaofvalor/playoff", current: location.pathname === "/arenaofvalor/playoff"},
-      { name: "BXH", href: "/arenaofvalor/ranking", current: location.pathname === "/arenaofvalor/ranking"},
-      { 
-        name: "Pick'em", 
-        href: "/arenaofvalor/pickem/welcome", 
-        current: ["/arenaofvalor/pickem/welcome", "/arenaofvalor/pickem", "/arenaofvalor/pickem/leaderboard","/arenaofvalor/pickem/pickemmatch"].includes(location.pathname)
+      {
+        name: 'Liên Quân Mobile',
+        href: '/arenaofvalor',
+        current: location.pathname === '/arenaofvalor',
+        logo: 'aov_icon',
       },
-      { name: "HOF", href: "/arenaofvalor/halloffame", current: location.pathname === "/arenaofvalor/halloffame" },
-      { name: "Luật lệ", href: "/arenaofvalor/luatle", current: location.pathname === "/arenaofvalor/luatle" },
-    ]
-,    
+      {
+        name: 'Nhánh đấu',
+        href: '/arenaofvalor/playoff',
+        current: location.pathname === '/arenaofvalor/playoff',
+      },
+      {
+        name: 'BXH',
+        href: '/arenaofvalor/ranking',
+        current: location.pathname === '/arenaofvalor/ranking',
+      },
+      {
+        name: "Pick'em",
+        href: '/arenaofvalor/pickem/welcome',
+        current: [
+          '/arenaofvalor/pickem/welcome',
+          '/arenaofvalor/pickem',
+          '/arenaofvalor/pickem/leaderboard',
+          '/arenaofvalor/pickem/pickemmatch',
+        ].includes(location.pathname),
+      },
+      {
+        name: 'HOF',
+        href: '/arenaofvalor/halloffame',
+        current: location.pathname === '/arenaofvalor/halloffame',
+      },
+      {
+        name: 'Luật lệ',
+        href: '/arenaofvalor/luatle',
+        current: location.pathname === '/arenaofvalor/luatle',
+      },
+    ],
     tft: [
-      { name: "Teamfight Tactics", href: "/tft", current: location.pathname === "/tft", logo: "tft_icon" },
-      { name: "Bảng đấu", href: "/tft/ranking/day1", current: ["/tft/ranking/day1", "/tft/ranking/day2",].includes(location.pathname)},
-      { name: "BXH Tổng", href: "/tft/ranking/total/day1", current: ["/tft/ranking/total/day1", "/tft/ranking/total/day2", "/tft/grandfinal"].includes(location.pathname)},
+      {
+        name: 'Teamfight Tactics',
+        href: '/tft',
+        current: location.pathname === '/tft',
+        logo: 'tft_icon',
+      },
+      {
+        name: 'Bảng đấu',
+        href: '/tft/ranking/day1',
+        current: ['/tft/ranking/day1', '/tft/ranking/day2'].includes(location.pathname),
+      },
+      {
+        name: 'BXH Tổng',
+        href: '/tft/ranking/total/day1',
+        current: ['/tft/ranking/total/day1', '/tft/ranking/total/day2', '/tft/grandfinal'].includes(
+          location.pathname
+        ),
+      },
     ],
     tft_double: [
-      { name: "Teamfight Tactics Double", href: "/tftdouble/", current: location.pathname === "/tftdouble/", logo: "tft_icon" },
-      { name: "BXH", href: "/tftdouble/ranking", current: location.pathname === "/tftdouble/ranking"},
-
+      {
+        name: 'Teamfight Tactics Double',
+        href: '/tftdouble/',
+        current: location.pathname === '/tftdouble/',
+        logo: 'tft_icon',
+      },
+      {
+        name: 'BXH',
+        href: '/tftdouble/ranking',
+        current: location.pathname === '/tftdouble/ranking',
+      },
     ],
     lol: [
-      { name: "League Of Legends", href: "/leagueoflegend", current: location.pathname === "/leagueoflegend", logo: "lol_icon" },
-
+      {
+        name: 'League Of Legends',
+        href: '/leagueoflegend',
+        current: location.pathname === '/leagueoflegend',
+        logo: 'lol_icon',
+      },
     ],
     chess: [
-      { name: "", href: "https://www.chess.com/", current: location.pathname === "https://www.chess.com/", logo: "lol_icon" },
-
+      {
+        name: '',
+        href: 'https://www.chess.com/',
+        current: location.pathname === 'https://www.chess.com/',
+        logo: 'lol_icon',
+      },
     ],
   };
 
   const getNavigation = () => {
-    if (location.pathname.includes("valorant")) return navigationAll.valorant;
-    if (location.pathname.includes("arenaofvalor")) return navigationAll.aov;
-    if (location.pathname.includes("/tft") && !location.pathname.includes("/tftdouble")) 
+    if (location.pathname.includes('valorant')) return navigationAll.valorant;
+    if (location.pathname.includes('arenaofvalor')) return navigationAll.aov;
+    if (location.pathname.includes('/tft') && !location.pathname.includes('/tftdouble'))
       return navigationAll.tft;
-    if (location.pathname.includes("/tftdouble")) 
-      return navigationAll.tft_double;
-    if (location.pathname.includes("leagueoflegend")) return navigationAll.lol;
-    if (location.pathname.includes("https://www.chess.com/")) return navigationAll.chess;
+    if (location.pathname.includes('/tftdouble')) return navigationAll.tft_double;
+    if (location.pathname.includes('leagueoflegend')) return navigationAll.lol;
+    if (location.pathname.includes('https://www.chess.com/')) return navigationAll.chess;
     return navigationAll.general;
   };
 
@@ -98,8 +170,8 @@ export default function Example() {
   const handleToggle = (event) => setTheme(event.target.value);
 
   useEffect(() => {
-    localStorage.setItem("theme", theme);
-    document.querySelector("html").setAttribute("data-theme", theme);
+    localStorage.setItem('theme', theme);
+    document.querySelector('html').setAttribute('data-theme', theme);
   }, [theme]);
 
   useEffect(() => {
@@ -109,7 +181,7 @@ export default function Example() {
         Object.entries(images).map(async ([path, resolver]) => {
           try {
             const module = await resolver();
-            urls[path.split("/").pop().split(".")[0]] = module.default;
+            urls[path.split('/').pop().split('.')[0]] = module.default;
           } catch (error) {
             console.error(`Failed to load image at ${path}`, error);
           }
@@ -142,7 +214,7 @@ export default function Example() {
               <Link to="/">
                 <img
                   alt="Your Company"
-                  src={imageUrls["LogoChristmas"]}
+                  src={imageUrls['LogoChristmas']}
                   className="h-12.5 w-12.5"
                 />
               </Link>
@@ -152,16 +224,16 @@ export default function Example() {
                     <Link
                       key={item.name}
                       to={item.href}
-                      aria-current={item.current ? "page" : undefined}
+                      aria-current={item.current ? 'page' : undefined}
                       className={
                         item.logo
-                          ? "flex flex-row p-2 font-bold text-primary gap-x-2 border-2 rounded-2xl border-primary justify-center items-center"  // Add your custom class here for items with logos
+                          ? 'flex flex-row p-2 font-bold text-primary gap-x-2 border-2 rounded-2xl border-primary justify-center items-center' // Add your custom class here for items with logos
                           : classNames(
-                            item.current
-                              ? "text-primary flex flex-row gap-x-2 underline underline-offset-8"
-                              : "hover:text-primary hover:underline underline-offset-8 flex gap-x-2 flex-row",
-                            "rounded-md px-3 text-sm font-medium hover:underline underline-offset-8 py-2"
-                          )
+                              item.current
+                                ? 'text-primary flex flex-row gap-x-2 underline underline-offset-8'
+                                : 'hover:text-primary hover:underline underline-offset-8 flex gap-x-2 flex-row',
+                              'rounded-md px-3 text-sm font-medium hover:underline underline-offset-8 py-2'
+                            )
                       }
                     >
                       {item.logo && (
@@ -178,9 +250,6 @@ export default function Example() {
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-
-
-
               {currentUser ? (
                 <Menu as="div" className="relative ml-3">
                   <div>
@@ -208,8 +277,8 @@ export default function Example() {
                           <Link
                             to="/profile"
                             className={classNames(
-                              active ? "bg-neutral " : "text-white",
-                              "block px-4 py-2 text-sm w-full text-left"
+                              active ? 'bg-neutral ' : 'text-white',
+                              'block px-4 py-2 text-sm w-full text-left'
                             )}
                           >
                             Cập nhật thông tin cá nhân
@@ -221,8 +290,8 @@ export default function Example() {
                           <button
                             onClick={handleSignOut}
                             className={classNames(
-                              active ? "bg-neutral " : "text-white",
-                              "block px-4 py-2 text-sm w-full text-left"
+                              active ? 'bg-neutral ' : 'text-white',
+                              'block px-4 py-2 text-sm w-full text-left'
                             )}
                           >
                             Đăng xuất
@@ -247,21 +316,19 @@ export default function Example() {
                   as={Link}
                   to={item.href}
                   className={classNames(
-                    item.current
-                      ? "bg-primary text-white"
-                      : "hover:bg-primary hover:text-white ",
-                    "flex rounded-md px-3 py-2 text-base font-medium flex-row gap-x-2"
+                    item.current ? 'bg-primary text-white' : 'hover:bg-primary hover:text-white ',
+                    'flex rounded-md px-3 py-2 text-base font-medium flex-row gap-x-2'
                   )}
-                  aria-current={item.current ? "page" : undefined}
+                  aria-current={item.current ? 'page' : undefined}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.logo && (
-                        <img
-                          src={imageUrls[item.logo]}
-                          alt={`${item.name} Logo`}
-                          className="inline-block h-8 w-8"
-                        />
-                      )}
+                    <img
+                      src={imageUrls[item.logo]}
+                      alt={`${item.name} Logo`}
+                      className="inline-block h-8 w-8"
+                    />
+                  )}
                   <p className="py-1 text-a">{item.name}</p>
                 </DisclosureButton>
               ))}

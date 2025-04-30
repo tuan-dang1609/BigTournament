@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 let cachedLeague = null;
 let cachedMe = null; // cache user luôn
@@ -15,11 +15,7 @@ export const useLeagueData = (game, league_id, currentUser) => {
 
   useEffect(() => {
     const fetchLeague = async () => {
-      if (
-        cachedLeague &&
-        cachedParams.game === game &&
-        cachedParams.league_id === league_id
-      ) {
+      if (cachedLeague && cachedParams.game === game && cachedParams.league_id === league_id) {
         return;
       }
 
@@ -37,7 +33,7 @@ export const useLeagueData = (game, league_id, currentUser) => {
           cachedParams.league_id = league_id;
         }
       } catch (err) {
-        console.error("❌ Fetch League Error:", err);
+        console.error('❌ Fetch League Error:', err);
       } finally {
         setLoading(false);
       }
@@ -62,7 +58,7 @@ export const useLeagueData = (game, league_id, currentUser) => {
         cachedMe = res.data;
         cachedParams.user_id = currentUser._id;
       } catch (err) {
-        console.error("❌ Fetch Me Error:", err);
+        console.error('❌ Fetch Me Error:', err);
       }
     };
 
@@ -74,10 +70,10 @@ export const useLeagueData = (game, league_id, currentUser) => {
       if (!league || !league.matches) return;
 
       const matchIdSet = new Set();
-      Object.values(league.matches).forEach(day => {
-        day.forEach(lobby => {
-          lobby.matchIds.forEach(id => {
-            if (id !== "0") matchIdSet.add(id);
+      Object.values(league.matches).forEach((day) => {
+        day.forEach((lobby) => {
+          lobby.matchIds.forEach((id) => {
+            if (id !== '0') matchIdSet.add(id);
           });
         });
       });
@@ -90,12 +86,14 @@ export const useLeagueData = (game, league_id, currentUser) => {
         }
 
         try {
-          const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/tft/match/${matchId}`);
+          const res = await fetch(
+            `https://bigtournament-hq9n.onrender.com/api/tft/match/${matchId}`
+          );
           const data = await res.json();
           allMatchDataTemp[matchId] = data;
           cachedMatchData[matchId] = data;
         } catch (err) {
-          console.error("❌ Fetch match", matchId, "error:", err);
+          console.error('❌ Fetch match', matchId, 'error:', err);
         }
       }
 
