@@ -1,57 +1,63 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import helmet from 'helmet';
-import userRoutes from './routes/user.route.js';
-import authRoutes from './routes/auth.route.js';
-import cookieParser from 'cookie-parser';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import cors from 'cors';
-import axios from 'axios';
-import Promise from 'bluebird';
-import NodeCache from 'node-cache';
-import rateLimit from 'express-rate-limit';
-import { Server } from 'socket.io';
-import compression from 'compression';
-import Queue from 'bull';
-import https from 'https';
-import request from 'request';
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import helmet from "helmet";
+import userRoutes from "./routes/user.route.js";
+import authRoutes from "./routes/auth.route.js";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+import cors from "cors";
+import axios from "axios";
+import Promise from "bluebird";
+import NodeCache from "node-cache";
+import rateLimit from "express-rate-limit";
+import { Server } from "socket.io";
+import compression from "compression";
+import Queue from "bull";
+import https from "https";
+import request from "request";
 
 dotenv.config();
 const app = express();
 const apiKey = process.env.TFT_KEY;
-const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT
+const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT;
 const clientID = process.env.RIOT_CLIENT_ID;
 const clientSecret = process.env.RIOT_CLIENT_SECRET;
-const appBaseUrl = "https://bigtournament-hq9n.onrender.com"
+const appBaseUrl = "https://bigtournament-hq9n.onrender.com";
 const appCallbackUrl = appBaseUrl + "/oauth2-callback";
-const provider = "https://auth.riotgames.com"
+const provider = "https://auth.riotgames.com";
 const authorizeUrl = provider + "/authorize";
 const tokenUrl = provider + "/token";
-const URLfrontend = "https://dongchuyennghiep.vercel.app"
+const URLfrontend = "https://dongchuyennghiep.vercel.app";
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'https://28e7-88-86-155-193.ngrok-free.app', 'https://bigtournament-hq9n.onrender.com', 'https://dongchuyennghiep.vercel.app'], // Allow both local and deployed origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    origin: [
+      "http://localhost:5173",
+      "https://28e7-88-86-155-193.ngrok-free.app",
+      "https://bigtournament-hq9n.onrender.com",
+      "https://dongchuyennghiep.vercel.app",
+    ], // Allow both local and deployed origins
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
-
-app.get('/sso/login-riot', function (req, res) {
-  const link = authorizeUrl
-    + "?redirect_uri=" + appCallbackUrl
-    + "&client_id=" + clientID
-    + "&response_type=code"
-    + "&scope=openid";
+app.get("/sso/login-riot", function (req, res) {
+  const link =
+    authorizeUrl +
+    "?redirect_uri=" +
+    appCallbackUrl +
+    "&client_id=" +
+    clientID +
+    "&response_type=code" +
+    "&scope=openid";
   // create a single link, send as an html document
   res.redirect(link);
 });
 
-
-app.get('/oauth2-callback', function (req, res) {
+app.get("/oauth2-callback", function (req, res) {
   const accessCode = req.query.code;
 
   request.post(
@@ -62,7 +68,7 @@ app.get('/oauth2-callback', function (req, res) {
         pass: clientSecret,
       },
       form: {
-        grant_type: 'authorization_code',
+        grant_type: "authorization_code",
         code: accessCode,
         redirect_uri: appCallbackUrl,
       },
@@ -75,7 +81,7 @@ app.get('/oauth2-callback', function (req, res) {
         try {
           // Gọi Riot API để lấy thông tin tài khoản
           const riotResponse = await axios.get(
-            'https://asia.api.riotgames.com/riot/account/v1/accounts/me',
+            "https://asia.api.riotgames.com/riot/account/v1/accounts/me",
             {
               headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -87,27 +93,31 @@ app.get('/oauth2-callback', function (req, res) {
 
           // Redirect về frontend với access_token và thông tin tài khoản
           res.redirect(
-            URLfrontend + `/profile?&gameName=${encodeURIComponent(
-              gameName
-            )}&tagName=${encodeURIComponent(tagLine)}`
+            URLfrontend +
+              `/profile?&gameName=${encodeURIComponent(
+                gameName
+              )}&tagName=${encodeURIComponent(tagLine)}`
           );
         } catch (riotError) {
-          console.error('Lỗi khi gọi Riot API:', riotError.response?.data || riotError.message);
+          console.error(
+            "Lỗi khi gọi Riot API:",
+            riotError.response?.data || riotError.message
+          );
           res.status(500).json({
-            error: 'Không thể lấy thông tin tài khoản Riot.',
+            error: "Không thể lấy thông tin tài khoản Riot.",
             details: riotError.response?.data || riotError.message,
           });
         }
       } else {
-        console.error('Lỗi khi lấy access_token:', error || response.statusMessage);
-        res.status(400).json({ error: 'Yêu cầu token thất bại.' });
+        console.error(
+          "Lỗi khi lấy access_token:",
+          error || response.statusMessage
+        );
+        res.status(400).json({ error: "Yêu cầu token thất bại." });
       }
     }
   );
 });
-
-
-
 
 // MongoDB connection
 mongoose
@@ -119,7 +129,7 @@ mongoose
     socketTimeoutMS: 60000,
   })
   .then(() => {
-    console.log('Connected to MongoDB with optimized connection pooling');
+    console.log("Connected to MongoDB with optimized connection pooling");
   })
   .catch((err) => {
     console.log(err);
@@ -129,25 +139,24 @@ mongoose
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 // Helmet security configuration
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
-app.use(helmet.frameguard({ action: 'deny' }));
+app.use(helmet.frameguard({ action: "deny" }));
 app.use(helmet.xssFilter());
 app.use(helmet.noSniff());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'trusted-cdn.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", "trusted-cdn.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
     },
   })
 );
 
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 const cache = new NodeCache({ stdTTL: 300, checkperiod: 320 });
 
@@ -162,26 +171,26 @@ const redisOptions = {
 };
 
 // Pass redisOptions to Bull queue
-const scoreQueue = new Queue('score-processing', {
+const scoreQueue = new Queue("score-processing", {
   redis: redisOptions,
 });
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
 const allowedOrigins = [
-  'http://localhost:5173',
-  'https://dongchuyennghiep.vercel.app'
+  "http://localhost:5173",
+  "https://dongchuyennghiep.vercel.app",
 ];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader("Access-Control-Allow-Origin", origin);
   }
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   next();
 });
 app.use(compression());
@@ -190,27 +199,32 @@ app.use(compression());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
-  message: 'Too many requests from this IP, please try again later',
+  message: "Too many requests from this IP, please try again later",
 });
-app.use('/api/', limiter);
+app.use("/api/", limiter);
 
-app.get('/api/livegame', async (req, res) => {  // Thay đổi để lấy riotId từ URL
-
+app.get("/api/livegame", async (req, res) => {
+  // Thay đổi để lấy riotId từ URL
 
   try {
     // Gọi API với riotId trong URL
-    const response = await axios.get(`https://127.0.0.1:2999/liveclientdata/playerlist`, {
-      httpsAgent: new https.Agent({ rejectUnauthorized: false })
-    });
-    res.json(response.data);  // Trả dữ liệu về cho frontend
+    const response = await axios.get(
+      `https://127.0.0.1:2999/liveclientdata/playerlist`,
+      {
+        httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+      }
+    );
+    res.json(response.data); // Trả dữ liệu về cho frontend
   } catch (error) {
-    console.error('Error fetching live game data:', error.message);
-    console.error('Error response data:', error.response?.data);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch live game data' });
+    console.error("Error fetching live game data:", error.message);
+    console.error("Error response data:", error.response?.data);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Failed to fetch live game data" });
   }
 });
 // Serve static files
-app.use(express.static(path.join(__dirname, '..', 'client')));
+app.use(express.static(path.join(__dirname, "..", "client")));
 const calculatePlayerStats = (player, roundResults) => {
   const { puuid } = player;
   let firstKills = 0;
@@ -223,11 +237,14 @@ const calculatePlayerStats = (player, roundResults) => {
 
   roundResults.forEach((round) => {
     const stats = round.playerStats.find((stat) => stat.puuid === puuid);
-    
+
     // Tìm first death chính xác
     const allKills = round.playerStats.flatMap((stat) => stat.kills);
-    const earliestKill = allKills.reduce((min, curr) =>
-      curr.timeSinceRoundStartMillis < min.timeSinceRoundStartMillis ? curr : min,
+    const earliestKill = allKills.reduce(
+      (min, curr) =>
+        curr.timeSinceRoundStartMillis < min.timeSinceRoundStartMillis
+          ? curr
+          : min,
       allKills[0]
     );
     if (earliestKill?.victim === puuid) {
@@ -279,63 +296,69 @@ const calculatePlayerStats = (player, roundResults) => {
   };
 };
 
-
-app.get('/api/valorant/match/:matchId', async (req, res) => {
+app.get("/api/valorant/match/:matchId", async (req, res) => {
   const { matchId } = req.params;
-
 
   try {
     // Gọi API lấy danh sách nhân vật
-    const dictionaryResponse = await axios.get('https://bigtournament-hq9n.onrender.com/api/valorant/dictionary');
+    const dictionaryResponse = await axios.get(
+      "https://bigtournament-hq9n.onrender.com/api/valorant/dictionary"
+    );
     const characterMap = {};
     const mapMap = {};
 
     if (dictionaryResponse.data.maps) {
-      dictionaryResponse.data.maps.forEach(map => {
+      dictionaryResponse.data.maps.forEach((map) => {
         if (map.assetPath) {
           mapMap[map.assetPath.toUpperCase()] = map.name;
         }
       });
     }
     if (dictionaryResponse.data.characters) {
-      dictionaryResponse.data.characters.forEach(char => {
+      dictionaryResponse.data.characters.forEach((char) => {
         characterMap[char.id] = char.name;
       });
     }
-    
-    const response = await axios.get(`https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`, {
-      headers: { 'X-Riot-Token': apiKeyValorant }
-    });
+
+    const response = await axios.get(
+      `https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`,
+      {
+        headers: { "X-Riot-Token": apiKeyValorant },
+      }
+    );
 
     const matchData = response.data;
 
-
-// Map name
-const rawMapId = matchData?.matchInfo?.mapId?.toUpperCase();
-matchData.matchInfo.mapName = mapMap[rawMapId] || "Unknown";
+    // Map name
+    const rawMapId = matchData?.matchInfo?.mapId?.toUpperCase();
+    matchData.matchInfo.mapName = mapMap[rawMapId] || "Unknown";
     const roundResults = matchData.roundResults || [];
-    const rateLimitRemaining = response.headers['x-ratelimit-remaining'];
-    const rateLimitReset = response.headers['x-ratelimit-reset'];
+    const rateLimitRemaining = response.headers["x-ratelimit-remaining"];
+    const rateLimitReset = response.headers["x-ratelimit-reset"];
 
     if (matchData?.players) {
-      matchData.players.forEach(player => {
+      matchData.players.forEach((player) => {
         const cleanId = player.characterId?.toUpperCase();
         player.characterName = `${characterMap[cleanId]}` || "Unknown";
-        player.imgCharacter = `https://dongchuyennghiep.vercel.app/agent/${characterMap[cleanId]}.png` || "Unknown";
-        const gameName = player.gameName || 'Unknown';
-        const tagLine = player.tagLine || 'Unknown';
+        player.imgCharacter =
+          `https://dongchuyennghiep.vercel.app/agent/${characterMap[cleanId]}.png` ||
+          "Unknown";
+        const gameName = player.gameName || "Unknown";
+        const tagLine = player.tagLine || "Unknown";
         player.riotID = `${gameName}#${tagLine}`;
-      
+
         if (player.stats) {
           const kills = player.stats.kills || 0;
           const deaths = player.stats.deaths || 0;
           const assists = player.stats.assists || 0;
           const KDA = (kills + deaths) / (assists || 1) || 0;
-          const acs = parseFloat((player.stats.score / player.stats.roundsPlayed).toFixed(0));
+          const acs = parseFloat(
+            (player.stats.score / player.stats.roundsPlayed).toFixed(0)
+          );
           player.stats.KD = `${kills}/${deaths}`;
           player.stats.KDA = parseFloat(KDA.toFixed(1));
           player.stats.acs = parseFloat(acs);
-      
+
           // 🔥 Thêm các chỉ số mới vào đây
           const advancedStats = calculatePlayerStats(player, roundResults);
           player.stats.firstKills = advancedStats.firstKills;
@@ -343,20 +366,22 @@ matchData.matchInfo.mapName = mapMap[rawMapId] || "Unknown";
           player.stats.multiKills = advancedStats.multiKills;
           player.stats.headshotPercentage = advancedStats.headshotPercentage;
           player.stats.totalDamage = advancedStats.totalDamage;
-          player.stats.adr = parseFloat((advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(1));
+          player.stats.adr = parseFloat(
+            (advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(1)
+          );
         }
       });
 
       // Tách thành 2 nhóm: red và blue
-      const redTeam = matchData.players.filter(p => p.teamId === 'Red');
-      const blueTeam = matchData.players.filter(p => p.teamId === 'Blue');
+      const redTeam = matchData.players.filter((p) => p.teamId === "Red");
+      const blueTeam = matchData.players.filter((p) => p.teamId === "Blue");
 
       // Sắp xếp mỗi nhóm theo ACS giảm dần
       redTeam.sort((a, b) => (b.stats?.acs ?? 0) - (a.stats?.acs ?? 0));
       blueTeam.sort((a, b) => (b.stats?.acs ?? 0) - (a.stats?.acs ?? 0));
       if (matchData?.teams?.length === 2) {
         const [team1, team2] = matchData.teams;
-      
+
         if (team1.roundsWon > team2.roundsWon) {
           team1.is = "Win";
           team2.is = "Loss";
@@ -368,24 +393,25 @@ matchData.matchInfo.mapName = mapMap[rawMapId] || "Unknown";
         }
       }
       // Gộp lại
-      matchData.players = [ ...redTeam,...blueTeam];
+      matchData.players = [...redTeam, ...blueTeam];
     }
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.json({
       rateLimitRemaining,
       rateLimitReset,
-      matchData
+      matchData,
     });
-
   } catch (error) {
-    console.error('Error fetching match data:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+    console.error("Error fetching match data:", error.message);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Failed to fetch match data" });
   }
 });
 
 // API to get match data with NodeCache
-app.get('/api/match/:region/:matchid', async (req, res) => {
+app.get("/api/match/:region/:matchid", async (req, res) => {
   const { region, matchid } = req.params;
   const cacheKey = `${region}-${matchid}`;
   const apiKey = process.env.API_KEY_VALORANT;
@@ -396,11 +422,14 @@ app.get('/api/match/:region/:matchid', async (req, res) => {
   }
 
   try {
-    const response = await axios.get(`https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`, {
-      headers: {
-        Authorization: apiKey,
-      },
-    });
+    const response = await axios.get(
+      `https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`,
+      {
+        headers: {
+          Authorization: apiKey,
+        },
+      }
+    );
 
     cache.set(cacheKey, response.data, 300);
     res.json(response.data);
@@ -412,33 +441,39 @@ app.get('/api/match/:region/:matchid', async (req, res) => {
     });
   }
 });
-app.get('/api/valorant/dictionary', async (req, res) => {
+app.get("/api/valorant/dictionary", async (req, res) => {
   try {
-    const response = await axios.get(`https://ap.api.riotgames.com/val/content/v1/contents?locale=vi-VN`, {
-      headers: { 'X-Riot-Token': process.env.API_KEY_VALORANT_RIOT }
-    });
+    const response = await axios.get(
+      `https://ap.api.riotgames.com/val/content/v1/contents?locale=vi-VN`,
+      {
+        headers: { "X-Riot-Token": process.env.API_KEY_VALORANT_RIOT },
+      }
+    );
 
     // Lọc dữ liệu chỉ giữ lại "characters" và "maps"
     const filteredData = {
       characters: response.data.characters || [],
-      maps: response.data.maps || []
+      maps: response.data.maps || [],
     };
 
     // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    res.setHeader("Access-Control-Allow-Origin", "*"); // Hoặc chỉ định domain cụ thể thay vì '*'
     res.json(filteredData);
   } catch (error) {
-    console.error('Error fetching dictionary data:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch dictionary data' });
+    console.error("Error fetching dictionary data:", error.message);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Failed to fetch dictionary data" });
   }
 });
 
-
-app.get('/api/matches', async (req, res) => {
+app.get("/api/matches", async (req, res) => {
   const { page = 1, limit = 10, matchids } = req.query;
 
   try {
-    const matches = await MatchModel.find({ matchid: { $in: matchids.split(',') } })
+    const matches = await MatchModel.find({
+      matchid: { $in: matchids.split(",") },
+    })
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .lean()
@@ -456,83 +491,106 @@ app.get('/api/matches', async (req, res) => {
   }
 });
 
-app.get('/api/tft/match/:matchId', async (req, res) => {
+app.get("/api/tft/match/:matchId", async (req, res) => {
   const { matchId } = req.params;
 
   try {
-    const response = await axios.get(`https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}`, {
-      headers: { 'X-Riot-Token': apiKey }
-    });
+    const response = await axios.get(
+      `https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}`,
+      {
+        headers: { "X-Riot-Token": apiKey },
+      }
+    );
 
     // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    res.setHeader("Access-Control-Allow-Origin", "*"); // Hoặc chỉ định domain cụ thể thay vì '*'
     res.json(response.data);
   } catch (error) {
-    console.error('Error fetching match data:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+    console.error("Error fetching match data:", error.message);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Failed to fetch match data" });
   }
 });
-app.get('/api/lol/match/:matchId', async (req, res) => {
+app.get("/api/lol/match/:matchId", async (req, res) => {
   const { matchId } = req.params;
 
   try {
-    const response = await axios.get(`https://sea.api.riotgames.com/lol/match/v5/matches/${matchId}`, {
-      headers: { 'X-Riot-Token': process.env.LOL_RIOT_API_KEY }
-    });
+    const response = await axios.get(
+      `https://sea.api.riotgames.com/lol/match/v5/matches/${matchId}`,
+      {
+        headers: { "X-Riot-Token": process.env.LOL_RIOT_API_KEY },
+      }
+    );
 
     // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    res.setHeader("Access-Control-Allow-Origin", "*"); // Hoặc chỉ định domain cụ thể thay vì '*'
     res.json(response.data);
   } catch (error) {
-    console.error('Error fetching match data:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+    console.error("Error fetching match data:", error.message);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Failed to fetch match data" });
   }
 });
-app.get('/api/lol/match/timeline/:matchId', async (req, res) => {
+app.get("/api/lol/match/timeline/:matchId", async (req, res) => {
   const { matchId } = req.params;
 
   try {
-    const response = await axios.get(`https://sea.api.riotgames.com/lol/match/v5/matches/${matchId}/timeline`, {
-      headers: { 'X-Riot-Token': process.env.LOL_RIOT_API_KEY }
-    });
+    const response = await axios.get(
+      `https://sea.api.riotgames.com/lol/match/v5/matches/${matchId}/timeline`,
+      {
+        headers: { "X-Riot-Token": process.env.LOL_RIOT_API_KEY },
+      }
+    );
 
     // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Hoặc chỉ định domain cụ thể thay vì '*'
+    res.setHeader("Access-Control-Allow-Origin", "*"); // Hoặc chỉ định domain cụ thể thay vì '*'
     res.json(response.data);
   } catch (error) {
-    console.error('Error fetching match data:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch match data' });
+    console.error("Error fetching match data:", error.message);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Failed to fetch match data" });
   }
 });
-app.post('/api/accounts', async (req, res) => {
+app.post("/api/accounts", async (req, res) => {
   const { puuids } = req.body;
 
   try {
     // Gửi request mẫu để kiểm tra rate limit
     const testResponse = await axios.get(
       `https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuids[0]}`,
-      { headers: { 'X-Riot-Token': apiKey } }
+      { headers: { "X-Riot-Token": apiKey } }
     );
 
     // Lấy thông tin rate limit từ header
-    const rateLimit = testResponse.headers['x-app-rate-limit'];       // Ví dụ: "100:120,2000:600"
-    const rateLimitCount = testResponse.headers['x-app-rate-limit-count']; // Ví dụ: "5:120,500:600"
-    console.log('Rate Limit:', rateLimit);
-    console.log('Rate Limit Count:', rateLimitCount);
+    const rateLimit = testResponse.headers["x-app-rate-limit"]; // Ví dụ: "100:120,2000:600"
+    const rateLimitCount = testResponse.headers["x-app-rate-limit-count"]; // Ví dụ: "5:120,500:600"
+    console.log("Rate Limit:", rateLimit);
+    console.log("Rate Limit Count:", rateLimitCount);
 
     // Chuyển đổi thông tin
-    const [shortTermLimit, longTermLimit] = rateLimit.split(',').map(limit => limit.split(':').map(Number));
-    const [shortTermCount, longTermCount] = rateLimitCount.split(',').map(count => count.split(':').map(Number));
+    const [shortTermLimit, longTermLimit] = rateLimit
+      .split(",")
+      .map((limit) => limit.split(":").map(Number));
+    const [shortTermCount, longTermCount] = rateLimitCount
+      .split(",")
+      .map((count) => count.split(":").map(Number));
 
     // Tính số request còn lại
     const remainingShort = shortTermLimit[0] - shortTermCount[0];
     const remainingLong = longTermLimit[0] - longTermCount[0];
 
-    console.log(`Requests còn lại: ${remainingShort} trong ${shortTermLimit[1]}s, ${remainingLong} trong ${longTermLimit[1]}s`);
+    console.log(
+      `Requests còn lại: ${remainingShort} trong ${shortTermLimit[1]}s, ${remainingLong} trong ${longTermLimit[1]}s`
+    );
 
     // Nếu số request còn lại quá ít, trả về lỗi sớm
     if (remainingShort <= 5 || remainingLong <= 10) {
-      return res.status(429).json({ error: 'Rate limit exceeded soon, please try again later' });
+      return res
+        .status(429)
+        .json({ error: "Rate limit exceeded soon, please try again later" });
     }
 
     // Sử dụng Bluebird Promise.map để giới hạn concurrency (ví dụ: 3 request đồng thời)
@@ -541,7 +599,7 @@ app.post('/api/accounts', async (req, res) => {
       async (puuid) => {
         const response = await axios.get(
           `https://asia.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`,
-          { headers: { 'X-Riot-Token': apiKey } }
+          { headers: { "X-Riot-Token": apiKey } }
         );
         // Loại bỏ trường puuid nếu không cần thiết
         const { puuid: _, ...accountData } = response.data;
@@ -552,19 +610,22 @@ app.post('/api/accounts', async (req, res) => {
 
     res.json(accountDataArray);
   } catch (error) {
-    console.error('Error fetching account data:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch account data' });
+    console.error("Error fetching account data:", error.message);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Failed to fetch account data" });
   }
 });
 
-
-app.post('/api/auth/tft_double_rank', async (req, res) => {
+app.post("/api/auth/tft_double_rank", async (req, res) => {
   try {
     // Lấy danh sách gameMembers từ request body
     const { gameMembers } = req.body;
 
     if (!gameMembers || !gameMembers["Teamfight Tactics Double Up"]) {
-      return res.status(400).json({ error: "Missing or invalid Teamfight Tactics members" });
+      return res
+        .status(400)
+        .json({ error: "Missing or invalid Teamfight Tactics members" });
     }
 
     const accounts = gameMembers["Teamfight Tactics Double Up"]; // Lấy danh sách Riot IDs từ gameMembers
@@ -572,12 +633,14 @@ app.post('/api/auth/tft_double_rank', async (req, res) => {
     // Xử lý dữ liệu như trước, với accounts được lấy từ gameMembers
     const accountPromises = accounts.map(async (accountString) => {
       try {
-        const [gameName, tagLine] = accountString.split('#');
-        if (!gameName || !tagLine) throw new Error('Invalid account format');
+        const [gameName, tagLine] = accountString.split("#");
+        if (!gameName || !tagLine) throw new Error("Invalid account format");
 
         // Step 1: Get PUUID from Riot ID
         const accountResponse = await axios.get(
-          `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}?api_key=${process.env.TFT_KEY}`
+          `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(
+            gameName
+          )}/${encodeURIComponent(tagLine)}?api_key=${process.env.TFT_KEY}`
         );
         const { puuid } = accountResponse.data;
 
@@ -594,27 +657,30 @@ app.post('/api/auth/tft_double_rank', async (req, res) => {
 
         // Step 4: Filter for queueType: RANKED_TFT_DOUBLE_UP
         const doubleUpData = leagueResponse.data.find(
-          (entry) => entry.queueType === 'RANKED_TFT_DOUBLE_UP'
+          (entry) => entry.queueType === "RANKED_TFT_DOUBLE_UP"
         );
 
         return doubleUpData
           ? { puuid, ...doubleUpData }
           : {
-            puuid,
-            leagueId: null,
-            queueType: 'RANKED_TFT_DOUBLE_UP',
-            tier: 'UNRANKED',
-            rank: '',
-            leaguePoints: null,
-            wins: 0,
-            losses: 0,
-            veteran: false,
-            inactive: false,
-            freshBlood: false,
-            hotStreak: false,
-          };
+              puuid,
+              leagueId: null,
+              queueType: "RANKED_TFT_DOUBLE_UP",
+              tier: "UNRANKED",
+              rank: "",
+              leaguePoints: null,
+              wins: 0,
+              losses: 0,
+              veteran: false,
+              inactive: false,
+              freshBlood: false,
+              hotStreak: false,
+            };
       } catch (innerError) {
-        console.error(`Error processing account ${accountString}:`, innerError.message);
+        console.error(
+          `Error processing account ${accountString}:`,
+          innerError.message
+        );
         return {
           error: `Failed to process account ${accountString}`,
         };
@@ -627,28 +693,55 @@ app.post('/api/auth/tft_double_rank', async (req, res) => {
     // Tính toán kết quả trung bình (như đoạn code trước đây)
     const tiers = {
       UNRANKED: 0,
-      "IRON IV": 1, "IRON III": 2, "IRON II": 3, "IRON I": 4,
-      "BRONZE IV": 5, "BRONZE III": 6, "BRONZE II": 7, "BRONZE I": 8,
-      "SILVER IV": 9, "SILVER III": 10, "SILVER II": 11, "SILVER I": 12,
-      "GOLD IV": 13, "GOLD III": 14, "GOLD II": 15, "GOLD I": 16,
-      "PLATINUM IV": 17, "PLATINUM III": 18, "PLATINUM II": 19, "PLATINUM I": 20,
-      "EMERALD IV": 21, "EMERALD III": 22, "EMERALD II": 23, "EMERALD I": 24,
-      "DIAMOND IV": 25, "DIAMOND III": 26, "DIAMOND II": 27, "DIAMOND I": 28,
-      "MASTER I": 29, "GRANDMASTER I": 30, "CHALLENGER I": 31,
+      "IRON IV": 1,
+      "IRON III": 2,
+      "IRON II": 3,
+      "IRON I": 4,
+      "BRONZE IV": 5,
+      "BRONZE III": 6,
+      "BRONZE II": 7,
+      "BRONZE I": 8,
+      "SILVER IV": 9,
+      "SILVER III": 10,
+      "SILVER II": 11,
+      "SILVER I": 12,
+      "GOLD IV": 13,
+      "GOLD III": 14,
+      "GOLD II": 15,
+      "GOLD I": 16,
+      "PLATINUM IV": 17,
+      "PLATINUM III": 18,
+      "PLATINUM II": 19,
+      "PLATINUM I": 20,
+      "EMERALD IV": 21,
+      "EMERALD III": 22,
+      "EMERALD II": 23,
+      "EMERALD I": 24,
+      "DIAMOND IV": 25,
+      "DIAMOND III": 26,
+      "DIAMOND II": 27,
+      "DIAMOND I": 28,
+      "MASTER I": 29,
+      "GRANDMASTER I": 30,
+      "CHALLENGER I": 31,
     };
 
-
-    const reverseTiers = Object.fromEntries(Object.entries(tiers).map(([key, value]) => [value, key]));
+    const reverseTiers = Object.fromEntries(
+      Object.entries(tiers).map(([key, value]) => [value, key])
+    );
 
     const tierValues = results.map(({ tier, rank }) => {
       const numericRank = tiers[`${tier} ${rank}`] || 0;
       return numericRank;
     });
 
-    const averageTierValue = Math.round(tierValues.reduce((a, b) => a + b, 0) / results.length);
+    const averageTierValue = Math.round(
+      tierValues.reduce((a, b) => a + b, 0) / results.length
+    );
     const averageTier = reverseTiers[averageTierValue] || "UNRANKED";
     const averageLeaguePoints = Math.ceil(
-      results.reduce((sum, { leaguePoints }) => sum + leaguePoints, 0) / results.length
+      results.reduce((sum, { leaguePoints }) => sum + leaguePoints, 0) /
+        results.length
     );
     const averageWins = Math.round(
       results.reduce((sum, { wins }) => sum + wins, 0) / results.length
@@ -677,47 +770,45 @@ app.post('/api/auth/tft_double_rank', async (req, res) => {
 
     res.json([...results, averageResult]);
   } catch (error) {
-    console.error('Error processing accounts:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to process accounts' });
+    console.error("Error processing accounts:", error.message);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Failed to process accounts" });
   }
 });
-
-
 
 const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server listening on port ${process.env.PORT || 3000}`);
 });
 
-
 const io = new Server(server, {
   cors: {
     origin: [
-      "http://localhost:5173",                 // 👈 local dev
-      "https://dongchuyennghiep.vercel.app"   // 👈 frontend đã deploy
+      "http://localhost:5173", // 👈 local dev
+      "https://dongchuyennghiep.vercel.app", // 👈 frontend đã deploy
     ],
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
-app.use('/api/user', userRoutes);
-app.use('/api/auth', authRoutes);
-io.on('connection', (socket) => {
-  console.log('✅ New client connected:', socket.id);
+app.use("/api/user", userRoutes);
+app.use("/api/auth", authRoutes);
+io.on("connection", (socket) => {
+  console.log("✅ New client connected:", socket.id);
 
-  socket.on('joinMatch', (matchId) => {
+  socket.on("joinMatch", (matchId) => {
     socket.join(matchId); // ← Join theo room
     console.log(`📥 Client ${socket.id} joined room ${matchId}`);
   });
 
-  socket.on('disconnect', () => {
-    console.log('🔌 Client disconnected:', socket.id);
+  socket.on("disconnect", () => {
+    console.log("🔌 Client disconnected:", socket.id);
   });
 });
-
 
 // Bull queue for background score processing with limited concurrency
 scoreQueue.process(5, async (job) => {
@@ -727,8 +818,8 @@ scoreQueue.process(5, async (job) => {
 });
 
 // Serve frontend
-app.get('*', (req, res) => {
-  const filePath = path.join(__dirname, '..', 'client', 'index.html');
+app.get("*", (req, res) => {
+  const filePath = path.join(__dirname, "..", "client", "index.html");
   res.sendFile(filePath, (err) => {
     if (err) {
       res.status(500).send({
@@ -740,11 +831,9 @@ app.get('*', (req, res) => {
   });
 });
 
-
-
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  const message = err.message || "Internal Server Error";
   return res.status(statusCode).json({
     success: false,
     message,
@@ -752,21 +841,22 @@ app.use((err, req, res, next) => {
   });
 });
 setInterval(() => {
-  fetch('https://bigtournament-hq9n.onrender.com/')
-    .then(res => console.log('✅ Keep-alive ping success:', res.status))
-    .catch(err => console.error('❌ Keep-alive ping failed:', err.message));
+  fetch("https://bigtournament-hq9n.onrender.com/")
+    .then((res) => console.log("✅ Keep-alive ping success:", res.status))
+    .catch((err) => console.error("❌ Keep-alive ping failed:", err.message));
 }, 30000); // mỗi 30 giây
 
 setInterval(async () => {
   try {
     // Kiểm tra kết nối MongoDB
-    if (mongoose.connection.readyState === 1) {  // 1 có nghĩa là kết nối thành công
+    if (mongoose.connection.readyState === 1) {
+      // 1 có nghĩa là kết nối thành công
       await mongoose.connection.db.admin().ping();
-      console.log('MongoDB is healthy');
+      console.log("MongoDB is healthy");
     } else {
-      console.log('MongoDB connection is not established');
+      console.log("MongoDB connection is not established");
     }
   } catch (err) {
-    console.error('MongoDB connection issue:', err);
+    console.error("MongoDB connection issue:", err);
   }
 }, 60000);

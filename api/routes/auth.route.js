@@ -1,53 +1,301 @@
-import express from 'express';
-import { findAllteamValorant, findAllteamTFT, findAllteamAOV, findAllteamTFTDouble, signin, signup, teamHOF, leagueHOF, findleagueHOF, findteamHOF, signout, getCorrectAnswers, comparePredictionmultiple, calculateMaxPoints, getUserPickemScore, comparePredictions, submitPrediction, submitCorrectAnswer, leaderboardpickem, finduserPrediction, findPlayer, findAllteam, addBanPickVeto, findBanPickVeto, addAllGame, findAllGame, addMatchID, findAllMatchID, findmatchID } from '../controllers/auth.controller.js';
-import QuestionPickem from '../models/question.model.js';
-import PowerRankingAOV from '../models/powerRankingAOV.model.js';
-import Response from '../models/response.model.js';
-import TeamRegister from '../models/registergame.model.js'
-import Match from '../models/match.model.js';
-import User from '../models/user.model.js';
-import BanPickValo from '../models/veto.model.js';
-import Organization from '../models/team.model.js';
-import DCNLeague from '../models/tournament.model.js';
-import TeamTFT from '../models/registergame.model.js'
-import Bracket from '../models/bracket.model.js';
+import express from "express";
+import dotenv from "dotenv";
+import {
+  findAllteamValorant,
+  findAllteamTFT,
+  findAllteamAOV,
+  findAllteamTFTDouble,
+  signin,
+  signup,
+  teamHOF,
+  leagueHOF,
+  findleagueHOF,
+  findteamHOF,
+  signout,
+  getCorrectAnswers,
+  comparePredictionmultiple,
+  calculateMaxPoints,
+  getUserPickemScore,
+  comparePredictions,
+  submitPrediction,
+  submitCorrectAnswer,
+  leaderboardpickem,
+  finduserPrediction,
+  findPlayer,
+  findAllteam,
+  addBanPickVeto,
+  findBanPickVeto,
+  addAllGame,
+  findAllGame,
+  addMatchID,
+  findAllMatchID,
+  findmatchID,
+} from "../controllers/auth.controller.js";
+import QuestionPickem from "../models/question.model.js";
+import PowerRankingAOV from "../models/powerRankingAOV.model.js";
+import Response from "../models/response.model.js";
+import TeamRegister from "../models/registergame.model.js";
+import Match from "../models/match.model.js";
+import User from "../models/user.model.js";
+import BanPickValo from "../models/veto.model.js";
+import Organization from "../models/team.model.js";
+import DCNLeague from "../models/tournament.model.js";
+import TeamTFT from "../models/registergame.model.js";
+import Bracket from "../models/bracket.model.js";
+import ValorantMatch from "../models/valorantmatch.model.js";
+dotenv.config();
+const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT;
 const router = express.Router();
+const calculatePlayerStats = (player, roundResults) => {
+  const { puuid } = player;
+  let firstKills = 0;
+  let multiKills = 0;
+  let headshots = 0;
+  let bodyshots = 0;
+  let legshots = 0;
+  let totalDamage = 0;
+  let firstDeaths = 0;
+  let clutches = 0;
+  let aces = 0;
 
-router.post('/signup', signup);
-router.post('/signin', signin);
-router.get('/signout', signout);
-router.post('/findallgame', findAllGame)
-router.post('/findplayer', findPlayer)
-router.post('/banpick', addBanPickVeto)
-router.post('/findbanpick', findBanPickVeto)
-router.post('/allgame', addAllGame)
-router.post('/addmatch', addMatchID)
-router.post('/findallmatchid', findAllMatchID)
-router.get('/findmatchid', findmatchID)
-router.get('/findallteam', findAllteam)
-router.get('/findallteamAOV', findAllteamAOV)
-router.get('/findallteamTFT', findAllteamTFT)
-router.get('/findallteamValorant', findAllteamValorant)
-router.post('/findallteamTFTDouble', findAllteamTFTDouble)
-router.post('/submitPrediction', submitPrediction)
-router.post('/checkuserprediction', finduserPrediction)
-router.post('/addcorrectanswer', submitCorrectAnswer)
-router.post('/comparepredictions', comparePredictions);
-router.post('/leaderboardpickem', leaderboardpickem)
-router.post('/scoreformanyids', comparePredictionmultiple)
-router.post('/getCorrectAnswers', getCorrectAnswers)
-router.post('/maxscore', calculateMaxPoints)
-router.post('/teamHOF', teamHOF)
-router.post('/teams/:league', findteamHOF)
-router.post('/leagues/list', findleagueHOF)
-router.post('/leagues', leagueHOF)
-router.post('/myrankpickem', getUserPickemScore)
+  roundResults.forEach((round) => {
+    const stats = round.playerStats?.find((stat) => stat.puuid === puuid);
+
+    // Tìm first death
+    const allKills =
+      round.playerStats?.flatMap((stat) => stat.kills || []) || [];
+    const earliestKill = allKills.reduce(
+      (min, curr) =>
+        curr.timeSinceRoundStartMillis < min.timeSinceRoundStartMillis
+          ? curr
+          : min,
+      allKills[0]
+    );
+    if (earliestKill?.victim === puuid) firstDeaths += 1;
+
+    if (stats) {
+      const earliestKillTime = Math.min(
+        ...allKills.map((k) => k.timeSinceRoundStartMillis)
+      );
+      const firstKill = stats.kills.find(
+        (kill) =>
+          kill.killer === puuid &&
+          kill.timeSinceRoundStartMillis === earliestKillTime
+      );
+      if (firstKill) firstKills += 1;
+
+      if ((stats.kills || []).length >= 3) multiKills += 1;
+
+      (stats.damage || []).forEach((dmg) => {
+        headshots += dmg.headshots || 0;
+        bodyshots += dmg.bodyshots || 0;
+        legshots += dmg.legshots || 0;
+        totalDamage += dmg.damage || 0;
+      });
+    }
+
+    // Đếm clutch/ace từ roundCeremony
+    if (round.roundCeremony === "CeremonyClutch" && stats?.kills?.length) {
+      clutches += 1;
+    }
+    if (round.roundCeremony === "CeremonyAce" && stats?.kills?.length >= 5) {
+      aces += 1;
+    }
+  });
+
+  const totalShots = headshots + bodyshots + legshots;
+  const headshotPercentage =
+    totalShots > 0
+      ? parseFloat(((headshots / totalShots) * 100).toFixed(0))
+      : 0;
+
+  return {
+    firstKills,
+    multiKills,
+    headshots,
+    bodyshots,
+    legshots,
+    headshotPercentage,
+    totalDamage,
+    firstDeaths,
+    clutches,
+    aces,
+  };
+};
+
+import axios from "axios";
+router.post("/signup", signup);
+router.post("/signin", signin);
+router.get("/signout", signout);
+router.post("/findallgame", findAllGame);
+router.post("/findplayer", findPlayer);
+router.post("/banpick", addBanPickVeto);
+router.post("/findbanpick", findBanPickVeto);
+router.post("/allgame", addAllGame);
+router.post("/addmatch", addMatchID);
+router.post("/findallmatchid", findAllMatchID);
+router.get("/findmatchid", findmatchID);
+router.get("/findallteam", findAllteam);
+router.get("/findallteamAOV", findAllteamAOV);
+router.get("/findallteamTFT", findAllteamTFT);
+router.get("/findallteamValorant", findAllteamValorant);
+router.post("/findallteamTFTDouble", findAllteamTFTDouble);
+router.post("/submitPrediction", submitPrediction);
+router.post("/checkuserprediction", finduserPrediction);
+router.post("/addcorrectanswer", submitCorrectAnswer);
+router.post("/comparepredictions", comparePredictions);
+router.post("/leaderboardpickem", leaderboardpickem);
+router.post("/scoreformanyids", comparePredictionmultiple);
+router.post("/getCorrectAnswers", getCorrectAnswers);
+router.post("/maxscore", calculateMaxPoints);
+router.post("/teamHOF", teamHOF);
+router.post("/teams/:league", findteamHOF);
+router.post("/leagues/list", findleagueHOF);
+router.post("/leagues", leagueHOF);
+router.post("/myrankpickem", getUserPickemScore);
+router.get("/valorant/matchdata/:matchId", async (req, res) => {
+  const { matchId } = req.params;
+
+  try {
+    // Tìm match đã được lưu trong MongoDB
+    const matchDoc = await ValorantMatch.findOne({ matchId }).lean();
+
+    if (!matchDoc) {
+      return res
+        .status(404)
+        .json({ error: "Match data not found in database" });
+    }
+
+    const matchData = matchDoc.data;
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.json({
+      source: "database",
+      matchData,
+    });
+  } catch (error) {
+    console.error("Error fetching match data from MongoDB:", error.message);
+    res.status(500).json({ error: "Failed to fetch match data from database" });
+  }
+});
+
+router.get("/valorant/save-match/:matchId", async (req, res) => {
+  const { matchId } = req.params;
+
+  try {
+    const dictionaryResponse = await axios.get(
+      "https://bigtournament-hq9n.onrender.com/api/valorant/dictionary"
+    );
+    const characterMap = {};
+    const mapMap = {};
+
+    dictionaryResponse.data.maps?.forEach((map) => {
+      if (map.assetPath) mapMap[map.assetPath.toUpperCase()] = map.name;
+    });
+
+    dictionaryResponse.data.characters?.forEach((char) => {
+      characterMap[char.id] = char.name;
+    });
+
+    const response = await axios.get(
+      `https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`,
+      { headers: { "X-Riot-Token": apiKeyValorant } }
+    );
+
+    const matchData = response.data;
+    const rawMapId = matchData?.matchInfo?.mapId?.toUpperCase();
+    matchData.matchInfo.mapName = mapMap[rawMapId] || "Unknown";
+
+    const roundResults = (matchData.roundResults || []).map((round) => ({
+      roundNum: round.roundNum,
+      roundResult: round.roundResult,
+      winningTeam: round.winningTeam,
+      winningTeamRole: round.winningTeamRole,
+      roundCeremony: round.roundCeremony,
+      playerStats:
+        round.playerStats?.map((ps) => ({
+          puuid: ps.puuid,
+          kills: ps.kills || [],
+          damage: ps.damage || [],
+        })) || [],
+    }));
+
+    if (matchData?.players) {
+      matchData.players.forEach((player) => {
+        const cleanId = player.characterId?.toUpperCase();
+        player.characterName = characterMap[cleanId] || "Unknown";
+        player.imgCharacter =
+          `https://dongchuyennghiep.vercel.app/agent/${characterMap[cleanId]}.png` ||
+          "Unknown";
+        player.riotID = `${player.gameName || "Unknown"}#${
+          player.tagLine || "Unknown"
+        }`;
+
+        if (player.stats) {
+          const kills = player.stats.kills || 0;
+          const deaths = player.stats.deaths || 0;
+          const assists = player.stats.assists || 0;
+          const KDA = (kills + deaths) / (assists || 1);
+          const acs = parseFloat(
+            (player.stats.score / player.stats.roundsPlayed).toFixed(0)
+          );
+          player.stats.KD = `${kills}/${deaths}`;
+          player.stats.KDA = parseFloat(KDA.toFixed(1));
+          player.stats.acs = acs;
+
+          const advancedStats = calculatePlayerStats(player, roundResults);
+          Object.assign(player.stats, advancedStats);
+          player.stats.adr = parseFloat(
+            (advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(1)
+          );
+        }
+      });
+
+      const redTeam = matchData.players
+        .filter((p) => p.teamId === "Red")
+        .sort((a, b) => b.stats?.acs - a.stats?.acs);
+      const blueTeam = matchData.players
+        .filter((p) => p.teamId === "Blue")
+        .sort((a, b) => b.stats?.acs - a.stats?.acs);
+      matchData.players = [...redTeam, ...blueTeam];
+
+      if (matchData?.teams?.length === 2) {
+        const [team1, team2] = matchData.teams;
+        team1.is = team1.roundsWon > team2.roundsWon ? "Win" : "Loss";
+        team2.is = team1.is === "Win" ? "Loss" : "Win";
+      }
+    }
+
+    const finalData = {
+      matchInfo: matchData.matchInfo,
+      players: matchData.players,
+      teams: matchData.teams,
+      roundResults,
+    };
+
+    const saved = await ValorantMatch.findOneAndUpdate(
+      { matchId },
+      { matchId, data: finalData },
+      { upsert: true, new: true }
+    );
+
+    res.json({ message: "Match data saved successfully", saved });
+  } catch (error) {
+    console.error("Error saving match data:", error.message);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Failed to save match data" });
+  }
+});
+
 router.post("/:game/:league_id/bracket/create", async (req, res) => {
   const { game, league_id } = req.params;
   const { type, team } = req.body;
 
   if (type !== "singleElimination" || team !== 8) {
-    return res.status(400).json({ message: "Currently only supports singleElimination 8 teams." });
+    return res
+      .status(400)
+      .json({ message: "Currently only supports singleElimination 8 teams." });
   }
 
   try {
@@ -55,7 +303,7 @@ router.post("/:game/:league_id/bracket/create", async (req, res) => {
       game,
       leagueId: league_id,
       type,
-      rounds: []
+      rounds: [],
     });
 
     // Quarter-finals
@@ -68,7 +316,11 @@ router.post("/:game/:league_id/bracket/create", async (req, res) => {
         factions: [],
       });
     }
-    bracket.rounds.push({ number: 1, name: "Quarter Finals", matches: quarterFinalMatches });
+    bracket.rounds.push({
+      number: 1,
+      name: "Quarter Finals",
+      matches: quarterFinalMatches,
+    });
 
     // Semi-finals
     const semiFinalMatches = [];
@@ -80,7 +332,11 @@ router.post("/:game/:league_id/bracket/create", async (req, res) => {
         factions: [],
       });
     }
-    bracket.rounds.push({ number: 2, name: "Semi Finals", matches: semiFinalMatches });
+    bracket.rounds.push({
+      number: 2,
+      name: "Semi Finals",
+      matches: semiFinalMatches,
+    });
 
     // Final
     bracket.rounds.push({
@@ -92,8 +348,8 @@ router.post("/:game/:league_id/bracket/create", async (req, res) => {
           ifWin: "champion",
           ifLose: "runner-up",
           factions: [],
-        }
-      ]
+        },
+      ],
     });
 
     // Third-place (Optional)
@@ -106,19 +362,17 @@ router.post("/:game/:league_id/bracket/create", async (req, res) => {
           ifWin: "third",
           ifLose: "fourth",
           factions: [],
-        }
-      ]
+        },
+      ],
     });
 
     await bracket.save();
     return res.json({ message: "Bracket created successfully", bracket });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-
 
 router.post("/:game/:league_id/bracket", async (req, res) => {
   const { game, league_id } = req.params;
@@ -131,12 +385,16 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
       return res.status(404).json({ message: "Bracket not found" });
     }
 
-    const leagueData = await DCNLeague.findOne({ "league.league_id": league_id });
+    const leagueData = await DCNLeague.findOne({
+      "league.league_id": league_id,
+    });
     const playersFromLeague = leagueData?.players || [];
 
     // Step 1: Cập nhật matchIds trước
     for (const { matchId, matchIds } of matchesPayload) {
-      const match = bracket.rounds.flatMap(r => r.matches).find(m => m.matchId === matchId);
+      const match = bracket.rounds
+        .flatMap((r) => r.matches)
+        .find((m) => m.matchId === matchId);
       if (match) {
         match.matchIds = matchIds;
       }
@@ -146,7 +404,9 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
 
     // Step 2: Fetch match data và xác định winner/loser
     for (const { matchId } of matchesPayload) {
-      const match = bracket.rounds.flatMap(r => r.matches).find(m => m.matchId === matchId);
+      const match = bracket.rounds
+        .flatMap((r) => r.matches)
+        .find((m) => m.matchId === matchId);
       if (!match || !match.matchIds || match.matchIds.length === 0) continue;
 
       let score = {};
@@ -154,20 +414,25 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
 
       for (const mId of match.matchIds) {
         try {
-          const response = await fetch(`https://bigtournament-hq9n.onrender.com/api/valorant/match/${mId}`);
+          const response = await fetch(
+            `https://bigtournament-hq9n.onrender.com/api/valorant/match/${mId}`
+          );
           const apiData = await response.json();
           const matchData = apiData.matchData;
           if (!matchData) continue;
 
           const players = matchData.players || [];
-          const blueTeam = players.filter(p => p.teamId === "Blue");
-          const redTeam = players.filter(p => p.teamId === "Red");
+          const blueTeam = players.filter((p) => p.teamId === "Blue");
+          const redTeam = players.filter((p) => p.teamId === "Red");
 
-          let blueTeamId = null, redTeamId = null;
+          let blueTeamId = null,
+            redTeamId = null;
 
           for (const p of blueTeam) {
             const ignFull = `${p.gameName}#${p.tagLine}`.toLowerCase();
-            const found = playersFromLeague.find(player => player.ign.some(ign => ign.toLowerCase() === ignFull));
+            const found = playersFromLeague.find((player) =>
+              player.ign.some((ign) => ign.toLowerCase() === ignFull)
+            );
             if (found) {
               blueTeamId = found.team.name;
               break;
@@ -176,7 +441,9 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
 
           for (const p of redTeam) {
             const ignFull = `${p.gameName}#${p.tagLine}`.toLowerCase();
-            const found = playersFromLeague.find(player => player.ign.some(ign => ign.toLowerCase() === ignFull));
+            const found = playersFromLeague.find((player) =>
+              player.ign.some((ign) => ign.toLowerCase() === ignFull)
+            );
             if (found) {
               redTeamId = found.team.name;
               break;
@@ -188,8 +455,14 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
           allTeamIds.add(blueTeamId);
           allTeamIds.add(redTeamId);
 
-          let blueScore = blueTeam.reduce((acc, p) => acc + (p.stats?.score || 0), 0);
-          let redScore = redTeam.reduce((acc, p) => acc + (p.stats?.score || 0), 0);
+          let blueScore = blueTeam.reduce(
+            (acc, p) => acc + (p.stats?.score || 0),
+            0
+          );
+          let redScore = redTeam.reduce(
+            (acc, p) => acc + (p.stats?.score || 0),
+            0
+          );
 
           if (blueScore > redScore) {
             score[blueTeamId] = (score[blueTeamId] || 0) + 1;
@@ -201,10 +474,12 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
         }
       }
 
-      const teamsInMatch = [...allTeamIds].map(teamId => ({
-        teamId,
-        score: score[teamId] || 0
-      })).sort((a, b) => b.score - a.score);
+      const teamsInMatch = [...allTeamIds]
+        .map((teamId) => ({
+          teamId,
+          score: score[teamId] || 0,
+        }))
+        .sort((a, b) => b.score - a.score);
 
       if (teamsInMatch.length > 0) {
         match.factions = teamsInMatch.map((team, idx) => ({
@@ -220,9 +495,11 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
 
         // Step 3: Update vào trận ifWin và ifLose
         if (match.ifWin) {
-          const nextMatch = bracket.rounds.flatMap(r => r.matches).find(m => m.matchId === match.ifWin);
+          const nextMatch = bracket.rounds
+            .flatMap((r) => r.matches)
+            .find((m) => m.matchId === match.ifWin);
           if (nextMatch) {
-            const emptyFaction = nextMatch.factions.find(f => !f.teamId);
+            const emptyFaction = nextMatch.factions.find((f) => !f.teamId);
             if (emptyFaction) {
               emptyFaction.teamId = match.winner;
               emptyFaction.teamName = match.winner;
@@ -232,16 +509,18 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
                 teamId: match.winner,
                 teamName: match.winner,
                 score: 0,
-                winner: false
+                winner: false,
               });
             }
           }
         }
 
         if (match.ifLose && loserTeamId) {
-          const nextMatchLose = bracket.rounds.flatMap(r => r.matches).find(m => m.matchId === match.ifLose);
+          const nextMatchLose = bracket.rounds
+            .flatMap((r) => r.matches)
+            .find((m) => m.matchId === match.ifLose);
           if (nextMatchLose) {
-            const emptyFaction = nextMatchLose.factions.find(f => !f.teamId);
+            const emptyFaction = nextMatchLose.factions.find((f) => !f.teamId);
             if (emptyFaction) {
               emptyFaction.teamId = loserTeamId;
               emptyFaction.teamName = loserTeamId;
@@ -251,7 +530,7 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
                 teamId: loserTeamId,
                 teamName: loserTeamId,
                 score: 0,
-                winner: false
+                winner: false,
               });
             }
           }
@@ -264,35 +543,35 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
     return res.json({ message: "Bracket updated successfully", bracket });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to update bracket", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to update bracket", error: error.message });
   }
 });
 
-
 // POST /:game/:league_id/:bracket
-router.get('/:game/:league_id/bracket', async (req, res) => {
+router.get("/:game/:league_id/bracket", async (req, res) => {
   const { game, league_id } = req.params;
   try {
     const bracket = await Bracket.findOne({ game, leagueId: league_id });
-    if (!bracket) return res.status(404).json({ message: 'Bracket not found' });
+    if (!bracket) return res.status(404).json({ message: "Bracket not found" });
 
     res.json({
       payload: {
         type: bracket.type,
         rounds: bracket.rounds,
-        matches: bracket.matches ? Object.fromEntries(bracket.matches) : {}
-      }
+        matches: bracket.matches ? Object.fromEntries(bracket.matches) : {},
+      },
     });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-
-router.get('/alluser', async (req, res) => {
+router.get("/alluser", async (req, res) => {
   try {
     const allPlayers = await User.find({});
-    const formattedPlayers = allPlayers.map(player => ({
+    const formattedPlayers = allPlayers.map((player) => ({
       discordID: player.discordID,
       riotId: player.riotID,
       className: player.className,
@@ -300,63 +579,72 @@ router.get('/alluser', async (req, res) => {
       nickname: player.nickname,
       username: player.username,
       id: player._id.toString(),
-      profilePicture: player.profilePicture
+      profilePicture: player.profilePicture,
     }));
     res.json(formattedPlayers);
   } catch (error) {
-    res.status(500).json({ "Message": error.message });
+    res.status(500).json({ Message: error.message });
   }
 });
 
-router.post('/check-registered-valorant', async (req, res) => {
+router.post("/check-registered-valorant", async (req, res) => {
   try {
     const { riotid } = req.body;
 
     if (!Array.isArray(riotid)) {
-      return res.status(400).json({ error: 'riotid phải là một mảng' });
+      return res.status(400).json({ error: "riotid phải là một mảng" });
     }
 
-    const game = 'Valorant';
+    const game = "Valorant";
     // Lấy tất cả các team tham gia game "Valorant"
     const teams = await TeamRegister.find({ games: game });
 
     if (!teams || teams.length === 0) {
-      return res.status(404).json({ error: 'Không tìm thấy team nào tham gia game này' });
+      return res
+        .status(404)
+        .json({ error: "Không tìm thấy team nào tham gia game này" });
     }
 
     // Tổng hợp tất cả các thành viên của game "Valorant" từ các team
     let combinedMembers = [];
-    teams.forEach(team => {
+    teams.forEach((team) => {
       let members = [];
       // Nếu gameMembers được lưu dưới dạng Map (nếu schema dùng Map)
       if (team.gameMembers instanceof Map) {
         members = team.gameMembers.get(game) || [];
       }
       // Nếu gameMembers là object thông thường
-      else if (typeof team.gameMembers === 'object' && team.gameMembers !== null) {
+      else if (
+        typeof team.gameMembers === "object" &&
+        team.gameMembers !== null
+      ) {
         members = team.gameMembers[game] || [];
       }
-      combinedMembers.push(...members.map(member => ({
-        riotID: member.trim().toLowerCase(),
-        teamName: team.teamName // Thêm teamName vào từng thành viên
-      })));
+      combinedMembers.push(
+        ...members.map((member) => ({
+          riotID: member.trim().toLowerCase(),
+          teamName: team.teamName, // Thêm teamName vào từng thành viên
+        }))
+      );
     });
 
     // Loại bỏ trùng lặp (nếu cần) và chuẩn hóa chuỗi (trim và chuyển về chữ thường)
     combinedMembers = [
       ...new Map(
-        combinedMembers.map(member => [member.riotID, member])
-      ).values()
+        combinedMembers.map((member) => [member.riotID, member])
+      ).values(),
     ];
 
     // Kiểm tra từng riotID đầu vào (chuẩn hóa theo cùng định dạng)
-    const result = riotid.map(id => {
+    const result = riotid.map((id) => {
       const normalizedId = id.trim().toLowerCase();
-      const member = combinedMembers.find(member => member.riotID === normalizedId);
+      const member = combinedMembers.find(
+        (member) => member.riotID === normalizedId
+      );
       return {
         riotID: id,
         isregistered: !!member, // Kiểm tra xem có tồn tại trong danh sách không
-        teamname: member ? member.teamName : null // Lấy teamName nếu có
+        teamname: member ? member.teamName : null, // Lấy teamName nếu có
       };
     });
 
@@ -367,7 +655,7 @@ router.post('/check-registered-valorant', async (req, res) => {
   }
 });
 // POST: Thêm dữ liệu mới
-router.post('/dcn-league', async (req, res) => {
+router.post("/dcn-league", async (req, res) => {
   try {
     const {
       league,
@@ -376,14 +664,14 @@ router.post('/dcn-league', async (req, res) => {
       prizepool,
       navigation,
       players = [],
-      matches = {}
+      matches = {},
     } = req.body;
 
     // ✅ Lấy dữ liệu hiện tại nếu đã tồn tại
     const existingLeague = await DCNLeague.findOne({
-      'league.game_name': league.game_name,
-      'league.league_id': league.league_id,
-      'season.season_number': season.season_number,
+      "league.game_name": league.game_name,
+      "league.league_id": league.league_id,
+      "season.season_number": season.season_number,
     });
 
     let finalPlayers = [];
@@ -394,38 +682,45 @@ router.post('/dcn-league', async (req, res) => {
     } else {
       // ✅ Nếu có truyền thì dùng players mới, nhưng giữ nguyên trạng thái check-in cũ nếu có
       const existingMap = new Map(
-        (existingLeague?.players || []).map(p => [String(p.usernameregister), p])
+        (existingLeague?.players || []).map((p) => [
+          String(p.usernameregister),
+          p,
+        ])
       );
 
-      finalPlayers = players.map(player => ({
+      finalPlayers = players.map((player) => ({
         ...player,
-        isCheckedin: typeof player.isCheckedin === 'boolean'
-          ? player.isCheckedin
-          : existingMap.get(String(player.usernameregister))?.isCheckedin || false,
+        isCheckedin:
+          typeof player.isCheckedin === "boolean"
+            ? player.isCheckedin
+            : existingMap.get(String(player.usernameregister))?.isCheckedin ||
+              false,
       }));
     }
 
     // ✅ Tính current_team_count
-    const currentTeamCount = finalPlayers.filter(p => p.game === "Teamfight Tactics").length;
+    const currentTeamCount = finalPlayers.filter(
+      (p) => p.game === "Teamfight Tactics"
+    ).length;
 
     // ✅ Tính check-in time
     const timeStart = new Date(season.time_start);
-    const checkinStart = new Date(timeStart.getTime() - 3 * 60 * 60 * 1000);      // -3h
-    const checkinEnd = new Date(timeStart.getTime() - 30 * 60 * 1000);            // -30min
+    const checkinStart = new Date(timeStart.getTime() - 3 * 60 * 60 * 1000); // -3h
+    const checkinEnd = new Date(timeStart.getTime() - 30 * 60 * 1000); // -30min
 
     const updatedSeason = {
       ...season,
       current_team_count: currentTeamCount,
       checkin_start: checkinStart,
-      checkin_end: checkinEnd
+      checkin_end: checkinEnd,
     };
 
     // ✅ Upsert DCN League
     const updatedLeague = await DCNLeague.findOneAndUpdate(
       {
-        'league.game_name': league.game_name,
-        'league.league_id': league.league_id,
-        'season.season_number': season.season_number,
+        "league.game_name": league.game_name,
+        "league.league_id": league.league_id,
+        "season.season_number": season.season_number,
       },
       {
         league,
@@ -434,38 +729,35 @@ router.post('/dcn-league', async (req, res) => {
         prizepool,
         navigation,
         players: finalPlayers,
-        matches
+        matches,
       },
       { upsert: true, new: true }
     );
 
     res.status(200).json({
-      message: 'DCN League saved or updated successfully!',
+      message: "DCN League saved or updated successfully!",
       data: updatedLeague,
     });
-
   } catch (err) {
-    console.error('❌ Error in /dcn-league:', err);
+    console.error("❌ Error in /dcn-league:", err);
     res.status(400).json({
-      message: 'Error saving/updating DCN League',
+      message: "Error saving/updating DCN League",
       error: err.message,
     });
   }
 });
 
-
-
-router.get('/:game/:league_id', async (req, res) => {
+router.get("/:game/:league_id", async (req, res) => {
   const { game, league_id } = req.params;
 
   try {
     const data = await DCNLeague.findOne({
-      'league.game_short': game,
-      'league.league_id': league_id,
+      "league.game_short": game,
+      "league.league_id": league_id,
     }).lean();
 
     if (!data) {
-      return res.status(404).json({ message: 'League not found' });
+      return res.status(404).json({ message: "League not found" });
     }
 
     // ✅ Tính số lượng team dựa vào players có game đúng
@@ -475,19 +767,23 @@ router.get('/:game/:league_id', async (req, res) => {
 
     res.status(200).json(data);
   } catch (err) {
-    console.error('❌ Error in GET league route:', err);
-    res.status(500).json({ message: 'Error fetching data', error: err.message });
+    console.error("❌ Error in GET league route:", err);
+    res
+      .status(500)
+      .json({ message: "Error fetching data", error: err.message });
   }
 });
-router.delete('/unregister/:league_id', async (req, res) => {
+router.delete("/unregister/:league_id", async (req, res) => {
   const { league_id } = req.params;
   const { usernameregister } = req.body;
 
   try {
-    const leagueDoc = await DCNLeague.findOne({ 'league.league_id': league_id });
+    const leagueDoc = await DCNLeague.findOne({
+      "league.league_id": league_id,
+    });
 
     if (!leagueDoc) {
-      return res.status(404).json({ message: 'League not found' });
+      return res.status(404).json({ message: "League not found" });
     }
 
     // Xoá player khỏi danh sách
@@ -497,13 +793,13 @@ router.delete('/unregister/:league_id', async (req, res) => {
 
     await leagueDoc.save();
 
-    res.status(200).json({ message: 'Player đã được xoá khỏi giải đấu.' });
+    res.status(200).json({ message: "Player đã được xoá khỏi giải đấu." });
   } catch (err) {
-    console.error('❌ Error unregistering:', err);
-    res.status(500).json({ message: 'Lỗi server khi xoá player' });
+    console.error("❌ Error unregistering:", err);
+    res.status(500).json({ message: "Lỗi server khi xoá player" });
   }
 });
-router.post('/league/checkin', async (req, res) => {
+router.post("/league/checkin", async (req, res) => {
   const { league_id, game_short, userId } = req.body;
 
   console.log("📥 Check-in request received:");
@@ -512,20 +808,20 @@ router.post('/league/checkin', async (req, res) => {
   console.log("➡️ userId:", userId);
   try {
     const leagueDoc = await DCNLeague.findOne({
-      'league.league_id': league_id,
-      'league.game_short': game_short
+      "league.league_id": league_id,
+      "league.game_short": game_short,
     });
-    
-  console.log("📄 Full leagueDoc:", JSON.stringify(leagueDoc, null, 2));
+
+    console.log("📄 Full leagueDoc:", JSON.stringify(leagueDoc, null, 2));
     if (!leagueDoc) {
       console.warn("❌ League not found");
-      return res.status(404).json({ message: 'League not found' });
+      return res.status(404).json({ message: "League not found" });
     }
 
     console.log("✅ League found:", leagueDoc.league.name);
 
     // log danh sách usernameregister trong players
-    const usernames = leagueDoc.players.map(p => String(p.usernameregister));
+    const usernames = leagueDoc.players.map((p) => String(p.usernameregister));
     console.log("👥 Players usernameregister:", usernames);
 
     const playerIndex = leagueDoc.players.findIndex(
@@ -534,7 +830,7 @@ router.post('/league/checkin', async (req, res) => {
 
     if (playerIndex === -1) {
       console.warn("❌ Player not found with userId:", userId);
-      return res.status(404).json({ message: 'Player not found' });
+      return res.status(404).json({ message: "Player not found" });
     }
 
     console.log("✅ Player matched:", leagueDoc.players[playerIndex]);
@@ -545,22 +841,21 @@ router.post('/league/checkin', async (req, res) => {
 
     console.log("✅ Check-in updated for user:", userId);
 
-    res.status(200).json({ message: 'Check-in success' });
+    res.status(200).json({ message: "Check-in success" });
   } catch (err) {
-    console.error('❌ Error in /league/checkin:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error("❌ Error in /league/checkin:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-
-router.get('/:team', async (req, res) => {
+router.get("/:team", async (req, res) => {
   try {
     const teamName = req.params.team;
 
     // Tìm tất cả user có field team = teamName
     const usersInTeam = await User.find({ team: teamName });
 
-    const formattedUsers = usersInTeam.map(player => ({
+    const formattedUsers = usersInTeam.map((player) => ({
       discordID: player.discordID,
       riotId: player.riotID,
       className: player.className,
@@ -569,7 +864,7 @@ router.get('/:team', async (req, res) => {
       username: player.username,
       id: player._id.toString(),
       profilePicture: player.profilePicture,
-      team: player.team
+      team: player.team,
     }));
 
     res.json(formattedUsers);
@@ -577,12 +872,12 @@ router.get('/:team', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-router.post('/create', async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
     const match = new BanPickValo({
       ...req.body,
       id: Math.random().toString(36).substr(2, 9),
-      currentTurn: "team1"
+      currentTurn: "team1",
     });
     await match.save();
     res.status(201).json(match);
@@ -590,9 +885,8 @@ router.post('/create', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-router.post('/status', async (req, res) => {
+router.post("/status", async (req, res) => {
   try {
-
     const match = await BanPickValo.findOne({ id: req.body.matchId }).lean();
 
     if (!match) {
@@ -600,34 +894,34 @@ router.post('/status', async (req, res) => {
       return res.status(404).json({
         error: "Match not found",
         receivedId: req.body.matchId,
-        storedIds: await BanPickValo.distinct('id')
+        storedIds: await BanPickValo.distinct("id"),
       });
     }
 
     res.json(match);
   } catch (error) {
-    console.error('Lỗi truy vấn database:', error);
+    console.error("Lỗi truy vấn database:", error);
     res.status(500).json({ error: error.message });
   }
 });
-router.post('/action', async (req, res) => {
+router.post("/action", async (req, res) => {
   const io = req.io;
   const { matchId, action } = req.body;
 
   try {
     const match = await BanPickValo.findOne({ id: matchId });
-    if (!match) return res.status(404).json({ error: 'Match not found' });
+    if (!match) return res.status(404).json({ error: "Match not found" });
 
-    if (action === 'ban') await processBan(match, req.body);
-    if (action === 'pick') await processPick(match, req.body);
-    if (action === 'side') await processSide(match, req.body);
+    if (action === "ban") await processBan(match, req.body);
+    if (action === "pick") await processPick(match, req.body);
+    if (action === "side") await processSide(match, req.body);
 
     await match.save();
 
     // ✅ Load lại bản cập nhật từ DB trước khi emit
     const updatedMatch = await BanPickValo.findOne({ id: matchId });
-    console.log('📢 EMITTING MATCH UPDATE');
-    io.to(matchId).emit('matchUpdated', updatedMatch);
+    console.log("📢 EMITTING MATCH UPDATE");
+    io.to(matchId).emit("matchUpdated", updatedMatch);
 
     res.json(updatedMatch);
   } catch (error) {
@@ -635,15 +929,14 @@ router.post('/action', async (req, res) => {
   }
 });
 async function processPick(match, { map, role }) {
-  if (match.matchType === 'BO1') {
+  if (match.matchType === "BO1") {
     mapSide.team1 = side;
-    mapSide.team2 = side === 'Attacker' ? 'Defender' : 'Attacker';
+    mapSide.team2 = side === "Attacker" ? "Defender" : "Attacker";
 
-    match.currentPhase = 'completed'; // kết thúc
+    match.currentPhase = "completed"; // kết thúc
     return;
   }
   if (match.currentPhase !== "pick") throw new Error("Invalid phase for pick");
-
   // Validate lượt pick
   else if (match.matchType === "BO3" || match.matchType === "BO5") {
     const currentPickCount = match.maps.picked.length;
@@ -657,22 +950,20 @@ async function processPick(match, { map, role }) {
     }
   }
 
-
-
   // Thêm thông tin pickedBy
   match.maps.picked.push({
     name: map,
-    pickedBy: role === "team1" ? match.team1 : match.team2
+    pickedBy: role === "team1" ? match.team1 : match.team2,
   });
 
-  match.maps.pool = match.maps.pool.filter(m => m !== map);
+  match.maps.pool = match.maps.pool.filter((m) => m !== map);
 
   // Thêm vào sides với pickedBy
   match.sides.push({
     map,
     pickedBy: role === "team1" ? match.team1 : match.team2,
     team1: null,
-    team2: null
+    team2: null,
   });
 
   // Xử lý lượt pick
@@ -681,14 +972,12 @@ async function processPick(match, { map, role }) {
 
     if (pickedCount === 1) {
       match.currentTurn = "team2";
-    }
-    else if (pickedCount === 2) {
+    } else if (pickedCount === 2) {
       match.currentPhase = "ban";
       match.banPhase = 2;
       match.currentTurn = "team1";
     }
-  }
-  else if (match.matchType === "BO5") {
+  } else if (match.matchType === "BO5") {
     const pickedCount = match.maps.picked.length;
 
     if (pickedCount < 4) {
@@ -699,17 +988,20 @@ async function processPick(match, { map, role }) {
     if (pickedCount === 4) {
       // Khi đã pick đủ 4 map → chọn map còn lại làm decider
       const deciderMap = match.maps.pool[0];
-      match.maps.selected = [...match.maps.picked.map(p => p.name), deciderMap];
+      match.maps.selected = [
+        ...match.maps.picked.map((p) => p.name),
+        deciderMap,
+      ];
       match.maps.pool = [];
 
       // Thêm vào sides
-      const alreadyInSides = match.sides.some(s => s.map === deciderMap);
+      const alreadyInSides = match.sides.some((s) => s.map === deciderMap);
       if (!alreadyInSides) {
         match.sides.push({
           map: deciderMap,
           pickedBy: "Decider",
           team1: null,
-          team2: null
+          team2: null,
         });
       }
 
@@ -726,10 +1018,10 @@ async function processBan(match, { map }) {
   // Thêm thông tin bannedBy
   match.maps.banned.push({
     name: map,
-    bannedBy: match.currentTurn === "team1" ? match.team1 : match.team2
+    bannedBy: match.currentTurn === "team1" ? match.team1 : match.team2,
   });
 
-  match.maps.pool = match.maps.pool.filter(m => m !== map);
+  match.maps.pool = match.maps.pool.filter((m) => m !== map);
 
   // Xử lý BO3 (Logic cập nhật lượt)
   if (match.matchType === "BO3") {
@@ -745,20 +1037,20 @@ async function processBan(match, { map }) {
       if (match.maps.banned.length === 4) {
         const deciderMap = match.maps.pool[0];
         match.maps.selected = [
-          ...match.maps.picked.map(p => p.name),
-          deciderMap
+          ...match.maps.picked.map((p) => p.name),
+          deciderMap,
         ];
 
         match.maps.pool = [];
 
         // ✅ Thêm decider vào sides với pickedBy là team1
-        const alreadyInSides = match.sides.some(s => s.map === deciderMap);
+        const alreadyInSides = match.sides.some((s) => s.map === deciderMap);
         if (!alreadyInSides) {
           match.sides.push({
             map: deciderMap,
             pickedBy: match.team1,
             team1: null,
-            team2: null
+            team2: null,
           });
         }
 
@@ -768,8 +1060,7 @@ async function processBan(match, { map }) {
         match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
       }
     }
-  }
-  else if (match.matchType === "BO1") {
+  } else if (match.matchType === "BO1") {
     const banCount = match.maps.banned.length;
 
     // Khi đã ban 6 map (3 lượt mỗi đội)
@@ -783,7 +1074,7 @@ async function processBan(match, { map }) {
         map: deciderMap,
         pickedBy: "Decider",
         team1: null,
-        team2: null
+        team2: null,
       });
 
       match.currentPhase = "side";
@@ -793,8 +1084,7 @@ async function processBan(match, { map }) {
     else {
       match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
     }
-  }
-  else if (match.matchType === "BO5") {
+  } else if (match.matchType === "BO5") {
     const banCount = match.maps.banned.length;
     const pickCount = match.maps.picked.length;
 
@@ -811,19 +1101,19 @@ async function processBan(match, { map }) {
       const deciderMap = match.maps.pool[0];
 
       match.maps.selected = [
-        ...match.maps.picked.map(p => p.name),
-        deciderMap
+        ...match.maps.picked.map((p) => p.name),
+        deciderMap,
       ];
 
       match.maps.pool = [];
 
-      const alreadyInSides = match.sides.some(s => s.map === deciderMap);
+      const alreadyInSides = match.sides.some((s) => s.map === deciderMap);
       if (!alreadyInSides) {
         match.sides.push({
           map: deciderMap,
           pickedBy: "Decider",
           team1: "TBD",
-          team2: "TBD"
+          team2: "TBD",
         });
       }
 
@@ -835,85 +1125,88 @@ async function processBan(match, { map }) {
   await match.save();
 }
 async function processSide(match, { map, side }) {
-
-  if (match.currentPhase !== 'side') {
-    throw new Error('Invalid phase for side selection');
+  if (match.currentPhase !== "side") {
+    throw new Error("Invalid phase for side selection");
   }
 
   // Kiểm tra map có trong danh sách selected không
   if (!match.maps.selected.includes(map)) {
-    throw new Error('Map not in selected maps');
+    throw new Error("Map not in selected maps");
   }
 
   // Tìm side configuration cho map
-  const mapSide = match.sides.find(s => s.map === map);
+  const mapSide = match.sides.find((s) => s.map === map);
 
   if (!mapSide) {
-    throw new Error('Map side configuration not found');
+    throw new Error("Map side configuration not found");
   }
 
   // Xác định team đang chọn side
   const team = match.currentTurn;
 
   // Validate role
-  if (!['team1', 'team2'].includes(team)) {
-    throw new Error('Invalid team for side selection');
+  if (!["team1", "team2"].includes(team)) {
+    throw new Error("Invalid team for side selection");
   }
 
   // Cập nhật side cho đội hiện tại
-  if (team === 'team1') {
+  if (team === "team1") {
     mapSide.team1 = side;
     // Đội 2 sẽ tự động nhận side ngược lại
-    mapSide.team2 = side === 'Attacker' ? 'Defender' : 'Attacker';
+    mapSide.team2 = side === "Attacker" ? "Defender" : "Attacker";
   } else {
     mapSide.team2 = side;
     // Đội 1 sẽ tự động nhận side ngược lại
-    mapSide.team1 = side === 'Attacker' ? 'Defender' : 'Attacker';
+    mapSide.team1 = side === "Attacker" ? "Defender" : "Attacker";
   }
 
   // Chuyển lượt chọn sang đội tiếp theo
-  const nextTeam = team === 'team1' ? 'team2' : 'team1';
+  const nextTeam = team === "team1" ? "team2" : "team1";
   match.currentTurn = nextTeam;
 
   // Kiểm tra đã chọn hết tất cả sides chưa
-  const allSidesSelected = match.sides.every(s =>
-    s.team1 !== null && s.team2 !== null
+  const allSidesSelected = match.sides.every(
+    (s) => s.team1 !== null && s.team2 !== null
   );
 
   if (allSidesSelected) {
-    match.currentPhase = 'completed';
+    match.currentPhase = "completed";
   }
 }
-router.post('/powerrankingaov', async (req, res) => {
+router.post("/powerrankingaov", async (req, res) => {
   try {
     // Truy vấn tất cả dữ liệu trong collection PowerRankingAOV
     const rankings = await PowerRankingAOV.find().sort({ points: -1 }); // Sắp xếp theo điểm giảm dần
 
     return res.status(200).json({
-      message: 'Lấy bảng xếp hạng thành công!',
+      message: "Lấy bảng xếp hạng thành công!",
       data: rankings,
     });
   } catch (error) {
-    console.error('Lỗi khi lấy bảng xếp hạng:', error);
-    return res.status(500).json({ message: 'Lỗi server!', error: error.message });
+    console.error("Lỗi khi lấy bảng xếp hạng:", error);
+    return res
+      .status(500)
+      .json({ message: "Lỗi server!", error: error.message });
   }
 });
-router.post('/addpowerrankingaov', async (req, res) => {
+router.post("/addpowerrankingaov", async (req, res) => {
   try {
     // Lấy danh sách đội từ TeamRegister có game là 'Liên Quân Mobile'
-    const teams = await TeamRegister.find({ games: 'Liên Quân Mobile' });
+    const teams = await TeamRegister.find({ games: "Liên Quân Mobile" });
 
     if (!teams.length) {
-      return res.status(404).json({ message: 'Không tìm thấy đội Liên Quân Mobile nào!' });
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy đội Liên Quân Mobile nào!" });
     }
 
     // Lấy tất cả dữ liệu bảng xếp hạng hiện có
     const existingRankings = await PowerRankingAOV.find({});
-    const existingTeamNames = existingRankings.map(rank => rank.teamName);
+    const existingTeamNames = existingRankings.map((rank) => rank.teamName);
 
     // Kiểm tra nếu collection rỗng, thêm toàn bộ danh sách đội từ TeamRegister
     if (!existingRankings.length) {
-      const initialRankingData = teams.map(team => ({
+      const initialRankingData = teams.map((team) => ({
         teamName: team.teamName,
         teamLogo: team.logoUrl,
         points: 500, // Điểm mặc định cho đội mới
@@ -922,7 +1215,7 @@ router.post('/addpowerrankingaov', async (req, res) => {
       await PowerRankingAOV.insertMany(initialRankingData);
 
       return res.status(201).json({
-        message: 'Đã thêm toàn bộ danh sách đội vào bảng xếp hạng!',
+        message: "Đã thêm toàn bộ danh sách đội vào bảng xếp hạng!",
         teamsAdded: initialRankingData,
       });
     }
@@ -935,13 +1228,17 @@ router.post('/addpowerrankingaov', async (req, res) => {
           { $set: { teamName: team.teamName, teamLogo: team.logoUrl } } // Chỉ cập nhật tên và logo
         );
       }
-      return res.status(200).json({ message: 'Đã cập nhật lại tên và logo đội thành công!' });
+      return res
+        .status(200)
+        .json({ message: "Đã cập nhật lại tên và logo đội thành công!" });
     }
 
     // Thêm các đội mới từ TeamRegister chưa có trong bảng xếp hạng
-    const newTeams = teams.filter(team => !existingTeamNames.includes(team.teamName));
+    const newTeams = teams.filter(
+      (team) => !existingTeamNames.includes(team.teamName)
+    );
 
-    const newRankingData = newTeams.map(team => ({
+    const newRankingData = newTeams.map((team) => ({
       teamName: team.teamName,
       teamLogo: team.logoUrl, // Logo đội
       points: 500, // Điểm mặc định cho đội mới
@@ -953,53 +1250,69 @@ router.post('/addpowerrankingaov', async (req, res) => {
     }
 
     return res.status(201).json({
-      message: 'Cập nhật bảng xếp hạng thành công!',
+      message: "Cập nhật bảng xếp hạng thành công!",
       newTeamsAdded: newRankingData,
     });
   } catch (error) {
-    console.error('Lỗi khi tạo/cập nhật bảng xếp hạng:', error);
-    return res.status(500).json({ message: 'Lỗi server!', error: error.message });
+    console.error("Lỗi khi tạo/cập nhật bảng xếp hạng:", error);
+    return res
+      .status(500)
+      .json({ message: "Lỗi server!", error: error.message });
   }
 });
 
-
-router.post('/upsertquestionsWithDynamicLogo', async (req, res) => {
+router.post("/upsertquestionsWithDynamicLogo", async (req, res) => {
   try {
     const { questions } = req.body;
 
     if (!Array.isArray(questions)) {
-      return res.status(400).json({ error: 'Invalid input. Please provide an array of questions.' });
+      return res.status(400).json({
+        error: "Invalid input. Please provide an array of questions.",
+      });
     }
 
     // Default profile picture if no matching user found
-    const defaultProfilePic = '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L';
+    const defaultProfilePic = "1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L";
 
     for (const question of questions) {
-      if (!question.id || !question.question || !question.maxChoose || !question.timelock || !question.type) {
+      if (
+        !question.id ||
+        !question.question ||
+        !question.maxChoose ||
+        !question.timelock ||
+        !question.type
+      ) {
         return res.status(400).json({
-          error: 'Invalid input. Please provide all required fields (id, question, maxChoose, type, and options).'
+          error:
+            "Invalid input. Please provide all required fields (id, question, maxChoose, type, and options).",
         });
       }
 
       // If options are empty, populate them from gameMembers for "Liên Quân Mobile" only
-      const optionsWithDynamicLogo = question.options && question.options.length > 0
-        ? question.options
-        : await TeamRegister.find({ games: "Liên Quân Mobile" }).then(async (teams) =>
-          Promise.all(
-            teams.flatMap(async (team) => {
-              const memberOptions = await Promise.all(
-                Array.from(team.gameMembers.get("Liên Quân Mobile") || []).map(async (member) => {
-                  const user = await User.findOne({ garenaaccount: member });
-                  return {
-                    name: member, // Use member name from gameMembers
-                    logo: user ? user.profilePicture : defaultProfilePic // Use profilePicture or default
-                  };
-                })
-              );
-              return memberOptions;
-            })
-          )
-        );
+      const optionsWithDynamicLogo =
+        question.options && question.options.length > 0
+          ? question.options
+          : await TeamRegister.find({ games: "Liên Quân Mobile" }).then(
+              async (teams) =>
+                Promise.all(
+                  teams.flatMap(async (team) => {
+                    const memberOptions = await Promise.all(
+                      Array.from(
+                        team.gameMembers.get("Liên Quân Mobile") || []
+                      ).map(async (member) => {
+                        const user = await User.findOne({
+                          garenaaccount: member,
+                        });
+                        return {
+                          name: member, // Use member name from gameMembers
+                          logo: user ? user.profilePicture : defaultProfilePic, // Use profilePicture or default
+                        };
+                      })
+                    );
+                    return memberOptions;
+                  })
+                )
+            );
 
       await QuestionPickem.findOneAndUpdate(
         { id: question.id },
@@ -1008,19 +1321,19 @@ router.post('/upsertquestionsWithDynamicLogo', async (req, res) => {
           question: question.question,
           maxChoose: question.maxChoose,
           type: question.type,
-          options: optionsWithDynamicLogo.flat() // Flatten the array to include all members as individual options
+          options: optionsWithDynamicLogo.flat(), // Flatten the array to include all members as individual options
         },
         { upsert: true, new: true }
       );
     }
 
-    res.status(201).json({ message: 'Questions added/updated successfully!' });
+    res.status(201).json({ message: "Questions added/updated successfully!" });
   } catch (error) {
-    console.error('Error adding/updating questions:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error adding/updating questions:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
-router.post('/rankpointchange', async (req, res) => {
+router.post("/rankpointchange", async (req, res) => {
   try {
     const { idmatch } = req.body; // ID của trận đấu mới được thêm
 
@@ -1036,8 +1349,8 @@ router.post('/rankpointchange', async (req, res) => {
     const rankings = await PowerRankingAOV.find().sort({ points: -1 });
 
     // Tìm thứ hạng của teamA và teamB
-    const rankTeamA = rankings.findIndex(team => team.teamName === teamA);
-    const rankTeamB = rankings.findIndex(team => team.teamName === teamB);
+    const rankTeamA = rankings.findIndex((team) => team.teamName === teamA);
+    const rankTeamB = rankings.findIndex((team) => team.teamName === teamB);
 
     if (rankTeamA === -1 || rankTeamB === -1) {
       return res.status(404).json({ message: "Teams not found in ranking!" });
@@ -1049,10 +1362,12 @@ router.post('/rankpointchange', async (req, res) => {
     // Tính toán khoảng cách thứ hạng
     const rankGap = Math.abs(rankTeamA - rankTeamB);
 
-    let teamAGain = 0, teamBLoss = 0;
+    let teamAGain = 0,
+      teamBLoss = 0;
 
     // Logic cộng/trừ điểm
-    if (scoreteamA > scoreteamB) { // teamA thắng
+    if (scoreteamA > scoreteamB) {
+      // teamA thắng
       if (rankTeamA > rankTeamB) {
         teamAGain = 50 + rankGap * 10; // Cộng nhiều điểm nếu thắng đội xếp cao hơn
         teamBLoss = 50 + rankGap * 10; // Trừ nhiều điểm
@@ -1060,7 +1375,8 @@ router.post('/rankpointchange', async (req, res) => {
         teamAGain = 20 + rankGap * 5; // Cộng ít điểm nếu thắng đội xếp thấp hơn
         teamBLoss = 20 + rankGap * 5; // Trừ ít điểm
       }
-    } else if (scoreteamB > scoreteamA) { // teamB thắng
+    } else if (scoreteamB > scoreteamA) {
+      // teamB thắng
       if (rankTeamB > rankTeamA) {
         teamAGain = 50 + rankGap * 10;
         teamBLoss = 50 + rankGap * 10;
@@ -1091,58 +1407,62 @@ router.post('/rankpointchange', async (req, res) => {
     return res.status(500).json({ error: "Server error occurred!" });
   }
 });
-router.post('/fetchplayerprofiles', async (req, res) => {
+router.post("/fetchplayerprofiles", async (req, res) => {
   try {
     const { players } = req.body; // Lấy danh sách các IGN từ request body
-    const playerProfiles = await Promise.all(players.map(async (player) => {
-      const user = await User.findOne({ garenaaccount: player });
+    const playerProfiles = await Promise.all(
+      players.map(async (player) => {
+        const user = await User.findOne({ garenaaccount: player });
 
-      if (user) {
+        if (user) {
+          return {
+            name: user.garenaaccount,
+            avatar: user.profilePicture,
+          };
+        }
+        // Trả về thông tin mặc định nếu không tìm thấy người dùng
         return {
-          name: user.garenaaccount,
-          avatar: user.profilePicture,
+          name: player,
+          avatar: "1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L", // Đường dẫn hoặc URL đến hình ảnh mặc định
         };
-      }
-      // Trả về thông tin mặc định nếu không tìm thấy người dùng
-      return {
-        name: player,
-        avatar: '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L', // Đường dẫn hoặc URL đến hình ảnh mặc định
-      };
-    }));
+      })
+    );
 
     res.status(200).json(playerProfiles);
   } catch (error) {
-    console.error('Error fetching player profiles:', error);
-    res.status(500).json({ error: 'Failed to fetch player profiles' });
+    console.error("Error fetching player profiles:", error);
+    res.status(500).json({ error: "Failed to fetch player profiles" });
   }
 });
-router.post('/fetchplayerprofilesvalo', async (req, res) => {
+router.post("/fetchplayerprofilesvalo", async (req, res) => {
   try {
     const { players } = req.body; // Lấy danh sách các IGN từ request body
-    const playerProfiles = await Promise.all(players.map(async (player) => {
-      const user = await User.findOne({ riotID: player });
+    const playerProfiles = await Promise.all(
+      players.map(async (player) => {
+        const user = await User.findOne({ riotID: player });
 
-      if (user) {
+        if (user) {
+          return {
+            name: user.riotID,
+            avatar: user.profilePicture,
+          };
+        }
+        // Trả về thông tin mặc định nếu không tìm thấy người dùng
         return {
-          name: user.riotID,
-          avatar: user.profilePicture,
+          name: player,
+          avatar: "1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L", // Đường dẫn hoặc URL đến hình ảnh mặc định
         };
-      }
-      // Trả về thông tin mặc định nếu không tìm thấy người dùng
-      return {
-        name: player,
-        avatar: '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L', // Đường dẫn hoặc URL đến hình ảnh mặc định
-      };
-    }));
+      })
+    );
 
     res.status(200).json(playerProfiles);
   } catch (error) {
-    console.error('Error fetching player profiles:', error);
-    res.status(500).json({ error: 'Failed to fetch player profiles' });
+    console.error("Error fetching player profiles:", error);
+    res.status(500).json({ error: "Failed to fetch player profiles" });
   }
 });
 // Route để thêm mới trận đấu
-router.post('/addmatchdetail', async (req, res) => {
+router.post("/addmatchdetail", async (req, res) => {
   try {
     // Thêm trận đấu vào database
     const match = new Match(req.body);
@@ -1166,21 +1486,26 @@ router.post('/addmatchdetail', async (req, res) => {
     });
 
     // Tìm thứ hạng của teamA và teamB
-    const rankTeamA = rankings.findIndex(team => team.teamName === teamA);
-    const rankTeamB = rankings.findIndex(team => team.teamName === teamB);
+    const rankTeamA = rankings.findIndex((team) => team.teamName === teamA);
+    const rankTeamB = rankings.findIndex((team) => team.teamName === teamB);
 
     if (rankTeamA === -1 || rankTeamB === -1) {
       return res.status(404).json({ message: "Teams not found in ranking!" });
     }
 
     // Tính toán khoảng cách thứ hạng
-    const rankGap = Math.abs(rankings[rankTeamA].rank - rankings[rankTeamB].rank);
+    const rankGap = Math.abs(
+      rankings[rankTeamA].rank - rankings[rankTeamB].rank
+    );
     const scoreGap = Math.abs(scoreteamA - scoreteamB);
-    let teamAGain = 0, teamALoss = 0;
-    let teamBGain = 0, teamBLoss = 0;
+    let teamAGain = 0,
+      teamALoss = 0;
+    let teamBGain = 0,
+      teamBLoss = 0;
 
     // Logic cộng/trừ điểm
-    if (scoreteamA > scoreteamB) { // teamA thắng
+    if (scoreteamA > scoreteamB) {
+      // teamA thắng
       if (rankings[rankTeamA].rank > rankings[rankTeamB].rank) {
         teamAGain = 25 + rankGap * 3 + scoreGap;
         teamBLoss = 25 + rankGap * 3 + scoreGap;
@@ -1191,7 +1516,8 @@ router.post('/addmatchdetail', async (req, res) => {
         teamAGain = 21 + scoreGap;
         teamBLoss = 21 + scoreGap;
       }
-    } else if (scoreteamB > scoreteamA) { // teamB thắng
+    } else if (scoreteamB > scoreteamA) {
+      // teamB thắng
       if (rankings[rankTeamB].rank > rankings[rankTeamA].rank) {
         teamBGain = 25 + rankGap * 3 + scoreGap;
         teamALoss = 25 + rankGap * 3 + scoreGap;
@@ -1232,14 +1558,13 @@ router.post('/addmatchdetail', async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating match and rankings:", error);
-    return res.status(500).json({ error: "Failed to add match or update rankings." });
+    return res
+      .status(500)
+      .json({ error: "Failed to add match or update rankings." });
   }
 });
 
-
-
-
-router.post('/fetchmatchAOV/:idmatch', async (req, res) => {
+router.post("/fetchmatchAOV/:idmatch", async (req, res) => {
   const { idmatch } = req.params; // Lấy `idmatch` từ body của request
 
   if (!idmatch) {
@@ -1258,7 +1583,7 @@ router.post('/fetchmatchAOV/:idmatch', async (req, res) => {
   }
 });
 // Route để cập nhật thông tin trận đấu
-router.post('/updateMatch', async (req, res) => {
+router.post("/updateMatch", async (req, res) => {
   const { idmatch } = req.body; // Giả sử chúng ta sử dụng `idmatch` làm điều kiện cập nhật
   try {
     const updatedMatch = await Match.findOneAndUpdate(
@@ -1271,23 +1596,33 @@ router.post('/updateMatch', async (req, res) => {
       return res.status(404).json({ error: "Match not found" });
     }
 
-    res.status(200).json({ message: "Match updated successfully", updatedMatch });
+    res
+      .status(200)
+      .json({ message: "Match updated successfully", updatedMatch });
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: "Failed to update match" });
   }
 });
 
-
-
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
-    const { teamName, shortName, classTeam, logoUrl, games, gameMembers, usernameregister, discordID, color } = req.body;
+    const {
+      teamName,
+      shortName,
+      classTeam,
+      logoUrl,
+      games,
+      gameMembers,
+      usernameregister,
+      discordID,
+      color,
+    } = req.body;
 
     // Tìm xem user đã đăng ký trong game này chưa
     const existingTeam = await TeamRegister.findOne({
       usernameregister,
-      games: { $in: games } // Kiểm tra xem user đã đăng ký team nào cho game này chưa
+      games: { $in: games }, // Kiểm tra xem user đã đăng ký team nào cho game này chưa
     });
 
     if (existingTeam) {
@@ -1300,7 +1635,9 @@ router.post('/register', async (req, res) => {
       existingTeam.gameMembers = gameMembers;
 
       const updatedTeam = await existingTeam.save();
-      return res.status(200).json({ message: "Cập nhật đội thành công!", team: updatedTeam });
+      return res
+        .status(200)
+        .json({ message: "Cập nhật đội thành công!", team: updatedTeam });
     }
 
     // Nếu chưa có đội, tạo mới
@@ -1317,20 +1654,20 @@ router.post('/register', async (req, res) => {
     });
 
     const savedTeam = await newTeam.save();
-    res.status(201).json({ message: "Đăng ký đội thành công!", team: savedTeam });
-
+    res
+      .status(201)
+      .json({ message: "Đăng ký đội thành công!", team: savedTeam });
   } catch (error) {
-    console.error('Error registering team:', error);
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map(err => err.message);
+    console.error("Error registering team:", error);
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
       return res.status(400).json({ errors });
     }
-    res.status(500).json({ message: 'Lỗi server' });
+    res.status(500).json({ message: "Lỗi server" });
   }
 });
 
-
-router.post('/register/:league_id', async (req, res) => {
+router.post("/register/:league_id", async (req, res) => {
   const { league_id } = req.params;
   const {
     logoUrl,
@@ -1341,16 +1678,16 @@ router.post('/register/:league_id', async (req, res) => {
     classTeam,
     games,
     teamName,
-    shortName
+    shortName,
   } = req.body;
 
   try {
     const leagueDoc = await DCNLeague.findOne({
-      'league.league_id': league_id,
+      "league.league_id": league_id,
     });
 
     if (!leagueDoc) {
-      return res.status(404).json({ message: 'League not found' });
+      return res.status(404).json({ message: "League not found" });
     }
 
     const existingPlayerIndex = leagueDoc.players.findIndex(
@@ -1368,10 +1705,10 @@ router.post('/register/:league_id', async (req, res) => {
       game: selectedGame,
       isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false,
       team: {
-        name: teamName || '',
-        logoTeam: teamLogo || '', // 👈 lấy logo team riêng
-        shortName: shortName || ''
-      }
+        name: teamName || "",
+        logoTeam: teamLogo || "", // 👈 lấy logo team riêng
+        shortName: shortName || "",
+      },
     };
 
     if (existingPlayerIndex === -1) {
@@ -1379,25 +1716,23 @@ router.post('/register/:league_id', async (req, res) => {
     } else {
       leagueDoc.players[existingPlayerIndex] = {
         ...leagueDoc.players[existingPlayerIndex],
-        ...playerData
+        ...playerData,
       };
     }
 
     await leagueDoc.save();
 
     res.status(200).json({
-      message: 'Đăng ký thành công và đã thêm/cập nhật vào giải đấu!',
-      player: playerData
+      message: "Đăng ký thành công và đã thêm/cập nhật vào giải đấu!",
+      player: playerData,
     });
-
   } catch (error) {
-    console.error('❌ Error registering player:', error);
-    res.status(500).json({ message: 'Lỗi server' });
+    console.error("❌ Error registering player:", error);
+    res.status(500).json({ message: "Lỗi server" });
   }
 });
 
-
-router.post('/checkregisterorz', async (req, res) => {
+router.post("/checkregisterorz", async (req, res) => {
   try {
     const { usernameregister } = req.body;
     const existingTeam = await Organization.findOne({ usernameregister });
@@ -1408,18 +1743,20 @@ router.post('/checkregisterorz', async (req, res) => {
     }
 
     // Nếu không tìm thấy đội, trả lại lỗi 404
-    return res.status(404).json({ message: 'Team not found' });
-
+    return res.status(404).json({ message: "Team not found" });
   } catch (error) {
     // Xử lý lỗi server
     res.status(500).json({ message: error });
   }
 });
-router.post('/checkregisterAOV', async (req, res) => {
+router.post("/checkregisterAOV", async (req, res) => {
   try {
     const { usernameregister } = req.body;
     const game = "Liên Quân Mobile";
-    const existingTeam = await TeamRegister.findOne({ usernameregister, games: { $in: [game] } });
+    const existingTeam = await TeamRegister.findOne({
+      usernameregister,
+      games: { $in: [game] },
+    });
 
     if (existingTeam) {
       // Nếu tìm thấy đội, trả lại thông tin đội
@@ -1427,18 +1764,20 @@ router.post('/checkregisterAOV', async (req, res) => {
     }
 
     // Nếu không tìm thấy đội, trả lại lỗi 404
-    return res.status(404).json({ message: 'Team not found' });
-
+    return res.status(404).json({ message: "Team not found" });
   } catch (error) {
     // Xử lý lỗi server
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
-router.post('/checkregisterValorant', async (req, res) => {
+router.post("/checkregisterValorant", async (req, res) => {
   try {
     const { usernameregister } = req.body;
     const game = "Valorant";
-    const existingTeam = await TeamRegister.findOne({ usernameregister, games: { $in: [game] } });
+    const existingTeam = await TeamRegister.findOne({
+      usernameregister,
+      games: { $in: [game] },
+    });
 
     if (existingTeam) {
       // Nếu tìm thấy đội, trả lại thông tin đội
@@ -1446,18 +1785,20 @@ router.post('/checkregisterValorant', async (req, res) => {
     }
 
     // Nếu không tìm thấy đội, trả lại lỗi 404
-    return res.status(404).json({ message: 'Team not found' });
-
+    return res.status(404).json({ message: "Team not found" });
   } catch (error) {
     // Xử lý lỗi server
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
-router.post('/checkregisterTFT', async (req, res) => {
+router.post("/checkregisterTFT", async (req, res) => {
   try {
     const { usernameregister } = req.body;
     const game = "Teamfight Tactics";
-    const existingTeam = await TeamRegister.findOne({ usernameregister, games: { $in: [game] } });
+    const existingTeam = await TeamRegister.findOne({
+      usernameregister,
+      games: { $in: [game] },
+    });
 
     if (existingTeam) {
       // Nếu tìm thấy đội, trả lại thông tin đội
@@ -1465,14 +1806,13 @@ router.post('/checkregisterTFT', async (req, res) => {
     }
 
     // Nếu không tìm thấy đội, trả lại lỗi 404
-    return res.status(404).json({ message: 'Team not found' });
-
+    return res.status(404).json({ message: "Team not found" });
   } catch (error) {
     // Xử lý lỗi server
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
-router.post('/:league_id/checkregisterTFT', async (req, res) => {
+router.post("/:league_id/checkregisterTFT", async (req, res) => {
   const { league_id } = req.params;
   const { usernameregister } = req.body;
 
@@ -1481,12 +1821,12 @@ router.post('/:league_id/checkregisterTFT', async (req, res) => {
 
     // ✅ Tìm đúng giải theo league_id và game TFT
     const league = await DCNLeague.findOne({
-      'league.league_id': league_id,
-      'league.game_name': game
+      "league.league_id": league_id,
+      "league.game_name": game,
     });
 
     if (!league) {
-      return res.status(404).json({ message: 'League not found' });
+      return res.status(404).json({ message: "League not found" });
     }
 
     // ✅ Kiểm tra xem player có trong players không
@@ -1498,15 +1838,16 @@ router.post('/:league_id/checkregisterTFT', async (req, res) => {
       return res.status(200).json(player);
     }
 
-    return res.status(404).json({ message: 'Player not found in this TFT league' });
-
+    return res
+      .status(404)
+      .json({ message: "Player not found in this TFT league" });
   } catch (error) {
     console.error("❌ Error in /:league_id/checkregisterTFT:", error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
-router.post('/:game_name/:league_id/checkregister', async (req, res) => {
-  const { game_name,league_id } = req.params;
+router.post("/:game_name/:league_id/checkregister", async (req, res) => {
+  const { game_name, league_id } = req.params;
   const { usernameregister } = req.body;
 
   try {
@@ -1514,12 +1855,12 @@ router.post('/:game_name/:league_id/checkregister', async (req, res) => {
 
     // ✅ Tìm đúng giải theo league_id và game TFT
     const league = await DCNLeague.findOne({
-      'league.league_id': league_id,
-      'league.game_short': game
+      "league.league_id": league_id,
+      "league.game_short": game,
     });
 
     if (!league) {
-      return res.status(404).json({ message: 'League not found' });
+      return res.status(404).json({ message: "League not found" });
     }
 
     // ✅ Kiểm tra xem player có trong players không
@@ -1531,67 +1872,81 @@ router.post('/:game_name/:league_id/checkregister', async (req, res) => {
       return res.status(200).json(player);
     }
 
-    return res.status(404).json({ message: 'Player not found in this league' });
-
+    return res.status(404).json({ message: "Player not found in this league" });
   } catch (error) {
     console.error("❌ Error in /:league_id/checkregisterTFT:", error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
-router.post('/allteamAOVcolor', async (req, res) => {
+router.post("/allteamAOVcolor", async (req, res) => {
   try {
     const { usernameregister } = req.body;
 
     // Fetch teams where games include "Liên Quân Mobile"
-    const teams = await TeamRegister.find({ games: "Liên Quân Mobile" })
-      .select('teamName shortName logoUrl color');
+    const teams = await TeamRegister.find({ games: "Liên Quân Mobile" }).select(
+      "teamName shortName logoUrl color"
+    );
 
     if (teams.length > 0) {
       // If teams are found, return the relevant information
       return res.status(200).json(teams);
     } else {
-      return res.status(404).json({ message: 'No teams found for Liên Quân Mobile' });
+      return res
+        .status(404)
+        .json({ message: "No teams found for Liên Quân Mobile" });
     }
-
   } catch (error) {
     // Handle server errors
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-
-router.post('/upsertquestions', async (req, res) => {
+router.post("/upsertquestions", async (req, res) => {
   try {
     const { questions } = req.body;
 
     if (!Array.isArray(questions)) {
-      return res.status(400).json({ error: 'Invalid input. Please provide an array of questions.' });
+      return res.status(400).json({
+        error: "Invalid input. Please provide an array of questions.",
+      });
     }
 
     for (const question of questions) {
-      if (!question.id || !question.question || !question.maxChoose || !question.timelock || !question.type || !question.options) {
+      if (
+        !question.id ||
+        !question.question ||
+        !question.maxChoose ||
+        !question.timelock ||
+        !question.type ||
+        !question.options
+      ) {
         return res.status(400).json({
-          error: 'Invalid input. Please provide all required fields (id, question, maxChoose, type, and options).'
+          error:
+            "Invalid input. Please provide all required fields (id, question, maxChoose, type, and options).",
         });
       }
 
       // Check if options is empty and populate it with teams' names and logos for "Liên Quân Mobile" only
-      const optionsWithLogos = question.options.length > 0
-        ? await Promise.all(
-          question.options.map(async (option) => {
-            const team = await TeamRegister.findOne({ teamName: option.name });
-            return {
-              name: option.name,
-              logo: team ? team.logoUrl : null // Default to null if no team found
-            };
-          })
-        )
-        : await TeamRegister.find({ games: "Liên Quân Mobile" }).then((teams) =>
-          teams.map((team) => ({
-            name: team.teamName,
-            logo: team.logoUrl
-          }))
-        );
+      const optionsWithLogos =
+        question.options.length > 0
+          ? await Promise.all(
+              question.options.map(async (option) => {
+                const team = await TeamRegister.findOne({
+                  teamName: option.name,
+                });
+                return {
+                  name: option.name,
+                  logo: team ? team.logoUrl : null, // Default to null if no team found
+                };
+              })
+            )
+          : await TeamRegister.find({ games: "Liên Quân Mobile" }).then(
+              (teams) =>
+                teams.map((team) => ({
+                  name: team.teamName,
+                  logo: team.logoUrl,
+                }))
+            );
 
       await QuestionPickem.findOneAndUpdate(
         { id: question.id, category: question.category },
@@ -1601,20 +1956,20 @@ router.post('/upsertquestions', async (req, res) => {
           maxChoose: question.maxChoose,
           type: question.type,
           options: optionsWithLogos,
-          category: question.category
+          category: question.category,
         },
         { upsert: true, new: true }
       );
     }
 
-    res.status(201).json({ message: 'Questions added/updated successfully!' });
+    res.status(201).json({ message: "Questions added/updated successfully!" });
   } catch (error) {
-    console.error('Error adding/updating questions:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error adding/updating questions:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.post('/registerorz', async (req, res) => {
+router.post("/registerorz", async (req, res) => {
   try {
     const {
       teamName,
@@ -1624,26 +1979,26 @@ router.post('/registerorz', async (req, res) => {
       gameMembers,
       usernameregister,
       discordID,
-      color
+      color,
     } = req.body;
 
     const validClassRegex = /^(10|11|12)(A([1-9]|1[0-8])|TH[1-2])$/;
 
-    const isAllCuuHocSinh = classTeam.length === 1 && classTeam[0] === 'Cựu';
-    const isAllTruongLop = classTeam.every(cls => validClassRegex.test(cls));
+    const isAllCuuHocSinh = classTeam.length === 1 && classTeam[0] === "Cựu";
+    const isAllTruongLop = classTeam.every((cls) => validClassRegex.test(cls));
 
     const hasCuuHocSinh = classTeam.includes("Cựu");
-    const hasLopKhac = classTeam.some(cls => cls !== "Cựu");
+    const hasLopKhac = classTeam.some((cls) => cls !== "Cựu");
 
     if (hasCuuHocSinh && hasLopKhac) {
       return res.status(400).json({
-        message: 'classTeam không được chứa cả "Cựu" và lớp khác.'
+        message: 'classTeam không được chứa cả "Cựu" và lớp khác.',
       });
     }
 
     if (!isAllCuuHocSinh && !isAllTruongLop) {
       return res.status(400).json({
-        message: 'classTeam phải là ["Cựu"] hoặc các lớp hợp lệ trong trường.'
+        message: 'classTeam phải là ["Cựu"] hoặc các lớp hợp lệ trong trường.',
       });
     }
 
@@ -1654,26 +2009,25 @@ router.post('/registerorz', async (req, res) => {
 
       if (!player.nickname || !playerClass) {
         return res.status(400).json({
-          message: `Người chơi ${player.nickname || 'không tên'} thiếu thông tin nickname hoặc class.`
+          message: `Người chơi ${
+            player.nickname || "không tên"
+          } thiếu thông tin nickname hoặc class.`,
         });
       }
 
       if (isAllCuuHocSinh) {
-        if (playerClass !== 'Cựu học sinh') outsiderCount++;
+        if (playerClass !== "Cựu học sinh") outsiderCount++;
       } else if (isAllTruongLop) {
         if (
           !classTeam.includes(playerClass) &&
-          playerClass !== 'Học sinh ngoài trường' &&
-          playerClass !== 'Cựu'
+          playerClass !== "Học sinh ngoài trường" &&
+          playerClass !== "Cựu"
         ) {
           return res.status(400).json({
-            message: `Người chơi ${player.nickname} có lớp không thuộc classTeam và không phải là cựu học sinh hoặc học sinh ngoài trường.`
+            message: `Người chơi ${player.nickname} có lớp không thuộc classTeam và không phải là cựu học sinh hoặc học sinh ngoài trường.`,
           });
         }
-        if (
-          playerClass === 'Cựu' ||
-          playerClass === 'Học sinh ngoài trường'
-        ) {
+        if (playerClass === "Cựu" || playerClass === "Học sinh ngoài trường") {
           outsiderCount++;
         }
       }
@@ -1681,7 +2035,7 @@ router.post('/registerorz', async (req, res) => {
 
     if (outsiderCount > 3) {
       return res.status(400).json({
-        message: `Tối đa chỉ được 3 người là học sinh ngoài trường hoặc học sinh khác lớp (với classTeam hiện tại). Hiện có ${outsiderCount} người.`
+        message: `Tối đa chỉ được 3 người là học sinh ngoài trường hoặc học sinh khác lớp (với classTeam hiện tại). Hiện có ${outsiderCount} người.`,
       });
     }
 
@@ -1690,16 +2044,16 @@ router.post('/registerorz', async (req, res) => {
     const oldTeamName = existingTeam ? existingTeam.team : null;
 
     // ✅ Kiểm tra trùng team
-    const nicknames = gameMembers.map(p => p.nickname);
+    const nicknames = gameMembers.map((p) => p.nickname);
     const users = await User.find({ nickname: { $in: nicknames } });
-
-    
 
     if (existingTeam) {
       // ✅ Tách danh sách thành viên cũ & mới
-      const oldNicknames = existingTeam.players.map(p => p.nickname);
-      const newNicknames = gameMembers.map(p => p.nickname);
-      const removedMembers = oldNicknames.filter(name => !newNicknames.includes(name));
+      const oldNicknames = existingTeam.players.map((p) => p.nickname);
+      const newNicknames = gameMembers.map((p) => p.nickname);
+      const removedMembers = oldNicknames.filter(
+        (name) => !newNicknames.includes(name)
+      );
       const addedOrKeptMembers = newNicknames;
 
       // ✅ Cập nhật đội
@@ -1714,30 +2068,32 @@ router.post('/registerorz', async (req, res) => {
 
       // ✅ Gỡ team của người bị xóa
       await Promise.all(
-        removedMembers.map(name =>
+        removedMembers.map((name) =>
           User.findOneAndUpdate({ nickname: name }, { team: "" })
         )
       );
 
       // ✅ Cập nhật team mới cho thành viên
       await Promise.all(
-        addedOrKeptMembers.map(name =>
+        addedOrKeptMembers.map((name) =>
           User.findOneAndUpdate(
             { nickname: name },
             {
               team: {
                 name: teamName,
                 logoTeam: logoUrl,
-                shortName : shortName
-              }
+                shortName: shortName,
+              },
             }
           )
         )
       );
 
-      return res.status(200).json({ message: 'Cập nhật đội thành công!', team: updatedTeam });
+      return res
+        .status(200)
+        .json({ message: "Cập nhật đội thành công!", team: updatedTeam });
     }
-    
+
     // ✅ Nếu chưa có đội, tạo mới
     const newTeam = new Organization({
       discordID,
@@ -1754,49 +2110,49 @@ router.post('/registerorz', async (req, res) => {
 
     // ✅ Cập nhật team cho thành viên mới
     await Promise.all(
-      gameMembers.map(member =>
+      gameMembers.map((member) =>
         User.findOneAndUpdate(
           { nickname: member.nickname },
           {
             team: {
               name: teamName,
-              logoTeam: logoUrl
-            }
+              logoTeam: logoUrl,
+            },
           }
         )
       )
     );
 
-    res.status(201).json({ message: 'Đăng ký đội thành công!', team: savedTeam });
-
+    res
+      .status(201)
+      .json({ message: "Đăng ký đội thành công!", team: savedTeam });
   } catch (error) {
-    console.error('Error registering team:', error);
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map(err => err.message);
+    console.error("Error registering team:", error);
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
       return res.status(400).json({ errors });
     }
     res.status(500).json({ message: error });
   }
 });
-router.post('/getquestions', async (req, res) => {
+router.post("/getquestions", async (req, res) => {
   try {
     const questions = await QuestionPickem.find(); // Fetch all questions
     if (!questions) {
-      return res.status(404).json({ message: 'No questions found.' });
+      return res.status(404).json({ message: "No questions found." });
     }
     res.status(200).json({ data: questions });
   } catch (error) {
-    console.error('Error fetching questions:', error);
-    res.status(500).json({ message: 'Server error. Unable to fetch questions.' });
+    console.error("Error fetching questions:", error);
+    res
+      .status(500)
+      .json({ message: "Server error. Unable to fetch questions." });
   }
 });
-router.post('/findrespond', async (req, res) => {
+router.post("/findrespond", async (req, res) => {
   const { userId } = req.body;
   const response = await Response.findOne({ userId });
   res.json(response);
 });
-
-
-
 
 export default router;

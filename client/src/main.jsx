@@ -59,6 +59,7 @@ import MemberPage from './tft/allplayer.jsx';
 import RulebookAll from './components/rule.jsx';
 import Leaderboard from './tft/leaderboard.jsx';
 import BracketPage from './components/bracket.jsx';
+import ValorantMatchCard from './components/aftermatchdata.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -70,6 +71,10 @@ if (rootElement) {
         <BrowserRouter>
           <Routes>
             {/* Route KHÔNG có Navbar */}
+            <Route
+              path="/:game/:league_id/match/:teamnameA/:teamnameB/:matchid"
+              element={<ValorantMatchCard />}
+            />
             <Route path="/:game/:league_id" element={<TFThompage />} />
             <Route path="/:game/:league_id/players" element={<MemberPage />} />
             <Route path="/:game/:league_id/rule" element={<RulebookAll />} />
