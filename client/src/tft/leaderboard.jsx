@@ -21,8 +21,7 @@ const Leaderboard = () => {
   const [columnCount, setColumnCount] = useState(0);
   const daySchedule = {
     day1: new Date('2025-05-09T19:00:00'), // ví dụ: ngày thi đấu vòng loại 1
-    day2: new Date('2025-05-10T19:00:00'), // ví dụ: vòng loại 2
-    day3: new Date('2025-05-11T19:00:00'), // ví dụ: chung kết
+    day2: new Date('2025-05-11T19:00:00'), // ví dụ: vòng loại 2
   };
   useEffect(() => {
     if (!league?.matches) return;
@@ -75,14 +74,10 @@ const Leaderboard = () => {
           matchExists = true;
 
           const match = allMatchData[matchId];
-
-          // Tách người chơi lạ và người chơi hợp lệ
-          const participants = match.info.participants.map((p) => {
-            return {
-              name: `${p.riotIdGameName}#${p.riotIdTagline}`,
-              placement: p.placement,
-            };
-          });
+          const participants = match.info.participants.map((p) => ({
+            name: `${p.riotIdGameName}#${p.riotIdTagline}`,
+            placement: p.placement,
+          }));
 
           const outsiders = participants.filter((p) => !registeredNames.has(p.name));
           const outsidersPlacements = outsiders.map((p) => p.placement);
@@ -95,7 +90,6 @@ const Leaderboard = () => {
 
             presentPlayers.add(name);
 
-            // Cộng thêm điểm nếu người chơi hợp lệ đứng dưới bất kỳ outsider nào
             const outsiderAbove = outsidersPlacements.filter((o) => o < p.placement).length;
             if (outsiderAbove > 0) {
               score += outsiderAbove;
@@ -132,7 +126,43 @@ const Leaderboard = () => {
 
       const sorted = Object.values(playerScores).sort((a, b) => b.total - a.total);
 
-      // Gắn logoUrl theo IGN
+      // === LỌC TOP 8 NGÀY TRƯỚC NẾU LÀ NGÀY CUỐI ===
+      let filtered = sorted;
+
+      const matchKeys = Object.keys(league.matches);
+      const lastDayKey = matchKeys[matchKeys.length - 1];
+      const prevDayKey = matchKeys[matchKeys.length - 2];
+
+      if (selectedDay === lastDayKey && league.matches[prevDayKey]) {
+        const prevLobbies = league.matches[prevDayKey];
+        const maxMatchesPrev = Math.max(...prevLobbies.map((l) => l.matchIds.length));
+        const prevScores = {};
+
+        for (let matchIndex = 0; matchIndex < maxMatchesPrev; matchIndex++) {
+          for (const lobby of prevLobbies) {
+            const matchId = lobby.matchIds[matchIndex];
+            if (matchId === '0' || !allMatchData[matchId]) continue;
+
+            const match = allMatchData[matchId];
+            match.info.participants.forEach((p) => {
+              const name = `${p.riotIdGameName}#${p.riotIdTagline}`;
+              if (!registeredNames.has(name)) return;
+
+              if (!prevScores[name]) prevScores[name] = 0;
+              prevScores[name] += 9 - p.placement;
+            });
+          }
+        }
+
+        const top8Names = Object.entries(prevScores)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8)
+          .map(([name]) => name);
+
+        filtered = sorted.filter((p) => top8Names.includes(p.name));
+      }
+
+      // GẮN AVATAR VÀ LOGO
       const playerMap = {};
       league.players.forEach((p) => {
         const ign = p.ign?.[0];
@@ -146,7 +176,7 @@ const Leaderboard = () => {
         }
       });
 
-      const leaderboardWithProfile = sorted.map((p) => ({
+      const leaderboardWithProfile = filtered.map((p) => ({
         ...p,
         avatar: playerMap[p.name]?.avatar,
         teamLogo: playerMap[p.name]?.teamLogo,
@@ -235,7 +265,10 @@ const Leaderboard = () => {
             </tr>
           </thead>
           <tbody>
-            {leaderboardData.map((player, index) => (
+            {(selectedDay === Object.keys(league.matches).slice(-1)[0]
+              ? leaderboardData.slice(0, 8)
+              : leaderboardData
+            ).map((player, index) => (
               <tr key={index}>
                 <td className="sticky left-0 bg-base-100 z-10 flex items-center space-x-4 py-2 pl-2">
                   <img
