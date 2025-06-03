@@ -1,40 +1,40 @@
-import User from '../models/user.model.js';
-import bcryptjs from 'bcryptjs';
-import { errorHandler } from '../utils/error.js';
-import jwt from 'jsonwebtoken';
-import BanPick from '../models/veto.model.js';
-import AllGame from '../models/allgame.model.js';
-import MatchID from '../models/matchid.model.js';
-import TeamRegister from '../models/registergame.model.js'
-import PredictionPickem from '../models/response.model.js';
-import CorrectAnswersSubmit from '../models/correctanswer.model.js';
-import AllUserScore from '../models/alluserscore.model.js';
-import Queue from 'bull';
-import TeamHOF from '../models/teamhof.model.js'
-import LeagueHOF from '../models/league.model.js';
-import QuestionPickem from '../models/question.model.js';
-import Organization from '../models/team.model.js';
-const scoreQueue = new Queue('score-processing');
+import User from "../models/user.model.js";
+import bcryptjs from "bcryptjs";
+import { errorHandler } from "../utils/error.js";
+import jwt from "jsonwebtoken";
+import BanPick from "../models/veto.model.js";
+import AllGame from "../models/allgame.model.js";
+import MatchID from "../models/matchid.model.js";
+import TeamRegister from "../models/registergame.model.js";
+import PredictionPickem from "../models/response.model.js";
+import CorrectAnswersSubmit from "../models/correctanswer.model.js";
+import AllUserScore from "../models/alluserscore.model.js";
+import Queue from "bull";
+import TeamHOF from "../models/teamhof.model.js";
+import LeagueHOF from "../models/league.model.js";
+import QuestionPickem from "../models/question.model.js";
+import Organization from "../models/team.model.js";
+const scoreQueue = new Queue("score-processing");
 
 const pointSystem = {
   1: 15,
   2: 10,
   3: 10,
   9: 10,
-  4: 15,  // Question 4 is worth 15 points per correct answer
-  5: 9,    // Question 5 is worth 9 points per correct answer
+  4: 15, // Question 4 is worth 15 points per correct answer
+  5: 9, // Question 5 is worth 9 points per correct answer
   6: 8,
-  7:10,
-  8: 8, 
-  10:10,
-  11:12,
-  12:11,
+  7: 10,
+  8: 8,
+  10: 10,
+  11: 12,
+  12: 11,
   13: 12,
   14: 20,
-  15:20,
-  16:4,
-  17:12,
-  18:8
+  15: 20,
+  16: 4,
+  17: 12,
+  18: 8,
 };
 
 for (let day = 1; day <= 8; day++) {
@@ -43,15 +43,31 @@ for (let day = 1; day <= 8; day++) {
   }
 }
 export const signup = async (req, res, next) => {
-  const { garenaaccount,nickname,riotID, username,className, password, discordID } = req.body;
+  const {
+    garenaaccount,
+    nickname,
+    riotID,
+    username,
+    className,
+    password,
+    discordID,
+  } = req.body;
   try {
     const hashedPassword = bcryptjs.hashSync(password, 10);
-    const newUser = new User({ garenaaccount,nickname,riotID, username,className, discordID, password: hashedPassword });
+    const newUser = new User({
+      garenaaccount,
+      nickname,
+      riotID,
+      username,
+      className,
+      discordID,
+      password: hashedPassword,
+    });
 
     await newUser.save();
-    res.status(201).json({ message: 'Tạo tài khoản thành công' });
+    res.status(201).json({ message: "Tạo tài khoản thành công" });
   } catch (error) {
-    return res.status(500).json({ message: error });;
+    return res.status(500).json({ message: error });
   }
 };
 export const teamHOF = async (req, res, next) => {
@@ -60,24 +76,33 @@ export const teamHOF = async (req, res, next) => {
 
     // Kiểm tra nếu `teams` không phải là mảng, trả về lỗi
     if (!Array.isArray(teams)) {
-      return res.status(400).json({ message: "Data must be an array of teams" });
+      return res
+        .status(400)
+        .json({ message: "Data must be an array of teams" });
     }
 
     // Tạo các hoạt động `upsert` cho từng đội
     const operations = teams.map((team) => ({
       updateOne: {
-        filter: { name: team.name, game: team.game ,league: team.league}, // Điều kiện xác định đội đã tồn tại
+        filter: { name: team.name, game: team.game, league: team.league }, // Điều kiện xác định đội đã tồn tại
         update: { $set: team },
-        upsert: true // Thêm mới nếu không tồn tại
-      }
+        upsert: true, // Thêm mới nếu không tồn tại
+      },
     }));
 
     // Thực hiện `bulkWrite` với các hoạt động `upsert`
     const result = await TeamHOF.bulkWrite(operations);
-    
-    res.status(201).json({ message: "Teams added or updated successfully", result });
+
+    res
+      .status(201)
+      .json({ message: "Teams added or updated successfully", result });
   } catch (error) {
-    res.status(400).json({ message: "Error adding or updating teams", error: error.message });
+    res
+      .status(400)
+      .json({
+        message: "Error adding or updating teams",
+        error: error.message,
+      });
   }
 };
 
@@ -87,25 +112,34 @@ export const leagueHOF = async (req, res, next) => {
 
     // Kiểm tra nếu `leagues` không phải là mảng, trả về lỗi
     if (!Array.isArray(leagues)) {
-      return res.status(400).json({ message: "Data must be an array of leagues" });
+      return res
+        .status(400)
+        .json({ message: "Data must be an array of leagues" });
     }
 
     // Tạo các hoạt động `upsert` cho từng giải đấu
     const operations = leagues.map((league) => ({
       updateOne: {
         filter: { id: league.id, game: league.game, name: league.name },
- // Điều kiện xác định giải đấu đã tồn tại
+        // Điều kiện xác định giải đấu đã tồn tại
         update: { $set: league },
-        upsert: true // Thêm mới nếu không tồn tại
-      }
+        upsert: true, // Thêm mới nếu không tồn tại
+      },
     }));
 
     // Thực hiện `bulkWrite` với các hoạt động `upsert`
     const result = await LeagueHOF.bulkWrite(operations);
 
-    res.status(201).json({ message: "Leagues added or updated successfully", result });
+    res
+      .status(201)
+      .json({ message: "Leagues added or updated successfully", result });
   } catch (error) {
-    res.status(400).json({ message: "Error adding or updating leagues", error: error.message });
+    res
+      .status(400)
+      .json({
+        message: "Error adding or updating leagues",
+        error: error.message,
+      });
   }
 };
 
@@ -114,7 +148,12 @@ export const findleagueHOF = async (req, res, next) => {
     const leagues = await LeagueHOF.find();
     res.status(200).json(leagues);
   } catch (error) {
-    res.status(400).json({ message: "Lỗi khi lấy danh sách giải đấu", error: error.message });
+    res
+      .status(400)
+      .json({
+        message: "Lỗi khi lấy danh sách giải đấu",
+        error: error.message,
+      });
   }
 };
 export const findteamHOF = async (req, res, next) => {
@@ -137,7 +176,7 @@ export const findteamHOF = async (req, res, next) => {
               // Trả về dữ liệu người dùng nếu tìm thấy
               return {
                 name: user.nickname,
-                avatar: user.profilePicture
+                avatar: user.profilePicture,
               };
             }
 
@@ -156,7 +195,9 @@ export const findteamHOF = async (req, res, next) => {
 
     res.status(200).json(enrichedTeams);
   } catch (error) {
-    res.status(400).json({ message: "Error fetching teams", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Error fetching teams", error: error.message });
   }
 };
 
@@ -164,7 +205,7 @@ export const calculateMaxPoints = async (req, res) => {
   try {
     const correctAnswers = await CorrectAnswersSubmit.findOne();
     if (!correctAnswers) {
-      return res.status(404).json({ message: 'Correct answers not found' });
+      return res.status(404).json({ message: "Correct answers not found" });
     }
 
     let totalMaxPoints = 0;
@@ -180,9 +221,9 @@ export const calculateMaxPoints = async (req, res) => {
 
       // Xử lý trường hợp `questionId` là dạng `category-id` hoặc chỉ `id`
       let question;
-      if (questionId.includes('-')) {
+      if (questionId.includes("-")) {
         // Trường hợp `category-id` (ví dụ: `day1-5`)
-        const [category, idStr] = questionId.split('-');
+        const [category, idStr] = questionId.split("-");
         const id = Number(idStr);
 
         if (!category || isNaN(id)) {
@@ -203,12 +244,16 @@ export const calculateMaxPoints = async (req, res) => {
       }
 
       if (!question) {
-        console.warn(`Question with ID "${questionId}" not found in QuestionPickem`);
+        console.warn(
+          `Question with ID "${questionId}" not found in QuestionPickem`
+        );
         continue;
       }
 
       // Tính điểm cho câu hỏi
-      const pointsForQuestion = Math.min(correctAnswer.correctTeams.length, question.maxChoose) * (pointSystem[questionId] || 0);
+      const pointsForQuestion =
+        Math.min(correctAnswer.correctTeams.length, question.maxChoose) *
+        (pointSystem[questionId] || 0);
       totalMaxPoints += pointsForQuestion;
 
       calculatedQuestions.push({
@@ -220,7 +265,7 @@ export const calculateMaxPoints = async (req, res) => {
       });
     }
 
-    console.log('Calculated Questions:', calculatedQuestions);
+    console.log("Calculated Questions:", calculatedQuestions);
 
     res.status(200).json({
       message: `The maximum possible points if all answers are correct is ${totalMaxPoints}.`,
@@ -228,26 +273,25 @@ export const calculateMaxPoints = async (req, res) => {
       calculatedQuestions,
     });
   } catch (error) {
-    console.error('Error calculating maximum points:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error calculating maximum points:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
-
 export const comparePredictions = async (req, res) => {
   try {
-    const { userId } = req.body;  // Expecting userId in the request body
+    const { userId } = req.body; // Expecting userId in the request body
 
     // Fetch the user's predictions by userId
     const userPrediction = await PredictionPickem.findOne({ userId });
     if (!userPrediction) {
-      return res.status(404).json({ message: 'User prediction not found' });
+      return res.status(404).json({ message: "User prediction not found" });
     }
 
     // Fetch the correct answers
     const correctAnswers = await CorrectAnswersSubmit.findOne();
     if (!correctAnswers) {
-      return res.status(404).json({ message: 'Correct answers not found' });
+      return res.status(404).json({ message: "Correct answers not found" });
     }
 
     // Initialize counters
@@ -255,8 +299,6 @@ export const comparePredictions = async (req, res) => {
     let totalPossibleChoices = 0;
     let totalPoints = 0;
     let detailedResults = [];
-
-
 
     // Iterate over the user's predictions
     userPrediction.answers.forEach((userAnswer) => {
@@ -275,7 +317,8 @@ export const comparePredictions = async (req, res) => {
         });
 
         // Calculate points for this question
-        const pointsForQuestion = correctChoicesForQuestion * (pointSystem[userAnswer.questionId] || 0);
+        const pointsForQuestion =
+          correctChoicesForQuestion * (pointSystem[userAnswer.questionId] || 0);
         totalPoints += pointsForQuestion;
 
         // Add detailed result for the question, including isTrue
@@ -284,7 +327,7 @@ export const comparePredictions = async (req, res) => {
           correctChoices: correctChoicesForQuestion,
           totalChoices: correctAnswer.correctTeams.length,
           pointsForQuestion,
-          isTrue: correctChoicesForQuestion > 0  // Check if user got at least one correct choice
+          isTrue: correctChoicesForQuestion > 0, // Check if user got at least one correct choice
         });
 
         // Increment the total counts
@@ -295,9 +338,9 @@ export const comparePredictions = async (req, res) => {
 
     // Save the total score to AllUserScore collection
     await AllUserScore.findOneAndUpdate(
-      { userID: userId },  // Find by userId
-      { userID: userId, totalScore: totalPoints },  // Update or set the totalScore
-      { upsert: true, new: true }  // Create a new document if not found, return the updated document
+      { userID: userId }, // Find by userId
+      { userID: userId, totalScore: totalPoints }, // Update or set the totalScore
+      { upsert: true, new: true } // Create a new document if not found, return the updated document
     );
 
     // Return the detailed result and the total number of correct answers and points
@@ -306,20 +349,22 @@ export const comparePredictions = async (req, res) => {
       totalCorrectChoices,
       totalPossibleChoices,
       totalPoints,
-      detailedResults
+      detailedResults,
     });
   } catch (error) {
-    console.error('Error comparing predictions:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error comparing predictions:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 export const comparePredictionmultiple = async (req, res) => {
   try {
-    const { userIds } = req.body;  // Expecting userIds as an array in the request body
+    const { userIds } = req.body; // Expecting userIds as an array in the request body
 
     if (!Array.isArray(userIds) || userIds.length === 0) {
-      return res.status(400).json({ message: 'Please provide an array of userIds.' });
+      return res
+        .status(400)
+        .json({ message: "Please provide an array of userIds." });
     }
 
     const results = [];
@@ -329,14 +374,14 @@ export const comparePredictionmultiple = async (req, res) => {
       // Fetch the user's predictions by userId
       const userPrediction = await PredictionPickem.findOne({ userId });
       if (!userPrediction) {
-        results.push({ userId, message: 'User prediction not found' });
-        continue;  // Skip to the next userId
+        results.push({ userId, message: "User prediction not found" });
+        continue; // Skip to the next userId
       }
 
       // Fetch the correct answers
       const correctAnswers = await CorrectAnswersSubmit.findOne();
       if (!correctAnswers) {
-        return res.status(404).json({ message: 'Correct answers not found' });
+        return res.status(404).json({ message: "Correct answers not found" });
       }
 
       // Initialize counters
@@ -346,7 +391,6 @@ export const comparePredictionmultiple = async (req, res) => {
       let detailedResults = [];
 
       // Point system based on questionId
-
 
       // Iterate over the user's predictions
       userPrediction.answers.forEach((userAnswer) => {
@@ -365,7 +409,9 @@ export const comparePredictionmultiple = async (req, res) => {
           });
 
           // Calculate points for this question
-          const pointsForQuestion = correctChoicesForQuestion * (pointSystem[userAnswer.questionId] || 0);
+          const pointsForQuestion =
+            correctChoicesForQuestion *
+            (pointSystem[userAnswer.questionId] || 0);
           totalPoints += pointsForQuestion;
 
           // Add detailed result for the question
@@ -373,7 +419,7 @@ export const comparePredictionmultiple = async (req, res) => {
             questionId: userAnswer.questionId,
             correctChoices: correctChoicesForQuestion,
             totalChoices: correctAnswer.correctTeams.length,
-            pointsForQuestion
+            pointsForQuestion,
           });
 
           // Increment the total counts
@@ -384,9 +430,9 @@ export const comparePredictionmultiple = async (req, res) => {
 
       // Save the total score to AllUserScore collection
       await AllUserScore.findOneAndUpdate(
-        { userID: userId },  // Find by userId
-        { userID: userId, totalScore: totalPoints },  // Update or set the totalScore
-        { upsert: true, new: true }  // Create a new document if not found, return the updated document
+        { userID: userId }, // Find by userId
+        { userID: userId, totalScore: totalPoints }, // Update or set the totalScore
+        { upsert: true, new: true } // Create a new document if not found, return the updated document
       );
 
       // Push result for this userId
@@ -396,18 +442,18 @@ export const comparePredictionmultiple = async (req, res) => {
         totalCorrectChoices,
         totalPossibleChoices,
         totalPoints,
-        detailedResults
+        detailedResults,
       });
     }
 
     // Return all results
     res.status(200).json({
-      message: 'Comparison completed successfully for all users.',
-      results
+      message: "Comparison completed successfully for all users.",
+      results,
     });
   } catch (error) {
-    console.error('Error comparing predictions:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error comparing predictions:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -425,7 +471,9 @@ export const submitPrediction = async (req, res) => {
       const { userId, answers } = prediction;
 
       if (!userId || !answers || !Array.isArray(answers)) {
-        return res.status(400).json({ error: 'Invalid input. Please provide userId and answers.' });
+        return res
+          .status(400)
+          .json({ error: "Invalid input. Please provide userId and answers." });
       }
 
       lastUserId = userId; // Cập nhật biến lastUserId
@@ -435,14 +483,20 @@ export const submitPrediction = async (req, res) => {
 
       if (existingPrediction) {
         // Tạo một map để dễ dàng cập nhật hoặc thêm mới dựa trên questionId
-        const answersMap = new Map(existingPrediction.answers.map((answer) => [answer.questionId.toString(), answer]));
+        const answersMap = new Map(
+          existingPrediction.answers.map((answer) => [
+            answer.questionId.toString(),
+            answer,
+          ])
+        );
 
         answers.forEach((newAnswer) => {
           const questionIdStr = newAnswer.questionId.toString();
 
           if (answersMap.has(questionIdStr)) {
             // Nếu đã có câu trả lời với questionId này, cập nhật selectedTeams
-            answersMap.get(questionIdStr).selectedTeams = newAnswer.selectedTeams;
+            answersMap.get(questionIdStr).selectedTeams =
+              newAnswer.selectedTeams;
           } else {
             // Nếu chưa có câu trả lời với questionId này, thêm mới
             existingPrediction.answers.push(newAnswer);
@@ -461,22 +515,32 @@ export const submitPrediction = async (req, res) => {
     }
 
     // Lấy dự đoán đã cập nhật hoặc mới tạo cho userId cuối cùng được xử lý và trả về nó trong phản hồi
-    const updatedPrediction = await PredictionPickem.findOne({ userId: lastUserId });
-    res.status(200).json({ success: true, message: 'Predictions submitted and processing in the background.', data: updatedPrediction });
+    const updatedPrediction = await PredictionPickem.findOne({
+      userId: lastUserId,
+    });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Predictions submitted and processing in the background.",
+        data: updatedPrediction,
+      });
   } catch (error) {
-    console.error('Error submitting prediction:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error submitting prediction:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 export const leaderboardpickem = async (req, res) => {
   try {
     // Fetch all leaderboard data with a high limit to override potential default limits
-    const leaderboardEntries = await AllUserScore.find({})
-      .sort({ totalScore: -1, updatedAt: 1 }); // Sort by totalScore in descending order
+    const leaderboardEntries = await AllUserScore.find({}).sort({
+      totalScore: -1,
+      updatedAt: 1,
+    }); // Sort by totalScore in descending order
 
     // Log the number of results returned from the query
-    console.log('Number of leaderboard entries:', leaderboardEntries.length);
+    console.log("Number of leaderboard entries:", leaderboardEntries.length);
 
     // Create an array to hold the enriched leaderboard data
     const enrichedLeaderboard = await Promise.all(
@@ -487,16 +551,16 @@ export const leaderboardpickem = async (req, res) => {
         // Check if user exists
         if (user) {
           return {
-            name: user.username,           // User's name
-            avatar: user.profilePicture,   // User's profile picture
-            score: entry.totalScore        // User's score
+            name: user.username, // User's name
+            avatar: user.profilePicture, // User's profile picture
+            score: entry.totalScore, // User's score
           };
         } else {
           // If user doesn't exist, return the userID as fallback
           return {
-            name: entry.userID,             // Use userID as fallback for name
-            avatar: "1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L",  // Default avatar
-            score: entry.totalScore         // User's score
+            name: entry.userID, // Use userID as fallback for name
+            avatar: "1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L", // Default avatar
+            score: entry.totalScore, // User's score
           };
         }
       })
@@ -504,12 +568,12 @@ export const leaderboardpickem = async (req, res) => {
 
     // Send the enriched leaderboard data as the response
     res.status(200).json({
-      message: 'Leaderboard fetched successfully!',
-      leaderboard: enrichedLeaderboard
+      message: "Leaderboard fetched successfully!",
+      leaderboard: enrichedLeaderboard,
     });
   } catch (error) {
-    console.error('Error fetching leaderboard:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching leaderboard:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -533,18 +597,18 @@ export const getUserPickemScore = async (req, res) => {
 
     // Prepare the response data
     const userData = {
-      name: user.username,          // User's name
-      avatar: user.profilePicture,  // User's profile picture
-      score: userScoreEntry.totalScore // User's total score
+      name: user.username, // User's name
+      avatar: user.profilePicture, // User's profile picture
+      score: userScoreEntry.totalScore, // User's total score
     };
 
     // Send the user's data as the response
     res.status(200).json({
       message: "User score and image fetched successfully!",
-      userData: userData
+      userData: userData,
     });
   } catch (error) {
-    console.error('Error fetching user score:', error);
+    console.error("Error fetching user score:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -554,7 +618,9 @@ export const submitCorrectAnswer = async (req, res) => {
 
     // Validate the input
     if (!answers || !Array.isArray(answers)) {
-      return res.status(400).json({ error: 'Invalid input. Please provide an array of answers.' });
+      return res
+        .status(400)
+        .json({ error: "Invalid input. Please provide an array of answers." });
     }
 
     // Loop through each answer and update/add correct answers for each question
@@ -562,19 +628,23 @@ export const submitCorrectAnswer = async (req, res) => {
       const { questionId, correctTeams } = answer;
 
       if (!questionId || !correctTeams || !Array.isArray(correctTeams)) {
-        return res.status(400).json({ error: `Invalid input for questionId: ${questionId}. Please provide questionId and correctTeams.` });
+        return res
+          .status(400)
+          .json({
+            error: `Invalid input for questionId: ${questionId}. Please provide questionId and correctTeams.`,
+          });
       }
 
       // Check if the document with the correct answers exists
       const existingDocument = await CorrectAnswersSubmit.findOne({
-        'answers.questionId': questionId
+        "answers.questionId": questionId,
       });
 
       if (existingDocument) {
         // Update the correctTeams for the existing questionId
         await CorrectAnswersSubmit.updateOne(
-          { 'answers.questionId': questionId },
-          { $set: { 'answers.$.correctTeams': correctTeams } }
+          { "answers.questionId": questionId },
+          { $set: { "answers.$.correctTeams": correctTeams } }
         );
       } else {
         // If questionId doesn't exist, push a new answer into the answers array
@@ -594,7 +664,6 @@ export const submitCorrectAnswer = async (req, res) => {
 
     // Recalculate the score for each user based on the updated correct answers
 
-
     for (const prediction of allPredictions) {
       let totalPoints = 0;
 
@@ -612,23 +681,30 @@ export const submitCorrectAnswer = async (req, res) => {
             }
           });
 
-          const pointsForQuestion = correctChoicesForQuestion * (pointSystem[userAnswer.questionId] || 0);
+          const pointsForQuestion =
+            correctChoicesForQuestion *
+            (pointSystem[userAnswer.questionId] || 0);
           totalPoints += pointsForQuestion;
         }
       });
 
       // Update the user's total score in the AllUserScore collection
       await AllUserScore.findOneAndUpdate(
-        { userID: prediction.userId },  // Find by userId
-        { userID: prediction.userId, totalScore: totalPoints },  // Update the score
-        { upsert: true, new: true }  // Create if not found
+        { userID: prediction.userId }, // Find by userId
+        { userID: prediction.userId, totalScore: totalPoints }, // Update the score
+        { upsert: true, new: true } // Create if not found
       );
     }
 
-    res.status(201).json({ message: 'Correct answers added/updated and user scores recalculated successfully!' });
+    res
+      .status(201)
+      .json({
+        message:
+          "Correct answers added/updated and user scores recalculated successfully!",
+      });
   } catch (error) {
-    console.error('Error adding/updating correct answers:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error adding/updating correct answers:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -637,17 +713,17 @@ export const getCorrectAnswers = async (req, res) => {
     // Fetch the correct answers from the database
     const correctAnswers = await CorrectAnswersSubmit.findOne();
     if (!correctAnswers) {
-      return res.status(404).json({ message: 'Correct answers not found.' });
+      return res.status(404).json({ message: "Correct answers not found." });
     }
 
     // Return the correct answers
     res.status(200).json({
-      message: 'Correct answers fetched successfully.',
-      answers: correctAnswers.answers // Return the array of correct answers
+      message: "Correct answers fetched successfully.",
+      answers: correctAnswers.answers, // Return the array of correct answers
     });
   } catch (error) {
-    console.error('Error fetching correct answers:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching correct answers:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -659,52 +735,77 @@ export const finduserPrediction = async (req, res) => {
     const prediction = await PredictionPickem.findOne({ userId });
 
     if (prediction) {
-      return res.status(200).json({ message: 'Prediction found', data: prediction });
+      return res
+        .status(200)
+        .json({ message: "Prediction found", data: prediction });
     } else {
-      return res.status(404).json({ message: 'No prediction found for this user' });
+      return res
+        .status(404)
+        .json({ message: "No prediction found for this user" });
     }
   } catch (error) {
-    console.error('Error checking prediction:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error checking prediction:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
-
-export const addAllGame = async (req,res,next) => {
-  const { url,game,image,description,badges } = req.body;
-  try{
-    const existingGame = await AllGame.findOne({game})
-    if (existingGame){
+export const addAllGame = async (req, res, next) => {
+  const { url, game, image, description, badges } = req.body;
+  try {
+    const existingGame = await AllGame.findOne({ game });
+    if (existingGame) {
       existingGame.url = url;
       existingGame.game = game;
       existingGame.image = image;
       existingGame.description = description;
       existingGame.badges = badges;
       await existingGame.save();
-      res.status(200).json({ message: 'Game updated successfully' });
-    }else{
+      res.status(200).json({ message: "Game updated successfully" });
+    } else {
       const newGame = new AllGame({
-        url,game,image,description,badges
+        url,
+        game,
+        image,
+        description,
+        badges,
       });
-      await newGame.save()
-      res.status(201).json({message:"Game added succesfully"})
+      await newGame.save();
+      res.status(201).json({ message: "Game added succesfully" });
     }
-  }catch(error){
-    next(error)
+  } catch (error) {
+    next(error);
   }
-}
+};
 
 export const addMatchID = async (req, res, next) => {
   try {
-    const { matchid, teamA, teamB, round,Match,game,scoreA,scoreB,banpickid} = req.body;
+    const {
+      matchid,
+      teamA,
+      teamB,
+      round,
+      Match,
+      game,
+      scoreA,
+      scoreB,
+      banpickid,
+    } = req.body;
 
     // Check if the required fields are provided
-    if (!matchid || !teamA || !teamB || !round||!Match) {
+    if (!matchid || !teamA || !teamB || !round || !Match) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     // Find if the matchid already exists
-    let match = await MatchID.findOne({ matchid,teamA,teamB,Match,round,game,banpickid });
+    let match = await MatchID.findOne({
+      matchid,
+      teamA,
+      teamB,
+      Match,
+      round,
+      game,
+      banpickid,
+    });
 
     if (match) {
       // Update the existing match details
@@ -714,12 +815,21 @@ export const addMatchID = async (req, res, next) => {
       match.Match = Match;
       match.scoreA = scoreA;
       match.scoreB = scoreB;
-      match.banpickid = banpickid
+      match.banpickid = banpickid;
       await match.save();
       return res.status(200).json({ message: "MatchID updated successfully" });
     } else {
       // Create a new match ID entry
-      const newMatchId = new MatchID({ matchid, teamA, teamB, round,Match,game,scoreA,scoreB});
+      const newMatchId = new MatchID({
+        matchid,
+        teamA,
+        teamB,
+        round,
+        Match,
+        game,
+        scoreA,
+        scoreB,
+      });
       await newMatchId.save();
       return res.status(201).json({ message: "MatchID added successfully" });
     }
@@ -733,7 +843,7 @@ export const findAllMatchID = async (req, res, next) => {
     const allGame = await MatchID.find();
 
     if (!allGame || allGame.length === 0) {
-      return next(errorHandler(404, 'No Game found'));
+      return next(errorHandler(404, "No Game found"));
     }
 
     res.status(200).json(allGame);
@@ -745,7 +855,9 @@ export const findAllMatchID = async (req, res, next) => {
 export const findAllteamAOV = async (req, res, next) => {
   try {
     // Sử dụng truy vấn $in để kiểm tra mảng "games" có chứa "Liên Quân Mobile"
-    const allTeam = await TeamRegister.find({ games: { $in: ["Liên Quân Mobile"] } });
+    const allTeam = await TeamRegister.find({
+      games: { $in: ["Liên Quân Mobile"] },
+    });
 
     if (!allTeam || allTeam.length === 0) {
       return next(errorHandler(404, 'No teams found for "Liên Quân Mobile"'));
@@ -774,7 +886,9 @@ export const findAllteamValorant = async (req, res, next) => {
 export const findAllteamTFT = async (req, res, next) => {
   try {
     // Sử dụng truy vấn $in để kiểm tra mảng "games" có chứa "Liên Quân Mobile"
-    const allTeam = await TeamRegister.find({ games: { $in: ["Teamfight Tactics"] } });
+    const allTeam = await TeamRegister.find({
+      games: { $in: ["Teamfight Tactics"] },
+    });
 
     if (!allTeam || allTeam.length === 0) {
       return res.status(200).json([]);
@@ -788,10 +902,14 @@ export const findAllteamTFT = async (req, res, next) => {
 export const findAllteamTFTDouble = async (req, res, next) => {
   try {
     // Sử dụng truy vấn $in để kiểm tra mảng "games" có chứa "Liên Quân Mobile"
-    const allTeam = await TeamRegister.find({ games: { $in: ["Teamfight Tactics Double Up"] } });
+    const allTeam = await TeamRegister.find({
+      games: { $in: ["Teamfight Tactics Double Up"] },
+    });
 
     if (!allTeam || allTeam.length === 0) {
-      return next(errorHandler(404, 'No teams found for "Teamfight Tactics Double"'));
+      return next(
+        errorHandler(404, 'No teams found for "Teamfight Tactics Double"')
+      );
     }
 
     res.status(200).json(allTeam);
@@ -804,7 +922,7 @@ export const findAllteam = async (req, res, next) => {
     const allTeam = await Organization.find();
 
     if (!allTeam || allTeam.length === 0) {
-      return next(errorHandler(404, 'No Game found'));
+      return next(errorHandler(404, "No Game found"));
     }
 
     res.status(200).json(allTeam);
@@ -814,12 +932,12 @@ export const findAllteam = async (req, res, next) => {
 };
 
 export const findmatchID = async (req, res, next) => {
-  const { round, Match } = req.body
+  const { round, Match } = req.body;
   try {
-    const allGame = await MatchID.findOne({round, Match });
+    const allGame = await MatchID.findOne({ round, Match });
 
     if (!allGame || allGame.length === 0) {
-      return next(errorHandler(404, 'No Game found'));
+      return next(errorHandler(404, "No Game found"));
     }
 
     res.status(200).json(allGame);
@@ -833,7 +951,7 @@ export const findAllGame = async (req, res, next) => {
     const allGame = await AllGame.find();
 
     if (allGame.length === 0) {
-      return next(errorHandler(404, 'No Game found'));
+      return next(errorHandler(404, "No Game found"));
     }
 
     res.status(200).json(allGame);
@@ -843,80 +961,83 @@ export const findAllGame = async (req, res, next) => {
 };
 export const addBanPickVeto = async (req, res) => {
   try {
+    const { id, group, veto } = req.body;
 
-      const { id,group, veto } = req.body;
+    // Ensure veto is an array and not empty
+    if (!Array.isArray(veto) || veto.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Veto should be a non-empty array" });
+    }
 
-      // Ensure veto is an array and not empty
-      if (!Array.isArray(veto) || veto.length === 0) {
-          return res.status(400).json({ error: 'Veto should be a non-empty array' });
-      }
+    const newBanPick = new BanPick({
+      id,
+      group,
+      veto,
+    });
 
-      const newBanPick = new BanPick({
-          id,group,
-          veto
-      });
+    await newBanPick.save();
 
-      await newBanPick.save();
-
-      res.status(201).json(newBanPick);
+    res.status(201).json(newBanPick);
   } catch (err) {
-      res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 };
 export const findBanPickVeto = async (req, res) => {
   try {
- // Add logging to debug
+    // Add logging to debug
 
-      const { id,group } = req.body;
+    const { id, group } = req.body;
 
-      const newBanPick = await BanPick.findOne({
-        id,group
-      });
+    const newBanPick = await BanPick.findOne({
+      id,
+      group,
+    });
 
-
-
-      res.status(200).json(newBanPick);
+    res.status(200).json(newBanPick);
   } catch (err) {
-      res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 };
-
-
 
 export const signin = async (req, res, next) => {
   const { username, password } = req.body;
   try {
     const validUser = await User.findOne({ username });
 
-    if (!validUser) return next(errorHandler(404, 'Người dùng không tìm thấy'));
+    if (!validUser) return next(errorHandler(404, "Người dùng không tìm thấy"));
 
     const validPassword = bcryptjs.compareSync(password, validUser.password);
-    if (!validPassword) return next(errorHandler(401, 'Thông tin đăng nhập sai'));
+    if (!validPassword)
+      return next(errorHandler(401, "Thông tin đăng nhập sai"));
 
-    const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    
-    if (!validUser._doc) return next(errorHandler(500, 'Không thể truy cập dữ liệu người dùng'));
+    const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    if (!validUser._doc)
+      return next(errorHandler(500, "Không thể truy cập dữ liệu người dùng"));
 
     const { password: hashedPassword, ...rest } = validUser._doc;
-    
+
     const expiryDate = new Date(Date.now() + 60 * 60 * 1000); // 1 giờ
 
     res
-      .cookie('access_token', token, { httpOnly: true, expires: expiryDate })
+      .cookie("access_token", token, { httpOnly: true, expires: expiryDate })
       .status(200)
       .json(rest);
   } catch (error) {
-    return next(errorHandler(500, 'Lỗi máy chủ nội bộ'));
+    return next(errorHandler(500, "Lỗi máy chủ nội bộ"));
   }
 };
 
 export const findPlayer = async (req, res, next) => {
   const { _id } = req.body;
   try {
-    const validUser = await User.findOne({ _id  });
+    const validUser = await User.findOne({ _id });
 
     if (!validUser) {
-      return next(errorHandler(404, 'User not found'));
+      return next(errorHandler(404, "User not found"));
     }
     res.status(200).json(validUser);
   } catch (error) {
@@ -925,5 +1046,5 @@ export const findPlayer = async (req, res, next) => {
 };
 
 export const signout = (req, res) => {
-  res.clearCookie('access_token').status(200).json('Signout success!');
+  res.clearCookie("access_token").status(200).json("Signout success!");
 };

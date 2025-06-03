@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-
+import { useDispatch } from 'react-redux';
+import { signOut } from '../../redux/user/userSlice.js';
 const LeagueHeader = ({
   me,
   league,
@@ -18,7 +19,7 @@ const LeagueHeader = ({
   const [registerPhase, setRegisterPhase] = useState('idle');
   const [joinCountdown, setJoinCountdown] = useState('');
   const [isCheckinPhase, setIsCheckinPhase] = useState(false);
-
+  const dispatch = useDispatch();
   const handleAutoRegister = async () => {
     try {
       const formData = {
@@ -159,6 +160,36 @@ const LeagueHeader = ({
         >
           <div className="sm:relative z-10 h-full items-center flex sm:flex-row flex-col justify-center px-2 sm:text-left  text-center">
             <div className="sm:mb-0 mb-4 sm:absolute relative md:left-5 left-0 sm:bottom-10 text-sm md:text-base text-white font-semibold pl-2 xl:pl-8">
+              {!currentUser ? (
+                <div className="text-white mb-9">
+                  <p>
+                    Ấn vào đây để{' '}
+                    <a href="/signin" className="hover:underline text-green-400">
+                      đăng nhập
+                    </a>
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-row items-center sm:justify-start justify-center mb-9">
+                  <span>Chào mừng quay lại, {currentUser.riotID}</span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await fetch('https://bigtournament-hq9n.onrender.com/api/auth/signout', {
+                          credentials: 'include',
+                        });
+                        dispatch(signOut()); // xóa currentUser trong Redux
+                      } catch (err) {
+                        console.error('Sign out error:', err);
+                        alert('Lỗi khi đăng xuất.');
+                      }
+                    }}
+                    className=" text-red-400 hover:underline px-3 py-1 rounded-md"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
               <div className="text-sm font-bold mb-2 uppercase">
                 <p className="text-left">
                   <span className="text-[#00ff5c]">
