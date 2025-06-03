@@ -81,7 +81,7 @@ export default function Profile() {
   }, []);
   useEffect(() => {
     if (loggedInUser && loggedInUser !== 'Đăng nhập với Riot Games') {
-      navigate('/tft/tft_road_to_iec_2025');
+      navigate('/tft/tft_road_set_10');
     }
   }, [loggedInUser]);
   useEffect(() => {
@@ -455,7 +455,9 @@ export default function Profile() {
                   type="password"
                   placeholder="Enter new password"
                   onChange={handleChange}
-                  className={`appearance-none bg-white rounded-md block w-full pl-10 px-3 py-3 border ${errors.newPassword ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                  className={`appearance-none bg-white rounded-md block w-full pl-10 px-3 py-3 border ${
+                    errors.newPassword ? 'border-red-500' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 />
               </div>
               {errors.newPassword && (
@@ -484,7 +486,9 @@ export default function Profile() {
                   type="password"
                   placeholder="Confirm new password"
                   onChange={handleChange}
-                  className={`appearance-none bg-white rounded-md block w-full pl-10 px-3 py-3 border ${errors.confirmNewPassword ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                  className={`appearance-none bg-white rounded-md block w-full pl-10 px-3 py-3 border ${
+                    errors.confirmNewPassword ? 'border-red-500' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 />
               </div>
               {errors.confirmNewPassword && (
