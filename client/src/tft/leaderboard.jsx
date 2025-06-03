@@ -227,6 +227,7 @@ const Leaderboard = () => {
       <LeagueHeader
         league={league}
         startTime={league.season.time_start}
+        endTime={league.season.time_end}
         currentUser={currentUser}
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}

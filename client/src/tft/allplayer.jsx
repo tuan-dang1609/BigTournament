@@ -109,6 +109,7 @@ const MemberPage = () => {
       <LeagueHeader
         league={league}
         startTime={league.season.time_start}
+        endTime={league.season.time_end}
         currentUser={currentUser}
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
@@ -154,7 +155,9 @@ const MemberPage = () => {
                           <img
                             src={`https://drive.google.com/thumbnail?id=${team.team.logoTeam}`}
                             alt="team-logo"
-                            className={`w-10 h-10 rounded-full object-cover ${team.team?.logoTeam ? '' : 'invisible'}`}
+                            className={`w-10 h-10 rounded-full object-cover ${
+                              team.team?.logoTeam ? '' : 'invisible'
+                            }`}
                           />
                         )}
                       </div>

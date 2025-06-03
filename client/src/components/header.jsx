@@ -7,6 +7,7 @@ const LeagueHeader = ({
   league,
   league_id,
   startTime,
+  endTime,
   currentUser,
   isMenuOpen,
   setIsMenuOpen,
@@ -160,7 +161,22 @@ const LeagueHeader = ({
             <div className="sm:mb-0 mb-4 sm:absolute relative md:left-5 left-0 sm:bottom-10 text-sm md:text-base text-white font-semibold pl-2 xl:pl-8">
               <div className="text-sm font-bold mb-2 uppercase">
                 <p className="text-left">
-                  <span className="text-[#00ff5c]">SẮP TỚI</span> •{' '}
+                  <span className="text-[#00ff5c]">
+                    {(() => {
+                      const now = new Date();
+                      const start = new Date(startTime);
+                      const end = new Date(endTime);
+
+                      if (now < start) {
+                        return <span className="text-[#00ff5c]">SẮP TỚI</span>;
+                      } else if (now >= start && now <= end) {
+                        return <span className="text-yellow-400">ĐANG DIỄN RA</span>;
+                      } else {
+                        return <span className="text-red-500 font-bold">KẾT THÚC</span>;
+                      }
+                    })()}
+                  </span>{' '}
+                  •{' '}
                   {new Date(startTime).toLocaleString('en-GB', {
                     weekday: 'short',
                     day: '2-digit',
@@ -232,7 +248,11 @@ const LeagueHeader = ({
                   </Link>
                 ) : (
                   <div
-                    className={`flex ${currentPlayer ? 'sm:justify-end justify-center gap-2' : 'sm:justify-end justify-center'}`}
+                    className={`flex ${
+                      currentPlayer
+                        ? 'sm:justify-end justify-center gap-2'
+                        : 'sm:justify-end justify-center'
+                    }`}
                   >
                     {currentPlayer && (
                       <button
