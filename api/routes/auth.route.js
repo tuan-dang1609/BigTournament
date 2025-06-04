@@ -178,6 +178,21 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch match data from database" });
   }
 });
+router.get("/valorant/allmatchdata", async (req, res) => {
+  try {
+    const allMatches = await ValorantMatch.find({}).lean();
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.json({
+      source: "database",
+      total: allMatches.length,
+      matches: allMatches,
+    });
+  } catch (error) {
+    console.error("Error fetching all match data:", error.message);
+    res.status(500).json({ error: "Failed to fetch all match data" });
+  }
+});
 
 router.get("/valorant/save-match/:matchId", async (req, res) => {
   const { matchId } = req.params;
