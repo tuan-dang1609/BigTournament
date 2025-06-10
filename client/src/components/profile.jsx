@@ -81,7 +81,7 @@ export default function Profile() {
   }, []);
   useEffect(() => {
     if (loggedInUser && loggedInUser !== 'Đăng nhập với Riot Games') {
-      navigate('/tft/tft_road_set_10');
+      navigate('/tft/tft_set_10');
     }
   }, [loggedInUser]);
   useEffect(() => {
