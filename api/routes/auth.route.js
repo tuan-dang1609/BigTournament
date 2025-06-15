@@ -154,6 +154,79 @@ router.post("/teams/:league", findteamHOF);
 router.post("/leagues/list", findleagueHOF);
 router.post("/leagues", leagueHOF);
 router.post("/myrankpickem", getUserPickemScore);
+// Add this route to get match data with player ready status
+router.get("/findmatch/:round/:match", async (req, res) => {
+  try {
+    const { round, match } = req.params;
+    const matchData = await MatchID.findOne({
+      round: round,
+      Match: match,
+      game: "Valorant",
+    });
+
+    if (!matchData) {
+      return res.status(404).json({ message: "Match not found" });
+    }
+
+    // Get banpick data
+    let banpickData = null;
+    if (matchData.banpickid) {
+      banpickData = await BanPickValo.findOne({ id: matchData.banpickid });
+    }
+
+    res.json({
+      matchData,
+      banpickData,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Add route to update player ready status
+router.post("/updatePlayerReady", async (req, res) => {
+  try {
+    const { round, match, riotID, isReady, team } = req.body;
+
+    const matchData = await MatchID.findOne({
+      round: round,
+      match: match,
+      game: "Valorant",
+    });
+
+    if (!matchData) {
+      return res.status(404).json({ message: "Match not found" });
+    }
+
+    // Initialize playersReady if it doesn't exist
+    if (!matchData.playersReady) {
+      matchData.playersReady = { team1: [], team2: [] };
+    }
+
+    const teamKey = team === "team1" ? "team1" : "team2";
+
+    // Find existing player or add new one
+    const existingPlayerIndex = matchData.playersReady[teamKey].findIndex(
+      (p) => p.riotID === riotID
+    );
+
+    if (existingPlayerIndex >= 0) {
+      matchData.playersReady[teamKey][existingPlayerIndex].isReady = isReady;
+    } else {
+      matchData.playersReady[teamKey].push({ riotID, isReady });
+    }
+
+    await matchData.save();
+
+    res.json({
+      message: "Player ready status updated",
+      playersReady: matchData.playersReady,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 router.get("/valorant/matchdata/:matchId", async (req, res) => {
   const { matchId } = req.params;
 
@@ -861,78 +934,5 @@ router.post("/league/checkin", async (req, res) => {
   } catch (err) {
     console.error("❌ Error in /league/checkin:", err);
     res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-// Add this route to get match data with player ready status
-router.get("/findmatch/:round/:match", async (req, res) => {
-  try {
-    const { round, match } = req.params;
-    const matchData = await MatchID.findOne({
-      round: round,
-      Match: match,
-      game: "Valorant",
-    });
-
-    if (!matchData) {
-      return res.status(404).json({ message: "Match not found" });
-    }
-
-    // Get banpick data
-    let banpickData = null;
-    if (matchData.banpickid) {
-      banpickData = await BanPickValo.findOne({ id: matchData.banpickid });
-    }
-
-    res.json({
-      matchData,
-      banpickData,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
-
-// Add route to update player ready status
-router.post("/updatePlayerReady", async (req, res) => {
-  try {
-    const { round, match, riotID, isReady, team } = req.body;
-
-    const matchData = await MatchID.findOne({
-      round: round,
-      match: match,
-      game: "Valorant",
-    });
-
-    if (!matchData) {
-      return res.status(404).json({ message: "Match not found" });
-    }
-
-    // Initialize playersReady if it doesn't exist
-    if (!matchData.playersReady) {
-      matchData.playersReady = { team1: [], team2: [] };
-    }
-
-    const teamKey = team === "team1" ? "team1" : "team2";
-
-    // Find existing player or add new one
-    const existingPlayerIndex = matchData.playersReady[teamKey].findIndex(
-      (p) => p.riotID === riotID
-    );
-
-    if (existingPlayerIndex >= 0) {
-      matchData.playersReady[teamKey][existingPlayerIndex].isReady = isReady;
-    } else {
-      matchData.playersReady[teamKey].push({ riotID, isReady });
-    }
-
-    await matchData.save();
-
-    res.json({
-      message: "Player ready status updated",
-      playersReady: matchData.playersReady,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
