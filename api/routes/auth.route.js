@@ -31,6 +31,7 @@ import {
   findAllMatchID,
   findmatchID,
 } from "../controllers/auth.controller.js";
+import { fetchPlayerProfilesValo } from "../controllers/fetchPlayerProfilesValo.controller.js";
 import QuestionPickem from "../models/question.model.js";
 import PowerRankingAOV from "../models/powerRankingAOV.model.js";
 import Response from "../models/response.model.js";
@@ -966,4 +967,5 @@ router.post("/league/checkin", async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+router.get("/fetchplayerprofilesvalo", fetchPlayerProfilesValo);
 export default router;
