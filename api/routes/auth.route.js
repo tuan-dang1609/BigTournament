@@ -249,12 +249,15 @@ router.post("/updatePlayerReady", async (req, res) => {
 
     await matchData.save();
 
-    const io = req.app.get("io");
-    io.to(`match_${round}_${match}`).emit("playerReadyUpdated", {
-      playersReady: matchData.playersReady,
-      round,
-      match,
-    });
+    // Use req.io if available, otherwise req.app.get('io')
+    const io = req.io || (req.app && req.app.get && req.app.get("io"));
+    if (io) {
+      io.to(`match_${round}_${match}`).emit("playerReadyUpdated", {
+        playersReady: matchData.playersReady,
+        round,
+        match,
+      });
+    }
 
     res.json({
       message: "Player ready status updated",
