@@ -38,6 +38,7 @@ import TFThompage from './tft/homepage.jsx';
 import LiveGameDataLOL from './leagueoflegend/hudgame.jsx';
 import TournamentBracketLOL from './leagueoflegend/bracket.jsx';
 import TournamentBracketAOV16 from './arenaofvalor/bracket_16team.jsx';
+import TournamentBracketAOV8 from './arenaofvalor/bracket.jsx';
 import PlayinAOV from './arenaofvalor/bracket.jsx';
 import RSO_Authorization from './components/rso.jsx';
 import PowerRankingAOV from './arenaofvalor/ranking.jsx';
@@ -60,6 +61,7 @@ import RulebookAll from './components/rule.jsx';
 import Leaderboard from './tft/leaderboard.jsx';
 import BracketPage from './components/bracket.jsx';
 import ValorantMatchCard from './components/aftermatchdata.jsx';
+import ValorantLobby from './valorant/lobby.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -80,6 +82,7 @@ if (rootElement) {
             <Route path="/:game/:league_id/rule" element={<RulebookAll />} />
             <Route path="/:game/:league_id/leaderboard" element={<Leaderboard />} />
             <Route path="/:game/:league_id/bracket" element={<BracketPage />} />
+            <Route path="/:game/:league_id/:round/:match/lobby" element={<ValorantLobby />} />
             {/* Routes CÓ Navbar + Footer */}
             <Route
               path="*"
@@ -101,7 +104,8 @@ if (rootElement) {
                     <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
                     <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
                     <Route path="/valorant/swissstage" element={<SwissStage />} />
-                    <Route path="/valorant/doubleup" element={<PlayoffValo />} />
+                    <Route path="/test/valorant/doubleup" element={<PlayoffValo />} />
+                    <Route path="/test/all/single8eli" element={<TournamentBracketAOV8 />} />
                     <Route path="/leagueoflegend/soloyasuo" element={<SwissStageLOL />} />
                     <Route path="/leagueoflegend/match" element={<MatchStatLOL />} />
                     <Route path="/arenaofvalor" element={<HomepageAOV />} />

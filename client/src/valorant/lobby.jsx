@@ -23,6 +23,7 @@ const ValorantLobby = () => {
   const [registerPhase, setRegisterPhase] = useState('idle');
   const [matchData, setMatchData] = useState(null);
   const [banpickData, setBanpickData] = useState(null);
+  const [playersReady, setPlayersReady] = useState({ team1: [], team2: [] });
 
   // Get URL parameters and current user
   const { game, league_id, round, match } = useParams();
@@ -86,29 +87,62 @@ const ValorantLobby = () => {
     };
   }, [round, match]);
 
-  // Fetch match data and banpick data
+  // Fetch match data, banpick data, and player data all in one effect
   useEffect(() => {
-    const fetchMatchData = async () => {
+    const fetchAll = async () => {
       if (!round || !match) return;
-
       setLoading(true);
       try {
+        // 1. Fetch match data
         const response = await axios.get(
           `https://bigtournament-hq9n.onrender.com/api/auth/findmatch/${round}/${match}`
         );
-
-        console.log('Match Response:', response.data);
-        setMatchData(response.data.matchData);
+        setMatchData({ ...response.data.matchData });
+        setPlayersReady(response.data.matchData.playersReady || { team1: [], team2: [] });
         setBanpickData(response.data.banpickData);
+
+        // 2. Fetch team players
+        const teamPlayers = await getTeamPlayers(response.data.matchData);
+        // 3. Fetch player profiles
+        const [team1Profiles, team2Profiles] = await Promise.all([
+          fetchPlayerProfiles(teamPlayers.team1),
+          fetchPlayerProfiles(teamPlayers.team2),
+        ]);
+        const createPlayerData = (profiles, teamKey) => {
+          if (!Array.isArray(profiles)) return [];
+          if (profiles.length === 0) return [];
+          return profiles
+            .map((profile, index) => {
+              if (!profile || typeof profile !== 'object') return null;
+              const riotID = profile.name || profile.riotID || `Unknown#${index}`;
+              const readyStatus =
+                response.data.matchData.playersReady?.[teamKey]?.find(
+                  (p) => p && p.riotID === riotID
+                )?.isReady || false;
+              return {
+                id: `${teamKey}_${index + 1}`,
+                riotID: String(riotID),
+                username: String(profile.nickname || riotID.split('#')[0] || 'Unknown'),
+                avatar: `https://drive.google.com/thumbnail?id=${
+                  profile.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'
+                }&sz=w100`,
+                isReady: Boolean(readyStatus),
+              };
+            })
+            .filter((player) => player !== null);
+        };
+        setPlayers({
+          team1: createPlayerData(team1Profiles, 'team1'),
+          team2: createPlayerData(team2Profiles, 'team2'),
+        });
       } catch (error) {
-        console.error('Error fetching match data:', error);
-        setError('Failed to load match data');
+        setError('Failed to load match/player data');
+        setPlayers({ team1: [], team2: [] });
       } finally {
         setLoading(false);
       }
     };
-
-    fetchMatchData();
+    fetchAll();
   }, [round, match]);
 
   // Fetch player profiles from your API
@@ -126,11 +160,14 @@ const ValorantLobby = () => {
 
     try {
       // Use GET and send riotIDs as a query parameter (comma-separated)
-      const response = await axios.get('http://localhost:3000/api/auth/fetchplayerprofilesvalo', {
-        params: {
-          players: riotIDs.join(','),
-        },
-      });
+      const response = await axios.get(
+        'https://bigtournament-hq9n.onrender.com/api/auth/fetchplayerprofilesvalo',
+        {
+          params: {
+            players: riotIDs.join(','),
+          },
+        }
+      );
 
       // Ensure response is an array
       const profiles = Array.isArray(response.data) ? response.data : [];
@@ -167,41 +204,35 @@ const ValorantLobby = () => {
     };
   };
 
-  // Get ready players from registered teams
-  const getTeamPlayers = async () => {
-    if (!matchData || !matchData.teamA || !matchData.teamB) {
+  // Fix: getTeamPlayers should accept matchData as argument for initial load
+  const getTeamPlayers = async (dataForTeams) => {
+    const data = dataForTeams || matchData;
+    if (!data || !data.teamA || !data.teamB) {
       console.log('No match data available');
       return { team1: [], team2: [] };
     }
-
     try {
-      // Use the new GET endpoint with teamA and teamB as query params
       const response = await axios.get(
-        `http://localhost:3000/api/auth/${game}/${league_id}/check-registered-valorant`,
+        `https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}/check-registered-valorant`,
         {
           params: {
-            teamA: matchData.teamA,
-            teamB: matchData.teamB,
+            teamA: data.teamA,
+            teamB: data.teamB,
           },
         }
       );
-
       if (!Array.isArray(response.data)) {
         console.error('Invalid response format from check-registered-valorant');
         return { team1: [], team2: [] };
       }
-
-      // Filter players by team
       const team1Players = response.data
-        .filter((player) => player && player.team && player.team.name === matchData.teamA)
+        .filter((player) => player && player.team && player.team.name === data.teamA)
         .flatMap((player) => (Array.isArray(player.igns) ? player.igns : []))
         .filter((riotID) => riotID && typeof riotID === 'string');
-
       const team2Players = response.data
-        .filter((player) => player && player.team && player.team.name === matchData.teamB)
+        .filter((player) => player && player.team && player.team.name === data.teamB)
         .flatMap((player) => (Array.isArray(player.igns) ? player.igns : []))
         .filter((riotID) => riotID && typeof riotID === 'string');
-
       return {
         team1: team1Players,
         team2: team2Players,
@@ -212,121 +243,32 @@ const ValorantLobby = () => {
     }
   };
 
-  // Initialize players data
+  // Only update ready status in players state on socket event
   useEffect(() => {
-    const initializePlayers = async () => {
-      if (!matchData) return;
-
-      try {
-        const teamPlayers = await getTeamPlayers();
-        console.log('Team Players Result:', teamPlayers);
-
-        // Fetch profiles for both teams - ensure we always get arrays
-        const [team1Profiles, team2Profiles] = await Promise.all([
-          fetchPlayerProfiles(teamPlayers.team1),
-          fetchPlayerProfiles(teamPlayers.team2),
-        ]);
-
-        console.log('Team1 Profiles:', team1Profiles);
-        console.log('Team2 Profiles:', team2Profiles);
-
-        // Create player objects with strict validation
-        const createPlayerData = (profiles, teamKey) => {
-          // CRITICAL: Ensure profiles is always an array
-          if (!Array.isArray(profiles)) {
-            console.error(`Profiles for ${teamKey} is not an array:`, profiles);
-            return []; // Return empty array instead of trying to map
-          }
-
-          // If profiles array is empty, return empty array
-          if (profiles.length === 0) {
-            console.log(`No profiles found for ${teamKey}`);
-            return [];
-          }
-
-          return profiles
-            .map((profile, index) => {
-              if (!profile || typeof profile !== 'object') {
-                console.error(`Invalid profile at index ${index}:`, profile);
-                return null;
-              }
-
-              const riotID = profile.name || profile.riotID || `Unknown#${index}`;
-              const readyStatus =
-                matchData.playersReady?.[teamKey]?.find((p) => p && p.riotID === riotID)?.isReady ||
-                false;
-
-              return {
-                id: `${teamKey}_${index + 1}`,
-                riotID: String(riotID),
-                username: String(profile.nickname || riotID.split('#')[0] || 'Unknown'),
-                avatar: `https://drive.google.com/thumbnail?id=${
-                  profile.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'
-                }&sz=w100`,
-                isReady: Boolean(readyStatus),
-              };
-            })
-            .filter((player) => player !== null); // Remove null entries
-        };
-
-        const team1Data = createPlayerData(team1Profiles, 'team1');
-        const team2Data = createPlayerData(team2Profiles, 'team2');
-
-        console.log('Final Team1 Data:', team1Data);
-        console.log('Final Team2 Data:', team2Data);
-
-        setPlayers({
-          team1: team1Data,
-          team2: team2Data,
-        });
-      } catch (error) {
-        console.error('Error initializing players:', error);
-        setError('Failed to load player data');
-        // Set empty arrays on error
-        setPlayers({
-          team1: [],
-          team2: [],
+    socket.on('playerReadyUpdated', (data) => {
+      if (data.round === round && data.match === match) {
+        setPlayersReady(data.playersReady);
+        setPlayers((prev) => {
+          const updateReady = (teamArr, teamKey) =>
+            teamArr.map((p) => {
+              if (!p) return p;
+              const found = data.playersReady?.[teamKey]?.find((x) => x.riotID === p.riotID);
+              return found ? { ...p, isReady: found.isReady } : p;
+            });
+          return {
+            team1: updateReady(prev.team1, 'team1'),
+            team2: updateReady(prev.team2, 'team2'),
+          };
         });
       }
-    };
+    });
+    return () => socket.off('playerReadyUpdated');
+  }, [round, match]);
 
-    initializePlayers();
-  }, [matchData]);
-
-  // Check if current user is in the lobby
-  const isCurrentUserInLobby = () => {
-    if (!me?.riotID) return false;
-    const allPlayers = [...players.team1, ...players.team2];
-    return allPlayers.some((player) => player && player.riotID === me.riotID);
-  };
-
-  // Countdown timer effect
-  useEffect(() => {
-    if (matchFound && countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [countdown, matchFound]);
-
-  // Check if all players are ready (max 5 per team)
-  useEffect(() => {
-    if (players.team1.length > 0 && players.team2.length > 0) {
-      const team1Ready = players.team1.filter((p) => p && p.isReady).length;
-      const team2Ready = players.team2.filter((p) => p && p.isReady).length;
-
-      // Each team needs max 5 players ready
-      const team1RequiredReady = Math.min(5, players.team1.length);
-      const team2RequiredReady = Math.min(5, players.team2.length);
-
-      setAllPlayersReady(team1Ready >= team1RequiredReady && team2Ready >= team2RequiredReady);
-    }
-  }, [players]);
-
-  // In togglePlayerReady, do NOT update local state directly, just call the API
+  // In togglePlayerReady, do NOT run fetch player logic, just call the API
   const togglePlayerReady = async (teamKey, playerId) => {
     const player = players[teamKey].find((p) => p && p.id === playerId);
     if (!player) return;
-
     try {
       await axios.post('https://bigtournament-hq9n.onrender.com/api/auth/updatePlayerReady', {
         round,
@@ -335,7 +277,7 @@ const ValorantLobby = () => {
         isReady: !player.isReady,
         team: teamKey,
       });
-      // Do not update local state here; wait for socket event
+      // Do not update local state or fetch player data here; wait for socket event
     } catch (error) {
       console.error('Error updating player ready status:', error);
     }
@@ -469,6 +411,13 @@ const ValorantLobby = () => {
       console.error('Error getting map name:', error);
       return 'Haven';
     }
+  };
+
+  // Utility: check if current user is in the lobby
+  const isCurrentUserInLobby = () => {
+    if (!me?.riotID) return false;
+    const allPlayers = [...players.team1, ...players.team2];
+    return allPlayers.some((player) => player && player.riotID === me.riotID);
   };
 
   // Early return for loading league data
