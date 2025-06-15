@@ -158,9 +158,11 @@ router.post("/myrankpickem", getUserPickemScore);
 router.get("/findmatch/:round/:match", async (req, res) => {
   try {
     const { round, match } = req.params;
+
+    // Find match data using the correct field name 'Match' (capital M)
     const matchData = await MatchID.findOne({
       round: round,
-      Match: match,
+      Match: match, // Note: capital M to match your schema
       game: "Valorant",
     });
 
@@ -168,17 +170,45 @@ router.get("/findmatch/:round/:match", async (req, res) => {
       return res.status(404).json({ message: "Match not found" });
     }
 
-    // Get banpick data
+    // Get banpick data if banpickid exists
     let banpickData = null;
     if (matchData.banpickid) {
       banpickData = await BanPickValo.findOne({ id: matchData.banpickid });
     }
 
-    res.json({
-      matchData,
-      banpickData,
-    });
+    // Ensure proper JSON serialization
+    const response = {
+      matchData: {
+        _id: matchData._id,
+        matchid: matchData.matchid,
+        teamA: matchData.teamA,
+        teamB: matchData.teamB,
+        round: matchData.round,
+        Match: matchData.Match,
+        scoreA: matchData.scoreA,
+        scoreB: matchData.scoreB,
+        banpickid: matchData.banpickid,
+        game: matchData.game,
+        playersReady: matchData.playersReady || { team1: [], team2: [] },
+      },
+      banpickData: banpickData
+        ? {
+            id: banpickData.id,
+            team1: banpickData.team1,
+            team2: banpickData.team2,
+            matchType: banpickData.matchType,
+            maps: banpickData.maps,
+            sides: banpickData.sides,
+            currentPhase: banpickData.currentPhase,
+            currentTurn: banpickData.currentTurn,
+            deciderMap: banpickData.deciderMap,
+          }
+        : null,
+    };
+
+    res.json(response);
   } catch (error) {
+    console.error("Error in findmatch route:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -936,3 +966,4 @@ router.post("/league/checkin", async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+export default router;
