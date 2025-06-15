@@ -800,8 +800,23 @@ app.use("/api/auth", authRoutes);
 io.on("connection", (socket) => {
   console.log("✅ New client connected:", socket.id);
 
+  // Join match room for lobby updates
+  socket.on("joinMatchLobby", ({ round, match }) => {
+    const roomName = `match_${round}_${match}`;
+    socket.join(roomName);
+    console.log(`📥 Client ${socket.id} joined lobby room ${roomName}`);
+  });
+
+  // Leave match room
+  socket.on("leaveMatchLobby", ({ round, match }) => {
+    const roomName = `match_${round}_${match}`;
+    socket.leave(roomName);
+    console.log(`📤 Client ${socket.id} left lobby room ${roomName}`);
+  });
+
+  // Existing joinMatch functionality
   socket.on("joinMatch", (matchId) => {
-    socket.join(matchId); // ← Join theo room
+    socket.join(matchId);
     console.log(`📥 Client ${socket.id} joined room ${matchId}`);
   });
 
