@@ -5,6 +5,12 @@ import { useSelector } from 'react-redux';
 import { useLeagueData } from '../hooks/useLeagueData';
 import MyNavbar2 from '../components/Navbar2';
 import LeagueHeader from '../components/header';
+import { io } from 'socket.io-client';
+
+const socket = io('https://bigtournament-hq9n.onrender.com', {
+  transports: ['websocket'],
+  withCredentials: true,
+});
 
 const ValorantLobby = () => {
   const [countdown, setCountdown] = useState(30);
@@ -59,6 +65,27 @@ const ValorantLobby = () => {
 
   const getNavigation = () => navigationAll1.aov;
 
+  // Socket.io: join/leave match room and listen for updates
+  useEffect(() => {
+    if (!round || !match) return;
+    socket.emit('joinMatchLobby', { round, match });
+    socket.on('playerReadyUpdated', (data) => {
+      if (data.round === round && data.match === match) {
+        setMatchData((prev) => ({ ...prev, playersReady: data.playersReady }));
+      }
+    });
+    socket.on('matchDataUpdated', (data) => {
+      if (data.round === round && data.match === match) {
+        setMatchData(data.matchData);
+      }
+    });
+    return () => {
+      socket.emit('leaveMatchLobby', { round, match });
+      socket.off('playerReadyUpdated');
+      socket.off('matchDataUpdated');
+    };
+  }, [round, match]);
+
   // Fetch match data and banpick data
   useEffect(() => {
     const fetchMatchData = async () => {
@@ -98,10 +125,12 @@ const ValorantLobby = () => {
     }
 
     try {
-      const response = await axios.post(
-        'https://bigtournament-hq9n.onrender.com/api/auth/fetchplayerprofilesvalo',
-        { players: riotIDs }
-      );
+      // Use GET and send riotIDs as a query parameter (comma-separated)
+      const response = await axios.get('http://localhost:3000/api/auth/fetchplayerprofilesvalo', {
+        params: {
+          players: riotIDs.join(','),
+        },
+      });
 
       // Ensure response is an array
       const profiles = Array.isArray(response.data) ? response.data : [];
@@ -146,10 +175,15 @@ const ValorantLobby = () => {
     }
 
     try {
-      // Get all registered players first
-      const response = await axios.post(
-        'https://bigtournament-hq9n.onrender.com/api/auth/check-registered-valorant',
-        { riotid: [] }
+      // Use the new GET endpoint with teamA and teamB as query params
+      const response = await axios.get(
+        `http://localhost:3000/api/auth/${game}/${league_id}/check-registered-valorant`,
+        {
+          params: {
+            teamA: matchData.teamA,
+            teamB: matchData.teamB,
+          },
+        }
       );
 
       if (!Array.isArray(response.data)) {
@@ -157,22 +191,16 @@ const ValorantLobby = () => {
         return { team1: [], team2: [] };
       }
 
-      console.log('Registered players:', response.data);
-
       // Filter players by team
       const team1Players = response.data
-        .filter((player) => player && player.teamName === matchData.teamA)
-        .slice(0, 5)
-        .map((player) => player.riotID)
+        .filter((player) => player && player.team && player.team.name === matchData.teamA)
+        .flatMap((player) => (Array.isArray(player.igns) ? player.igns : []))
         .filter((riotID) => riotID && typeof riotID === 'string');
 
       const team2Players = response.data
-        .filter((player) => player && player.teamName === matchData.teamB)
-        .slice(0, 5)
-        .map((player) => player.riotID)
+        .filter((player) => player && player.team && player.team.name === matchData.teamB)
+        .flatMap((player) => (Array.isArray(player.igns) ? player.igns : []))
         .filter((riotID) => riotID && typeof riotID === 'string');
-
-      console.log('Team players:', { team1: team1Players, team2: team2Players });
 
       return {
         team1: team1Players,
@@ -294,6 +322,7 @@ const ValorantLobby = () => {
     }
   }, [players]);
 
+  // In togglePlayerReady, do NOT update local state directly, just call the API
   const togglePlayerReady = async (teamKey, playerId) => {
     const player = players[teamKey].find((p) => p && p.id === playerId);
     if (!player) return;
@@ -306,14 +335,7 @@ const ValorantLobby = () => {
         isReady: !player.isReady,
         team: teamKey,
       });
-
-      // Update local state
-      setPlayers((prev) => ({
-        ...prev,
-        [teamKey]: prev[teamKey].map((p) =>
-          p && p.id === playerId ? { ...p, isReady: !p.isReady } : p
-        ),
-      }));
+      // Do not update local state here; wait for socket event
     } catch (error) {
       console.error('Error updating player ready status:', error);
     }
@@ -342,7 +364,7 @@ const ValorantLobby = () => {
       <div
         className={`bg-gray-800 rounded-lg p-4 border-2 transition-all duration-300 ${
           player.isReady ? 'border-green-500 bg-green-900/20' : 'border-red-500 bg-red-900/20'
-        } ${isCurrentUser ? 'ring-2 ring-blue-400' : ''}`}
+        } ${isCurrentUser ? '' : ''}`}
       >
         <div className="flex items-center space-x-3">
           <div className="relative">
@@ -368,7 +390,7 @@ const ValorantLobby = () => {
                 {player.username}
               </h3>
               {isCurrentUser && (
-                <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">YOU</span>
+                <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">BẠN</span>
               )}
             </div>
 
@@ -377,19 +399,6 @@ const ValorantLobby = () => {
             </div>
           </div>
         </div>
-
-        {isCurrentUser && isCurrentUserInLobby() && (
-          <button
-            onClick={() => togglePlayerReady(teamKey, player.id)}
-            className={`w-full mt-3 py-2 px-4 rounded font-semibold transition-colors ${
-              player.isReady
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
-          >
-            {player.isReady ? 'NOT READY' : 'READY'}
-          </button>
-        )}
       </div>
     );
   };
@@ -639,7 +648,7 @@ const ValorantLobby = () => {
                           : 'bg-green-600 hover:bg-green-700 text-white'
                       }`}
                     >
-                      {currentUserPlayer?.isReady ? 'NOT READY' : 'READY'}
+                      {currentUserPlayer?.isReady ? 'HỦY' : 'SẴN SÀNG'}
                     </button>
 
                     <div className="w-px h-8 bg-gray-600"></div>

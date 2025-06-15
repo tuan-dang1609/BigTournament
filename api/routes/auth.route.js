@@ -221,7 +221,7 @@ router.post("/updatePlayerReady", async (req, res) => {
 
     const matchData = await MatchID.findOne({
       round: round,
-      match: match,
+      Match: match,
       game: "Valorant",
     });
 
@@ -248,6 +248,13 @@ router.post("/updatePlayerReady", async (req, res) => {
     }
 
     await matchData.save();
+
+    const io = req.app.get("io");
+    io.to(`match_${round}_${match}`).emit("playerReadyUpdated", {
+      playersReady: matchData.playersReady,
+      round,
+      match,
+    });
 
     res.json({
       message: "Player ready status updated",
@@ -707,71 +714,40 @@ router.get("/alluser", async (req, res) => {
   }
 });
 
-router.post("/check-registered-valorant", async (req, res) => {
+router.get("/:game/:league_id/check-registered-valorant", async (req, res) => {
+  const { game, league_id } = req.params;
   try {
-    const { riotid } = req.body;
-
-    if (!Array.isArray(riotid)) {
-      return res.status(400).json({ error: "riotid phải là một mảng" });
+    const { teamA, teamB } = req.query;
+    if (!teamA || !teamB) {
+      return res.status(400).json({ message: "Missing team names" });
     }
 
-    const game = "Valorant";
-    // Lấy tất cả các team tham gia game "Valorant"
-    const teams = await TeamRegister.find({ games: game });
-
-    if (!teams || teams.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "Không tìm thấy team nào tham gia game này" });
+    // Find the league with Valorant players
+    const league = await DCNLeague.findOne({
+      "league.game_short": game,
+      "league.league_id": league_id,
+    }).lean();
+    if (!league) {
+      return res.status(404).json({ message: "Valorant league not found" });
     }
 
-    // Tổng hợp tất cả các thành viên của game "Valorant" từ các team
-    let combinedMembers = [];
-    teams.forEach((team) => {
-      let members = [];
-      // Nếu gameMembers được lưu dưới dạng Map (nếu schema dùng Map)
-      if (team.gameMembers instanceof Map) {
-        members = team.gameMembers.get(game) || [];
-      }
-      // Nếu gameMembers là object thông thường
-      else if (
-        typeof team.gameMembers === "object" &&
-        team.gameMembers !== null
-      ) {
-        members = team.gameMembers[game] || [];
-      }
-      combinedMembers.push(
-        ...members.map((member) => ({
-          riotID: member.trim().toLowerCase(),
-          teamName: team.teamName, // Thêm teamName vào từng thành viên
-        }))
-      );
-    });
+    // Filter players by team name (teamA or teamB)
+    const players = league.players.filter(
+      (player) => player.team?.name === teamA || player.team?.name === teamB
+    );
 
-    // Loại bỏ trùng lặp (nếu cần) và chuẩn hóa chuỗi (trim và chuyển về chữ thường)
-    combinedMembers = [
-      ...new Map(
-        combinedMembers.map((member) => [member.riotID, member])
-      ).values(),
-    ];
+    // Return only igns and team info
+    const result = players.map((player) => ({
+      igns: player.ign,
+      team: player.team,
+      logoUrl: player.logoUrl,
+      discordID: player.discordID,
+      usernameregister: player.usernameregister,
+    }));
 
-    // Kiểm tra từng riotID đầu vào (chuẩn hóa theo cùng định dạng)
-    const result = riotid.map((id) => {
-      const normalizedId = id.trim().toLowerCase();
-      const member = combinedMembers.find(
-        (member) => member.riotID === normalizedId
-      );
-      return {
-        riotID: id,
-        isregistered: !!member, // Kiểm tra xem có tồn tại trong danh sách không
-        teamname: member ? member.teamName : null, // Lấy teamName nếu có
-      };
-    });
-
-    return res.status(200).json(result);
+    res.status(200).json(result);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 // POST: Thêm dữ liệu mới

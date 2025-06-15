@@ -1,32 +1,52 @@
-import DCNLeague from "../models/tournament.model.js";
+import User from "../models/user.model.js";
 
-// Fetch Valorant player profiles by team names
+// Fetch Valorant player profiles by riotIDs (GET: ?players=riot1,riot2,...)
 export const fetchPlayerProfilesValo = async (req, res) => {
   try {
-    const { teamA, teamB } = req.body;
-    if (!teamA || !teamB) {
-      return res.status(400).json({ message: "Missing team names" });
+    // Accept riotIDs as a comma-separated string in query (?players=riot1,riot2,...)
+    let riotIDs = req.query.players;
+    if (!riotIDs) {
+      return res
+        .status(400)
+        .json({ message: "Missing players query parameter" });
+    }
+    if (typeof riotIDs === "string") {
+      riotIDs = riotIDs
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
+    }
+    if (!Array.isArray(riotIDs) || riotIDs.length === 0) {
+      return res.status(400).json({ message: "No valid riotIDs provided" });
     }
 
-    // Find the league with Valorant players
-    const league = await DCNLeague.findOne({ "league.game_short": "valo" });
-    if (!league) {
-      return res.status(404).json({ message: "Valorant league not found" });
-    }
+    // Find user profiles for each riotID
+    const userProfiles = await User.find({ riotID: { $in: riotIDs } });
 
-    // Filter players by team name (teamA or teamB)
-    const players = league.players.filter(
-      (player) => player.team?.name === teamA || player.team?.name === teamB
-    );
+    // Map riotID to user profile for quick lookup
+    const userMap = {};
+    userProfiles.forEach((user) => {
+      userMap[user.riotID] = user;
+    });
 
-    // Return only igns and team info
-    const result = players.map((player) => ({
-      igns: player.ign,
-      team: player.team,
-      logoUrl: player.logoUrl,
-      discordID: player.discordID,
-      usernameregister: player.usernameregister,
-    }));
+    // Return user profile structure for each riotID (like user.model.js)
+    const result = riotIDs.map((riotID) => {
+      const user = userMap[riotID];
+      if (user) {
+        return {
+          nickname: user.nickname,
+          discordID: user.discordID,
+          className: user.className,
+          garenaaccount: user.garenaaccount,
+          riotID: user.riotID,
+          username: user.username,
+          profilePicture: user.profilePicture,
+          team: user.team,
+        };
+      } else {
+        return { riotID, notFound: true };
+      }
+    });
 
     res.status(200).json(result);
   } catch (error) {
