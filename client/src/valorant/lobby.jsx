@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useLeagueData } from '../hooks/useLeagueData';
 import MyNavbar2 from '../components/Navbar2';
@@ -15,7 +15,6 @@ const socket = io('https://bigtournament-hq9n.onrender.com', {
 const ValorantLobby = () => {
   const [countdown, setCountdown] = useState(30);
   const [matchFound, setMatchFound] = useState(true);
-  const [allPlayersReady, setAllPlayersReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,6 +26,7 @@ const ValorantLobby = () => {
 
   // Get URL parameters and current user
   const { game, league_id, round, match } = useParams();
+  const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
 
   // Use the league data hook
@@ -65,7 +65,51 @@ const ValorantLobby = () => {
   };
 
   const getNavigation = () => navigationAll1.aov;
+  // Utility: get number of maps (BO1/BO3/BO5)
+  const getTotalMaps = () => {
+    if (banpickData && banpickData.maps && Array.isArray(banpickData.maps.selected)) {
+      return banpickData.maps.selected.length;
+    }
+    // fallback: BO1
+    return 1;
+  };
 
+  const getMapNames = () => {
+    if (banpickData && banpickData.maps && Array.isArray(banpickData.maps.selected)) {
+      return banpickData.maps.selected;
+    }
+    return Array(getTotalMaps()).fill('Unknown');
+  };
+
+  // Ensure mapNames is defined at the top-level of the component so it's available everywhere
+  const mapNames = getMapNames();
+  // Remove mapIndex from the route and useParams, and instead compute it based on matchData.matchid.length + 1
+  // Compute mapIndex based on matchData.matchid.length (if available)
+  const matchidLength =
+    matchData && Array.isArray(matchData.matchid) ? matchData.matchid.length : 0;
+  const mapIndex = matchidLength;
+  const matchStartTimes =
+    matchData && Array.isArray(matchData.matchStartTimes) ? matchData.matchStartTimes : [];
+  const currentMatchStartTime = matchStartTimes[mapIndex]
+    ? new Date(matchStartTimes[mapIndex])
+    : null;
+  // For the first match, use a fixed time if needed (e.g., from league or config)
+  // For subsequent matches, use the stored time
+  // Accept window: 15 minutes after start
+  const acceptWindowMinutes = 15;
+  const acceptEndTime = currentMatchStartTime
+    ? new Date(currentMatchStartTime.getTime() + acceptWindowMinutes * 60000)
+    : null;
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+  const timeLeft = acceptEndTime ? Math.max(0, Math.floor((acceptEndTime - now) / 1000)) : 0;
+  const showReadyButton = timeLeft > 0;
+
+  // Get the current map name from banpickData.maps.selected using mapIndex
+  const currentMapName = mapNames[mapIndex] || `Map ${mapIndex + 1}`;
   // Socket.io: join/leave match room and listen for updates
   useEffect(() => {
     if (!round || !match) return;
@@ -126,7 +170,10 @@ const ValorantLobby = () => {
                 avatar: `https://drive.google.com/thumbnail?id=${
                   profile.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'
                 }&sz=w100`,
-                isReady: Boolean(readyStatus),
+                isReady:
+                  response.data.matchData.playersReady?.[teamKey]?.find(
+                    (p) => p && p.riotID === riotID
+                  )?.isReady || [],
               };
             })
             .filter((player) => player !== null);
@@ -265,126 +312,28 @@ const ValorantLobby = () => {
     return () => socket.off('playerReadyUpdated');
   }, [round, match]);
 
-  // In togglePlayerReady, do NOT run fetch player logic, just call the API
-  const togglePlayerReady = async (teamKey, playerId) => {
+  // Update togglePlayerReady to accept mapIndex and totalMaps
+  const togglePlayerReady = async (teamKey, playerId, mapIndex) => {
     const player = players[teamKey].find((p) => p && p.id === playerId);
     if (!player) return;
+    const totalMaps = getTotalMaps();
+    // Get current ready status for this map
+    const readyArr = Array.isArray(player.isReady) ? player.isReady : [player.isReady];
+    const isReadyForMap = readyArr[mapIndex] || false;
     try {
       await axios.post('https://bigtournament-hq9n.onrender.com/api/auth/updatePlayerReady', {
         round,
         match,
         riotID: player.riotID,
-        isReady: !player.isReady,
+        isReady: !isReadyForMap,
         team: teamKey,
+        mapIndex,
+        totalMaps,
       });
-      // Do not update local state or fetch player data here; wait for socket event
+      // Wait for socket event to update UI
     } catch (error) {
       console.error('Error updating player ready status:', error);
     }
-  };
-
-  const handleCurrentUserReady = async () => {
-    if (!isCurrentUserInLobby()) return;
-
-    const allPlayers = [...players.team1, ...players.team2];
-    const currentUserPlayer = allPlayers.find((p) => p && p.riotID === me.riotID);
-
-    if (currentUserPlayer) {
-      const teamKey = players.team1.some((p) => p && p.id === currentUserPlayer.id)
-        ? 'team1'
-        : 'team2';
-      await togglePlayerReady(teamKey, currentUserPlayer.id);
-    }
-  };
-
-  const PlayerCard = ({ player, teamKey }) => {
-    if (!player) return null;
-
-    const isCurrentUser = me?.riotID === player.riotID;
-
-    return (
-      <div
-        className={`bg-gray-800 rounded-lg p-4 border-2 transition-all duration-300 ${
-          player.isReady ? 'border-green-500 bg-green-900/20' : 'border-red-500 bg-red-900/20'
-        } ${isCurrentUser ? '' : ''}`}
-      >
-        <div className="flex items-center space-x-3">
-          <div className="relative">
-            <img
-              src={player.avatar}
-              alt={player.username}
-              className="w-12 h-12 rounded-full border-2 border-gray-600 object-cover"
-              onError={(e) => {
-                e.target.src =
-                  'https://drive.google.com/thumbnail?id=1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L&sz=w100';
-              }}
-            />
-            <div
-              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${
-                player.isReady ? 'bg-green-500' : 'bg-red-500'
-              }`}
-            ></div>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2">
-              <h3 className="text-white font-semibold truncate" title={player.riotID}>
-                {player.username}
-              </h3>
-              {isCurrentUser && (
-                <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">BẠN</span>
-              )}
-            </div>
-
-            <div className="text-xs text-gray-400 mt-1 truncate" title={player.riotID}>
-              {player.riotID}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const TeamSection = ({ team, teamName, teamKey, teamColor }) => {
-    if (!Array.isArray(team)) {
-      console.error(`Team ${teamKey} is not an array:`, team);
-      return (
-        <div className="space-y-4">
-          <div className={`text-center py-3 rounded-lg ${teamColor}`}>
-            <h2 className="text-xl font-bold text-white">{teamName}</h2>
-            <div className="text-sm text-gray-300">No players found</div>
-          </div>
-        </div>
-      );
-    }
-
-    const readyCount = team.filter((player) => player && player.isReady).length;
-    const maxReady = Math.min(5, team.length);
-
-    return (
-      <div className="space-y-4">
-        <div className={`text-center py-3 rounded-lg ${teamColor}`}>
-          <h2 className="text-xl font-bold text-white">{teamName}</h2>
-          <div className="text-sm text-gray-300">
-            {readyCount}/{maxReady} Ready
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {team.length === 0 ? (
-            <div className="text-center text-gray-400 py-4">
-              No players registered for this team
-            </div>
-          ) : (
-            team
-              .slice(0, 5)
-              .map((player) =>
-                player ? <PlayerCard key={player.id} player={player} teamKey={teamKey} /> : null
-              )
-          )}
-        </div>
-      </div>
-    );
   };
 
   // Get map name from banpick data
@@ -418,6 +367,24 @@ const ValorantLobby = () => {
     if (!me?.riotID) return false;
     const allPlayers = [...players.team1, ...players.team2];
     return allPlayers.some((player) => player && player.riotID === me.riotID);
+  };
+
+  // Handle current user ready/unready for the current map
+  const handleCurrentUserReady = () => {
+    if (!me?.riotID) return;
+    // Find which team the user is in
+    let teamKey = null;
+    let playerId = null;
+    for (const key of ['team1', 'team2']) {
+      const player = players[key].find((p) => p && p.riotID === me.riotID);
+      if (player) {
+        teamKey = key;
+        playerId = player.id;
+        break;
+      }
+    }
+    if (!teamKey || !playerId) return;
+    togglePlayerReady(teamKey, playerId, mapIndex);
   };
 
   // Early return for loading league data
@@ -456,11 +423,16 @@ const ValorantLobby = () => {
     );
   }
 
-  const readyPlayersCount = [...players.team1, ...players.team2].filter(
-    (p) => p && p.isReady
-  ).length;
-  const totalRequiredPlayers =
-    Math.min(5, players.team1.length) + Math.min(5, players.team2.length);
+  // Calculate ready count for each team (only first 5 ready count)
+  const readyCountTeam1 = players.team1
+    .filter((p) => p && Array.isArray(p.isReady) && p.isReady[mapIndex])
+    .slice(0, 5).length;
+  const readyCountTeam2 = players.team2
+    .filter((p) => p && Array.isArray(p.isReady) && p.isReady[mapIndex])
+    .slice(0, 5).length;
+  const readyPlayersCount = readyCountTeam1 + readyCountTeam2;
+  const totalRequiredPlayers = Math.min(5, players.team1.length) + Math.min(5, players.team2.length);
+  const allPlayersReady = readyCountTeam1 === 5 && readyCountTeam2 === 5;
   const currentUserPlayer = [...players.team1, ...players.team2].find(
     (p) => p && p.riotID === me?.riotID
   );
@@ -487,43 +459,49 @@ const ValorantLobby = () => {
         {/* Header */}
         <div className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-700">
           <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+            <div className="grid md:grid-cols-3 grid-cols-1 items-center justify-between relative">
+              <div className="flex items-center space-x-4 w-full md:w-auto justify-start md:justify-start min-w-[260px]">
                 <img src="/image/val_icon.png" alt="Valorant" className="h-8" />
                 <div>
-                  <h1 className="text-2xl font-bold text-white">Match Lobby</h1>
+                  <h1 className="text-2xl font-bold text-white">Phòng chờ trận đấu</h1>
                   <p className="text-gray-400">
                     Competitive • {round} • {match}
                   </p>
                 </div>
               </div>
 
-              <div className="text-center">
-                <div
-                  className={`text-4xl font-bold ${
-                    countdown <= 10 ? 'text-red-400' : 'text-white'
-                  }`}
-                >
-                  {String(Math.floor(countdown / 60)).padStart(2, '0')}:
-                  {String(countdown % 60).padStart(2, '0')}
+              {/* Countdown Centered */}
+              <div className="flex-1 flex md:justify-center justify-start  items-center py-4 md:order-2 order-1">
+                <div className="flex items-center text-center md:flex-col flex-row-reverse md:gap-x-0 gap-x-2">
+                  <div
+                    className={`text-4xl font-bold ${
+                      timeLeft <= 10 ? 'text-red-400' : 'text-white'
+                    }`}
+                  >
+                    {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:
+                    {String(timeLeft % 60).padStart(2, '0')}
+                  </div>
+                  <div className="text-gray-400 text-sm">Thời gian xác nhận</div>
                 </div>
-                <div className="text-gray-400 text-sm">Time to accept</div>
               </div>
 
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <div className="text-white font-semibold">Map</div>
-                  <div className="text-gray-400">{mapName}</div>
-                </div>
-                <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
-                  <img
-                    src={`/image/${mapName}.jpg`}
-                    alt={mapName}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src = '/image/haven.jpg';
-                    }}
-                  />
+              <div className="flex items-center space-x-4 md:order-3 order-3 w-full md:w-auto justify-end md:justify-end min-w-[180px]">
+                {/* On small screens, show image left and text right; on md+, text left and image right */}
+                <div className="flex flex-row-reverse md:flex-row items-center md:gap-x-0 gap-x-2 space-x-2 md:space-x-4 w-full md:w-auto">
+                  <div className=" md:text-right text-left w-full md:w-auto">
+                    <div className="text-white font-semibold">Bản đồ</div>
+                    <div className="text-gray-400">{currentMapName}</div>
+                  </div>
+                  <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden mr-2 md:mr-0 ml-0 md:ml-2">
+                    <img
+                      src={`/image/${currentMapName}.jpg`}
+                      alt={currentMapName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = '/image/haven.jpg';
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -545,8 +523,8 @@ const ValorantLobby = () => {
               }`}
             >
               {allPlayersReady
-                ? '✅ All Players Ready - Match Starting Soon!'
-                : '⏳ Waiting for all players to ready up...'}
+                ? '✅ Tất cả người chơi đã sẵn sàng - Trận đấu sẽ bắt đầu sớm!'
+                : '⏳ Chờ tất cả người chơi...'}
             </div>
           </div>
         </div>
@@ -559,6 +537,8 @@ const ValorantLobby = () => {
               teamName={teamNames.team1}
               teamKey="team1"
               teamColor="bg-gradient-to-r from-blue-600 to-blue-700"
+              me={me}
+              mapIndex={mapIndex}
             />
 
             <div className="flex items-center justify-center lg:hidden">
@@ -570,6 +550,8 @@ const ValorantLobby = () => {
               teamName={teamNames.team2}
               teamKey="team2"
               teamColor="bg-gradient-to-r from-red-600 to-red-700"
+              me={me}
+              mapIndex={mapIndex}
             />
 
             {/* VS Divider for desktop */}
@@ -587,39 +569,39 @@ const ValorantLobby = () => {
             <div className="flex items-center justify-center">
               <div className="flex items-center space-x-4">
                 {/* Ready Button for Current User */}
-                {isCurrentUserInLobby() && (
+                {isCurrentUserInLobby() && showReadyButton && (
                   <>
                     <button
                       onClick={handleCurrentUserReady}
                       className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                        currentUserPlayer?.isReady
+                        Array.isArray(currentUserPlayer?.isReady) &&
+                        currentUserPlayer.isReady[mapIndex]
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-green-600 hover:bg-green-700 text-white'
                       }`}
                     >
-                      {currentUserPlayer?.isReady ? 'HỦY' : 'SẴN SÀNG'}
+                      {Array.isArray(currentUserPlayer?.isReady) &&
+                      currentUserPlayer.isReady[mapIndex]
+                        ? 'HỦY'
+                        : 'SẴN SÀNG'}
                     </button>
-
                     <div className="w-px h-8 bg-gray-600"></div>
                   </>
                 )}
 
                 <div className="text-center">
                   <div className="text-white font-semibold">
-                    {readyPlayersCount}/{totalRequiredPlayers} Ready
+                    {readyPlayersCount}/{totalRequiredPlayers} Sẵn sàng
                   </div>
-                  <div className="text-gray-400 text-sm">Players</div>
+                  <div className="text-gray-400 text-sm">Người chơi</div>
                 </div>
-
-                <div className="w-px h-8 bg-gray-600"></div>
-
                 <div className="text-center">
                   <div
                     className={`text-lg font-semibold ${
                       allPlayersReady ? 'text-green-400' : 'text-yellow-400'
                     }`}
                   >
-                    {allPlayersReady ? 'Ready to Start Match' : 'Waiting for All Players'}
+                    {allPlayersReady ? 'Sẵn sàng bắt đầu trận đấu' : 'Chờ tất cả người chơi'}
                   </div>
                 </div>
               </div>
@@ -628,6 +610,120 @@ const ValorantLobby = () => {
         </div>
       </div>
     </>
+  );
+};
+
+// Pass 'me' and 'mapIndex' as a prop to PlayerCard and TeamSection
+const TeamSection = ({ team, teamName, teamKey, teamColor, me, mapIndex }) => {
+  if (!Array.isArray(team)) {
+    console.error(`Team ${teamKey} is not an array:`, team);
+    return (
+      <div className="space-y-4">
+        <div className={`text-center py-3 rounded-lg ${teamColor}`}>
+          <h2 className="text-xl font-bold text-white">{teamName}</h2>
+          <div className="text-sm text-gray-300">Không tìm thấy người chơi</div>
+        </div>
+      </div>
+    );
+  }
+  // Only count the first 5 ready players
+  const readyPlayers = team.filter(
+    (player) => player && Array.isArray(player.isReady) && player.isReady[mapIndex]
+  );
+  const readyCount = readyPlayers.length > 5 ? 5 : readyPlayers.length;
+  const maxReady = Math.min(5, team.length);
+  // Find the index of the current user in the team
+  const currentUserIndex = team.findIndex((p) => p && me && p.riotID === me.riotID);
+  // Only allow ready button for first 5 players or if not enough ready yet
+  const canCurrentUserReady =
+    currentUserIndex > -1 &&
+    (currentUserIndex < 5 ||
+      readyCount < 5 ||
+      (Array.isArray(team[currentUserIndex].isReady) && team[currentUserIndex].isReady[mapIndex]));
+  return (
+    <div className="space-y-4">
+      <div className={`text-center py-3 rounded-lg ${teamColor}`}>
+        <h2 className="text-xl font-bold text-white">{teamName}</h2>
+        <div className="text-sm text-gray-300">
+          {readyCount}/{maxReady} Sẵn sàng
+        </div>
+      </div>
+      <div className="space-y-3">
+        {team.length === 0 ? (
+          <div className="text-center text-gray-400 py-4">
+            Không có người chơi nào đăng ký cho đội này
+          </div>
+        ) : (
+          team
+            .map((player, idx) =>
+              player ? (
+                <PlayerCard
+                  key={player.id}
+                  player={player}
+                  teamKey={teamKey}
+                  me={me}
+                  mapIndex={mapIndex}
+                  canReady={canCurrentUserReady || idx < 5}
+                />
+              ) : null
+            )
+        )}
+      </div>
+    </div>
+  );
+};
+
+const PlayerCard = ({ player, teamKey, me, mapIndex, canReady }) => {
+  if (!player) return null;
+  const isCurrentUser = me?.riotID === player.riotID;
+  const readyArr = Array.isArray(player.isReady) ? player.isReady : [player.isReady];
+  return (
+    <div
+      className={`bg-gray-800 rounded-lg p-4 border-2 transition-all duration-300 ${
+        readyArr[mapIndex] ? 'border-green-500 bg-green-900/20' : 'border-red-500 bg-red-900/20'
+      } ${isCurrentUser ? '' : ''}`}
+    >
+      <div className="flex items-center space-x-3">
+        <div className="relative">
+          <img
+            src={player.avatar}
+            alt={player.username}
+            className="w-12 h-12 rounded-full border-2 border-gray-600 object-cover"
+            onError={(e) => {
+              e.target.src =
+                'https://drive.google.com/thumbnail?id=1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L&sz=w100';
+            }}
+          />
+          <div
+            className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${
+              readyArr[mapIndex] ? 'bg-green-500' : 'bg-red-500'
+            }`}
+          ></div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2">
+            <h3 className="text-white font-semibold truncate" title={player.riotID}>
+              {player.username}
+            </h3>
+            {isCurrentUser && (
+              <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">BẠN</span>
+            )}
+          </div>
+          <div className="text-xs text-gray-400 mt-1 truncate" title={player.riotID}>
+            {player.riotID}
+          </div>
+          {/* Only show ready button for current user and if canReady is true */}
+          {isCurrentUser && !readyArr[mapIndex] && !canReady && (
+            <button
+              className="mt-2 px-4 py-2 rounded bg-gray-500 text-white cursor-not-allowed"
+              disabled
+            >
+              Đã đủ 5 người sẵn sàng
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

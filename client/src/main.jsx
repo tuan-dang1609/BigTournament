@@ -83,6 +83,7 @@ if (rootElement) {
             <Route path="/:game/:league_id/leaderboard" element={<Leaderboard />} />
             <Route path="/:game/:league_id/bracket" element={<BracketPage />} />
             <Route path="/:game/:league_id/:round/:match/lobby" element={<ValorantLobby />} />
+
             {/* Routes CÓ Navbar + Footer */}
             <Route
               path="*"
