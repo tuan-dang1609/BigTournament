@@ -829,6 +829,8 @@ export const addMatchID = async (req, res, next) => {
         game,
         scoreA,
         scoreB,
+        // Set the first match start time if provided
+        matchStartTimes: req.body.matchStartTimes || [],
       });
       await newMatchId.save();
       return res.status(201).json({ message: "MatchID added successfully" });

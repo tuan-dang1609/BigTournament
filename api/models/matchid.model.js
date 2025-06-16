@@ -7,6 +7,7 @@ const playerReadySchema = new mongoose.Schema({
 
 const allgameSchema = new mongoose.Schema({
   matchid: { type: [String] },
+  matchStartTimes: { type: [Date], default: [] }, // Array of start times for each map/match
   teamA: { type: String, required: true },
   teamB: { type: String, required: true },
   round: { type: String, required: true },
