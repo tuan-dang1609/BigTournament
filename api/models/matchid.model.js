@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const playerReadySchema = new mongoose.Schema({
   riotID: { type: String, required: true },
-  isReady: { type: Boolean, default: false },
+  isReady: { type: [Boolean], default: [] },
 });
 
 const allgameSchema = new mongoose.Schema({

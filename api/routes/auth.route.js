@@ -217,7 +217,7 @@ router.get("/findmatch/:round/:match", async (req, res) => {
 // Add route to update player ready status
 router.post("/updatePlayerReady", async (req, res) => {
   try {
-    const { round, match, riotID, isReady, team } = req.body;
+    const { round, match, riotID, isReady, team, mapIndex, totalMaps } = req.body;
 
     const matchData = await MatchID.findOne({
       round: round,
@@ -241,10 +241,26 @@ router.post("/updatePlayerReady", async (req, res) => {
       (p) => p.riotID === riotID
     );
 
+    // Helper to initialize isReady array
+    function getIsReadyArray(existing, total) {
+      if (Array.isArray(existing) && existing.length === total) return existing;
+      const arr = Array(total).fill(false);
+      if (Array.isArray(existing)) {
+        for (let i = 0; i < Math.min(existing.length, total); i++) arr[i] = existing[i];
+      }
+      return arr;
+    }
+
     if (existingPlayerIndex >= 0) {
-      matchData.playersReady[teamKey][existingPlayerIndex].isReady = isReady;
+      // Ensure isReady is an array of correct length
+      let isReadyArr = getIsReadyArray(matchData.playersReady[teamKey][existingPlayerIndex].isReady, totalMaps);
+      isReadyArr[mapIndex] = isReady;
+      matchData.playersReady[teamKey][existingPlayerIndex].isReady = isReadyArr;
     } else {
-      matchData.playersReady[teamKey].push({ riotID, isReady });
+      // New player: initialize isReady array
+      const isReadyArr = Array(totalMaps).fill(false);
+      isReadyArr[mapIndex] = isReady;
+      matchData.playersReady[teamKey].push({ riotID, isReady: isReadyArr });
     }
 
     await matchData.save();
