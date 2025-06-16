@@ -387,60 +387,6 @@ const ValorantLobby = () => {
     togglePlayerReady(teamKey, playerId, mapIndex);
   };
 
-  // Calculate ready count for each team (only first 5 ready count)
-  const readyCountTeam1 = players.team1
-    .filter((p) => p && Array.isArray(p.isReady) && p.isReady[mapIndex])
-    .slice(0, 5).length;
-  const readyCountTeam2 = players.team2
-    .filter((p) => p && Array.isArray(p.isReady) && p.isReady[mapIndex])
-    .slice(0, 5).length;
-  const readyPlayersCount = readyCountTeam1 + readyCountTeam2;
-  const totalRequiredPlayers =
-    Math.min(5, players.team1.length) + Math.min(5, players.team2.length);
-  const allPlayersReady = readyCountTeam1 === 5 && readyCountTeam2 === 5;
-
-  // Track previous value of allPlayersReady
-  const prevAllPlayersReadyRef = useRef(false);
-
-  const [finalCountdown, setFinalCountdown] = useState(null); // seconds left
-  const countdownRef = useRef(null);
-  const [countdownActive, setCountdownActive] = useState(false);
-  const [countdownStartTime, setCountdownStartTime] = useState(null);
-
-  // 3-minute countdown effect for allPlayersReady
-  useEffect(() => {
-    // If allPlayersReady just transitioned from false to true, start/reset countdown
-    if (allPlayersReady && !prevAllPlayersReadyRef.current) {
-      setFinalCountdown(180);
-      setCountdownActive(true);
-      setCountdownStartTime(Date.now());
-      if (countdownRef.current) clearInterval(countdownRef.current);
-      countdownRef.current = setInterval(() => {
-        setFinalCountdown((prev) => {
-          if (prev === 1) {
-            clearInterval(countdownRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    // If allPlayersReady just transitioned from true to false, stop/reset countdown
-    if (!allPlayersReady && prevAllPlayersReadyRef.current) {
-      setCountdownActive(false);
-      setFinalCountdown(null);
-      setCountdownStartTime(null);
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    }
-    prevAllPlayersReadyRef.current = allPlayersReady;
-    // Cleanup on unmount
-    return () => {
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    };
-  }, [allPlayersReady]);
-
-  const hideReadyForAll = countdownActive && finalCountdown === 0;
-
   // Early return for loading league data
   if (!league) {
     return (
@@ -477,6 +423,17 @@ const ValorantLobby = () => {
     );
   }
 
+  // Calculate ready count for each team (only first 5 ready count)
+  const readyCountTeam1 = players.team1
+    .filter((p) => p && Array.isArray(p.isReady) && p.isReady[mapIndex])
+    .slice(0, 5).length;
+  const readyCountTeam2 = players.team2
+    .filter((p) => p && Array.isArray(p.isReady) && p.isReady[mapIndex])
+    .slice(0, 5).length;
+  const readyPlayersCount = readyCountTeam1 + readyCountTeam2;
+  const totalRequiredPlayers =
+    Math.min(5, players.team1.length) + Math.min(5, players.team2.length);
+  const allPlayersReady = readyCountTeam1 === 5 && readyCountTeam2 === 5;
   const currentUserPlayer = [...players.team1, ...players.team2].find(
     (p) => p && p.riotID === me?.riotID
   );
@@ -519,20 +476,13 @@ const ValorantLobby = () => {
                 <div className="flex items-center text-center md:flex-col flex-row-reverse md:gap-x-0 gap-x-2">
                   <div
                     className={`text-4xl font-bold ${
-                      (allPlayersReady && countdownActive && finalCountdown > 0)
-                        ? 'text-green-400'
-                        : (timeLeft <= 10 ? 'text-red-400' : 'text-white')
+                      timeLeft <= 10 ? 'text-red-400' : 'text-white'
                     }`}
                   >
-                    {(allPlayersReady && countdownActive && finalCountdown > 0)
-                      ? `${String(Math.floor(finalCountdown / 60)).padStart(2, '0')}:${String(finalCountdown % 60).padStart(2, '0')}`
-                      : `${String(Math.floor(timeLeft / 60)).padStart(2, '0')}:${String(timeLeft % 60).padStart(2, '0')}`}
+                    {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:
+                    {String(timeLeft % 60).padStart(2, '0')}
                   </div>
-                  <div className="text-gray-400 text-sm">
-                    {(allPlayersReady && countdownActive && finalCountdown > 0)
-                      ? 'Đếm ngược bắt đầu'
-                      : 'Thời gian xác nhận'}
-                  </div>
+                  <div className="text-gray-400 text-sm">Thời gian xác nhận</div>
                 </div>
               </div>
 
@@ -622,43 +572,43 @@ const ValorantLobby = () => {
                 {/* Ready Button for Current User */}
                 {isCurrentUserInLobby() &&
                   showReadyButton &&
-                  !hideReadyForAll && (
-                    (() => {
-                      const myTeamKey = players.team1.some(p => p.riotID === me?.riotID) ? 'team1' : 'team2';
-                      const myPlayer = players[myTeamKey].find(p => p.riotID === me?.riotID);
-                      const readyCount = players[myTeamKey]
-                        .filter((p) => p && Array.isArray(p.isReady) && p.isReady[mapIndex])
-                        .slice(0, 5).length;
-                      // If current user is already ready, always show the cancel button
-                      if (Array.isArray(myPlayer?.isReady) && myPlayer.isReady[mapIndex]) {
-                        return (
-                          <>
-                            <button
-                              onClick={handleCurrentUserReady}
-                              className="px-6 py-3 rounded-lg font-semibold transition-colors bg-red-600 hover:bg-red-700 text-white"
-                            >
-                              HỦY
-                            </button>
-                            <div className="w-px h-8 bg-gray-600"></div>
-                          </>
-                        );
-                      }
-                      // If not ready and 5 are already ready, hide the button
-                      if (readyCount >= 5) return null;
-                      // Otherwise, show the ready button
+                  (() => {
+                    const myTeamKey = players.team1.some((p) => p.riotID === me?.riotID)
+                      ? 'team1'
+                      : 'team2';
+                    const myPlayer = players[myTeamKey].find((p) => p.riotID === me?.riotID);
+                    const readyCount = players[myTeamKey]
+                      .filter((p) => p && Array.isArray(p.isReady) && p.isReady[mapIndex])
+                      .slice(0, 5).length;
+                    // If current user is already ready, always show the cancel button
+                    if (Array.isArray(myPlayer?.isReady) && myPlayer.isReady[mapIndex]) {
                       return (
                         <>
                           <button
                             onClick={handleCurrentUserReady}
-                            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-green-600 hover:bg-green-700 text-white"
+                            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-red-600 hover:bg-red-700 text-white"
                           >
-                            SẴN SÀNG
+                            HỦY
                           </button>
                           <div className="w-px h-8 bg-gray-600"></div>
                         </>
                       );
-                    })()
-                  )}
+                    }
+                    // If not ready and 5 are already ready, hide the button
+                    if (readyCount >= 5) return null;
+                    // Otherwise, show the ready button
+                    return (
+                      <>
+                        <button
+                          onClick={handleCurrentUserReady}
+                          className="px-6 py-3 rounded-lg font-semibold transition-colors bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          SẴN SÀNG
+                        </button>
+                        <div className="w-px h-8 bg-gray-600"></div>
+                      </>
+                    );
+                  })()}
 
                 <div className="text-center">
                   <div className="text-white font-semibold">
