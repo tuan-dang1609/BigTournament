@@ -182,6 +182,7 @@ router.get("/findmatch/:round/:match", async (req, res) => {
       matchData: {
         _id: matchData._id,
         matchid: matchData.matchid,
+        matchStartTimes: matchData.matchStartTimes, // Add this line to include matchStartTimes in the response
         teamA: matchData.teamA,
         teamB: matchData.teamB,
         round: matchData.round,
