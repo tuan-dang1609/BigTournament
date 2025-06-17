@@ -168,7 +168,7 @@ const ValorantLobby = () => {
                 riotID: String(riotID),
                 username: String(profile.nickname || riotID.split('#')[0] || 'Unknown'),
                 avatar: `https://drive.google.com/thumbnail?id=${
-                  profile.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'
+                  profile.profilePicture || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'
                 }&sz=w100`,
                 isReady:
                   response.data.matchData.playersReady?.[teamKey]?.find(
