@@ -6,41 +6,53 @@ import LeagueHeader from '../components/header';
 import { useLeagueData } from '../hooks/useLeagueData';
 import { Link } from 'react-router-dom';
 import Image from '../image/waiting.png';
-const TournamentBracket = () => {
+
+// Utility to get all unique teams from league.players
+function getAllTeamsFromLeague(league) {
+  if (!league?.players) return {};
+  const teamsMap = {};
+  league.players.forEach((player) => {
+    if (player.team && player.team.name && player.team.logoTeam) {
+      // Map by full name (team.name)
+      teamsMap[player.team.name] = {
+        logo: player.team.logoTeam,
+        fullName: player.team.name,
+        shortName: player.team.shortName || player.team.name, // add shortName from league
+      };
+    }
+  });
+  return teamsMap; // { fullName: {...}, ... }
+}
+
+const TournamentBracket = ({ league, game, league_id }) => {
   const [teams, setTeams] = useState([[], [], [], []]);
   const [loading, setLoading] = useState(true);
   const [idmatch, setMatchId] = useState([]);
+
+  // Fetch bracket structure from Google Sheets and map to league teams
   const fetchTeams = async () => {
     try {
       const response = await fetch(
-        'https://docs.google.com/spreadsheets/d/1ZGF4cPHRmKL5BSzgAMtUD2WWYrB-Dpx8Q_gFha5T0dY/gviz/tq?sheet=Play-in&range=A1:L20'
+        'https://docs.google.com/spreadsheets/d/1ZGF4cPHRmKL5BSzgAMtUD2WWYrB-Dpx8Q_gFha5T0dY/gviz/tq?sheet=Play-in&range=A1:R20'
       );
-
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const text = await response.text();
       const json = JSON.parse(text.substring(47, text.length - 2));
 
-      const teamResponse = await fetch(
-        'https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      if (!teamResponse.ok) throw new Error(`HTTP error! status: ${teamResponse.status}`);
-      const teamData = await teamResponse.json();
-
+      // Get mapping from league
+      const teamsMap = getAllTeamsFromLeague(league);
       const columns = [0, 3, 6, 9, 12, 15];
       const updatedTeams = columns.map((col) =>
         json.table.rows.map((row) => {
           const teamName = row.c[col + 1]?.v || 'Unknown';
-          const team = teamData.find((t) => t.teamName === teamName);
-
+          const teamInfo = teamsMap[teamName] || {};
           return {
-            name: teamName,
-            icon: team ? `https://drive.google.com/thumbnail?id=${team.logoUrl}` : Image,
+            name: teamInfo.fullName || teamName,
+            shortName: teamInfo.shortName || teamName, // use league shortName if available
+            icon:
+              teamInfo.logo && teamInfo.logo !== 'null'
+                ? `https://drive.google.com/thumbnail?id=${teamInfo.logo}`
+                : Image,
             score: row.c[col + 2]?.v || 0,
           };
         })
@@ -53,24 +65,20 @@ const TournamentBracket = () => {
     }
   };
 
+  // Fetch all match data for the bracket
   const fetchGames = async () => {
     try {
       const response = await fetch(
         'https://bigtournament-hq9n.onrender.com/api/auth/findallmatchid',
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         }
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setMatchId(data);
+      console.log('Fetched idmatch:', data); // Debug log
     } catch (error) {
       console.error('Failed to fetch games:', error);
     }
@@ -79,7 +87,7 @@ const TournamentBracket = () => {
   useEffect(() => {
     fetchTeams();
     fetchGames();
-  }, []);
+  }, [league]);
 
   const getMatchLink = (team1, team2) => {
     if (!team1.name || !team2.name) return '#';
@@ -93,7 +101,7 @@ const TournamentBracket = () => {
     );
 
     if (match) {
-      return `/valorant/match/${match.round}/${match.Match}`;
+      return `/${game}/${league_id}/${match.round}/${match.Match}/lobby`;
     } else {
       return '#';
     }
@@ -105,6 +113,25 @@ const TournamentBracket = () => {
     '1W-1L': { border: 'border-gray-300', titleBg: 'bg-[#D9D9D94D]' },
     '0W-1L': { border: 'border-gray-300', titleBg: 'bg-[#D9D9D94D]' },
     'Advance to play-off': { border: 'border-gray-300', titleBg: 'bg-[#D9D9D94D]' },
+  };
+
+  // Helper: get display name (show shortName if match, else full name)
+  const getDisplayName = (team) => {
+    if (!team || !team.name) return 'Unknown';
+    // Try to find a match in idmatch
+    const match = idmatch.find(
+      (m) =>
+        m.teamA.toLowerCase() === team.name.toLowerCase() ||
+        m.teamB.toLowerCase() === team.name.toLowerCase()
+    );
+    if (match && team.shortName && team.shortName !== team.name) {
+      return team.shortName; // show shortName if available and in a match
+    }
+    // If shortName exists and is not empty, prefer it
+    if (team.shortName && team.shortName !== team.name) {
+      return team.shortName;
+    }
+    return team.name;
   };
 
   const renderMatchup = (team1, team2, hasMargin = true, additionalMargin = '') => (
@@ -121,7 +148,7 @@ const TournamentBracket = () => {
         >
           <div className="flex items-center">
             <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
-            <span className="text-black">{team?.name || 'Unknown'}</span>
+            <span className="text-black">{getDisplayName(team) || 'Unknown'}</span>
           </div>
           <div className="flex items-center justify-center w-14 h-14 bg-[#d9d9d9e5]">
             <span className="font-bold text-[#f4aa49ef] text-[19px]">{team?.score || 0}</span>
@@ -144,7 +171,7 @@ const TournamentBracket = () => {
         >
           <div className="flex items-center h-14">
             <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
-            <span className="text-black">{team?.name || 'Unknown'}</span>
+            <span className="text-black">{getDisplayName(team) || 'Unknown'}</span>
           </div>
         </div>
       ))}
@@ -165,7 +192,7 @@ const TournamentBracket = () => {
         >
           <div className="flex items-center h-14">
             <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
-            <span className="text-black">{team?.name || 'Unknown'}</span>
+            <span className="text-black">{getDisplayName(team) || 'Unknown'}</span>
           </div>
         </div>
       ))}
@@ -195,6 +222,32 @@ const TournamentBracket = () => {
     );
   };
 
+  // Debug: log all possible team pair matchings after teams and idmatch are loaded
+  useEffect(() => {
+    if (!teams || !idmatch || teams.length === 0 || idmatch.length === 0) return;
+    // Flatten all teams arrays and filter out empty slots
+    const allTeamsFlat = teams.flat().filter((t) => t && t.shortName);
+    for (let i = 0; i < allTeamsFlat.length; i++) {
+      for (let j = i + 1; j < allTeamsFlat.length; j++) {
+        getMatchLink(allTeamsFlat[i], allTeamsFlat[j]);
+      }
+    }
+  }, [teams, idmatch]);
+
+  // Debug: log if teams from the bracket are present in the league variable
+  useEffect(() => {
+    if (!teams || teams.length === 0 || !league) return;
+    const teamsMap = getAllTeamsFromLeague(league);
+    const allTeamsFlat = teams.flat().filter((t) => t && t.shortName);
+    allTeamsFlat.forEach((team) => {
+      if (!teamsMap[team.shortName]) {
+        console.log('TEAM NOT IN LEAGUE:', team.shortName, team);
+      } else {
+        console.log('TEAM IN LEAGUE:', team.shortName, team);
+      }
+    });
+  }, [teams, league]);
+
   return (
     <div className="container mx-auto p-4 relative">
       {loading ? (
@@ -204,7 +257,6 @@ const TournamentBracket = () => {
       ) : (
         <>
           <h1 className="text-3xl font-bold mb-5 text-center">Vòng Play-off</h1>
-
           <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
             <div className="w-full lg:w-1/4 relative">
               <div>
@@ -218,15 +270,6 @@ const TournamentBracket = () => {
                   ],
                   'lg:!mb-[48px] lg:last:!mb-[0px] lg:first:!mt-[10px]'
                 )}
-                <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] lg:w-[10%] bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[calc(7.9rem)] lg:left-[110%] h-[165px] w-[2.3px] bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[18.1rem] left-full h-[2px] lg:w-[10%] bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[13rem] lg:left-[110%]  h-[2px] lg:w-[10%] bg-secondary"></div>
-
-                <div className="hidden lg:block absolute top-[28.2rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[calc(28.2rem)] lg:left-[110%] h-[165px] w-[2.3px] bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[38.4rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[33.3rem] lg:left-[110%]  h-[2px] lg:w-[10%] bg-secondary"></div>
               </div>
             </div>
             <div className="w-full lg:w-1/4 relative">
@@ -238,10 +281,6 @@ const TournamentBracket = () => {
                 ],
                 'lg:!mt-[100px] last:!mb-[0px] lg:!mb-[208px]'
               )}
-              <div className="hidden lg:block absolute top-[13.1rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(13.1rem)] lg:left-[110%] h-[325px] w-[2.3px] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[33.3rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[23.2rem] lg:left-[110%]  h-[2px] lg:w-[10%] bg-secondary"></div>
             </div>
             <div className="w-full lg:w-1/4 relative">
               {renderSection(
@@ -249,10 +288,6 @@ const TournamentBracket = () => {
                 [[teams[2][0], teams[2][1]]],
                 'lg:!mt-[262px] last:!mb-[0px]'
               )}
-              <div className="hidden lg:block absolute top-[23.2rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(23.2rem)] lg:left-[110%] h-[560px] w-[2.3px] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[58.1rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[40.0rem] lg:left-[110%]  h-[2px] lg:w-[10%] bg-secondary"></div>
             </div>
             <div className="hidden lg:block lg:w-1/4 relative">
               {renderSection(
@@ -273,8 +308,6 @@ const TournamentBracket = () => {
                   ],
                   'lg:!mb-[48px] lg:last:!mb-[0px] lg:first:!mt-[10px]'
                 )}
-                <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] lg:w-[29%]  bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[18.1rem] left-full h-[2px] lg:w-[29%] bg-secondary"></div>
               </div>
             </div>
             <div className="w-full lg:w-1/4 relative">
@@ -286,10 +319,6 @@ const TournamentBracket = () => {
                 ],
                 'lg:!mb-[48px] lg:last:!mb-[0px] lg:first:!mt-[10px]'
               )}
-              <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(7.9rem)] lg:left-[110%] h-[165.5px] w-[2.3px] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[18.1rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[13rem] lg:left-[110%]  h-[2px] lg:w-[19%] bg-secondary"></div>
             </div>
             <div className="w-full lg:w-1/4 relative">
               {renderSection(
@@ -297,7 +326,6 @@ const TournamentBracket = () => {
                 [[teams[2][9], teams[2][10]]],
                 'lg:first:!mt-[98px]'
               )}
-              <div className="hidden lg:block absolute top-[13rem] lg:left-[100%]  h-[2px] lg:w-[29%] bg-secondary"></div>
             </div>
             <div className="w-full lg:w-1/4 relative">
               {renderSection(
@@ -318,7 +346,8 @@ const TournamentBracket = () => {
       )}
     </div>
   );
-};
+}; // <-- Closing brace for TournamentBracket
+
 const BracketPage = () => {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useSelector((state) => state.user);
@@ -435,7 +464,7 @@ const BracketPage = () => {
 
       {/* Bracket Section */}
       <div className="flex justify-center items-start p-8">
-        <TournamentBracket />
+        <TournamentBracket league={league} game={game} league_id={league_id} />
       </div>
     </div>
   );

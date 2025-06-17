@@ -1,2 +1,13 @@
-POST https://bigtournament-hq9n.onrender.com/api/auth/register/api/auth/alluser
+
+
+# Test updatePlayerReady API
+POST http://localhost:3000/api/auth/updatePlayerReady
 Content-Type: application/json
+
+{
+  "match": "DND-UND",
+  "riotID": "Beacon#DCN4",
+  "round": "doubleup",
+  "team": "team1",
+  "isReady": true
+}
