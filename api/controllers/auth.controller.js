@@ -97,12 +97,10 @@ export const teamHOF = async (req, res, next) => {
       .status(201)
       .json({ message: "Teams added or updated successfully", result });
   } catch (error) {
-    res
-      .status(400)
-      .json({
-        message: "Error adding or updating teams",
-        error: error.message,
-      });
+    res.status(400).json({
+      message: "Error adding or updating teams",
+      error: error.message,
+    });
   }
 };
 
@@ -134,12 +132,10 @@ export const leagueHOF = async (req, res, next) => {
       .status(201)
       .json({ message: "Leagues added or updated successfully", result });
   } catch (error) {
-    res
-      .status(400)
-      .json({
-        message: "Error adding or updating leagues",
-        error: error.message,
-      });
+    res.status(400).json({
+      message: "Error adding or updating leagues",
+      error: error.message,
+    });
   }
 };
 
@@ -148,12 +144,10 @@ export const findleagueHOF = async (req, res, next) => {
     const leagues = await LeagueHOF.find();
     res.status(200).json(leagues);
   } catch (error) {
-    res
-      .status(400)
-      .json({
-        message: "Lỗi khi lấy danh sách giải đấu",
-        error: error.message,
-      });
+    res.status(400).json({
+      message: "Lỗi khi lấy danh sách giải đấu",
+      error: error.message,
+    });
   }
 };
 export const findteamHOF = async (req, res, next) => {
@@ -518,13 +512,11 @@ export const submitPrediction = async (req, res) => {
     const updatedPrediction = await PredictionPickem.findOne({
       userId: lastUserId,
     });
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Predictions submitted and processing in the background.",
-        data: updatedPrediction,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Predictions submitted and processing in the background.",
+      data: updatedPrediction,
+    });
   } catch (error) {
     console.error("Error submitting prediction:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -628,11 +620,9 @@ export const submitCorrectAnswer = async (req, res) => {
       const { questionId, correctTeams } = answer;
 
       if (!questionId || !correctTeams || !Array.isArray(correctTeams)) {
-        return res
-          .status(400)
-          .json({
-            error: `Invalid input for questionId: ${questionId}. Please provide questionId and correctTeams.`,
-          });
+        return res.status(400).json({
+          error: `Invalid input for questionId: ${questionId}. Please provide questionId and correctTeams.`,
+        });
       }
 
       // Check if the document with the correct answers exists
@@ -696,12 +686,10 @@ export const submitCorrectAnswer = async (req, res) => {
       );
     }
 
-    res
-      .status(201)
-      .json({
-        message:
-          "Correct answers added/updated and user scores recalculated successfully!",
-      });
+    res.status(201).json({
+      message:
+        "Correct answers added/updated and user scores recalculated successfully!",
+    });
   } catch (error) {
     console.error("Error adding/updating correct answers:", error);
     res.status(500).json({ error: "Internal server error" });
