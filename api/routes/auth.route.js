@@ -331,7 +331,7 @@ router.get("/valorant/allmatchdata", async (req, res) => {
   }
 });
 
-router.get("/valorant/save-match/:matchId", async (req, res) => {
+router.post("/valorant/save-match/:matchId", async (req, res) => {
   const { matchId } = req.params;
 
   try {
