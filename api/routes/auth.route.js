@@ -218,7 +218,8 @@ router.get("/findmatch/:round/:match", async (req, res) => {
 // Add route to update player ready status
 router.post("/updatePlayerReady", async (req, res) => {
   try {
-    const { round, match, riotID, isReady, team, mapIndex, totalMaps } = req.body;
+    const { round, match, riotID, isReady, team, mapIndex, totalMaps } =
+      req.body;
 
     const matchData = await MatchID.findOne({
       round: round,
@@ -247,14 +248,18 @@ router.post("/updatePlayerReady", async (req, res) => {
       if (Array.isArray(existing) && existing.length === total) return existing;
       const arr = Array(total).fill(false);
       if (Array.isArray(existing)) {
-        for (let i = 0; i < Math.min(existing.length, total); i++) arr[i] = existing[i];
+        for (let i = 0; i < Math.min(existing.length, total); i++)
+          arr[i] = existing[i];
       }
       return arr;
     }
 
     if (existingPlayerIndex >= 0) {
       // Ensure isReady is an array of correct length
-      let isReadyArr = getIsReadyArray(matchData.playersReady[teamKey][existingPlayerIndex].isReady, totalMaps);
+      let isReadyArr = getIsReadyArray(
+        matchData.playersReady[teamKey][existingPlayerIndex].isReady,
+        totalMaps
+      );
       isReadyArr[mapIndex] = isReady;
       matchData.playersReady[teamKey][existingPlayerIndex].isReady = isReadyArr;
     } else {
@@ -964,4 +969,305 @@ router.post("/league/checkin", async (req, res) => {
   }
 });
 router.get("/fetchplayerprofilesvalo", fetchPlayerProfilesValo);
+router.post("/create", async (req, res) => {
+  try {
+    const match = new BanPickValo({
+      ...req.body,
+      id: Math.random().toString(36).substr(2, 9),
+      currentTurn: "team1",
+    });
+    await match.save();
+    res.status(201).json(match);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+router.post("/status", async (req, res) => {
+  try {
+    const match = await BanPickValo.findOne({ id: req.body.matchId }).lean();
+
+    if (!match) {
+      console.log(`Không tìm thấy match với ID: ${req.body.matchId}`);
+      return res.status(404).json({
+        error: "Match not found",
+        receivedId: req.body.matchId,
+        storedIds: await BanPickValo.distinct("id"),
+      });
+    }
+
+    res.json(match);
+  } catch (error) {
+    console.error("Lỗi truy vấn database:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+router.post("/action", async (req, res) => {
+  const io = req.io;
+  const { matchId, action } = req.body;
+
+  try {
+    const match = await BanPickValo.findOne({ id: matchId });
+    if (!match) return res.status(404).json({ error: "Match not found" });
+
+    if (action === "ban") await processBan(match, req.body);
+    if (action === "pick") await processPick(match, req.body);
+    if (action === "side") await processSide(match, req.body);
+
+    await match.save();
+
+    // ✅ Load lại bản cập nhật từ DB trước khi emit
+    const updatedMatch = await BanPickValo.findOne({ id: matchId });
+    console.log("📢 EMITTING MATCH UPDATE");
+    io.to(matchId).emit("matchUpdated", updatedMatch);
+
+    res.json(updatedMatch);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+async function processPick(match, { map, role }) {
+  if (match.matchType === "BO1") {
+    mapSide.team1 = side;
+    mapSide.team2 = side === "Attacker" ? "Defender" : "Attacker";
+
+    match.currentPhase = "completed"; // kết thúc
+    return;
+  }
+  if (match.currentPhase !== "pick") throw new Error("Invalid phase for pick");
+  // Validate lượt pick
+  else if (match.matchType === "BO3" || match.matchType === "BO5") {
+    const currentPickCount = match.maps.picked.length;
+
+    if (currentPickCount === 0 && role !== "team1") {
+      throw new Error("Only Team 1 can make the first pick");
+    }
+
+    if (currentPickCount === 1 && role !== "team2") {
+      throw new Error("Only Team 2 can make the second pick");
+    }
+  }
+
+  // Thêm thông tin pickedBy
+  match.maps.picked.push({
+    name: map,
+    pickedBy: role === "team1" ? match.team1 : match.team2,
+  });
+
+  match.maps.pool = match.maps.pool.filter((m) => m !== map);
+
+  // Thêm vào sides với pickedBy
+  match.sides.push({
+    map,
+    pickedBy: role === "team1" ? match.team1 : match.team2,
+    team1: null,
+    team2: null,
+  });
+
+  // Xử lý lượt pick
+  if (match.matchType === "BO3") {
+    const pickedCount = match.maps.picked.length;
+
+    if (pickedCount === 1) {
+      match.currentTurn = "team2";
+    } else if (pickedCount === 2) {
+      match.currentPhase = "ban";
+      match.banPhase = 2;
+      match.currentTurn = "team1";
+    }
+  } else if (match.matchType === "BO5") {
+    const pickedCount = match.maps.picked.length;
+
+    if (pickedCount < 4) {
+      // Chuyển lượt cho team kia sau mỗi pick
+      match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+    }
+
+    if (pickedCount === 4) {
+      // Khi đã pick đủ 4 map → chọn map còn lại làm decider
+      const deciderMap = match.maps.pool[0];
+      match.maps.selected = [
+        ...match.maps.picked.map((p) => p.name),
+        deciderMap,
+      ];
+      match.maps.pool = [];
+
+      // Thêm vào sides
+      const alreadyInSides = match.sides.some((s) => s.map === deciderMap);
+      if (!alreadyInSides) {
+        match.sides.push({
+          map: deciderMap,
+          pickedBy: "Decider",
+          team1: null,
+          team2: null,
+        });
+      }
+
+      match.currentPhase = "side";
+      match.currentTurn = "team2"; // hoặc random chọn team bắt đầu pick side
+    }
+  }
+  await match.save();
+}
+
+async function processBan(match, { map }) {
+  if (match.currentPhase !== "ban") throw new Error("Invalid phase for ban");
+
+  // Thêm thông tin bannedBy
+  match.maps.banned.push({
+    name: map,
+    bannedBy: match.currentTurn === "team1" ? match.team1 : match.team2,
+  });
+
+  match.maps.pool = match.maps.pool.filter((m) => m !== map);
+
+  // Xử lý BO3 (Logic cập nhật lượt)
+  if (match.matchType === "BO3") {
+    if (match.banPhase === 1) {
+      if (match.maps.banned.length === 2) {
+        match.currentPhase = "pick";
+        match.currentTurn = "team1";
+        match.banPhase = 2;
+      } else {
+        match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+      }
+    } else if (match.banPhase === 2) {
+      if (match.maps.banned.length === 4) {
+        const deciderMap = match.maps.pool[0];
+        match.maps.selected = [
+          ...match.maps.picked.map((p) => p.name),
+          deciderMap,
+        ];
+
+        match.maps.pool = [];
+
+        // ✅ Thêm decider vào sides với pickedBy là team1
+        const alreadyInSides = match.sides.some((s) => s.map === deciderMap);
+        if (!alreadyInSides) {
+          match.sides.push({
+            map: deciderMap,
+            pickedBy: match.team1,
+            team1: null,
+            team2: null,
+          });
+        }
+
+        match.currentPhase = "side";
+        match.currentTurn = "team2"; // team2 chọn side vì team1 pick map
+      } else {
+        match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+      }
+    }
+  } else if (match.matchType === "BO1") {
+    const banCount = match.maps.banned.length;
+
+    // Khi đã ban 6 map (3 lượt mỗi đội)
+    if (banCount === 6) {
+      // Lấy map cuối cùng làm Decider
+      const deciderMap = match.maps.pool[0];
+      match.maps.selected = [deciderMap];
+      match.maps.pool = [];
+
+      match.sides.push({
+        map: deciderMap,
+        pickedBy: "Decider",
+        team1: null,
+        team2: null,
+      });
+
+      match.currentPhase = "side";
+      match.currentTurn = "team1";
+    }
+    // Chưa đủ 6 bans -> đổi lượt
+    else {
+      match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+    }
+  } else if (match.matchType === "BO5") {
+    const banCount = match.maps.banned.length;
+    const pickCount = match.maps.picked.length;
+
+    if (banCount === 1) {
+      match.currentTurn = match.currentTurn === "team1" ? "team2" : "team1";
+    } else if (banCount === 2) {
+      match.currentPhase = "pick";
+      match.pickPhase = 1;
+      match.currentTurn = "team1";
+    }
+
+    // ✅ Khi đã pick đủ 4 map → xác định decider
+    if (pickCount === 5 && match.maps.pool.length === 0) {
+      const deciderMap = match.maps.pool[0];
+
+      match.maps.selected = [
+        ...match.maps.picked.map((p) => p.name),
+        deciderMap,
+      ];
+
+      match.maps.pool = [];
+
+      const alreadyInSides = match.sides.some((s) => s.map === deciderMap);
+      if (!alreadyInSides) {
+        match.sides.push({
+          map: deciderMap,
+          pickedBy: "Decider",
+          team1: "TBD",
+          team2: "TBD",
+        });
+      }
+
+      match.currentPhase = "side";
+      match.currentTurn = "team1"; // hoặc tùy theo logic bạn chọn bên
+    }
+  }
+
+  await match.save();
+}
+async function processSide(match, { map, side }) {
+  if (match.currentPhase !== "side") {
+    throw new Error("Invalid phase for side selection");
+  }
+
+  // Kiểm tra map có trong danh sách selected không
+  if (!match.maps.selected.includes(map)) {
+    throw new Error("Map not in selected maps");
+  }
+
+  // Tìm side configuration cho map
+  const mapSide = match.sides.find((s) => s.map === map);
+
+  if (!mapSide) {
+    throw new Error("Map side configuration not found");
+  }
+
+  // Xác định team đang chọn side
+  const team = match.currentTurn;
+
+  // Validate role
+  if (!["team1", "team2"].includes(team)) {
+    throw new Error("Invalid team for side selection");
+  }
+
+  // Cập nhật side cho đội hiện tại
+  if (team === "team1") {
+    mapSide.team1 = side;
+    // Đội 2 sẽ tự động nhận side ngược lại
+    mapSide.team2 = side === "Attacker" ? "Defender" : "Attacker";
+  } else {
+    mapSide.team2 = side;
+    // Đội 1 sẽ tự động nhận side ngược lại
+    mapSide.team1 = side === "Attacker" ? "Defender" : "Attacker";
+  }
+
+  // Chuyển lượt chọn sang đội tiếp theo
+  const nextTeam = team === "team1" ? "team2" : "team1";
+  match.currentTurn = nextTeam;
+
+  // Kiểm tra đã chọn hết tất cả sides chưa
+  const allSidesSelected = match.sides.every(
+    (s) => s.team1 !== null && s.team2 !== null
+  );
+
+  if (allSidesSelected) {
+    match.currentPhase = "completed";
+  }
+}
 export default router;
