@@ -89,15 +89,17 @@ const TournamentBracket = ({ league, game, league_id }) => {
     fetchGames();
   }, [league]);
 
-  const getMatchLink = (team1, team2) => {
+  // Updated getMatchLink to accept round and matchNum for unique match lookup
+  const getMatchLink = (team1, team2, round, matchNum) => {
     if (!team1.name || !team2.name) return '#';
 
     const match = idmatch.find(
       (m) =>
-        (m.teamA.toLowerCase() === team1.name.toLowerCase() &&
+        ((m.teamA.toLowerCase() === team1.name.toLowerCase() &&
           m.teamB.toLowerCase() === team2.name.toLowerCase()) ||
-        (m.teamA.toLowerCase() === team2.name.toLowerCase() &&
-          m.teamB.toLowerCase() === team1.name.toLowerCase())
+          (m.teamA.toLowerCase() === team2.name.toLowerCase() &&
+            m.teamB.toLowerCase() === team1.name.toLowerCase())) &&
+        (round ? m.round === round : true)
     );
 
     if (match) {
@@ -134,9 +136,20 @@ const TournamentBracket = ({ league, game, league_id }) => {
     return team.name;
   };
 
-  const renderMatchup = (team1, team2, hasMargin = true, additionalMargin = '') => (
+  // Updated renderMatchup to log round and matchNum on click
+  const renderMatchup = (
+    team1,
+    team2,
+    round,
+    matchNum,
+    hasMargin = true,
+    additionalMargin = ''
+  ) => (
     <Link
-      to={getMatchLink(team1, team2)}
+      to={getMatchLink(team1, team2, round, matchNum)}
+      onClick={() => {
+        console.log('Clicked match:', { round, matchNum, team1: team1.name, team2: team2.name });
+      }}
       className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
         hasMargin ? 'my-4' : 'mb-0'
       } ${additionalMargin}`}
@@ -157,48 +170,8 @@ const TournamentBracket = ({ league, game, league_id }) => {
       ))}
     </Link>
   );
-  const renderAdvance = (team1, team2, hasMargin = true, additionalMargin = '') => (
-    <Link
-      to={getMatchLink(team1, team2)}
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
-        hasMargin ? 'my-4' : 'mb-0'
-      } ${additionalMargin}`}
-    >
-      {[team1, team2].map((team, index) => (
-        <div
-          key={index}
-          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white lg:first:mb-[268px]`}
-        >
-          <div className="flex items-center h-14">
-            <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
-            <span className="text-black">{getDisplayName(team) || 'Unknown'}</span>
-          </div>
-        </div>
-      ))}
-    </Link>
-  );
 
-  const renderAdvance2 = (team1, team2, hasMargin = true, additionalMargin = '') => (
-    <Link
-      to={getMatchLink(team1, team2)}
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
-        hasMargin ? 'my-4' : 'mb-0'
-      } ${additionalMargin}`}
-    >
-      {[team1, team2].map((team, index) => (
-        <div
-          key={index}
-          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white lg:first:mb-[108px]`}
-        >
-          <div className="flex items-center h-14">
-            <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-8 h-8 mr-2" />
-            <span className="text-black">{getDisplayName(team) || 'Unknown'}</span>
-          </div>
-        </div>
-      ))}
-    </Link>
-  );
-
+  // Updated renderSection to pass round and matchNum to renderMatchup
   const renderSection = (title, matchups, className = '') => {
     const styles = roundStyles[title] || { border: 'border-gray-300', titleBg: 'bg-[#D9D9D94D]' };
 
@@ -214,7 +187,7 @@ const TournamentBracket = ({ league, game, league_id }) => {
         <div className="py-2">
           {matchups.map((matchup, index) => (
             <div key={index} className={className}>
-              {renderMatchup(matchup[0] || {}, matchup[1] || {})}
+              {renderMatchup(matchup[0] || {}, matchup[1] || {}, title, (index + 1).toString())}
             </div>
           ))}
         </div>
@@ -261,7 +234,7 @@ const TournamentBracket = ({ league, game, league_id }) => {
             <div className="w-full lg:w-1/4 relative">
               <div>
                 {renderSection(
-                  'Tứ kết (BO5)',
+                  'Semi Final',
                   [
                     [teams[0][0], teams[0][1]],
                     [teams[0][2], teams[0][3]],
@@ -290,11 +263,7 @@ const TournamentBracket = ({ league, game, league_id }) => {
               )}
             </div>
             <div className="hidden lg:block lg:w-1/4 relative">
-              {renderSection(
-                'Chung kết tổng (BO7)',
-                [[teams[3][0], teams[3][1]]],
-                'lg:!mt-[530px]'
-              )}
+              {renderSection('Chung kết tổng', [[teams[3][0], teams[3][1]]], 'lg:!mt-[530px]')}
             </div>
           </div>
           <div className="flex flex-col lg:w-[74%] lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
