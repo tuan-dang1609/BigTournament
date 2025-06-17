@@ -305,7 +305,7 @@ const TournamentBracket = ({ league, game, league_id }) => {
             </div>
             <div className="w-full lg:hidden relative">
               {renderSection(
-                'Chung kết Tổng (BO7)',
+                'Chung kết Tổng',
                 [[teams[3][0], teams[3][1]]],
                 'lg:!mt-[500px] last:!mb-[0px]'
               )}
