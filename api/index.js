@@ -436,9 +436,11 @@ app.get("/api/matches", async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+// Simple in-memory lock for TFT matchId (for demo/dev only, use Redis for production)
+const tftMatchLocks = new Map();
+
 app.get("/api/tft/match/:matchId", async (req, res) => {
   const { matchId } = req.params;
-
   try {
     // Kiểm tra trong MongoDB trước
     let matchDoc = await TFTMatch.findOne({ matchId });
@@ -447,21 +449,36 @@ app.get("/api/tft/match/:matchId", async (req, res) => {
       return res.json(matchDoc.data);
     }
 
-    // Nếu chưa có thì gọi API Riot
-    const response = await axios.get(
-      `https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}`,
-      {
-        headers: { "X-Riot-Token": apiKey },
+    // Lock để tránh race condition
+    while (tftMatchLocks.get(matchId)) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      matchDoc = await TFTMatch.findOne({ matchId });
+      if (matchDoc) {
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        return res.json(matchDoc.data);
       }
-    );
+    }
+    tftMatchLocks.set(matchId, true);
+    try {
+      // Nếu chưa có thì gọi API Riot
+      const response = await axios.get(
+        `https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}`,
+        {
+          headers: { "X-Riot-Token": apiKey },
+        }
+      );
 
-    // Lưu vào MongoDB
-    matchDoc = new TFTMatch({ matchId, data: response.data });
-    await matchDoc.save();
+      // Lưu vào MongoDB
+      matchDoc = new TFTMatch({ matchId, data: response.data });
+      await matchDoc.save();
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.json(response.data);
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.json(response.data);
+    } finally {
+      tftMatchLocks.delete(matchId);
+    }
   } catch (error) {
+    tftMatchLocks.delete(matchId);
     console.error("Lỗi khi lấy dữ liệu trận đấu:", error.message);
     res
       .status(error.response?.status || 500)
