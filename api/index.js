@@ -17,6 +17,7 @@ import compression from "compression";
 import Queue from "bull";
 import https from "https";
 import request from "request";
+import TFTMatch from "./models/tftmatch.model.js";
 
 dotenv.config();
 const app = express();
@@ -411,61 +412,6 @@ app.get("/api/valorant/match/:matchId", async (req, res) => {
 });
 
 // API to get match data with NodeCache
-app.get("/api/match/:region/:matchid", async (req, res) => {
-  const { region, matchid } = req.params;
-  const cacheKey = `${region}-${matchid}`;
-  const apiKey = process.env.API_KEY_VALORANT;
-
-  const cachedData = cache.get(cacheKey);
-  if (cachedData) {
-    return res.json(cachedData);
-  }
-
-  try {
-    const response = await axios.get(
-      `https://api.henrikdev.xyz/valorant/v4/match/${region}/${matchid}`,
-      {
-        headers: {
-          Authorization: apiKey,
-        },
-      }
-    );
-
-    cache.set(cacheKey, response.data, 300);
-    res.json(response.data);
-  } catch (err) {
-    res.status(err.response?.status || 500).json({
-      success: false,
-      message: err.message,
-      statusCode: err.response?.status || 500,
-    });
-  }
-});
-app.get("/api/valorant/dictionary", async (req, res) => {
-  try {
-    const response = await axios.get(
-      `https://ap.api.riotgames.com/val/content/v1/contents?locale=vi-VN`,
-      {
-        headers: { "X-Riot-Token": process.env.API_KEY_VALORANT_RIOT },
-      }
-    );
-
-    // Lọc dữ liệu chỉ giữ lại "characters" và "maps"
-    const filteredData = {
-      characters: response.data.characters || [],
-      maps: response.data.maps || [],
-    };
-
-    // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Hoặc chỉ định domain cụ thể thay vì '*'
-    res.json(filteredData);
-  } catch (error) {
-    console.error("Error fetching dictionary data:", error.message);
-    res
-      .status(error.response?.status || 500)
-      .json({ error: "Failed to fetch dictionary data" });
-  }
-});
 
 app.get("/api/matches", async (req, res) => {
   const { page = 1, limit = 10, matchids } = req.query;
@@ -490,11 +436,18 @@ app.get("/api/matches", async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-
 app.get("/api/tft/match/:matchId", async (req, res) => {
   const { matchId } = req.params;
 
   try {
+    // Kiểm tra trong MongoDB trước
+    let matchDoc = await TFTMatch.findOne({ matchId });
+    if (matchDoc) {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      return res.json(matchDoc.data);
+    }
+
+    // Nếu chưa có thì gọi API Riot
     const response = await axios.get(
       `https://sea.api.riotgames.com/tft/match/v1/matches/${matchId}`,
       {
@@ -502,14 +455,17 @@ app.get("/api/tft/match/:matchId", async (req, res) => {
       }
     );
 
-    // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Hoặc chỉ định domain cụ thể thay vì '*'
+    // Lưu vào MongoDB
+    matchDoc = new TFTMatch({ matchId, data: response.data });
+    await matchDoc.save();
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.json(response.data);
   } catch (error) {
-    console.error("Error fetching match data:", error.message);
+    console.error("Lỗi khi lấy dữ liệu trận đấu:", error.message);
     res
       .status(error.response?.status || 500)
-      .json({ error: "Failed to fetch match data" });
+      .json({ error: "Không thể lấy dữ liệu trận đấu" });
   }
 });
 app.get("/api/lol/match/:matchId", async (req, res) => {

@@ -136,7 +136,7 @@ router.get("/findbanpick", findBanPickVeto);
 router.post("/allgame", addAllGame);
 router.post("/addmatch", addMatchID);
 router.post("/findallmatchid", findAllMatchID);
-router.get("/findmatchid", findmatchID);
+router.post("/findmatchid", findmatchID);
 router.get("/findallteam", findAllteam);
 router.get("/findallteamAOV", findAllteamAOV);
 router.get("/findallteamTFT", findAllteamTFT);
@@ -290,29 +290,119 @@ router.post("/updatePlayerReady", async (req, res) => {
   }
 });
 
+// Simple in-memory lock for matchId (for demo/dev only, use Redis for production)
+const matchLocks = new Map();
+
 router.get("/valorant/matchdata/:matchId", async (req, res) => {
   const { matchId } = req.params;
-
   try {
-    // Tìm match đã được lưu trong MongoDB
-    const matchDoc = await ValorantMatch.findOne({ matchId }).lean();
-
-    if (!matchDoc) {
-      return res
-        .status(404)
-        .json({ error: "Match data not found in database" });
+    // Kiểm tra trong MongoDB trước
+    let matchDoc = await ValorantMatch.findOne({ matchId }).lean();
+    if (matchDoc) {
+      // Loại bỏ roundResult khỏi dữ liệu trả về nếu có
+      const data = { ...matchDoc.data };
+      if (data.roundResults) {
+        data.roundResults = data.roundResults.map(
+          ({ roundResult, ...rest }) => rest
+        );
+      }
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      return res.json({ source: "database", matchData: data });
     }
 
-    const matchData = matchDoc.data;
+    // Lock để tránh race condition
+    while (matchLocks.get(matchId)) {
+      // Đợi 100ms rồi thử lại
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Nếu có ai đó đã lưu xong thì lấy lại từ DB
+      matchDoc = await ValorantMatch.findOne({ matchId }).lean();
+      if (matchDoc) {
+        const data = { ...matchDoc.data };
+        if (data.roundResults) {
+          data.roundResults = data.roundResults.map(
+            ({ roundResult, ...rest }) => rest
+          );
+        }
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        return res.json({ source: "database", matchData: data });
+      }
+    }
+    matchLocks.set(matchId, true);
+    try {
+      // Nếu muốn nhẹ nhất, không nhập roundResults luôn nếu không cần
+      const roundResults = undefined; // Không nhập roundResults vào finalData
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.json({
-      source: "database",
-      matchData,
-    });
+      if (matchData?.players) {
+        matchData.players.forEach((player) => {
+          const cleanId = player.characterId?.toUpperCase();
+          player.characterName = characterMap[cleanId] || "Unknown";
+          player.imgCharacter =
+            `https://dongchuyennghiep.vercel.app/agent/${characterMap[cleanId]}.png` ||
+            "Unknown";
+          player.riotID = `${player.gameName || "Unknown"}#${
+            player.tagLine || "Unknown"
+          }`;
+
+          if (player.stats) {
+            const kills = player.stats.kills || 0;
+            const deaths = player.stats.deaths || 0;
+            const assists = player.stats.assists || 0;
+            const KDA = (kills + deaths) / (assists || 1);
+            const acs = parseFloat(
+              (player.stats.score / player.stats.roundsPlayed).toFixed(0)
+            );
+            player.stats.KD = `${kills}/${deaths}`;
+            player.stats.KDA = parseFloat(KDA.toFixed(1));
+            player.stats.acs = acs;
+
+            // Nếu không có roundResults thì truyền mảng rỗng vào advancedStats
+            const advancedStats = calculatePlayerStats(player, []);
+            Object.assign(player.stats, advancedStats);
+            player.stats.adr = parseFloat(
+              (advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(1)
+            );
+          }
+        });
+
+        const redTeam = matchData.players
+          .filter((p) => p.teamId === "Red")
+          .sort((a, b) => b.stats?.acs - a.stats?.acs);
+        const blueTeam = matchData.players
+          .filter((p) => p.teamId === "Blue")
+          .sort((a, b) => b.stats?.acs - a.stats?.acs);
+        matchData.players = [...redTeam, ...blueTeam];
+
+        if (matchData?.teams?.length === 2) {
+          const [team1, team2] = matchData.teams;
+          team1.is = team1.roundsWon > team2.roundsWon ? "Win" : "Loss";
+          team2.is = team1.is === "Win" ? "Loss" : "Win";
+        }
+      }
+
+      const finalData = {
+        matchInfo: matchData.matchInfo,
+        players: matchData.players,
+        teams: matchData.teams,
+        // Không nhập roundResults nếu không cần
+      };
+
+      await ValorantMatch.findOneAndUpdate(
+        { matchId },
+        { matchId, data: finalData },
+        { upsert: true, new: true }
+      );
+
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.json({ source: "riot", matchData: finalData });
+    } finally {
+      matchLocks.delete(matchId);
+    }
   } catch (error) {
-    console.error("Error fetching match data from MongoDB:", error.message);
-    res.status(500).json({ error: "Failed to fetch match data from database" });
+    matchLocks.delete(matchId);
+    console.error("Lỗi khi lấy dữ liệu trận đấu Valorant:", error.message);
+    res
+      .status(error.response?.status || 500)
+      .json({ error: "Không thể lấy dữ liệu trận đấu Valorant" });
   }
 });
 router.get("/valorant/allmatchdata", async (req, res) => {
@@ -360,16 +450,15 @@ router.post("/valorant/save-match/:matchId", async (req, res) => {
 
     const roundResults = (matchData.roundResults || []).map((round) => ({
       roundNum: round.roundNum,
-      roundResult: round.roundResult,
+      // roundResult: round.roundResult, // Bỏ trường này để test tốc độ
       winningTeam: round.winningTeam,
       winningTeamRole: round.winningTeamRole,
       roundCeremony: round.roundCeremony,
-      playerStats:
-        round.playerStats?.map((ps) => ({
-          puuid: ps.puuid,
-          kills: ps.kills || [],
-          damage: ps.damage || [],
-        })) || [],
+      playerStats: (round.playerStats || []).map((ps) => ({
+        puuid: ps.puuid,
+        kills: ps.kills || [],
+        damage: ps.damage || [],
+      })),
     }));
 
     if (matchData?.players) {

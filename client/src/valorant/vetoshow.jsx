@@ -83,14 +83,7 @@ const Valoveto = ({ banpickid, teams }) => {
     }
     return teamName;
   };
-  const getSideImage = (sideValue) => {
-    if (sideValue === 'Attacker') {
-      return <img src={Attacker} alt="Attacker" className="lg:w-10 lg:h-10 w-8 h-8 " />;
-    } else if (sideValue === 'Defender') {
-      return <img src={Defender} alt="Defender" className="lg:w-10 lg:h-10 w-8 h-8" />;
-    }
-    return sideValue;
-  };
+
   // Lọc các map có pickedBy (dành cho BO3)
   const pickedMaps = match.maps.picked ? match.maps.picked.filter((pick) => pick.pickedBy) : [];
   const selectedMaps = match.maps.selected; // Giả sử mảng này chứa tên map
@@ -100,7 +93,7 @@ const Valoveto = ({ banpickid, teams }) => {
   const renderTile = (background, contentElements, key, extraClass = '') => (
     <div
       key={key}
-      className={`px-3 relative md:h-[150px] h-[50px] rounded overflow-hidden ${extraClass} text-white`}
+      className={`px-3 gap-x-2 relative md:h-[150px] h-[50px] rounded overflow-hidden ${extraClass} text-white`}
     >
       {/* Background Image với filter darken */}
       <div
@@ -131,7 +124,7 @@ const Valoveto = ({ banpickid, teams }) => {
       <div className="mt-1">
         {match.matchType === 'BO1' ? (
           // Giao diện dành cho BO1
-          <div className="grid md:grid-cols-7 grid-cols-2 w-full justify-center gap-1 font-bold ">
+          <div className="grid  md:grid-cols-7 grid-cols-2 w-full justify-center gap-10 font-bold ">
             {/* Render các map bị cấm */}
             {match.maps.banned.map((ban, index) =>
               renderTile(
@@ -164,7 +157,7 @@ const Valoveto = ({ banpickid, teams }) => {
         ) : (
           // Giao diện dành cho BO3
           <div className="flex flex-col">
-            <div className="grid md:grid-cols-7 grid-cols-2 w-full justify-center gap-1 md:last:gap-1 last:!gap-x-0 font-bold">
+            <div className="grid md:grid-cols-7 grid-cols-2 w-full justify-center gap-x-1 font-bold">
               {/* Sắp xếp theo thứ tự: Ban[0], Ban[1], Pick[0], Pick[1], Ban[2], Ban[3], Selected Map (Decider) */}
               {match.maps.banned[0] &&
                 renderTile(
@@ -256,49 +249,6 @@ const Valoveto = ({ banpickid, teams }) => {
                   'selected-last',
                   'md:w-[100%] w-[201.6%]'
                 )}
-            </div>
-            <div className="mt-1">
-              <div className="grid lg:grid-cols-3 grid-cols-1 gap-1 md:text-[16px] text-[14px] text-white">
-                {match.sides.map((side) => (
-                  <div
-                    key={side._id}
-                    className="p-4 rounded bg-cover bg-center"
-                    style={{ backgroundImage: `url(/image/${side.map}.jpg)` }}
-                  >
-                    <div className="bg-black bg-opacity-60 p-2 rounded font-semibold">
-                      <h3 className="text-lg font-semibold">{side.map}</h3>
-                      <div className="grid grid-cols-3 items-center justify-between mx-auto h-full w-[85%]">
-                        <div className="flex items-center justify-center flex-col lg:gap-y-0 gap-y-1">
-                          {getTeamDisplay(side.pickedBy)}{' '}
-                          <p className="lg:text-[12px] text-[12px] ">Team Pick</p>
-                        </div>
-                        <div className="flex items-center justify-center flex-col gap-y-2">
-                          <div>
-                            {typeof getSideImage(side.team1) === 'string' ? (
-                              <span>{getSideImage(side.team1)}</span>
-                            ) : (
-                              getSideImage(side.team1) // Hiển thị component SVG
-                            )}
-                          </div>
-                          <p className="xl:hidden block text-[11px]">{getTeamShort(match.team1)}</p>
-                          <p className="xl:block hidden text-[12px]">{match.team1}</p>
-                        </div>
-                        <div className="flex items-center justify-center flex-col gap-y-2">
-                          <div className="flex items-center justify-center">
-                            {typeof getSideImage(side.team2) === 'string' ? (
-                              <span>{getSideImage(side.team2)}</span>
-                            ) : (
-                              getSideImage(side.team2) // Hiển thị component SVG
-                            )}
-                          </div>
-                          <p className="xl:hidden block text-[11px]">{getTeamShort(match.team2)}</p>
-                          <p className="xl:block hidden text-[12px]">{match.team2}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         )}
