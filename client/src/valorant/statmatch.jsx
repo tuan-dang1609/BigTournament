@@ -1,27 +1,33 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import PlayerStats from './match.jsx';
 import Valoveto from './vetoshow.jsx';
+import { useSelector } from 'react-redux';
+import MyNavbar2 from '../components/Navbar2';
+import LeagueHeader from '../components/header';
+import { useLeagueData } from '../hooks/useLeagueData';
 export default function MatchStat2() {
-  const { round, Match } = useParams();
-  const [matchid, setMatchid] = useState([]);
-  const [teamA, setteamA] = useState([]);
-  const [teamB, setteamB] = useState([]);
-  const [teamALogo, setTeamALogo] = useState('');
-  const [teamBLogo, setTeamBLogo] = useState('');
-  const [teamABgColor, setTeamABgColor] = useState('');
-  const [teamBBgColor, setTeamBBgColor] = useState('');
-  const [teamAshort, setTeamAshort] = useState('');
-  const [teamBshort, setTeamBshort] = useState('');
-  const [matchInfo, setMatchInfo] = useState([]);
-  const [time, setTime] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [botype, setBotype] = useState('');
-  const [banpickid, setbanpickid] = useState('');
-  const [findteam, setFindteam] = useState([]);
-  const [allPlayer, setAllPlayer] = useState([]);
+  const { game, league_id, round, Match } = useParams();
+  const { currentUser } = useSelector((state) => state.user);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [joinCountdown, setJoinCountdown] = useState('');
+  const [registerPhase, setRegisterPhase] = useState('idle');
   const [registeredPlayers, setRegisteredPlayers] = useState([]);
-  const [error, setError] = useState(null);
+  // Use new hook for all match data
+  const {
+    league,
+    loading: isLoading,
+    startTime,
+    me,
+    matchid,
+    teamA,
+    teamB,
+    botype,
+    banpickid,
+    matchInfo,
+    time,
+    error,
+  } = useLeagueData(game, league_id, currentUser, round, Match);
   const hexToRgba = (hex, opacity) => {
     hex = hex.replace('#', '');
     const r = parseInt(hex.substring(0, 2), 16);
@@ -29,105 +35,100 @@ export default function MatchStat2() {
     const b = parseInt(hex.substring(4, 6), 16);
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        // Step 1: Call 3 API song song
-        const [matchRes, teamRes] = await Promise.all([
-          fetch('https://bigtournament-hq9n.onrender.com/api/auth/findmatchid', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ round, Match, game: 'Valorant' }),
-          }),
-          fetch('https://bigtournament-hq9n.onrender.com/api/auth/findallteamValorant', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          }),
-        ]);
 
-        if (!matchRes.ok || !teamRes.ok) {
-          throw new Error('One or more API calls failed');
-        }
+  const navigationAll1 = {
+    aov: [
+      {
+        name: 'Tổng quan',
+        href: `/${game}/${league_id}`,
+        current: location.pathname === `/${game}/${league_id}`,
+      },
+      {
+        name: 'Người chơi',
+        href: `/${game}/${league_id}/players`,
+        current: location.pathname === `/${game}/${league_id}/players`,
+      },
+      {
+        name: 'Luật',
+        href: `/${game}/${league_id}/rule`,
+        current: location.pathname === `/${game}/${league_id}/rule`,
+      },
+      {
+        name: 'BXH',
+        href: `/${game}/${league_id}/leaderboard`,
+        current: location.pathname === `/${game}/${league_id}/leaderboard`,
+      },
+    ],
+  };
 
-        const [matchData, teamData] = await Promise.all([matchRes.json(), teamRes.json()]);
+  const getNavigation = () => navigationAll1.aov;
 
-        // Step 2: Process match data
-        const matchCount = matchData.matchid.length;
-        let boType =
-          matchCount === 1
-            ? 'BO1'
-            : matchCount <= 3
-              ? 'BO3'
-              : matchCount <= 5
-                ? 'BO5'
-                : matchCount <= 7
-                  ? 'BO7'
-                  : 'Invalid BO type';
+  // Compute all unique RiotIDs from matchInfo
+  const allPlayer = [
+    ...new Set(
+      (matchInfo || []).flatMap((match) =>
+        match.players
+          ?.filter((player) => player.gameName && player.tagLine)
+          .map((player) => `${player.gameName}#${player.tagLine}`)
+      )
+    ),
+  ];
 
-        setMatchid(matchData.matchid);
-        setteamA(matchData.teamA);
-        setteamB(matchData.teamB);
-        setBotype(boType);
-        setbanpickid(matchData.banpickid);
-
-        // Step 3: Fetch match details song song
-        const matchDetailPromises = matchData.matchid.map(async (id) => {
-          const res = await fetch(
-            `https://bigtournament-hq9n.onrender.com/api/valorant/match/${id}`
-          );
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-          const data = await res.json();
-          return data.matchData;
-        });
-
-        const matchResults = await Promise.all(matchDetailPromises);
-        setMatchInfo(matchResults);
-        setTime(matchResults[0].matchInfo.gameStartMillis);
-
-        const extractedPlayers = matchResults.flatMap((match) =>
-          match.players
-            ?.filter((player) => player.gameName && player.tagLine)
-            .map((player) => `${player.gameName}#${player.tagLine}`)
-        );
-        const uniquePlayers = [...new Set(extractedPlayers)];
-        setAllPlayer(uniquePlayers);
-
-        // Step 4: Team info
-        setFindteam(teamData);
-        const teamAData = teamData.find((team) => team.teamName === matchData.teamA);
-        const teamBData = teamData.find((team) => team.teamName === matchData.teamB);
-        setTeamALogo(`https://drive.google.com/thumbnail?id=${teamAData?.logoUrl}`);
-        setTeamBLogo(`https://drive.google.com/thumbnail?id=${teamBData?.logoUrl}`);
-        setTeamABgColor(teamAData?.color || '#ffffff');
-        setTeamBBgColor(teamBData?.color || '#ffffff');
-        setTeamAshort(teamAData?.shortName);
-        setTeamBshort(teamBData?.shortName);
-
-        // Step 6: Check registered players
-        const checkPlayerRes = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/check-registered-valorant',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ riotid: uniquePlayers }),
-          }
-        );
-
-        if (!checkPlayerRes.ok) throw new Error(`HTTP error! status: ${checkPlayerRes.status}`);
-        const playerResult = await checkPlayerRes.json();
-        setRegisteredPlayers(playerResult);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError(error.message);
-        setIsLoading(false);
+  // Derive findteam from league.players
+  const findteam = Object.values(
+    (league?.players || []).reduce((acc, player) => {
+      if (player.team && player.team.name && !acc[player.team.name]) {
+        acc[player.team.name] = {
+          teamName: player.team.name,
+          logoUrl: player.logoUrl || player.team.logoTeam,
+          shortName: player.team.shortName,
+          color: player.team.color || '#ffffff',
+        };
       }
-    };
+      return acc;
+    }, {})
+  );
 
-    fetchAllData();
-  }, [round, Match]);
+  // Derived state: uniquePlayers, teams, logos, registeredPlayers, etc.
+  useEffect(() => {
+    if (
+      !league ||
+      !league.players ||
+      league.players.length === 0 ||
+      !matchInfo ||
+      matchInfo.length === 0 ||
+      !teamA ||
+      !teamB
+    ) {
+      return;
+    }
+    // Step 1: uniquePlayers
+    const extractedPlayers = matchInfo.flatMap((match) =>
+      match.players
+        ?.filter((player) => player.gameName && player.tagLine)
+        .map((player) => `${player.gameName}#${player.tagLine}`)
+    );
+    const uniquePlayers = [...new Set(extractedPlayers)];
+    // Step 2: teams (no longer needed to set state, handled as local variables)
+    // Step 3: registeredPlayers
+    const leaguePlayers = league.players;
+    const leagueIGNs = leaguePlayers.flatMap((player) =>
+      player.ign.map((ign) => ign.toLowerCase().trim())
+    );
+    const registeredPlayers = uniquePlayers.map((riotID) => {
+      const isRegistered = leagueIGNs.includes(riotID.toLowerCase().trim());
+      const playerObj = leaguePlayers.find((p) =>
+        p.ign.map((i) => i.toLowerCase().trim()).includes(riotID.toLowerCase().trim())
+      );
+      return {
+        riotID,
+        isRegistered,
+        teamname: playerObj?.team?.name || null,
+        logoUrl: playerObj?.logoUrl || null,
+      };
+    });
+    setRegisteredPlayers(registeredPlayers);
+  }, [league, matchInfo, teamA, teamB]);
 
   // Kiểm tra kết quả
   useEffect(() => {
@@ -167,35 +168,50 @@ export default function MatchStat2() {
     let totalWinsB = 0;
 
     matchInfo.forEach((match) => {
-      const sortedPlayers = match.players.reduce((acc, player) => {
+      // Count verified players for each team
+      let verifiedA = 0;
+      let verifiedB = 0;
+      match.players.forEach((player) => {
+        const normalizedId = `${player.gameName}#${player.tagLine}`.toLowerCase().trim();
+        const reg = registeredPlayers.find(
+          (p) => p.riotID.toLowerCase().trim() === normalizedId && p.isRegistered
+        );
         const playerTeamName = getPlayerTeamName(player);
-        if (playerTeamName) {
-          acc[playerTeamName] = player.teamId;
+        if (reg) {
+          if (playerTeamName === teamA) verifiedA++;
+          if (playerTeamName === teamB) verifiedB++;
         }
-        return acc;
-      }, {});
-
-      let actualTeamA =
-        Object.keys(sortedPlayers).find((team) => sortedPlayers[team] === 'Red') || 'Đội Đỏ';
-
-      let actualTeamB =
-        Object.keys(sortedPlayers).find((team) => sortedPlayers[team] === 'Blue') || 'Đội Xanh';
-
-      const redTeam = match.teams.find((team) => team.teamId === 'Red');
-      const blueTeam = match.teams.find((team) => team.teamId === 'Blue');
-
-      let scoreA = redTeam ? redTeam.roundsWon : 0;
-      let scoreB = blueTeam ? blueTeam.roundsWon : 0;
-
-      if (actualTeamA !== teamA) {
-        [actualTeamA, actualTeamB] = [actualTeamB, actualTeamA];
-        [scoreA, scoreB] = [scoreB, scoreA];
-      }
-
-      if (scoreA > scoreB) {
+      });
+      if (verifiedA > verifiedB) {
         totalWinsA += 1;
-      } else {
+      } else if (verifiedB > verifiedA) {
         totalWinsB += 1;
+      } else {
+        // fallback: use in-game score if equal
+        const sortedPlayers = match.players.reduce((acc, player) => {
+          const playerTeamName = getPlayerTeamName(player);
+          if (playerTeamName) {
+            acc[playerTeamName] = player.teamId;
+          }
+          return acc;
+        }, {});
+        let actualTeamA =
+          Object.keys(sortedPlayers).find((team) => sortedPlayers[team] === 'Red') || 'Đội Đỏ';
+        let actualTeamB =
+          Object.keys(sortedPlayers).find((team) => sortedPlayers[team] === 'Blue') || 'Đội Xanh';
+        const redTeam = match.teams.find((team) => team.teamId === 'Red');
+        const blueTeam = match.teams.find((team) => team.teamId === 'Blue');
+        let scoreA = redTeam ? redTeam.roundsWon : 0;
+        let scoreB = blueTeam ? blueTeam.roundsWon : 0;
+        if (actualTeamA !== teamA) {
+          [actualTeamA, actualTeamB] = [actualTeamB, actualTeamA];
+          [scoreA, scoreB] = [scoreB, scoreA];
+        }
+        if (scoreA > scoreB) {
+          totalWinsA += 1;
+        } else {
+          totalWinsB += 1;
+        }
       }
     });
 
@@ -230,7 +246,50 @@ export default function MatchStat2() {
     }
   }, [teamA, teamB]);
 
-  if (isLoading) {
+  // Hàm xác định trạng thái xác thực của player (dùng cho icon Verify)
+  const getVerificationStatus = (gameName, tagLine) => {
+    if (!registeredPlayers || registeredPlayers.length === 0) return '';
+    const normalizedId = `${gameName}#${tagLine}`.toLowerCase().trim();
+    const player = registeredPlayers.find((p) => p.riotID.toLowerCase().trim() === normalizedId);
+    return player && player.isRegistered ? (
+      <img src={Verify} className="w-4 h-4 inline-block ml-1" alt="verified" />
+    ) : (
+      ''
+    );
+  };
+
+  // Derive team info from league and teamA/teamB
+  const teamsMap = {};
+  (league?.players || []).forEach((player) => {
+    if (player.team && player.team.name && !teamsMap[player.team.name]) {
+      teamsMap[player.team.name] = {
+        color: player.team.color || '#ffffff',
+        shortName: player.team.shortName,
+        logoUrl: player.logoUrl || player.team.logoTeam,
+      };
+    }
+  });
+  const teamABgColor = teamsMap[teamA]?.color || '#ffffff';
+  const teamBBgColor = teamsMap[teamB]?.color || '#ffffff';
+  const teamAshort = teamsMap[teamA]?.shortName || teamA;
+  const teamBshort = teamsMap[teamB]?.shortName || teamB;
+  const teamALogo = teamsMap[teamA]?.logoUrl
+    ? `https://drive.google.com/thumbnail?id=${teamsMap[teamA].logoUrl}`
+    : '';
+  const teamBLogo = teamsMap[teamB]?.logoUrl
+    ? `https://drive.google.com/thumbnail?id=${teamsMap[teamB].logoUrl}`
+    : '';
+
+  if (
+    isLoading ||
+    !league ||
+    !league.players ||
+    league.players.length === 0 ||
+    !matchInfo ||
+    matchInfo.length === 0 ||
+    !teamA ||
+    !teamB
+  ) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <span className="loading loading-dots loading-lg text-primary"></span>
@@ -240,6 +299,20 @@ export default function MatchStat2() {
 
   return (
     <>
+      <LeagueHeader
+        league={league}
+        startTime={league.season.time_start}
+        endTime={league.season.time_end}
+        currentUser={currentUser}
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+        getNavigation={getNavigation}
+        MyNavbar2={MyNavbar2}
+        league_id={league_id}
+        me={me}
+        game={game}
+      />
+
       <div className="matchstat">
         <div className="scoreboard-title">
           <div className="scoreboard w-full">

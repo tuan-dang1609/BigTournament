@@ -83,7 +83,7 @@ if (rootElement) {
             <Route path="/:game/:league_id/leaderboard" element={<Leaderboard />} />
             <Route path="/:game/:league_id/bracket" element={<BracketPage />} />
             <Route path="/:game/:league_id/:round/:match/lobby" element={<ValorantLobby />} />
-
+            <Route path="/:game/:league_id/match/:round/:Match" element={<MatchStat />} />
             {/* Routes CÓ Navbar + Footer */}
             <Route
               path="*"
@@ -102,7 +102,7 @@ if (rootElement) {
                     <Route path="/valorant/test/createbanpick" element={<CreateMatch />} />
                     <Route path="/match/:matchId/:role" element={<MatchInterface />} />
                     <Route path="/valorant/test/special" element={<TournamentBracketLOL />} />
-                    <Route path="/valorant/match/:round/:Match" element={<MatchStat />} />
+
                     <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
                     <Route path="/valorant/swissstage" element={<SwissStage />} />
                     <Route path="/test/valorant/doubleup" element={<PlayoffValo />} />

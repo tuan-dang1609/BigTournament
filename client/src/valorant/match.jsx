@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Verify from '../image/verified-symbol-icon.png';
 const columns = [
   { key: 'name', label: 'Người chơi' },
@@ -12,6 +12,17 @@ const columns = [
 ];
 
 const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
+  // Compute all unique RiotIDs from data
+  const allPlayer = [
+    ...new Set(
+      data.flatMap((match) =>
+        match.players
+          ?.filter((player) => player.gameName && player.tagLine)
+          .map((player) => `${player.gameName}#${player.tagLine}`)
+      )
+    ),
+  ];
+
   const [selectedMap, setSelectedMap] = useState(null);
 
   const getVerificationStatus = (gameName, tagLine) => {
@@ -20,7 +31,7 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
     const normalizedId = `${gameName}#${tagLine}`.toLowerCase().trim();
     const player = registeredPlayers.find((p) => p.riotID.toLowerCase().trim() === normalizedId);
 
-    return player?.isregistered ? <img src={Verify} className="w-4 h-4" /> : '';
+    return player?.isRegistered ? <img src={Verify} className="w-4 h-4" /> : '';
   };
 
   const mapData = data.reduce((acc, match) => {
@@ -35,6 +46,9 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
     }
   }, [mapData]);
   const playerData = data.find((match) => match.matchInfo?.mapName === selectedMap) || data[0];
+  console.log('PlayerStats data:', data);
+  console.log('playerData:', playerData);
+  console.log('playerData.players:', playerData?.players);
   // Định nghĩa renderTable TRƯỚC khi sử dụng
   const getPlayerTeamName = (player) => {
     const normalizedId = `${player.gameName}#${player.tagLine}`.toLowerCase().trim();
@@ -45,6 +59,14 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
   };
 
   const renderTable = (teamData, teamColor) => {
+    // Check if all 5 players are registered
+    const allVerified =
+      teamData.length === 5 &&
+      teamData.every((row) => {
+        const normalizedId = `${row.gameName}#${row.tagLine}`.toLowerCase().trim();
+        const player = registeredPlayers.find((p) => p.riotID.toLowerCase().trim() === normalizedId);
+        return player && player.isRegistered;
+      });
     return (
       <div className="w-full overflow-x-auto shadow-lg rounded-lg mb-8">
         <table className="w-full min-w-max table-auto font-bold text-center">
@@ -80,11 +102,13 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
                       case 'name':
                         cellData = (
                           <div className="flex items-center">
-                            <img
-                              src={row.imgCharacter}
-                              alt={row.characterId}
-                              className="w-8 h-8 rounded-full mr-2"
-                            />
+                            {row.imgCharacter && (
+                              <img
+                                src={row.imgCharacter}
+                                alt="agent"
+                                className="w-6 h-6 rounded-full mr-2"
+                              />
+                            )}
                             <span className="lg:flex lg:flex-row hidden">
                               {row.gameName}#{row.tagLine}
                               <span className="text-xs ml-1">
@@ -113,7 +137,9 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
                         break;
 
                       case 'kda':
-                        cellData = `${row.stats.kills || 0}/${row.stats.deaths || 0}/${row.stats.assists || 0}`;
+                        cellData = `${row.stats.kills || 0}/${row.stats.deaths || 0}/${
+                          row.stats.assists || 0
+                        }`;
                         break;
 
                       case 'stats.kills/stats.deaths':
