@@ -377,7 +377,7 @@ export default function MatchStat2() {
           </div>
 
           <div className="title bg-[#362431]">
-            <span className="league all-title">Valorant DCN Split 2</span>
+            <span className="league all-title">{league.league.name.toLocaleUpperCase()}</span>
             <span className="group all-title text-white">
               Nhánh {capitalizeFirstLetter(round)} ● {botype}
             </span>

@@ -51,7 +51,7 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
         // Fetch matchid and matchdata if round and Match are available
         let matchDataPromise = Promise.resolve(null);
         if (round && Match) {
-          matchDataPromise = fetch('http://localhost:3000/api/auth/findmatchid', {
+          matchDataPromise = fetch('https://bigtournament-hq9n.onrender.com/api/auth/findmatchid', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ round, Match }),
@@ -77,7 +77,9 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
               );
               setbanpickid(matchData.banpickid || '');
               const matchDetailPromises = matchData.matchid.map(async (id) => {
-                const res = await fetch(`http://localhost:3000/api/auth/valorant/matchdata/${id}`);
+                const res = await fetch(
+                  `https://bigtournament-hq9n.onrender.com/api/auth/valorant/matchdata/${id}`
+                );
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
                 return data.matchData;
@@ -120,7 +122,7 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
             if (cachedMatchData[matchId]) {
               return Promise.resolve({ matchId, data: cachedMatchData[matchId] });
             }
-            return fetch(`http://localhost:3000/api/tft/match/${matchId}`)
+            return fetch(`https://bigtournament-hq9n.onrender.com/api/tft/match/${matchId}`)
               .then((res) => res.json())
               .then((data) => {
                 cachedMatchData[matchId] = data;
