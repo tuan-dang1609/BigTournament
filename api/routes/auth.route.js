@@ -214,7 +214,70 @@ router.get("/findmatch/:round/:match", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+router.post("/register/:league_id", async (req, res) => {
+  const { league_id } = req.params;
+  const {
+    logoUrl,
+    teamLogo, // 👈 thêm dòng này
+    gameMembers,
+    usernameregister,
+    discordID,
+    classTeam,
+    games,
+    teamName,
+    shortName,
+  } = req.body;
 
+  try {
+    const leagueDoc = await DCNLeague.findOne({
+      "league.league_id": league_id,
+    });
+
+    if (!leagueDoc) {
+      return res.status(404).json({ message: "League not found" });
+    }
+
+    const existingPlayerIndex = leagueDoc.players.findIndex(
+      (p) => String(p.usernameregister) === String(usernameregister)
+    );
+
+    const selectedGame = games?.[0]; // 👈 lấy game thực sự mà người dùng chọn
+
+    const playerData = {
+      discordID,
+      ign: (gameMembers?.[selectedGame] || []).filter((m) => m.trim() !== ""),
+      usernameregister,
+      logoUrl,
+      classTeam,
+      game: selectedGame,
+      isCheckedin: leagueDoc.players[existingPlayerIndex]?.isCheckedin || false,
+      team: {
+        name: teamName || "",
+        logoTeam: teamLogo || "", // 👈 lấy logo team riêng
+        shortName: shortName || "",
+      },
+    };
+
+    if (existingPlayerIndex === -1) {
+      leagueDoc.players.push(playerData);
+    } else {
+      leagueDoc.players[existingPlayerIndex] = {
+        ...leagueDoc.players[existingPlayerIndex],
+        ...playerData,
+      };
+    }
+
+    await leagueDoc.save();
+
+    res.status(200).json({
+      message: "Đăng ký thành công và đã thêm/cập nhật vào giải đấu!",
+      player: playerData,
+    });
+  } catch (error) {
+    console.error("❌ Error registering player:", error);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
 // Add route to update player ready status
 router.post("/updatePlayerReady", async (req, res) => {
   try {
