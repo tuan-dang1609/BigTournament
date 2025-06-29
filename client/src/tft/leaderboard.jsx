@@ -247,7 +247,7 @@ const Leaderboard = () => {
         >
           {Object.keys(league?.matches || {}).map((dayKey, index) => (
             <option key={dayKey} value={dayKey}>
-              Ngày {index + 1}
+              Vòng {index + 1}
             </option>
           ))}
         </select>
