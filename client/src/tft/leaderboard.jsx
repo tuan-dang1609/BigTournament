@@ -5,13 +5,15 @@ import 'animate.css';
 import MyNavbar2 from '../components/Navbar2';
 import LeagueHeader from '../components/header';
 import { useLeagueData } from '../hooks/useLeagueData';
+import axios from 'axios';
 
 const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useSelector((state) => state.user);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { game, league_id } = useParams();
-  const { league, me, allMatchData } = useLeagueData(game, league_id, currentUser);
+  const { league, me } = useLeagueData(game, league_id, currentUser);
+  const [allMatchData, setAllMatchData] = useState({});
   const currentPlayer = league?.players?.find(
     (p) => String(p.usernameregister) === String(currentUser?._id)
   );
@@ -54,8 +56,40 @@ const Leaderboard = () => {
   }, [league]);
 
   useEffect(() => {
+    // Khi vào trang leaderboard, luôn fetch lại toàn bộ match data từ API
+    if (!league?.matches) return;
+    const matchIdSet = new Set();
+    Object.values(league.matches || {}).forEach((day) => {
+      day.forEach((lobby) => {
+        lobby.matchIds.forEach((id) => {
+          if (id !== '0') matchIdSet.add(id);
+        });
+      });
+    });
+    const fetchAllMatches = async () => {
+      const matchFetchPromises = Array.from(matchIdSet).map((matchId) =>
+        axios
+          .get(`https://bigtournament-hq9n.onrender.com/api/tft/match/${matchId}`)
+          .then((res) => ({ matchId, data: res.data }))
+          .catch((err) => {
+            console.error('❌ Match fetch failed for', matchId, err);
+            return { matchId, data: null };
+          })
+      );
+      const matchResults = await Promise.all(matchFetchPromises);
+      const allMatchDataTemp = {};
+      matchResults.forEach(({ matchId, data }) => {
+        if (data) allMatchDataTemp[matchId] = data;
+      });
+      setAllMatchData(allMatchDataTemp);
+    };
+    fetchAllMatches();
+  }, [league]);
+
+  useEffect(() => {
     const generateLeaderboard = () => {
       if (!league || !league.matches || !league.matches[selectedDay]) return;
+      if (!allMatchData || Object.keys(allMatchData).length === 0) return;
 
       const lobbies = league.matches[selectedDay];
       const maxMatches = Math.max(...lobbies.map((l) => l.matchIds.length));

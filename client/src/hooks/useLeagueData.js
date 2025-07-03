@@ -11,7 +11,6 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
   const [loading, setLoading] = useState(!cachedLeague);
   const [startTime, setStartTime] = useState(null);
   const [me, setMe] = useState(cachedMe);
-  const [allMatchData, setAllMatchData] = useState({});
 
   // Valorant statmatch state
   const [matchid, setMatchid] = useState([]);
@@ -107,39 +106,6 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
           cachedLeague = leagueData;
           cachedParams.game = game;
           cachedParams.league_id = league_id;
-
-          // Fetch all TFT match data in parallel
-          const matchIdSet = new Set();
-          Object.values(leagueData.matches || {}).forEach((day) => {
-            day.forEach((lobby) => {
-              lobby.matchIds.forEach((id) => {
-                if (id !== '0') matchIdSet.add(id);
-              });
-            });
-          });
-
-          const matchFetchPromises = Array.from(matchIdSet).map((matchId) => {
-            if (cachedMatchData[matchId]) {
-              return Promise.resolve({ matchId, data: cachedMatchData[matchId] });
-            }
-            return fetch(`https://bigtournament-hq9n.onrender.com/api/tft/match/${matchId}`)
-              .then((res) => res.json())
-              .then((data) => {
-                cachedMatchData[matchId] = data;
-                return { matchId, data };
-              })
-              .catch((err) => {
-                console.error('❌ Match fetch failed for', matchId, err);
-                return { matchId, data: null };
-              });
-          });
-
-          const matchResults = await Promise.all(matchFetchPromises);
-          const allMatchDataTemp = {};
-          matchResults.forEach(({ matchId, data }) => {
-            if (data) allMatchDataTemp[matchId] = data;
-          });
-          setAllMatchData(allMatchDataTemp);
         }
 
         if (meData) {
@@ -161,8 +127,7 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
     loading,
     startTime,
     me,
-    allMatchData,
-    // Valorant statmatch
+    // Không trả về allMatchData nữa
     matchid,
     teamA,
     teamB,
