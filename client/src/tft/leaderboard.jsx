@@ -5,15 +5,13 @@ import 'animate.css';
 import MyNavbar2 from '../components/Navbar2';
 import LeagueHeader from '../components/header';
 import { useLeagueData } from '../hooks/useLeagueData';
-import axios from 'axios';
 
 const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useSelector((state) => state.user);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { game, league_id } = useParams();
-  const { league, me } = useLeagueData(game, league_id, currentUser);
-  const [allMatchData, setAllMatchData] = useState({});
+  const { league, me, allMatchData } = useLeagueData(game, league_id, currentUser);
   const currentPlayer = league?.players?.find(
     (p) => String(p.usernameregister) === String(currentUser?._id)
   );
@@ -56,109 +54,114 @@ const Leaderboard = () => {
   }, [league]);
 
   useEffect(() => {
-    // Khi vào trang leaderboard, luôn fetch lại toàn bộ match data từ API
-    if (!league?.matches) return;
-    const matchIdSet = new Set();
-    Object.values(league.matches || {}).forEach((day) => {
-      day.forEach((lobby) => {
-        lobby.matchIds.forEach((id) => {
-          if (id !== '0') matchIdSet.add(id);
-        });
-      });
-    });
-    const fetchAllMatches = async () => {
-      const matchFetchPromises = Array.from(matchIdSet).map((matchId) =>
-        axios
-          .get(`https://bigtournament-hq9n.onrender.com/api/tft/match/${matchId}`)
-          .then((res) => ({ matchId, data: res.data }))
-          .catch((err) => {
-            console.error('❌ Match fetch failed for', matchId, err);
-            return { matchId, data: null };
-          })
-      );
-      const matchResults = await Promise.all(matchFetchPromises);
-      const allMatchDataTemp = {};
-      matchResults.forEach(({ matchId, data }) => {
-        if (data) allMatchDataTemp[matchId] = data;
-      });
-      setAllMatchData(allMatchDataTemp);
-    };
-    fetchAllMatches();
-  }, [league]);
-
-  useEffect(() => {
     const generateLeaderboard = () => {
+      // DEBUG LOGS
+      console.log('league.players', league?.players);
+      // registeredPuuids will be filled below
       if (!league || !league.matches || !league.matches[selectedDay]) return;
-      if (!allMatchData || Object.keys(allMatchData).length === 0) return;
 
       const lobbies = league.matches[selectedDay];
       const maxMatches = Math.max(...lobbies.map((l) => l.matchIds.length));
       setColumnCount(maxMatches);
 
       const playerScores = {};
-      const registeredNames = new Set(league.players.map((p) => p.ign?.[0]).filter(Boolean));
+      // Map riotID -> puuid (from match data)
+      const riotIdToPuuid = {};
+      // Duyệt qua tất cả match để lấy mapping riotID -> puuid
+      Object.values(allMatchData).forEach((match) => {
+        match.info.participants.forEach((p) => {
+          const riotId = `${p.riotIdGameName}#${p.riotIdTagline}`;
+          riotIdToPuuid[riotId] = p.puuid;
+        });
+      });
+
+      // Map puuid <-> player info, registeredPuuids
+      const puuidToPlayer = {};
+      const registeredPuuids = new Set();
+      league.players.forEach((p) => {
+        const riotId = p.ign?.[0];
+        const puuid = riotIdToPuuid[riotId];
+        if (puuid) {
+          puuidToPlayer[puuid] = { ...p, riotId };
+          registeredPuuids.add(puuid);
+        }
+      });
+      console.log('registeredPuuids', Array.from(registeredPuuids));
 
       for (let matchIndex = 0; matchIndex < maxMatches; matchIndex++) {
+        // DEBUG
+        console.log('lobbies', lobbies);
         const presentPlayers = new Set();
         let matchExists = false;
 
         for (const lobby of lobbies) {
+          // DEBUG
+          // console.log('lobby', lobby);
           const matchId = lobby.matchIds[matchIndex];
           if (matchId === '0' || !allMatchData[matchId]) continue;
           matchExists = true;
 
           const match = allMatchData[matchId];
+          // DEBUG
+          // console.log('match', match);
           const participants = match.info.participants.map((p) => ({
-            name: `${p.riotIdGameName}#${p.riotIdTagline}`,
+            puuid: p.puuid,
             placement: p.placement,
           }));
+          // DEBUG
+          // console.log('participants', participants);
 
-          const outsiders = participants.filter((p) => !registeredNames.has(p.name));
+          const outsiders = participants.filter((p) => !registeredPuuids.has(p.puuid));
           const outsidersPlacements = outsiders.map((p) => p.placement);
 
           match.info.participants.forEach((p) => {
-            const name = `${p.riotIdGameName}#${p.riotIdTagline}`;
+            // DEBUG
+            // console.log('participant', p);
+            const puuid = p.puuid;
             let score = 9 - p.placement;
 
-            if (!registeredNames.has(name)) return;
+            if (!registeredPuuids.has(puuid)) return;
 
-            presentPlayers.add(name);
+            presentPlayers.add(puuid);
 
             const outsiderAbove = outsidersPlacements.filter((o) => o < p.placement).length;
             if (outsiderAbove > 0) {
               score += outsiderAbove;
             }
 
-            if (!playerScores[name]) {
-              playerScores[name] = {
-                name,
+            if (!playerScores[puuid]) {
+              playerScores[puuid] = {
+                puuid,
+                riotId: puuidToPlayer[puuid]?.riotId || '',
                 scores: Array(maxMatches).fill(0),
                 total: 0,
               };
             }
 
-            playerScores[name].scores[matchIndex] = score;
-            playerScores[name].total += score;
+            playerScores[puuid].scores[matchIndex] = score;
+            playerScores[puuid].total += score;
           });
         }
 
-        registeredNames.forEach((name) => {
-          if (!playerScores[name]) {
-            playerScores[name] = {
-              name,
+        registeredPuuids.forEach((puuid) => {
+          if (!playerScores[puuid]) {
+            playerScores[puuid] = {
+              puuid,
+              riotId: puuidToPlayer[puuid]?.riotId || '',
               scores: Array(maxMatches).fill(0),
               total: 0,
             };
           }
 
-          if (matchExists && !presentPlayers.has(name)) {
-            playerScores[name].scores[matchIndex] = 1;
-            playerScores[name].total += 1;
+          if (matchExists && !presentPlayers.has(puuid)) {
+            playerScores[puuid].scores[matchIndex] = 1;
+            playerScores[puuid].total += 1;
           }
         });
       }
 
       const sorted = Object.values(playerScores).sort((a, b) => b.total - a.total);
+      console.log('playerScores', playerScores);
 
       // === LỌC TOP 8 NGÀY TRƯỚC NẾU LÀ NGÀY CUỐI ===
       let filtered = sorted;
@@ -179,44 +182,48 @@ const Leaderboard = () => {
 
             const match = allMatchData[matchId];
             match.info.participants.forEach((p) => {
-              const name = `${p.riotIdGameName}#${p.riotIdTagline}`;
-              if (!registeredNames.has(name)) return;
+              const puuid = p.puuid;
+              if (!registeredPuuids.has(puuid)) return;
 
-              if (!prevScores[name]) prevScores[name] = 0;
-              prevScores[name] += 9 - p.placement;
+              if (!prevScores[puuid]) prevScores[puuid] = 0;
+              prevScores[puuid] += 9 - p.placement;
             });
           }
         }
 
-        const top8Names = Object.entries(prevScores)
+        const top8Puuids = Object.entries(prevScores)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 8)
-          .map(([name]) => name);
+          .map(([puuid]) => puuid);
 
-        filtered = sorted.filter((p) => top8Names.includes(p.name));
+        filtered = sorted.filter((p) => top8Puuids.includes(p.puuid));
       }
 
       // GẮN AVATAR VÀ LOGO
       const playerMap = {};
       league.players.forEach((p) => {
-        const ign = p.ign?.[0];
+        const riotId = p.ign?.[0];
+        const puuid = riotIdToPuuid[riotId];
         const avatar = `https://drive.google.com/thumbnail?id=${p.logoUrl}`;
         const teamLogo = `https://drive.google.com/thumbnail?id=${p.team.logoTeam}`;
-        if (ign) {
-          playerMap[ign] = {
+        if (puuid) {
+          playerMap[puuid] = {
             avatar: avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
             teamLogo: teamLogo || null,
+            riotId: riotId || '',
           };
         }
       });
 
       const leaderboardWithProfile = filtered.map((p) => ({
         ...p,
-        avatar: playerMap[p.name]?.avatar,
-        teamLogo: playerMap[p.name]?.teamLogo,
+        avatar: playerMap[p.puuid]?.avatar,
+        teamLogo: playerMap[p.puuid]?.teamLogo,
+        name: playerMap[p.puuid]?.riotId || p.riotId || p.puuid,
       }));
 
       setLeaderboardData(leaderboardWithProfile);
+      console.log('leaderboardData', leaderboardWithProfile);
     };
 
     generateLeaderboard();
