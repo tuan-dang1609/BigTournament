@@ -155,6 +155,23 @@ router.post("/teams/:league", findteamHOF);
 router.post("/leagues/list", findleagueHOF);
 router.post("/leagues", leagueHOF);
 router.post("/myrankpickem", getUserPickemScore);
+router.post("/checkregisterorz", async (req, res) => {
+  try {
+    const { usernameregister } = req.body;
+    const existingTeam = await Organization.findOne({ usernameregister });
+
+    if (existingTeam) {
+      // Nếu tìm thấy đội, trả lại thông tin đội
+      return res.status(200).json(existingTeam);
+    }
+
+    // Nếu không tìm thấy đội, trả lại lỗi 404
+    return res.status(404).json({ message: "Team not found" });
+  } catch (error) {
+    // Xử lý lỗi server
+    res.status(500).json({ message: error });
+  }
+});
 router.post("/registerorz", async (req, res) => {
   try {
     const {
@@ -168,73 +185,17 @@ router.post("/registerorz", async (req, res) => {
       color,
     } = req.body;
 
-    const validClassRegex = /^(10|11|12)(A([1-9]|1[0-8])|TH[1-2])$/;
+    // Bỏ hết kiểm tra regex, chỉ cần submit là được
 
-    const isAllCuuHocSinh = classTeam.length === 1 && classTeam[0] === "Cựu";
-    const isAllTruongLop = classTeam.every((cls) => validClassRegex.test(cls));
-
-    const hasCuuHocSinh = classTeam.includes("Cựu");
-    const hasLopKhac = classTeam.some((cls) => cls !== "Cựu");
-
-    if (hasCuuHocSinh && hasLopKhac) {
-      return res.status(400).json({
-        message: 'classTeam không được chứa cả "Cựu" và lớp khác.',
-      });
-    }
-
-    if (!isAllCuuHocSinh && !isAllTruongLop) {
-      return res.status(400).json({
-        message: 'classTeam phải là ["Cựu"] hoặc các lớp hợp lệ trong trường.',
-      });
-    }
-
-    let outsiderCount = 0;
-
-    for (let player of gameMembers) {
-      const playerClass = player.class;
-
-      if (!player.nickname || !playerClass) {
-        return res.status(400).json({
-          message: `Người chơi ${
-            player.nickname || "không tên"
-          } thiếu thông tin nickname hoặc class.`,
-        });
-      }
-
-      if (isAllCuuHocSinh) {
-        if (playerClass !== "Cựu học sinh") outsiderCount++;
-      } else if (isAllTruongLop) {
-        if (
-          !classTeam.includes(playerClass) &&
-          playerClass !== "Học sinh ngoài trường" &&
-          playerClass !== "Cựu"
-        ) {
-          return res.status(400).json({
-            message: `Người chơi ${player.nickname} có lớp không thuộc classTeam và không phải là cựu học sinh hoặc học sinh ngoài trường.`,
-          });
-        }
-        if (playerClass === "Cựu" || playerClass === "Học sinh ngoài trường") {
-          outsiderCount++;
-        }
-      }
-    }
-
-    if (outsiderCount > 3) {
-      return res.status(400).json({
-        message: `Tối đa chỉ được 3 người là học sinh ngoài trường hoặc học sinh khác lớp (với classTeam hiện tại). Hiện có ${outsiderCount} người.`,
-      });
-    }
-
-    // ✅ Tìm đội hiện tại của user
+    // Tìm đội hiện tại của user
     const existingTeam = await Organization.findOne({ usernameregister });
-    const oldTeamName = existingTeam ? existingTeam.team : null;
 
-    // ✅ Kiểm tra trùng team
+    // Kiểm tra trùng team
     const nicknames = gameMembers.map((p) => p.nickname);
     const users = await User.find({ nickname: { $in: nicknames } });
 
     if (existingTeam) {
-      // ✅ Tách danh sách thành viên cũ & mới
+      // Tách danh sách thành viên cũ & mới
       const oldNicknames = existingTeam.players.map((p) => p.nickname);
       const newNicknames = gameMembers.map((p) => p.nickname);
       const removedMembers = oldNicknames.filter(
@@ -242,7 +203,7 @@ router.post("/registerorz", async (req, res) => {
       );
       const addedOrKeptMembers = newNicknames;
 
-      // ✅ Cập nhật đội
+      // Cập nhật đội
       existingTeam.team = teamName;
       existingTeam.shortname = shortName;
       existingTeam.class = classTeam;
@@ -252,14 +213,14 @@ router.post("/registerorz", async (req, res) => {
 
       const updatedTeam = await existingTeam.save();
 
-      // ✅ Gỡ team của người bị xóa
+      // Gỡ team của người bị xóa
       await Promise.all(
         removedMembers.map((name) =>
           User.findOneAndUpdate({ nickname: name }, { team: "" })
         )
       );
 
-      // ✅ Cập nhật team mới cho thành viên
+      // Cập nhật team mới cho thành viên
       await Promise.all(
         addedOrKeptMembers.map((name) =>
           User.findOneAndUpdate(
@@ -280,7 +241,7 @@ router.post("/registerorz", async (req, res) => {
         .json({ message: "Cập nhật đội thành công!", team: updatedTeam });
     }
 
-    // ✅ Nếu chưa có đội, tạo mới
+    // Nếu chưa có đội, tạo mới
     const newTeam = new Organization({
       discordID,
       usernameregister,
@@ -294,7 +255,7 @@ router.post("/registerorz", async (req, res) => {
 
     const savedTeam = await newTeam.save();
 
-    // ✅ Cập nhật team cho thành viên mới
+    // Cập nhật team cho thành viên mới
     await Promise.all(
       gameMembers.map((member) =>
         User.findOneAndUpdate(
