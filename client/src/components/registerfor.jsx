@@ -7,6 +7,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 const TeamRegistrationForm = () => {
+  // Thêm state để lưu file ảnh logo
+  const [logoFile, setLogoFile] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [formData, setFormData] = useState({
     discordID: currentUser.discordID,
@@ -313,7 +315,6 @@ const TeamRegistrationForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Dữ liệu form gửi lên:', formData);
     let tempErrors = { ...errors };
     const formFields = ['teamName', 'shortName', 'classTeam', 'logoUrl', 'gameMembers'];
     formFields.forEach((field) => validateField(field, formData[field]));
@@ -324,14 +325,39 @@ const TeamRegistrationForm = () => {
       return;
     }
 
+    let logoUrl = formData.logoUrl;
+    if (logoFile) {
+      const formDataFile = new FormData();
+      formDataFile.append('image', logoFile);
+      try {
+        const res = await axios.post(
+          'https://bigtournament-hq9n.onrender.com/api/upload-image',
+          formDataFile,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          }
+        );
+        // Đảm bảo url là /image/filename
+        if (res.data.url && res.data.url.includes('/image/')) {
+          logoUrl = res.data.url;
+        } else if (res.data.filename) {
+          logoUrl = `/image/${res.data.filename}`;
+        } else {
+          logoUrl = res.data.url || '';
+        }
+      } catch (err) {
+        setSubmitStatus({ success: false, message: 'Lỗi upload ảnh: ' + (err.response?.data?.error || err.message) });
+        return;
+      }
+    }
+
     try {
       const response = await axios.post(
         'https://bigtournament-hq9n.onrender.com/api/auth/registerorz',
-        formData
+        { ...formData, logoUrl }
       );
       setSubmitStatus({ success: true, message: 'Team registered successfully!' });
       setSignupSuccess(true);
-
       setFormData({
         teamName: '',
         shortName: '',
@@ -340,6 +366,7 @@ const TeamRegistrationForm = () => {
         color: '',
         gameMembers: [],
       });
+      setLogoFile(null);
       setErrors({});
     } catch (error) {
       setSubmitStatus({
@@ -500,32 +527,27 @@ const TeamRegistrationForm = () => {
                     type="file"
                     accept="image/*"
                     name="logoUrl"
-                    onChange={async (e) => {
+                    onChange={(e) => {
                       const file = e.target.files[0];
                       if (!file) return;
-                      const formDataFile = new FormData();
-                      formDataFile.append('image', file);
-                      try {
-                        const res = await axios.post(
-                          'https://bigtournament-hq9n.onrender.com/api/upload-image',
-                          formDataFile,
-                          {
-                            headers: { 'Content-Type': 'multipart/form-data' },
-                          }
-                        );
-                        setFormData({ ...formData, logoUrl: res.data.url });
-                      } catch (err) {
-                        alert('Lỗi upload ảnh: ' + (err.response?.data?.error || err.message));
-                      }
+                      setLogoFile(file);
                     }}
                     className="px-4 py-2 bg-white border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
                   />
-                  {formData.logoUrl && (
+                  {logoFile ? (
                     <img
-                      src={formData.logoUrl}
+                      src={URL.createObjectURL(logoFile)}
                       alt="logo preview"
                       className="w-16 h-16 mt-2 rounded-full object-cover border"
                     />
+                  ) : (
+                    formData.logoUrl && (
+                      <img
+                        src={formData.logoUrl}
+                        alt="logo preview"
+                        className="w-16 h-16 mt-2 rounded-full object-cover border"
+                      />
+                    )
                   )}
                   {errors.logoUrl && (
                     <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
