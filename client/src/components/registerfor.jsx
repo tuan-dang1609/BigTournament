@@ -319,6 +319,10 @@ const TeamRegistrationForm = () => {
     const formFields = ['teamName', 'shortName', 'classTeam', 'logoUrl', 'gameMembers'];
     formFields.forEach((field) => validateField(field, formData[field]));
 
+    // Debug log các giá trị trước khi submit
+    console.log('logoFile:', logoFile);
+    console.log('formData.logoUrl trước khi upload:', formData.logoUrl);
+
     if (Object.keys(tempErrors).length > 0) {
       setErrors(tempErrors);
       setSubmitStatus({ success: false, message: 'Please fix the errors in the form.' });
@@ -330,13 +334,11 @@ const TeamRegistrationForm = () => {
       const formDataFile = new FormData();
       formDataFile.append('image', logoFile);
       try {
-        const res = await axios.post(
-          'https://bigtournament-hq9n.onrender.com/api/upload-image',
-          formDataFile,
-          {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          }
-        );
+        const res = await axios.post('http://localhost:3000/api/upload-image', formDataFile, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        // Debug log kết quả upload
+        console.log('Kết quả upload:', res.data);
         // Đảm bảo url là /image/filename
         if (res.data.url && res.data.url.includes('/image/')) {
           logoUrl = res.data.url;
@@ -346,16 +348,24 @@ const TeamRegistrationForm = () => {
           logoUrl = res.data.url || '';
         }
       } catch (err) {
-        setSubmitStatus({ success: false, message: 'Lỗi upload ảnh: ' + (err.response?.data?.error || err.message) });
+        setSubmitStatus({
+          success: false,
+          message: 'Lỗi upload ảnh: ' + (err.response?.data?.error || err.message),
+        });
         return;
       }
     }
+
+    // Debug log logoUrl trước khi gửi đăng ký
+    console.log('logoUrl gửi lên backend:', logoUrl);
 
     try {
       const response = await axios.post(
         'https://bigtournament-hq9n.onrender.com/api/auth/registerorz',
         { ...formData, logoUrl }
       );
+      // Debug log kết quả đăng ký
+      console.log('Kết quả đăng ký:', response.data);
       setSubmitStatus({ success: true, message: 'Team registered successfully!' });
       setSignupSuccess(true);
       setFormData({
