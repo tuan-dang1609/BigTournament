@@ -7,8 +7,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 const TeamRegistrationForm = () => {
-  // Thêm state để lưu file ảnh logo
-  const [logoFile, setLogoFile] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [formData, setFormData] = useState({
     discordID: currentUser.discordID,
@@ -204,7 +202,7 @@ const TeamRegistrationForm = () => {
       }, 1000);
 
       if (countdown === 0) {
-        navigate('/valorant');
+        navigate('/');
       }
 
       return () => clearInterval(timer);
@@ -315,13 +313,10 @@ const TeamRegistrationForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Dữ liệu form gửi lên:', formData);
     let tempErrors = { ...errors };
     const formFields = ['teamName', 'shortName', 'classTeam', 'logoUrl', 'gameMembers'];
     formFields.forEach((field) => validateField(field, formData[field]));
-
-    // Debug log các giá trị trước khi submit
-    console.log('logoFile:', logoFile);
-    console.log('formData.logoUrl trước khi upload:', formData.logoUrl);
 
     if (Object.keys(tempErrors).length > 0) {
       setErrors(tempErrors);
@@ -329,45 +324,14 @@ const TeamRegistrationForm = () => {
       return;
     }
 
-    let logoUrl = formData.logoUrl;
-    if (logoFile) {
-      const formDataFile = new FormData();
-      formDataFile.append('image', logoFile);
-      try {
-        const res = await axios.post('http://localhost:3000/api/upload-image', formDataFile, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        // Debug log kết quả upload
-        console.log('Kết quả upload:', res.data);
-        // Đảm bảo url là /image/filename
-        if (res.data.url && res.data.url.includes('/image/')) {
-          logoUrl = res.data.url;
-        } else if (res.data.filename) {
-          logoUrl = `/image/${res.data.filename}`;
-        } else {
-          logoUrl = res.data.url || '';
-        }
-      } catch (err) {
-        setSubmitStatus({
-          success: false,
-          message: 'Lỗi upload ảnh: ' + (err.response?.data?.error || err.message),
-        });
-        return;
-      }
-    }
-
-    // Debug log logoUrl trước khi gửi đăng ký
-    console.log('logoUrl gửi lên backend:', logoUrl);
-
     try {
       const response = await axios.post(
         'https://bigtournament-hq9n.onrender.com/api/auth/registerorz',
-        { ...formData, logoUrl }
+        formData
       );
-      // Debug log kết quả đăng ký
-      console.log('Kết quả đăng ký:', response.data);
       setSubmitStatus({ success: true, message: 'Team registered successfully!' });
       setSignupSuccess(true);
+
       setFormData({
         teamName: '',
         shortName: '',
@@ -376,7 +340,6 @@ const TeamRegistrationForm = () => {
         color: '',
         gameMembers: [],
       });
-      setLogoFile(null);
       setErrors({});
     } catch (error) {
       setSubmitStatus({
@@ -531,33 +494,23 @@ const TeamRegistrationForm = () => {
                     className="leading-loose font-semibold text-base-content"
                     htmlFor="logoUrl"
                   >
-                    Logo của team bạn (upload file ảnh)
+                    Logo ID của team bạn
                   </label>
                   <input
-                    type="file"
-                    accept="image/*"
+                    type="text"
                     name="logoUrl"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (!file) return;
-                      setLogoFile(file);
-                    }}
+                    value={formData.logoUrl}
+                    onChange={handleInputChange}
                     className="px-4 py-2 bg-white border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                    placeholder="Nhập ID của tệp Google Drive"
                   />
-                  {logoFile ? (
+                  {/* Hiển thị ảnh preview nếu có logoID */}
+                  {formData.logoUrl && (
                     <img
-                      src={URL.createObjectURL(logoFile)}
+                      src={`https://drive.google.com/thumbnail?id=${formData.logoUrl}`}
                       alt="logo preview"
                       className="w-16 h-16 mt-2 rounded-full object-cover border"
                     />
-                  ) : (
-                    formData.logoUrl && (
-                      <img
-                        src={formData.logoUrl}
-                        alt="logo preview"
-                        className="w-16 h-16 mt-2 rounded-full object-cover border"
-                      />
-                    )
                   )}
                   {errors.logoUrl && (
                     <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
