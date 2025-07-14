@@ -436,6 +436,28 @@ app.get("/api/matches", async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// ================== UPLOAD IMAGE TO public/image ==================
+import multer from "multer";
+
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "..", "client", "public", "image"));
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+const uploadImage = multer({ storage: imageStorage });
+
+app.post("/api/upload-image", uploadImage.single("image"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+  // Trả về đường dẫn public để client dùng luôn
+  res.json({ url: `/image/${req.file.filename}` });
+});
+
 // Simple in-memory lock for TFT matchId (for demo/dev only, use Redis for production)
 const tftMatchLocks = new Map();
 

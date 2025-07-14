@@ -494,16 +494,39 @@ const TeamRegistrationForm = () => {
                     className="leading-loose font-semibold text-base-content"
                     htmlFor="logoUrl"
                   >
-                    Logo ID của team bạn
+                    Logo của team bạn (upload file ảnh)
                   </label>
                   <input
-                    type="text"
+                    type="file"
+                    accept="image/*"
                     name="logoUrl"
-                    value={formData.logoUrl}
-                    onChange={handleInputChange}
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      const formDataFile = new FormData();
+                      formDataFile.append('image', file);
+                      try {
+                        const res = await axios.post(
+                          'https://bigtournament-hq9n.onrender.com/api/upload-image',
+                          formDataFile,
+                          {
+                            headers: { 'Content-Type': 'multipart/form-data' },
+                          }
+                        );
+                        setFormData({ ...formData, logoUrl: res.data.url });
+                      } catch (err) {
+                        alert('Lỗi upload ảnh: ' + (err.response?.data?.error || err.message));
+                      }
+                    }}
                     className="px-4 py-2 bg-white border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
-                    placeholder="Nhập ID của tệp Google Drive"
                   />
+                  {formData.logoUrl && (
+                    <img
+                      src={formData.logoUrl}
+                      alt="logo preview"
+                      className="w-16 h-16 mt-2 rounded-full object-cover border"
+                    />
+                  )}
                   {errors.logoUrl && (
                     <p className="text-red-500 text-xs italic">{errors.logoUrl}</p>
                   )}
