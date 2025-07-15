@@ -157,11 +157,13 @@ router.post("/leagues", leagueHOF);
 router.post("/myrankpickem", getUserPickemScore);
 router.post("/checkregisterorz", async (req, res) => {
   try {
-    const { usernameregister } = req.body;
-    const existingTeam = await Organization.findOne({ usernameregister });
+    const { usernameregister } = req.body; // usernameregister là currentUser._id
+    const existingTeam = await Organization.findOne({
+      "players._id": usernameregister,
+    });
 
     if (existingTeam) {
-      // Nếu tìm thấy đội, trả lại thông tin đội
+      // Nếu tìm thấy _id trong players, trả lại thông tin đội
       return res.status(200).json(existingTeam);
     }
 
@@ -194,10 +196,20 @@ router.post("/registerorz", async (req, res) => {
     const nicknames = gameMembers.map((p) => p.nickname);
     const users = await User.find({ nickname: { $in: nicknames } });
 
+    // Gán _id và username cho từng player trong gameMembers nếu tìm thấy user
+    const gameMembersWithId = gameMembers.map((p) => {
+      const user = users.find((u) => u.nickname === p.nickname);
+      return {
+        ...p,
+        _id: user ? user._id : undefined,
+        username: user ? user.username : "",
+      };
+    });
+
     if (existingTeam) {
       // Tách danh sách thành viên cũ & mới
       const oldNicknames = existingTeam.players.map((p) => p.nickname);
-      const newNicknames = gameMembers.map((p) => p.nickname);
+      const newNicknames = gameMembersWithId.map((p) => p.nickname);
       const removedMembers = oldNicknames.filter(
         (name) => !newNicknames.includes(name)
       );
@@ -208,7 +220,7 @@ router.post("/registerorz", async (req, res) => {
       existingTeam.shortname = shortName;
       existingTeam.class = classTeam;
       existingTeam.logoURL = logoUrl;
-      existingTeam.players = gameMembers;
+      existingTeam.players = gameMembersWithId;
       existingTeam.color = color;
 
       const updatedTeam = await existingTeam.save();
@@ -249,7 +261,7 @@ router.post("/registerorz", async (req, res) => {
       shortname: shortName,
       class: classTeam,
       logoURL: logoUrl,
-      players: gameMembers,
+      players: gameMembersWithId,
       color: color,
     });
 
@@ -257,7 +269,7 @@ router.post("/registerorz", async (req, res) => {
 
     // Cập nhật team cho thành viên mới
     await Promise.all(
-      gameMembers.map((member) =>
+      gameMembersWithId.map((member) =>
         User.findOneAndUpdate(
           { nickname: member.nickname },
           {

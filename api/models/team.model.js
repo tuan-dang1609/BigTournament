@@ -1,16 +1,16 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    discordID:{
-      type:String
-  },
-  usernameregister:{
-      type:String
-  },
-  color:{
-    type:String
-  },
+    discordID: {
+      type: String,
+    },
+    usernameregister: {
+      type: String,
+    },
+    color: {
+      type: String,
+    },
     team: {
       type: String,
       unique: true,
@@ -33,26 +33,26 @@ const userSchema = new mongoose.Schema(
     players: {
       type: [
         {
+          _id: { type: mongoose.Schema.Types.ObjectId, required: true }, // thêm dòng này
           nickname: { type: String, required: true },
-          class: { type: String, required: true }, // chưa validate ở đây
+          class: { type: String, required: true },
+          username: { type: String, required: true },
         },
       ],
       required: true,
-    }
-    ,
+    },
     trophy: {
       type: [
         {
-          game: { type: String, },
-          rank: { type: Number,  }, // chưa validate ở đây
+          game: { type: String },
+          rank: { type: Number }, // chưa validate ở đây
         },
       ],
-    }
-    ,
+    },
   },
   { timestamps: true }
 );
 
-const Organization = mongoose.model('Organization', userSchema, 'Organization');
+const Organization = mongoose.model("Organization", userSchema, "Organization");
 
 export default Organization;
