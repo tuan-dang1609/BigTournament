@@ -32,7 +32,6 @@ const TeamRegistrationForm = () => {
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [classTeamInput, setClassTeamInput] = useState('');
   const navigate = useNavigate();
-
   const driverObj = driver({
     showProgress: true,
     steps: [
