@@ -253,10 +253,10 @@ export default function MatchInterface() {
     match.matchType === 'BO3'
       ? match.maps.selected[2]
       : match.matchType === 'BO1'
-        ? match.maps.selected[0]
-        : match.matchType === 'BO5'
-          ? match.maps.selected[4]
-          : null;
+      ? match.maps.selected[0]
+      : match.matchType === 'BO5'
+      ? match.maps.selected[4]
+      : null;
   return (
     <div className="container mx-auto p-4 mt-16">
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -284,10 +284,10 @@ export default function MatchInterface() {
               match?.matchType === 'BO3'
                 ? match.maps.selected[2]
                 : match?.matchType === 'BO1'
-                  ? match.maps.selected[0]
-                  : match?.matchType === 'BO5'
-                    ? match.maps.selected[4]
-                    : null;
+                ? match.maps.selected[0]
+                : match?.matchType === 'BO5'
+                ? match.maps.selected[4]
+                : null;
 
             const combinedMaps = [
               ...match.maps.picked,
