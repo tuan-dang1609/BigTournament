@@ -62,6 +62,7 @@ import Leaderboard from './tft/leaderboard.jsx';
 import BracketPage from './components/bracket.jsx';
 import ValorantMatchCard from './components/aftermatchdata.jsx';
 import ValorantLobby from './valorant/lobby.jsx';
+import TournamentForm from './components/test.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
 
@@ -91,6 +92,7 @@ if (rootElement) {
                 <>
                   <Navbar />
                   <Routes>
+                    <Route path="/addgame" element={<TournamentForm />} />
                     <Route exact path="/rsotest" element={<RSO_Authorization />} />
                     <Route exact path="/" element={<Home />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />

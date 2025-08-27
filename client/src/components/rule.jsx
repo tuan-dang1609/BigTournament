@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
 import { Link as ScrollLink, Element } from 'react-scroll';
 import { useParams } from 'react-router-dom';
 import { useLeagueData } from '../hooks/useLeagueData';
@@ -147,7 +148,7 @@ export default function Rulebook() {
                   {rule.title}
                 </h2>
                 <div className="prose prose-invert prose-sm max-w-none text-white">
-                  <ReactMarkdown>{rule.content}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkBreaks]}>{rule.content}</ReactMarkdown>
                 </div>
               </div>
             </Element>
