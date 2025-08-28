@@ -20,7 +20,7 @@ const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [columnCount, setColumnCount] = useState(0);
   const daySchedule = {
-    day1: new Date('2025-08-01T11:00:00'), // ví dụ: ngày thi đấu vòng loại 1
+    day1: new Date('2025-08-31T00:00:00'), // ví dụ: ngày thi đấu vòng loại 1
     day2: new Date('2025-09-02T19:00:00'), // ví dụ: vòng loại 2
   };
   useEffect(() => {
