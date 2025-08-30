@@ -219,6 +219,48 @@ const CompetitionPage = () => {
             </div>
           </div>
           <section className=" py-12 text-white ">
+            <div className="justify-between items-center mb-4 md:hidden flex">
+              <h2 className="text-2xl font-bold">Người chơi</h2>
+              <Link to={`/${game}/${league_id}/players`}>
+                <button className="text-orange-500 font-bold hover:underline text-sm">
+                  XEM TẤT CẢ
+                </button>
+              </Link>
+            </div>
+
+            <div className="md:hidden flex border border-gray-700 rounded-lg p-4 items-center space-x-3 mb-10">
+              <div className="relative w-8 h-8">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="16" stroke="#333" strokeWidth="4" fill="none" />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    stroke="#ff6600"
+                    strokeWidth="4"
+                    fill="none"
+                    strokeDasharray={`${(percent / 100) * 100} 100`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center text-white">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="#fff"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                  >
+                    <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 2.239-7 5v2h14v-2c0-2.761-3.134-5-7-5z" />
+                  </svg>
+                </div>
+              </div>
+
+              <span className="text-[14px] font-medium">
+                {parseInt(league?.season?.current_team_count).toLocaleString()} /{' '}
+                {parseInt(league?.season?.max_registration).toLocaleString()}
+              </span>
+            </div>
             <h2 className="text-3xl md:text-2xl font-bold mb-8">Tiến Trình</h2>
             <div className="space-y-8">
               {league?.milestones.map((item, index) => {
@@ -261,7 +303,7 @@ const CompetitionPage = () => {
         <div className="xl:w-[32%] lg:w-[30%] w-full px-2 xl:px-8">
           <section className=" text-white ">
             {/* TEAMS */}
-            <div className="flex justify-between items-center mb-4">
+            <div className="justify-between items-center mb-4 md:flex hidden">
               <h2 className="text-2xl font-bold">Người chơi</h2>
               <Link to={`/${game}/${league_id}/players`}>
                 <button className="text-orange-500 font-bold hover:underline text-sm">
@@ -270,7 +312,7 @@ const CompetitionPage = () => {
               </Link>
             </div>
 
-            <div className="border border-gray-700 rounded-lg p-4 flex items-center space-x-3 mb-10">
+            <div className="md:flex hidden border border-gray-700 rounded-lg p-4 items-center space-x-3 mb-10">
               <div className="relative w-8 h-8">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                   <circle cx="18" cy="18" r="16" stroke="#333" strokeWidth="4" fill="none" />
