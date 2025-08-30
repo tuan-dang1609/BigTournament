@@ -220,7 +220,7 @@ export default function Profile() {
       }, 1000);
 
       if (countdown === 0) {
-        navigate('/');
+        navigate('/tft/tft_set_15');
       }
 
       // Cleanup the interval on component unmount
