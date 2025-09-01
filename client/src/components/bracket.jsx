@@ -103,7 +103,14 @@ const TournamentBracket = ({ league, game, league_id }) => {
     );
 
     if (match) {
-      return `/${game}/${league_id}/${match.round}/${match.Match}/lobby`;
+      if (
+        Array.isArray(match.matchid) &&
+        match.matchid.some(id => !id || id.trim() === "")
+      ) {
+        return `/${game}/${league_id}/${match.round}/${match.Match}/lobby`;
+      } else {
+        return `/${game}/${league_id}/${match.round}/${match.Match}/match`;
+      }
     } else {
       return '#';
     }
