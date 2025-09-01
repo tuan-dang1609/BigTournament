@@ -22,6 +22,7 @@ export const useLeagueData = (game, league_id, currentUser) => {
         cachedMe &&
         cachedParams.user_id === currentUser?._id
       ) {
+        setAllMatchData({ ...cachedMatchData });
         setLoading(false);
         return;
       }
