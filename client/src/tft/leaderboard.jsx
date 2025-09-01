@@ -20,8 +20,8 @@ const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [columnCount, setColumnCount] = useState(0);
   const daySchedule = {
-    day1: new Date('2025-09-01T00:00:00'), // ví dụ: ngày thi đấu vòng loại 1
-    day2: new Date('2025-09-02T22:00:00'), // ví dụ: vòng loại 2
+    day1: new Date('2025-09-02T22:00:00'), // ví dụ: ngày thi đấu vòng loại 1
+    day2: new Date('2025-09-02T23:00:00'), // ví dụ: vòng loại 2
   };
   useEffect(() => {
     if (!league?.matches) return;
