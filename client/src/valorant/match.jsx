@@ -6,9 +6,9 @@ const columns = [
   { key: 'kda', label: 'K/D/A' },
   { key: 'stats.kills/stats.deaths', label: 'KD' },
   { key: 'stats.headshotPercentage', label: 'HS%' },
-  { key: 'fk', label: 'FK' },
-  { key: 'fd', label: 'FD' },
-  { key: 'mk', label: 'MK' },
+  { key: 'fk', label: 'FK', className: 'hidden md:table-cell' },
+  { key: 'fd', label: 'FD', className: 'hidden md:table-cell' },
+  { key: 'mk', label: 'MK', className: 'hidden md:table-cell' },
 ];
 
 const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
@@ -77,7 +77,7 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
                   key={column.key}
                   className={`py-[6px] bg-[#362431] px-2 text-center text-[10.5px] xl:text-[10.75px] text-white transition-colors ${
                     index === 0 ? `sticky left-0 z-10` : ''
-                  }`}
+                  } ${column.className || ''}`}
                 >
                   <div className="flex items-center justify-center">
                     <span>{column.label}</span>
@@ -176,7 +176,7 @@ const PlayerStats = ({ data, registeredPlayers, teamA, teamB }) => {
                         key={`${rowIndex}-${column.key}`}
                         className={`py-2 px-3 text-center ${
                           columnIndex === 0 ? 'sticky left-0 z-10 bg-base-100' : ''
-                        }`}
+                        } ${column.className || ''}`}
                         style={
                           columnIndex === 0
                             ? {
