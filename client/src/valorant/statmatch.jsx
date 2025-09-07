@@ -7,7 +7,7 @@ import MyNavbar2 from '../components/Navbar2';
 import LeagueHeader from '../components/header';
 import { useLeagueData } from '../hooks/useLeagueData';
 export default function MatchStat2() {
-  const { game, league_id, round, Match } = useParams();
+  const { game, league_id, round, match } = useParams();
   const { currentUser } = useSelector((state) => state.user);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [joinCountdown, setJoinCountdown] = useState('');
@@ -27,7 +27,7 @@ export default function MatchStat2() {
     matchInfo,
     time,
     error,
-  } = useLeagueData(game, league_id, currentUser, round, Match);
+  } = useLeagueData(game, league_id, currentUser, round, match);
   const hexToRgba = (hex, opacity) => {
     hex = hex.replace('#', '');
     const r = parseInt(hex.substring(0, 2), 16);

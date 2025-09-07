@@ -86,7 +86,9 @@ const ValorantLobby = () => {
   // Remove mapIndex from the route and useParams, and instead compute it based on matchData.matchid.length + 1
   // Compute mapIndex based on matchData.matchid.length (if available)
   const matchidLength =
-    matchData && Array.isArray(matchData.matchid) ? matchData.matchid.length : 0;
+    matchData && Array.isArray(matchData.matchid)
+      ? matchData.matchid.filter(id => id && id.trim() !== '').length
+      : 0;
   const mapIndex = matchidLength;
   const matchStartTimes =
     matchData && Array.isArray(matchData.matchStartTimes) ? matchData.matchStartTimes : [];
@@ -458,7 +460,7 @@ const ValorantLobby = () => {
 
       <div className="min-h-screen mb-20">
         {/* Header */}
-        <div className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-700">
+        <div className="">
           <div className="max-w-7xl mx-auto px-4 py-6">
             <div className="grid md:grid-cols-3 grid-cols-1 items-center justify-between relative">
               <div className="flex items-center space-x-4 w-full md:w-auto justify-start md:justify-start min-w-[260px]">

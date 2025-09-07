@@ -103,10 +103,7 @@ const TournamentBracket = ({ league, game, league_id }) => {
     );
 
     if (match) {
-      if (
-        Array.isArray(match.matchid) &&
-        match.matchid.some(id => !id || id.trim() === "")
-      ) {
+      if (Array.isArray(match.matchid) && match.matchid.some((id) => !id || id.trim() === '')) {
         return `/${game}/${league_id}/${match.round}/${match.Match}/lobby`;
       } else {
         return `/${game}/${league_id}/${match.round}/${match.Match}/match`;
@@ -332,6 +329,9 @@ const BracketPage = () => {
   const [registerPhase, setRegisterPhase] = useState('idle');
   const { game, league_id } = useParams();
   const { league, startTime, me } = useLeagueData(game, league_id, currentUser);
+  if ((me, league)) {
+    console.log('LEAGUE DATA in BracketPage:', league, me);
+  }
 
   const max = parseInt(league?.season?.max_registration) || 64;
   const currentPlayer = league?.players?.find(

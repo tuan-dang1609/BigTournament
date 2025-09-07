@@ -514,9 +514,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
 
     // Lock để tránh race condition
     while (matchLocks.get(matchId)) {
-      // Đợi 100ms rồi thử lại
       await new Promise((resolve) => setTimeout(resolve, 100));
-      // Nếu có ai đó đã lưu xong thì lấy lại từ DB
       matchDoc = await ValorantMatch.findOne({ matchId }).lean();
       if (matchDoc) {
         const data = { ...matchDoc.data };
@@ -531,16 +529,76 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
     }
     matchLocks.set(matchId, true);
     try {
-      // Nếu muốn nhẹ nhất, không nhập roundResults luôn nếu không cần
-      const roundResults = undefined; // Không nhập roundResults vào finalData
+      // Lấy dictionary cho character/map
+      const dictionaryResponse = await axios.get(
+        "https://bigtournament-hq9n.onrender.com/api/valorant/dictionary"
+      );
+      const characterMap = {};
+      const mapMap = {};
+
+      dictionaryResponse.data.maps?.forEach((map) => {
+        if (map.assetPath) {
+          mapMap[map.assetPath.toUpperCase()] = map.name;
+          mapMap[map.assetPath.toLowerCase()] = map.name;
+        }
+        if (map.id) {
+          mapMap[map.id.toUpperCase()] = map.name;
+          mapMap[map.id.toLowerCase()] = map.name;
+        }
+        // Debug log
+        // console.log('Map dictionary entry:', map.assetPath, map.id, map.name);
+      });
+
+      dictionaryResponse.data.characters?.forEach((char) => {
+        if (char.id) {
+          characterMap[char.id.toUpperCase()] = char.name;
+          characterMap[char.id.toLowerCase()] = char.name;
+        }
+        // Debug log
+        // console.log('Character dictionary entry:', char.id, char.name);
+      });
+
+      // Gọi API Riot lấy match data
+      const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT;
+      const response = await axios.get(
+        `https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`,
+        { headers: { "X-Riot-Token": apiKeyValorant } }
+      );
+
+
+      const matchData = response.data;
+      const rawMapId = matchData?.matchInfo?.mapId?.toUpperCase();
+      // Try both upper and lower case for mapId
+      let mapName = mapMap[rawMapId] || mapMap[rawMapId?.toLowerCase()] || mapMap[rawMapId?.toUpperCase()];
+      if (!mapName) {
+        console.error('Không tìm thấy mapName cho mapId:', rawMapId, 'mapMap:', Object.keys(mapMap));
+        mapName = "Unknown";
+      }
+      matchData.matchInfo.mapName = mapName;
+
+      // Giữ nguyên roundResults gốc để tính toán advancedStats
+      const roundResultsFull = matchData.roundResults || [];
+
+      // Tạo roundResults rút gọn để trả về/lưu DB
+      const roundResults = roundResultsFull.map((round) => ({
+        roundNum: round.roundNum,
+        winningTeam: round.winningTeam,
+        winningTeamRole: round.winningTeamRole,
+        roundCeremony: round.roundCeremony,
+      }));
 
       if (matchData?.players) {
         matchData.players.forEach((player) => {
-          const cleanId = player.characterId?.toUpperCase();
-          player.characterName = characterMap[cleanId] || "Unknown";
+          // Try both upper and lower case for characterId
+          let cleanId = player.characterId;
+          let charName = characterMap[cleanId?.toUpperCase()] || characterMap[cleanId?.toLowerCase()];
+          if (!charName) {
+            console.error('Không tìm thấy characterName cho characterId:', cleanId, 'characterMap:', Object.keys(characterMap));
+            charName = "Unknown";
+          }
+          player.characterName = charName;
           player.imgCharacter =
-            `https://dongchuyennghiep.vercel.app/agent/${characterMap[cleanId]}.png` ||
-            "Unknown";
+            (charName !== "Unknown" ? `https://dongchuyennghiep.vercel.app/agent/${charName}.png` : "Unknown");
           player.riotID = `${player.gameName || "Unknown"}#${
             player.tagLine || "Unknown"
           }`;
@@ -557,8 +615,8 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
             player.stats.KDA = parseFloat(KDA.toFixed(1));
             player.stats.acs = acs;
 
-            // Nếu không có roundResults thì truyền mảng rỗng vào advancedStats
-            const advancedStats = calculatePlayerStats(player, []);
+            // Tính advancedStats dựa trên roundResults gốc (có playerStats)
+            const advancedStats = calculatePlayerStats(player, roundResultsFull);
             Object.assign(player.stats, advancedStats);
             player.stats.adr = parseFloat(
               (advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(1)
@@ -585,7 +643,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
         matchInfo: matchData.matchInfo,
         players: matchData.players,
         teams: matchData.teams,
-        // Không nhập roundResults nếu không cần
+        roundResults,
       };
 
       await ValorantMatch.findOneAndUpdate(
@@ -620,114 +678,6 @@ router.get("/valorant/allmatchdata", async (req, res) => {
   } catch (error) {
     console.error("Error fetching all match data:", error.message);
     res.status(500).json({ error: "Failed to fetch all match data" });
-  }
-});
-
-router.post("/valorant/save-match/:matchId", async (req, res) => {
-  const { matchId } = req.params;
-
-  try {
-    const dictionaryResponse = await axios.get(
-      "https://bigtournament-hq9n.onrender.com/api/valorant/dictionary"
-    );
-    const characterMap = {};
-    const mapMap = {};
-
-    dictionaryResponse.data.maps?.forEach((map) => {
-      if (map.assetPath) mapMap[map.assetPath.toUpperCase()] = map.name;
-    });
-
-    dictionaryResponse.data.characters?.forEach((char) => {
-      characterMap[char.id] = char.name;
-    });
-
-    const response = await axios.get(
-      `https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`,
-      { headers: { "X-Riot-Token": apiKeyValorant } }
-    );
-
-    const matchData = response.data;
-    const rawMapId = matchData?.matchInfo?.mapId?.toUpperCase();
-    matchData.matchInfo.mapName = mapMap[rawMapId] || "Unknown";
-
-    const roundResults = (matchData.roundResults || []).map((round) => ({
-      roundNum: round.roundNum,
-      // roundResult: round.roundResult, // Bỏ trường này để test tốc độ
-      winningTeam: round.winningTeam,
-      winningTeamRole: round.winningTeamRole,
-      roundCeremony: round.roundCeremony,
-      playerStats: (round.playerStats || []).map((ps) => ({
-        puuid: ps.puuid,
-        kills: ps.kills || [],
-        damage: ps.damage || [],
-      })),
-    }));
-
-    if (matchData?.players) {
-      matchData.players.forEach((player) => {
-        const cleanId = player.characterId?.toUpperCase();
-        player.characterName = characterMap[cleanId] || "Unknown";
-        player.imgCharacter =
-          `https://dongchuyennghiep.vercel.app/agent/${characterMap[cleanId]}.png` ||
-          "Unknown";
-        player.riotID = `${player.gameName || "Unknown"}#${
-          player.tagLine || "Unknown"
-        }`;
-
-        if (player.stats) {
-          const kills = player.stats.kills || 0;
-          const deaths = player.stats.deaths || 0;
-          const assists = player.stats.assists || 0;
-          const KDA = (kills + deaths) / (assists || 1);
-          const acs = parseFloat(
-            (player.stats.score / player.stats.roundsPlayed).toFixed(0)
-          );
-          player.stats.KD = `${kills}/${deaths}`;
-          player.stats.KDA = parseFloat(KDA.toFixed(1));
-          player.stats.acs = acs;
-
-          const advancedStats = calculatePlayerStats(player, roundResults);
-          Object.assign(player.stats, advancedStats);
-          player.stats.adr = parseFloat(
-            (advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(1)
-          );
-        }
-      });
-
-      const redTeam = matchData.players
-        .filter((p) => p.teamId === "Red")
-        .sort((a, b) => b.stats?.acs - a.stats?.acs);
-      const blueTeam = matchData.players
-        .filter((p) => p.teamId === "Blue")
-        .sort((a, b) => b.stats?.acs - a.stats?.acs);
-      matchData.players = [...redTeam, ...blueTeam];
-
-      if (matchData?.teams?.length === 2) {
-        const [team1, team2] = matchData.teams;
-        team1.is = team1.roundsWon > team2.roundsWon ? "Win" : "Loss";
-        team2.is = team1.is === "Win" ? "Loss" : "Win";
-      }
-    }
-
-    const finalData = {
-      matchInfo: matchData.matchInfo,
-      players: matchData.players,
-      teams: matchData.teams,
-      roundResults,
-    };
-
-    const saved = await ValorantMatch.findOneAndUpdate(
-      { matchId },
-      { matchId, data: finalData },
-      { upsert: true, new: true }
-    );
-
-    res.json({ message: "Match data saved successfully", saved });
-  } catch (error) {
-    console.error("Error saving match data:", error.message);
-    res
-      .status(error.response?.status || 500)
-      .json({ error: "Failed to save match data" });
   }
 });
 
