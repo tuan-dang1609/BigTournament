@@ -33,7 +33,7 @@ const TournamentBracket = ({ league, game, league_id }) => {
   const fetchTeams = async () => {
     try {
       const response = await fetch(
-        'https://docs.google.com/spreadsheets/d/1ZGF4cPHRmKL5BSzgAMtUD2WWYrB-Dpx8Q_gFha5T0dY/gviz/tq?sheet=Play-in&range=A1:R20'
+        `https://docs.google.com/spreadsheets/d/${league.season.bracket_id}/gviz/tq?sheet=Play-in&range=A1:R20`
       );
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const text = await response.text();

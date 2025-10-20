@@ -12,7 +12,6 @@ import Profile from './components/profile.jsx';
 import SignIn from './components/signin.jsx';
 import SignUp from './components/signup.jsx';
 import Rule from './valorant/Rule.jsx';
-import AllGame from './components/allgame.jsx';
 import './index.css';
 import HomepageAOV from './arenaofvalor/homepage.jsx';
 import MatchStat from './valorant/statmatch.jsx';
@@ -85,7 +84,8 @@ if (rootElement) {
             <Route path="/:game/:league_id/bracket" element={<BracketPage />} />
             <Route path="/:game/:league_id/:round/:match/lobby" element={<ValorantLobby />} />
             <Route path="/:game/:league_id/:round/:match/match" element={<MatchStat />} />
-            {/* Routes CÓ Navbar + Footer */}
+            <Route path="/:league_id/pickem/:game" element={<PickemChallenge />} />
+
             <Route
               path="*"
               element={
@@ -151,7 +151,6 @@ if (rootElement) {
                         element={<LeaderboardComponent />}
                       />
                       <Route path="/profile" element={<Profile />} />
-                      <Route path="/arenaofvalor/pickem/pickemall" element={<PickemChallenge />} />
                     </Route>
                   </Routes>
                   <Footer />

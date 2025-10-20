@@ -1,3 +1,1175 @@
+// Route: Lấy leaderboard PickemScore cho league_id
+import PickemScore from "../models/pickemscore.model.js";
+import PickemChallenge from "../models/question.model.js";
+import User from "../models/user.model.js";
+import BanPickValo from "../models/veto.model.js";
+import Organization from "../models/team.model.js";
+import DCNLeague from "../models/tournament.model.js";
+
+import Bracket from "../models/bracket.model.js";
+import ValorantMatch from "../models/valorantmatch.model.js";
+import MatchID from "../models/matchid.model.js";
+import PickemResponse from "../models/response.model.js";
+const router = express.Router();
+
+// Helpers for single elimination bracket serialization without schema changes
+const BRACKET_PREFIX = {
+  quarterfinal: "QF",
+  semifinal: "SF",
+  first: "1ST",
+  second: "2ND",
+};
+const PREFIX_TO_STAGE = {
+  QF: "quarterfinal",
+  SF: "semifinal",
+  "1ST": "first",
+  "2ND": "second",
+};
+function serializeBracketObjectToFlatArray(obj) {
+  // obj example: { quarterfinal:[], semifinal:[], first:[], second:[] }
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return [];
+  const out = [];
+  for (const [stage, arr] of Object.entries(obj)) {
+    const pref = BRACKET_PREFIX[stage];
+    if (!pref) continue;
+    (arr || []).forEach((v) => {
+      if (typeof v === "string" && v.trim()) out.push(`${pref}:${v.trim()}`);
+    });
+  }
+  return out;
+}
+function deserializeFlatArrayToBracketObject(arr) {
+  const result = { quarterfinal: [], semifinal: [], first: [], second: [] };
+  if (!Array.isArray(arr)) return result;
+  for (const s of arr) {
+    if (typeof s !== "string") continue;
+    const idx = s.indexOf(":");
+    if (idx <= 0) continue;
+    const pref = s.slice(0, idx);
+    const val = s.slice(idx + 1);
+    const stage = PREFIX_TO_STAGE[pref];
+    if (stage && val) result[stage].push(val);
+  }
+  return result;
+}
+
+// Helpers for double elimination bracket (final placements) serialization
+// We store positions as prefixes: P7_8, P5_6, P4, P3, P2, P1
+const DOUBLE_PREFIX = {
+  pos_7_8: "P7_8",
+  pos_5_6: "P5_6",
+  pos_4: "P4",
+  pos_3: "P3",
+  pos_2: "P2",
+  pos_1: "P1",
+};
+const PREFIX_TO_DOUBLE_STAGE = {
+  P7_8: "pos_7_8",
+  P5_6: "pos_5_6",
+  P4: "pos_4",
+  P3: "pos_3",
+  P2: "pos_2",
+  P1: "pos_1",
+};
+function serializeDoubleBracketObjectToFlatArray(obj) {
+  // obj example: { pos_7_8: [a,b], pos_5_6: [c,d], pos_4:[e], pos_3:[f], pos_2:[g], pos_1:[h] }
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return [];
+  const out = [];
+  const keyMap = new Map(
+    Object.entries(DOUBLE_PREFIX).map(([k, v]) => [k.toLowerCase(), v])
+  );
+  for (const [stageRaw, arr] of Object.entries(obj)) {
+    const stage = String(stageRaw).toLowerCase();
+    const pref = keyMap.get(stage);
+    if (!pref) continue;
+    (arr || []).forEach((v) => {
+      if (typeof v === "string" && v.trim()) out.push(`${pref}:${v.trim()}`);
+    });
+  }
+  return out;
+}
+function deserializeFlatArrayToDoubleBracketObject(arr) {
+  const result = {
+    pos_7_8: [],
+    pos_5_6: [],
+    pos_4: [],
+    pos_3: [],
+    pos_2: [],
+    pos_1: [],
+  };
+  if (!Array.isArray(arr)) return result;
+  for (const s of arr) {
+    if (typeof s !== "string") continue;
+    const idx = s.indexOf(":");
+    if (idx <= 0) continue;
+    const pref = s.slice(0, idx);
+    const val = s.slice(idx + 1);
+    const stage = PREFIX_TO_DOUBLE_STAGE[pref];
+    if (stage && val) result[stage].push(val);
+  }
+  return result;
+}
+
+// Helpers for double elimination stage tokens (for FE visualization only)
+// Supported prefixes: QF, SF, UF (Upper Final), LS1, LS2, FOURTH, THIRD, SECOND, FIRST
+const DOUBLE_STAGE_TOKEN_MAP = {
+  QF: "qf",
+  SF: "sf",
+  UF: "uf",
+  LS1: "ls1",
+  LS2: "ls2",
+  FOURTH: "fourth",
+  THIRD: "third",
+  SECOND: "second",
+  FIRST: "first",
+};
+const DOUBLE_STAGE_PREFIX = {
+  qf: "QF",
+  sf: "SF",
+  uf: "UF",
+  ls1: "LS1",
+  ls2: "LS2",
+  fourth: "FOURTH",
+  third: "THIRD",
+  second: "SECOND",
+  first: "FIRST",
+};
+function deserializeDoubleStageTokens(arr) {
+  const result = {
+    qf: [],
+    sf: [],
+    uf: [],
+    ls1: [],
+    ls2: [],
+    fourth: [],
+    third: [],
+    second: [],
+    first: [],
+  };
+  if (!Array.isArray(arr)) return result;
+  for (const s of arr) {
+    if (typeof s !== "string") continue;
+    const idx = s.indexOf(":");
+    if (idx <= 0) continue;
+    const prefRaw = s.slice(0, idx);
+    const pref = String(prefRaw).toUpperCase();
+    const val = s.slice(idx + 1);
+    const key = DOUBLE_STAGE_TOKEN_MAP[pref];
+    if (key && val) result[key].push(val);
+  }
+  return result;
+}
+function serializeDoubleStageObjectToFlatArray(obj) {
+  // obj example: { qf:[], sf:[], uf:[], ls1:[], ls2:[], fourth:[], third:[], second:[], first:[] }
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return [];
+  const out = [];
+  for (const [stageRaw, arr] of Object.entries(obj)) {
+    const key = String(stageRaw || "").toLowerCase();
+    const pref = DOUBLE_STAGE_PREFIX[key];
+    if (!pref) continue;
+    (arr || []).forEach((v) => {
+      if (typeof v === "string" && v.trim()) out.push(`${pref}:${v.trim()}`);
+    });
+  }
+  return out;
+}
+
+router.get("/pickemscore/:league_id/leaderboard", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    // Lấy tất cả điểm của user cho league_id
+    const scores = await PickemScore.find({ league_id });
+    // Lấy thông tin userId
+    const userIds = scores.map((s) => s.userId);
+    const users = await User.find({ _id: { $in: userIds } });
+    // Map userId -> user
+    const userMap = new Map(users.map((u) => [String(u._id), u]));
+    // Tạo leaderboard
+    const leaderboard = scores
+      .map((s) => {
+        const user = userMap.get(String(s.userId));
+        return {
+          username: user?.username || "",
+          userId: s.userId,
+          logoURL: user?.logoURL || user?.profilePicture || "",
+          Score: s.score || 0,
+        };
+      })
+      .sort((a, b) => b.Score - a.Score);
+    res.json({ league_id, leaderboard });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+// Route: Gộp thêm câu hỏi Pickem (player/team), chỉ update nếu đã có PickemChallenge
+// Hàm chấm điểm Pickem cho toàn bộ user
+async function gradePickem(league_id, force = false) {
+  const pickemDoc = await PickemChallenge.findOne({ league_id });
+  const pickemResDoc = await PickemResponse.findOne({ league_id });
+  if (!pickemDoc) {
+    return;
+  }
+  if (!pickemResDoc) {
+    return;
+  }
+  for (const userRes of pickemResDoc.responses) {
+    let totalScore = 0;
+    for (const ans of userRes.answers) {
+      // Tìm question tương ứng
+      const ques = pickemDoc.questions.find((qq) => qq.id === ans.questionId);
+      if (!ques) {
+        continue;
+      }
+      if (
+        !ques ||
+        !Array.isArray(ques.correctAnswer) ||
+        ques.correctAnswer.length === 0
+      ) {
+        continue;
+      }
+
+      // Kiểm tra range thời gian pickem
+      const now = new Date();
+      // If not forcing, enforce answer-level open/close time range if provided
+      if (!force && ans.openTime && ans.closeTime) {
+        if (now < new Date(ans.openTime) || now > new Date(ans.closeTime)) {
+          continue;
+        }
+      }
+
+      // Xử lý validate cho double_eli_bracket và single_eli_bracket
+      let userAns = ans.selectedOptions;
+      let correctAns = ques.correctAnswer;
+      let matched = 0;
+      if (
+        (ques.type === "double_eli_bracket" ||
+          ques.type === "single_eli_bracket") &&
+        Array.isArray(correctAns)
+      ) {
+        let matched = 0;
+        const hasPrefix = correctAns.some(
+          (x) => typeof x === "string" && x.includes(":")
+        );
+        if (hasPrefix) {
+          // Compare by stage groups via prefixes (order-insensitive within stage)
+          const canonDouble = (p) => {
+            const pref = String(p || "")
+              .toUpperCase()
+              .trim();
+            // Map podium synonyms to placement prefixes
+            if (pref === "1ST" || pref === "FIRST") return "P1";
+            if (pref === "2ND" || pref === "SECOND") return "P2";
+            if (pref === "3RD" || pref === "THIRD") return "P3";
+            if (pref === "4TH" || pref === "FOURTH") return "P4";
+            return pref;
+          };
+          const groupByPrefix = (arr, isDouble) => {
+            const m = new Map();
+            for (const s of arr || []) {
+              if (typeof s !== "string") continue;
+              const idx = s.indexOf(":");
+              if (idx <= 0) continue;
+              const rawPref = s.slice(0, idx);
+              const pref = isDouble ? canonDouble(rawPref) : rawPref;
+              const val = s.slice(idx + 1);
+              if (!m.has(pref)) m.set(pref, new Set());
+              if (val) m.get(pref).add(val);
+            }
+            return m;
+          };
+          const isDouble = ques.type === "double_eli_bracket";
+          const corrMap = groupByPrefix(correctAns, isDouble);
+
+          // Option 2: augment user answer tokens with stage tokens from per-user logs (if exist)
+          let combinedUserTokens = Array.isArray(userAns) ? [...userAns] : [];
+          if (isDouble && Array.isArray(userRes.logs)) {
+            const logEntry = userRes.logs.find(
+              (l) => Number(l.questionId) === Number(ans.questionId)
+            );
+            const stages = logEntry?.stages || logEntry?.selectedStages;
+            if (stages && typeof stages === "object") {
+              try {
+                const stageTokens =
+                  serializeDoubleStageObjectToFlatArray(stages);
+                if (Array.isArray(stageTokens) && stageTokens.length) {
+                  // Dedupe tokens via Set to avoid double-counting same prefix:value
+                  const set = new Set([
+                    ...(combinedUserTokens || []),
+                    ...stageTokens,
+                  ]);
+                  combinedUserTokens = Array.from(set);
+                }
+              } catch (e) {
+                // ignore stage serialization errors
+              }
+            }
+          }
+          const userMap = groupByPrefix(combinedUserTokens || [], isDouble);
+
+          // Debug logging for scoring details (defaults to QID=6 for double_eli_bracket)
+          const debugQid = Number(process.env.PICKEM_DEBUG_QID || 6);
+          const debugEnabled = isDouble && Number(ans.questionId) === debugQid;
+          if (debugEnabled) {
+            const mapToObj = (m) =>
+              Object.fromEntries(
+                Array.from(m.entries()).map(([k, v]) => [k, Array.from(v)])
+              );
+            console.log(
+              `[PickemGrade] user=${userRes.userId} q=${ans.questionId} type=${ques.type}`
+            );
+            console.log("[PickemGrade] correctAns(groups):", mapToObj(corrMap));
+            console.log("[PickemGrade] userAns(groups):   ", mapToObj(userMap));
+          }
+          for (const [pref, corrSet] of corrMap.entries()) {
+            const uSet = userMap.get(pref) || new Set();
+            let prefMatches = 0;
+            const matchedTokens = [];
+            for (const v of uSet) {
+              if (corrSet.has(v)) {
+                matched++;
+                prefMatches++;
+                matchedTokens.push(v);
+              }
+            }
+            if (
+              Number(process.env.PICKEM_DEBUG_QID || 6) ===
+                Number(ans.questionId) &&
+              ques.type === "double_eli_bracket"
+            ) {
+              console.log(
+                `[PickemGrade] q=${ans.questionId} pref=${pref} matched=${prefMatches} tokens=`,
+                matchedTokens
+              );
+            }
+          }
+        } else {
+          // Positional compare fallback
+          for (let i = 0; i < correctAns.length; i++) {
+            if (userAns[i] === correctAns[i]) matched++;
+          }
+        }
+        if (matched > 0) {
+          const add =
+            (typeof ques.score === "number" ? ques.score : 0) * matched;
+          if (
+            Number(process.env.PICKEM_DEBUG_QID || 6) ===
+              Number(ans.questionId) &&
+            ques.type === "double_eli_bracket"
+          ) {
+            console.log(
+              `[PickemGrade] q=${ans.questionId} matchedTotal=${matched}, ques.score=${ques.score} -> pointsAdded=${add}`
+            );
+          }
+          totalScore += add;
+        }
+      } else if (ques.type === "team" || ques.type === "player") {
+        // Chấm điểm: chỉ cần đúng bất kỳ vị trí nào, không cần đúng thứ tự
+        let correctSet = new Set(correctAns);
+        let matched = 0;
+        for (let i = 0; i < userAns.length; i++) {
+          if (correctSet.has(userAns[i])) matched++;
+        }
+        if (matched > 0) {
+          totalScore +=
+            (typeof ques.score === "number" ? ques.score : 0) * matched;
+        }
+      }
+    }
+    // Final per-user debug total for focused question ID
+    if (Number(process.env.PICKEM_DEBUG_QID || 6)) {
+      console.log(
+        `[PickemGrade] user=${userRes.userId} totalScore(after grade)=${totalScore}`
+      );
+    }
+    userRes.totalScore = totalScore;
+  }
+  await pickemResDoc.save();
+}
+router.post("/:league_id/addquestion", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    // incoming request body processed
+    let questionsInput = Array.isArray(req.body) ? req.body : [req.body];
+    const leagueDoc = await DCNLeague.findOne({
+      "league.league_id": league_id,
+    });
+    if (!leagueDoc)
+      return res.status(404).json({ message: "League not found" });
+
+    let pickemDoc = await PickemChallenge.findOne({ league_id });
+    if (!pickemDoc) {
+      pickemDoc = new PickemChallenge({ league_id, questions: [] });
+    }
+
+    let updatedQuestions = [];
+
+    for (const q of questionsInput) {
+      // correctAnswer input processed
+      // Tạo options cho từng câu hỏi
+      let options = [];
+      if (q.type === "player") {
+        // ...existing code...
+        const gameShort = q.game_short || q.game;
+        let players = leagueDoc.players;
+        if (gameShort) {
+          players = players.filter(
+            (p) =>
+              p.game === gameShort ||
+              p.game === leagueDoc.league.game_name ||
+              p.game === leagueDoc.league.game_short
+          );
+        }
+        players.forEach((player) => {
+          (player.ign || []).forEach((ign) => {
+            options.push({ name: ign, img: player.logoUrl || "" });
+          });
+        });
+      } else if (
+        q.type === "team" ||
+        q.type === "bracket" ||
+        q.type === "swiss_bracket" ||
+        q.type === "double_eli_bracket" ||
+        q.type === "single_eli_bracket"
+      ) {
+        const gameShort = q.game_short || q.game;
+        let players = leagueDoc.players;
+        if (gameShort) {
+          players = players.filter(
+            (p) =>
+              p.game === gameShort ||
+              p.game === leagueDoc.league.game_name ||
+              p.game === leagueDoc.league.game_short
+          );
+        }
+        const teamMap = new Map();
+        players.forEach((player) => {
+          if (player.team && player.team.name) {
+            teamMap.set(player.team.name, {
+              name: player.team.name,
+              shortName: player.team.shortName || "",
+              img: player.team.logoTeam || "",
+            });
+          }
+        });
+        options = Array.from(teamMap.values());
+      } else {
+        continue; // skip invalid type
+      }
+
+      // Chuẩn hóa correctAnswer cho single_eli_bracket hoặc double_eli_bracket nếu client gửi object
+      let correctAnswer;
+      if (
+        (q.type === "single_eli_bracket" || q.type === "double_eli_bracket") &&
+        q.correctAnswer &&
+        !Array.isArray(q.correctAnswer) &&
+        typeof q.correctAnswer === "object"
+      ) {
+        if (q.type === "single_eli_bracket") {
+          correctAnswer = serializeBracketObjectToFlatArray(q.correctAnswer);
+        } else {
+          // double_eli_bracket: hỗ trợ 2 dạng object
+          // 1) placements: { pos_7_8, pos_5_6, pos_4, pos_3, pos_2, pos_1 } -> P7_8:/P5_6:/...
+          // 2) stages: { qf, sf, uf, ls1, ls2, fourth, third, second, first } -> QF:/SF:/.../FIRST:
+          const hasPlacementKeys = [
+            "pos_7_8",
+            "pos_5_6",
+            "pos_4",
+            "pos_3",
+            "pos_2",
+            "pos_1",
+          ].some((k) =>
+            Object.prototype.hasOwnProperty.call(q.correctAnswer, k)
+          );
+          const hasStageKeys = [
+            "qf",
+            "sf",
+            "uf",
+            "ls1",
+            "ls2",
+            "fourth",
+            "third",
+            "second",
+            "first",
+          ].some((k) =>
+            Object.prototype.hasOwnProperty.call(q.correctAnswer, k)
+          );
+          if (hasPlacementKeys) {
+            correctAnswer = serializeDoubleBracketObjectToFlatArray(
+              q.correctAnswer
+            );
+          } else if (hasStageKeys) {
+            correctAnswer = serializeDoubleStageObjectToFlatArray(
+              q.correctAnswer
+            );
+          } else {
+            correctAnswer = [];
+          }
+        }
+      } else {
+        correctAnswer = Array.isArray(q.correctAnswer) ? q.correctAnswer : [];
+      }
+      // correctAnswer input processed
+      // Nếu là double_eli_bracket hoặc single_eli_bracket thì giữ nguyên mảng phẳng
+      // Các loại khác giữ nguyên như cũ
+      // final correctAnswer prepared
+      // Luôn cập nhật correctAnswer khi update hoặc thêm mới
+      // Nếu truyền id, kiểm tra có tồn tại không
+      let questionIdx = -1;
+      if (typeof q.id === "number") {
+        questionIdx = pickemDoc.questions.findIndex((ques) => ques.id === q.id);
+      }
+
+      if (questionIdx !== -1) {
+        // Update câu hỏi cũ, luôn cập nhật correctAnswer đã chuẩn hóa
+        pickemDoc.questions[questionIdx] = {
+          ...pickemDoc.questions[questionIdx],
+          ...q,
+          options,
+          correctAnswer,
+          openTime: q.openTime
+            ? new Date(q.openTime)
+            : pickemDoc.questions[questionIdx].openTime,
+          closeTime: q.closeTime
+            ? new Date(q.closeTime)
+            : pickemDoc.questions[questionIdx].closeTime,
+        };
+        updatedQuestions.push(pickemDoc.questions[questionIdx]);
+      } else {
+        // Thêm mới, luôn lưu correctAnswer đã chuẩn hóa
+        let newId =
+          typeof q.id === "number" ? q.id : pickemDoc.questions.length;
+        const questionObj = {
+          id: newId,
+          question: q.question,
+          maxChoose: q.maxChoose,
+          game_short: q.game_short || q.game || "",
+          league_id,
+          type: q.type,
+          bracket_id: q.bracket_id || "",
+          options,
+          score: typeof q.score === "number" ? q.score : 0,
+          correctAnswer,
+          openTime: q.openTime ? new Date(q.openTime) : undefined,
+          closeTime: q.closeTime ? new Date(q.closeTime) : undefined,
+        };
+        pickemDoc.questions.push(questionObj);
+        updatedQuestions.push(questionObj);
+      }
+    }
+    await pickemDoc.save();
+    // Chấm lại điểm cho toàn bộ user (force grading to ignore open/close windows)
+    await gradePickem(league_id, true);
+
+    // === CẬP NHẬT LEADERBOARD TỪ ĐIỂM ĐÃ CHẤM (gradePickem) ===
+    try {
+      const pickemResDoc = await PickemResponse.findOne({ league_id });
+      let leaderboard = [];
+      if (pickemResDoc) {
+        for (const userRes of pickemResDoc.responses) {
+          let totalScore = userRes.totalScore || 0;
+          // Lấy thông tin user: nếu userId là ObjectId thì dùng findById, nếu là string thì dùng findOne({ username })
+          let user = null;
+          if (/^[0-9a-fA-F]{24}$/.test(userRes.userId)) {
+            user = await User.findById(userRes.userId);
+          } else {
+            user = await User.findOne({ username: userRes.userId });
+          }
+          leaderboard.push({
+            username: user?.username || userRes.userId || "",
+            userId: userRes.userId,
+            logoURL: user?.logoURL || user?.profilePicture || "",
+            Score: totalScore,
+          });
+        }
+        leaderboard.sort((a, b) => b.Score - a.Score);
+        await PickemScore.findOneAndUpdate(
+          { league_id },
+          { league_id, leaderboard },
+          { upsert: true }
+        );
+      }
+    } catch (err) {
+      console.error("Error updating PickemScore leaderboard:", err);
+    }
+    // === END CHẤM ĐIỂM ===
+
+    res.status(200).json({
+      message: "Questions processed",
+      data: pickemDoc,
+      updatedQuestions,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Route: Lấy danh sách câu hỏi theo league_id, game_short và type (không trả về correctAnswer)
+router.get("/:game_short/:league_id/question/:type", async (req, res) => {
+  try {
+    const { league_id, game_short, type } = req.params;
+    const pickemDoc = await PickemChallenge.findOne({ league_id });
+    if (!pickemDoc)
+      return res.status(404).json({ message: "Pickem challenge not found" });
+
+    const questions = (pickemDoc.questions || []).filter((q) => {
+      const qGame = (q.game_short || "").toString().toLowerCase();
+      const wantedGame = (game_short || "").toString().toLowerCase();
+      if (qGame !== wantedGame) return false;
+      // if type === 'all', return all types for this game_short
+      if (!type || type.toString().toLowerCase() === "all") return true;
+      return q.type === type;
+    });
+
+    const sanitized = questions.map((q) => ({
+      id: q.id,
+      question: q.question,
+      type: q.type,
+      options: q.options || [],
+      score: q.score,
+      maxChoose: q.maxChoose,
+      correctAnswer: q.correctAnswer,
+      game_short: q.game_short,
+      bracket_id: q.bracket_id,
+      openTime: q.openTime,
+      closeTime: q.closeTime,
+    }));
+
+    res.json({
+      league_id,
+      game_short,
+      type,
+      count: sanitized.length,
+      questions: sanitized,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.post("/:league_id/submitPrediction", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    const { userId, answers } = req.body;
+
+    if (!league_id || !userId || !answers || !Array.isArray(answers)) {
+      return res
+        .status(400)
+        .json({ error: "Thiếu league_id, userId hoặc answers." });
+    }
+
+    // Tạm giữ nguyên selectedOptions (có thể là mảng hoặc object) và lưu openTime/closeTime nếu có
+    let formattedAnswers = answers.map((ans) => ({
+      questionId: ans.questionId,
+      selectedOptions: ans.selectedOptions,
+      openTime: ans.openTime ? new Date(ans.openTime) : undefined,
+      closeTime: ans.closeTime ? new Date(ans.closeTime) : undefined,
+    }));
+
+    // Enrich saved response with user's nickname and team info when possible
+    let pickemDoc = await PickemResponse.findOne({ league_id });
+
+    // Try to resolve user by ObjectId or username
+    let user = null;
+    try {
+      if (/^[0-9a-fA-F]{24}$/.test(String(userId))) {
+        user = await User.findById(userId).select("-password");
+      } else {
+        user = await User.findOne({ username: userId }).select("-password");
+      }
+    } catch (err) {
+      // ignore lookup errors, we'll save without enrichment
+      user = null;
+    }
+
+    const responseEntry = {
+      userId,
+      user: {
+        id: user ? String(user._id) : String(userId),
+        nickname: user?.nickname,
+        team: user?.team || undefined,
+      },
+      answers: formattedAnswers,
+    };
+
+    if (!pickemDoc) {
+      pickemDoc = new PickemResponse({
+        league_id,
+        responses: [responseEntry],
+      });
+      await pickemDoc.save();
+    } else {
+      const userIndex = pickemDoc.responses.findIndex(
+        (r) => String(r.userId) === String(userId)
+      );
+      if (userIndex !== -1) {
+        // Merge incoming answers into existing answers.
+        // Only replace an existing answer when questionId + game_short + type match;
+        // otherwise append the incoming answer so we don't overwrite unrelated entries.
+        const existingAnswers = pickemDoc.responses[userIndex].answers || [];
+
+        // Load question bank to get game_short/type for matching
+        const pickemQuestionDoc = await PickemChallenge.findOne({ league_id });
+
+        // For single_eli_bracket & double_eli_bracket: serialize object form to flat [String] with prefixes
+        formattedAnswers = formattedAnswers.map((incoming) => {
+          const incomingQ = pickemQuestionDoc?.questions?.find(
+            (q) => q.id === incoming.questionId
+          );
+          if (
+            (incomingQ?.type === "single_eli_bracket" ||
+              incomingQ?.type === "double_eli_bracket") &&
+            incoming.selectedOptions &&
+            !Array.isArray(incoming.selectedOptions) &&
+            typeof incoming.selectedOptions === "object"
+          ) {
+            const selectedOptions =
+              incomingQ?.type === "single_eli_bracket"
+                ? serializeBracketObjectToFlatArray(incoming.selectedOptions)
+                : serializeDoubleBracketObjectToFlatArray(
+                    incoming.selectedOptions
+                  );
+            return {
+              ...incoming,
+              selectedOptions,
+            };
+          }
+          // Ensure array for non-object
+          let selectedOptions = Array.isArray(incoming.selectedOptions)
+            ? incoming.selectedOptions
+            : [];
+          // For double_eli_bracket, strip FE-only stage tokens before saving the answer
+          if (incomingQ?.type === "double_eli_bracket") {
+            const allowed = new Set(Object.values(DOUBLE_PREFIX));
+            selectedOptions = selectedOptions.filter((s) => {
+              if (typeof s !== "string") return false;
+              const idx = s.indexOf(":");
+              if (idx <= 0) return false;
+              const pref = s.slice(0, idx);
+              return allowed.has(pref);
+            });
+          }
+          return { ...incoming, selectedOptions };
+        });
+
+        const mergedAnswers = [...existingAnswers];
+
+        for (const incoming of formattedAnswers) {
+          // Determine metadata for the incoming answer's question
+          const incomingQ = pickemQuestionDoc?.questions?.find(
+            (q) => q.id === incoming.questionId
+          );
+          const incomingGame = incomingQ?.game_short;
+          const incomingType = incomingQ?.type;
+
+          const matchIdx = mergedAnswers.findIndex((ea) => {
+            if (ea.questionId !== incoming.questionId) return false;
+            const existingQ = pickemQuestionDoc?.questions?.find(
+              (q) => q.id === ea.questionId
+            );
+            const existingGame = existingQ?.game_short;
+            const existingType = existingQ?.type;
+            return (
+              existingGame === incomingGame && existingType === incomingType
+            );
+          });
+
+          if (matchIdx !== -1) {
+            // Replace the matching existing answer
+            mergedAnswers[matchIdx] = incoming;
+          } else {
+            // No matching existing answer: append
+            mergedAnswers.push(incoming);
+          }
+        }
+
+        pickemDoc.responses[userIndex].answers = mergedAnswers;
+        pickemDoc.responses[userIndex].user = responseEntry.user;
+      } else {
+        pickemDoc.responses.push(responseEntry);
+      }
+      await pickemDoc.save();
+    }
+
+    // Persist a single stages log per question (double_eli_bracket) aggregated to the latest state
+    try {
+      const pickemQuestionDoc = await PickemChallenge.findOne({ league_id });
+      const clientIp =
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.connection?.remoteAddress ||
+        req.socket?.remoteAddress ||
+        req.ip;
+      const userIdxForLog = pickemDoc.responses.findIndex(
+        (r) => String(r.userId) === String(userId)
+      );
+      if (userIdxForLog === -1)
+        throw new Error("User response not found to append logs");
+
+      // Build a latest stages object per question from incoming answers
+      const stageByQid = new Map();
+      for (const ans of answers || []) {
+        const ques = pickemQuestionDoc?.questions?.find(
+          (q) => q.id === ans.questionId
+        );
+        if (ques?.type !== "double_eli_bracket") continue;
+        const flat = Array.isArray(ans.selectedOptions)
+          ? ans.selectedOptions
+          : [];
+        const stages = deserializeDoubleStageTokens(flat);
+        // Backfill podium stages from final placements when not explicitly present in the incoming stage tokens
+        const bracketObj = deserializeFlatArrayToDoubleBracketObject(flat);
+        stages.first =
+          stages.first && stages.first.length
+            ? stages.first
+            : bracketObj.pos_1 || [];
+        stages.second =
+          stages.second && stages.second.length
+            ? stages.second
+            : bracketObj.pos_2 || [];
+        stages.third =
+          stages.third && stages.third.length
+            ? stages.third
+            : bracketObj.pos_3 || [];
+        stages.fourth =
+          stages.fourth && stages.fourth.length
+            ? stages.fourth
+            : bracketObj.pos_4 || [];
+        stageByQid.set(ans.questionId, stages);
+      }
+
+      const userLogs = (pickemDoc.responses[userIdxForLog].logs =
+        pickemDoc.responses[userIdxForLog].logs || []);
+
+      for (const [qid, stages] of stageByQid.entries()) {
+        const existingIdx = userLogs.findIndex(
+          (l) => Number(l.questionId) === Number(qid)
+        );
+        const logEntry = {
+          userId: String(userId),
+          questionId: Number(qid),
+          type: "double_eli_bracket",
+          stages,
+          user: responseEntry.user,
+          ip: clientIp,
+          updatedAt: new Date(),
+        };
+        // Token count to decide whether to overwrite existing
+        const countTokens = (st) =>
+          (st?.qf?.length || 0) +
+          (st?.sf?.length || 0) +
+          (st?.uf?.length || 0) +
+          (st?.ls1?.length || 0) +
+          (st?.ls2?.length || 0) +
+          (st?.fourth?.length || 0) +
+          (st?.third?.length || 0) +
+          (st?.second?.length || 0) +
+          (st?.first?.length || 0);
+        let targetIdx = existingIdx;
+        if (existingIdx !== -1) {
+          const existing = userLogs[existingIdx];
+          const existingStages =
+            existing?.stages || existing?.selectedStages || {};
+          const newCount = countTokens(stages);
+          const oldCount = countTokens(existingStages);
+          // Only overwrite if new log is richer or equal
+          if (newCount >= oldCount) {
+            userLogs[existingIdx] = { ...existing, ...logEntry };
+          }
+        } else {
+          // Create a new log entry
+          userLogs.push({ ...logEntry, createdAt: new Date() });
+          targetIdx = userLogs.length - 1;
+        }
+        // Deduplicate: remove any other logs with the same questionId
+        for (let i = userLogs.length - 1; i >= 0; i--) {
+          if (
+            i !== targetIdx &&
+            Number(userLogs[i].questionId) === Number(qid)
+          ) {
+            userLogs.splice(i, 1);
+          }
+        }
+      }
+      await pickemDoc.save();
+    } catch (logErr) {
+      console.error("Error writing per-user logs:", logErr?.message || logErr);
+    }
+
+    // Chấm lại điểm cho toàn bộ user
+    await gradePickem(league_id);
+    res.status(200).json({
+      success: true,
+      message: "Dự đoán đã được lưu và đã chấm lại điểm số.",
+      data: pickemDoc,
+    });
+  } catch (error) {
+    console.error("Error submitting prediction:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+// Route: Lấy câu trả lời của user cho 1 league
+router.get("/:league_id/myanswer", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    // user id có thể được truyền bằng query ?userId=... hoặc header x-user-id
+    const userId =
+      req.query.userId || req.headers["x-user-id"] || req.body?.userId;
+    // Cho phép includeLogs đến từ query hoặc body, mặc định TRUE để luôn trả log
+    const includeLogsParam =
+      typeof req.query.includeLogs !== "undefined"
+        ? req.query.includeLogs
+        : req.body?.includeLogs;
+    const includeLogs =
+      includeLogsParam === true ||
+      includeLogsParam === "true" ||
+      includeLogsParam === undefined;
+    // Chấp nhận questionId từ query hoặc body
+    const rawQid =
+      typeof req.query.questionId !== "undefined"
+        ? req.query.questionId
+        : req.body?.questionId;
+    const questionIdFilter =
+      typeof rawQid !== "undefined" ? Number(rawQid) : undefined;
+
+    if (!userId)
+      return res
+        .status(400)
+        .json({ error: "Missing userId (query or x-user-id header)" });
+
+    const pickemResDoc = await PickemResponse.findOne({ league_id });
+    if (!pickemResDoc)
+      return res.status(404).json({ error: "No responses for league" });
+
+    const userRes = pickemResDoc.responses.find(
+      (r) => String(r.userId) === String(userId)
+    );
+    if (!userRes)
+      return res.status(404).json({ error: "No answers found for this user" });
+
+    // Build user object: prefer stored user subdoc, otherwise try to resolve
+    let userObj = userRes.user;
+    if (!userObj) {
+      try {
+        let lookupUser = null;
+        if (/^[0-9a-fA-F]{24}$/.test(String(userId))) {
+          lookupUser = await User.findById(userId).select("-password");
+        } else {
+          lookupUser = await User.findOne({ username: userId }).select(
+            "-password"
+          );
+        }
+        if (lookupUser) {
+          userObj = {
+            id: String(lookupUser._id),
+            nickname: lookupUser.nickname,
+            team: lookupUser.team || undefined,
+          };
+        }
+      } catch (err) {
+        userObj = { id: String(userId) };
+      }
+    }
+
+    // Return user's answers; include question meta by default (unless includeMeta explicitly "false")
+    const includeMeta = req.query.includeMeta !== "false";
+    if (!includeMeta) {
+      const base = {
+        league_id,
+        userId,
+        user: userObj,
+        totalScore: userRes.totalScore || 0,
+        answers: userRes.answers || [],
+      };
+      if (includeLogs) {
+        const logs = Array.isArray(userRes.logs) ? userRes.logs : [];
+        // Reduce to best entry per questionId (prefer more tokens; break ties by latest ts)
+        const latestByQ = new Map();
+        const emptyStages = {
+          qf: [],
+          sf: [],
+          uf: [],
+          ls1: [],
+          ls2: [],
+          fourth: [],
+          third: [],
+          second: [],
+          first: [],
+        };
+        const countTokens = (st) =>
+          (st.qf?.length || 0) +
+          (st.sf?.length || 0) +
+          (st.uf?.length || 0) +
+          (st.ls1?.length || 0) +
+          (st.ls2?.length || 0) +
+          (st.fourth?.length || 0) +
+          (st.third?.length || 0) +
+          (st.second?.length || 0) +
+          (st.first?.length || 0);
+        for (const l of logs) {
+          const key = Number(l.questionId);
+          const ts = new Date(l.updatedAt || l.createdAt || 0).getTime();
+          const stages = l.stages || l.selectedStages || emptyStages;
+          const tokens = countTokens(stages);
+          const current = latestByQ.get(key);
+          if (!current) {
+            latestByQ.set(key, {
+              _ts: ts,
+              _tokens: tokens,
+              questionId: key,
+              stages,
+            });
+          } else if (
+            tokens > current._tokens ||
+            (tokens === current._tokens && ts > current._ts)
+          ) {
+            latestByQ.set(key, {
+              _ts: ts,
+              _tokens: tokens,
+              questionId: key,
+              stages,
+            });
+          }
+        }
+        if (typeof questionIdFilter === "number") {
+          const entry = latestByQ.get(questionIdFilter);
+          return res.json({
+            ...base,
+            logs: entry ? entry.stages : emptyStages,
+          });
+        }
+        const latestArr = Array.from(latestByQ.values()).map(
+          ({ _ts, _tokens, ...rest }) => rest
+        );
+        return res.json({ ...base, logs: latestArr });
+      }
+      return res.json(base);
+    }
+
+    const pickemDoc = await PickemChallenge.findOne({ league_id });
+    const enriched = (userRes.answers || []).map((ans) => {
+      const ques = pickemDoc?.questions?.find((q) => q.id === ans.questionId);
+      const base = {
+        questionId: ans.questionId,
+        selectedOptions: ans.selectedOptions,
+        openTime: ans.openTime,
+        closeTime: ans.closeTime,
+        question: ques?.question,
+        type: ques?.type,
+        maxChoose: ques?.maxChoose,
+        score: ques?.score,
+        options: ques?.options || [],
+      };
+      if (ques?.type === "single_eli_bracket") {
+        return {
+          ...base,
+          selectedBracket: deserializeFlatArrayToBracketObject(
+            ans.selectedOptions || []
+          ),
+        };
+      } else if (ques?.type === "double_eli_bracket") {
+        const bracketObj = deserializeFlatArrayToDoubleBracketObject(
+          ans.selectedOptions || []
+        );
+        const stages = deserializeDoubleStageTokens(ans.selectedOptions || []);
+        // Backfill podium stages from final placements when not explicitly present
+        stages.first =
+          stages.first && stages.first.length
+            ? stages.first
+            : bracketObj.pos_1 || [];
+        stages.second =
+          stages.second && stages.second.length
+            ? stages.second
+            : bracketObj.pos_2 || [];
+        stages.third =
+          stages.third && stages.third.length
+            ? stages.third
+            : bracketObj.pos_3 || [];
+        stages.fourth =
+          stages.fourth && stages.fourth.length
+            ? stages.fourth
+            : bracketObj.pos_4 || [];
+        return {
+          ...base,
+          selectedBracket: bracketObj,
+          // FE-only: expose stage tokens like single_eli to visualize user picks
+          selectedStages: stages,
+        };
+      }
+      return base;
+    });
+
+    const responsePayload = {
+      league_id,
+      userId,
+      user: userObj,
+      totalScore: userRes.totalScore || 0,
+      answers: enriched,
+    };
+    if (includeLogs) {
+      const logs = Array.isArray(userRes.logs) ? userRes.logs : [];
+      // Reduce to best entry per questionId (prefer more tokens; break ties by latest ts)
+      const latestByQ = new Map();
+      const emptyStages = {
+        qf: [],
+        sf: [],
+        uf: [],
+        ls1: [],
+        ls2: [],
+        fourth: [],
+        third: [],
+        second: [],
+        first: [],
+      };
+      const countTokens = (st) =>
+        (st.qf?.length || 0) +
+        (st.sf?.length || 0) +
+        (st.uf?.length || 0) +
+        (st.ls1?.length || 0) +
+        (st.ls2?.length || 0) +
+        (st.fourth?.length || 0) +
+        (st.third?.length || 0) +
+        (st.second?.length || 0) +
+        (st.first?.length || 0);
+      for (const l of logs) {
+        const key = Number(l.questionId);
+        const ts = new Date(l.updatedAt || l.createdAt || 0).getTime();
+        const stages = l.stages || l.selectedStages || emptyStages;
+        const tokens = countTokens(stages);
+        const current = latestByQ.get(key);
+        if (!current) {
+          latestByQ.set(key, {
+            _ts: ts,
+            _tokens: tokens,
+            questionId: key,
+            stages,
+          });
+        } else if (
+          tokens > current._tokens ||
+          (tokens === current._tokens && ts > current._ts)
+        ) {
+          latestByQ.set(key, {
+            _ts: ts,
+            _tokens: tokens,
+            questionId: key,
+            stages,
+          });
+        }
+      }
+      if (typeof questionIdFilter === "number") {
+        const entry = latestByQ.get(questionIdFilter);
+        responsePayload.logs = entry ? entry.stages : emptyStages;
+      } else {
+        responsePayload.logs = Array.from(latestByQ.values()).map(
+          ({ _ts, _tokens, ...rest }) => rest
+        );
+      }
+    }
+    return res.json(responsePayload);
+  } catch (err) {
+    console.error("Error in /:league_id/myanswer:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// Route: Cập nhật score và correctAnswer cho câu hỏi Pickem theo id
+
 import express from "express";
 import dotenv from "dotenv";
 import {
@@ -17,7 +1189,6 @@ import {
   calculateMaxPoints,
   getUserPickemScore,
   comparePredictions,
-  submitPrediction,
   submitCorrectAnswer,
   leaderboardpickem,
   finduserPrediction,
@@ -32,22 +1203,10 @@ import {
   findmatchID,
 } from "../controllers/auth.controller.js";
 import { fetchPlayerProfilesValo } from "../controllers/fetchPlayerProfilesValo.controller.js";
-import QuestionPickem from "../models/question.model.js";
-import PowerRankingAOV from "../models/powerRankingAOV.model.js";
-import Response from "../models/response.model.js";
-import TeamRegister from "../models/registergame.model.js";
-import Match from "../models/match.model.js";
-import User from "../models/user.model.js";
-import BanPickValo from "../models/veto.model.js";
-import Organization from "../models/team.model.js";
-import DCNLeague from "../models/tournament.model.js";
-import TeamTFT from "../models/registergame.model.js";
-import Bracket from "../models/bracket.model.js";
-import ValorantMatch from "../models/valorantmatch.model.js";
-import MatchID from "../models/matchid.model.js";
+
 dotenv.config();
 const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT;
-const router = express.Router();
+
 const calculatePlayerStats = (player, roundResults) => {
   const { puuid } = player;
   let firstKills = 0;
@@ -142,7 +1301,6 @@ router.get("/findallteamAOV", findAllteamAOV);
 router.get("/findallteamTFT", findAllteamTFT);
 router.get("/findallteamValorant", findAllteamValorant);
 router.post("/findallteamTFTDouble", findAllteamTFTDouble);
-router.post("/submitPrediction", submitPrediction);
 router.post("/checkuserprediction", finduserPrediction);
 router.post("/addcorrectanswer", submitCorrectAnswer);
 router.post("/comparepredictions", comparePredictions);
@@ -565,13 +1723,20 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
         { headers: { "X-Riot-Token": apiKeyValorant } }
       );
 
-
       const matchData = response.data;
       const rawMapId = matchData?.matchInfo?.mapId?.toUpperCase();
       // Try both upper and lower case for mapId
-      let mapName = mapMap[rawMapId] || mapMap[rawMapId?.toLowerCase()] || mapMap[rawMapId?.toUpperCase()];
+      let mapName =
+        mapMap[rawMapId] ||
+        mapMap[rawMapId?.toLowerCase()] ||
+        mapMap[rawMapId?.toUpperCase()];
       if (!mapName) {
-        console.error('Không tìm thấy mapName cho mapId:', rawMapId, 'mapMap:', Object.keys(mapMap));
+        console.error(
+          "Không tìm thấy mapName cho mapId:",
+          rawMapId,
+          "mapMap:",
+          Object.keys(mapMap)
+        );
         mapName = "Unknown";
       }
       matchData.matchInfo.mapName = mapName;
@@ -591,14 +1756,23 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
         matchData.players.forEach((player) => {
           // Try both upper and lower case for characterId
           let cleanId = player.characterId;
-          let charName = characterMap[cleanId?.toUpperCase()] || characterMap[cleanId?.toLowerCase()];
+          let charName =
+            characterMap[cleanId?.toUpperCase()] ||
+            characterMap[cleanId?.toLowerCase()];
           if (!charName) {
-            console.error('Không tìm thấy characterName cho characterId:', cleanId, 'characterMap:', Object.keys(characterMap));
+            console.error(
+              "Không tìm thấy characterName cho characterId:",
+              cleanId,
+              "characterMap:",
+              Object.keys(characterMap)
+            );
             charName = "Unknown";
           }
           player.characterName = charName;
           player.imgCharacter =
-            (charName !== "Unknown" ? `https://dongchuyennghiep.vercel.app/agent/${charName}.png` : "Unknown");
+            charName !== "Unknown"
+              ? `https://dongchuyennghiep.vercel.app/agent/${charName}.png`
+              : "Unknown";
           player.riotID = `${player.gameName || "Unknown"}#${
             player.tagLine || "Unknown"
           }`;
@@ -616,7 +1790,10 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
             player.stats.acs = acs;
 
             // Tính advancedStats dựa trên roundResults gốc (có playerStats)
-            const advancedStats = calculatePlayerStats(player, roundResultsFull);
+            const advancedStats = calculatePlayerStats(
+              player,
+              roundResultsFull
+            );
             Object.assign(player.stats, advancedStats);
             player.stats.adr = parseFloat(
               (advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(1)

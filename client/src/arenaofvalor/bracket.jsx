@@ -106,7 +106,9 @@ const TournamentBracket = () => {
   const renderMatchup = (team1, team2, hasMargin = true, additionalMargin = '') => (
     <Link
       to={getMatchLink(team1, team2)}
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'} ${additionalMargin}`}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
+        hasMargin ? 'my-4' : 'mb-0'
+      } ${additionalMargin}`}
     >
       {[team1, team2].map((team, index) => (
         <div
@@ -127,7 +129,9 @@ const TournamentBracket = () => {
   const renderAdvance = (team1, team2, hasMargin = true, additionalMargin = '') => (
     <Link
       to={getMatchLink(team1, team2)}
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'} ${additionalMargin}`}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
+        hasMargin ? 'my-4' : 'mb-0'
+      } ${additionalMargin}`}
     >
       {[team1, team2].map((team, index) => (
         <div
@@ -146,7 +150,9 @@ const TournamentBracket = () => {
   const renderAdvance2 = (team1, team2, hasMargin = true, additionalMargin = '') => (
     <Link
       to={getMatchLink(team1, team2)}
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'} ${additionalMargin}`}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
+        hasMargin ? 'my-4' : 'mb-0'
+      } ${additionalMargin}`}
     >
       {[team1, team2].map((team, index) => (
         <div
@@ -167,7 +173,9 @@ const TournamentBracket = () => {
 
     return (
       <div
-        className={`flex flex-col  ${styles.border} overflow-hidden ${title === '1W-1L' ? 'lg:mt-5' : ''}`}
+        className={`flex flex-col  ${styles.border} overflow-hidden ${
+          title === '1W-1L' ? 'lg:mt-5' : ''
+        }`}
       >
         <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>
           {title}
@@ -187,7 +195,9 @@ const TournamentBracket = () => {
 
     return (
       <div
-        className={`flex flex-col  ${styles.border} overflow-hidden ${title === '1W-1L' ? 'lg:mt-5' : ''}`}
+        className={`flex flex-col  ${styles.border} overflow-hidden ${
+          title === '1W-1L' ? 'lg:mt-5' : ''
+        }`}
       >
         <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>
           {title}
@@ -207,7 +217,9 @@ const TournamentBracket = () => {
 
     return (
       <div
-        className={`flex flex-col  ${styles.border} overflow-hidden ${title === '1W-1L' ? 'lg:mt-5' : ''}`}
+        className={`flex flex-col  ${styles.border} overflow-hidden ${
+          title === '1W-1L' ? 'lg:mt-5' : ''
+        }`}
       >
         <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>
           {title}
@@ -232,38 +244,7 @@ const TournamentBracket = () => {
       ) : (
         <>
           <h1 className="text-3xl font-bold mb-5 mt-20 text-center">Vòng Play-off</h1>
-          <div className="max-w-[900px] justify-center flex flex-col mx-auto mb-10">
-            <p>
-              Hiii! Xin chào tất cả các bạn, chào mừng các bạn đã đến với vòng đấu Play-off, và đây
-              là một số luật lệ tụi mình sẽ có update thêm trong tương lai nhaaaa:{' '}
-            </p>
-            <ul class="list-disc">
-              <li>Tất cả các trận ở đây là BO5. Riêng các trận chung kết tổng sẽ là BO7.</li>
-              <li>Các cặp trận được xếp dựa trên ELO tích được ở vòng bảng.</li>
-              <li>
-                Thể thức là Double Elimination. Nghĩa là các bạn sẽ có 2 cơ hội. Riêng từ tranh hạng
-                4 trở đi sẽ chỉ có 1 cơ hội.
-              </li>
-              <li>
-                Thời gian sẽ được thông báo ở kênh riêng trên{' '}
-                <a href="https://discord.gg/4AGUSHS2">Discord</a>.
-              </li>
-              <li>
-                Trước giờ thi đấu 2h các bạn phải đưa lại đội hình cho BTC để bọn mình dễ dàng kiểm
-                soát thông tin người chơi.
-              </li>
-              <li>Mọi thông tin khác tụi mình sẽ thông báo riêng trên kênh đấu giải.</li>
-              <li>
-                Thời gian thi đấu BTC thông báo sẽ là cố định và KHÔNG thể dời dưới mọi hình thức.
-                Nếu không đủ thành viên thi đấu thì chỉ có thể tìm Stand-in hoặc bị xử thua
-              </li>
-            </ul>
-            <p>
-              {' '}
-              Và đó là tất cả những điều chúng mình muốn gửi đến các bạn, chúc các bạn thi đấu tốt
-              nhaaaaaaa.
-            </p>
-          </div>
+
           <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
             <div className="w-full lg:w-1/4 relative">
               <div>
