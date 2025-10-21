@@ -15,6 +15,8 @@ const LeagueHeader = ({
   getNavigation,
   MyNavbar2,
   game,
+  // Optional: show pick'em stats (only provided by pickem.jsx pages)
+  pickemStats,
 }) => {
   const [registerPhase, setRegisterPhase] = useState('idle');
   const [joinCountdown, setJoinCountdown] = useState('');
@@ -230,6 +232,42 @@ const LeagueHeader = ({
                 <span className="text-white font-semibold">{league.league.organizer_id}</span>
               </div>
             </div>
+
+            {/* Header right stats: only show on Pick'em pages when pickemStats is provided */}
+            {pickemStats && (
+              <div className="sm:absolute relative sm:right-0 sm:bottom-10 sm:mr-4 xl:mr-8 text-white font-semibold">
+                <div className="flex flex-row divide-x divide-gray-700 rounded-lg overflow-hidden bg-black/30 border border-gray-700">
+                  {/* Score box */}
+                  <div className="px-6 py-4 flex flex-col items-center justify-center min-w-[140px]">
+                    <div className="text-3xl md:text-4xl font-extrabold leading-none">
+                      {Number(pickemStats.score || 0)}{' '}
+                      <span className="text-gray-300 text-xl">đ</span>
+                    </div>
+                    <div className="uppercase text-xs tracking-wide text-gray-300 mt-1">
+                      Điểm số
+                    </div>
+                  </div>
+                  {/* Top/Rank box */}
+                  <div className="px-6 py-4 flex flex-col items-center justify-center min-w-[160px]">
+                    <div className="text-3xl md:text-4xl font-extrabold leading-none">
+                      {(() => {
+                        const rank = Number(pickemStats?.rank);
+                        if (Number.isFinite(rank) && rank > 0) {
+                          return `Top ${Math.floor(rank)}`; // Show exact rank
+                        }
+                        // Fallback to percent if rank not provided
+                        const raw = pickemStats?.topPercent;
+                        const valid = Number.isFinite(raw) && raw > 0;
+                        if (!valid) return 'Top —';
+                        const bounded = Math.max(1, Math.min(100, Math.round(raw)));
+                        return `Top ${bounded}%`;
+                      })()}
+                    </div>
+                    <div className="uppercase text-xs tracking-wide text-gray-300 mt-1">Xếp hạng</div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {registerPhase === 'before' && (
               <div className="sm:absolute relative px-4 md:px-8 sm:right-0 sm:bottom-10 text-sm md:text-base text-white font-semibold text-center sm:text-right">

@@ -201,6 +201,82 @@ router.get("/pickemscore/:league_id/leaderboard", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Route: Leaderboard directly from PickemResponse (no separate PickemScore doc)
+// Ranking rules:
+// - Primary: totalScore (desc)
+// - Tie-breaker: earlier lastUpdate (asc). lastUpdate is the latest updatedAt among a user's logs.
+//   If a user has no logs, we treat lastUpdate as very large so they are ranked lower on ties.
+router.get("/pickem/:league_id/leaderboard", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    const doc = await PickemResponse.findOne({ league_id }).lean();
+    if (!doc)
+      return res.status(404).json({ message: "No responses for league" });
+
+    const responses = Array.isArray(doc.responses) ? doc.responses : [];
+
+    // Collect possible user ids for enrichment
+    const idCandidates = responses
+      .map((r) => String(r?.user?.id || r?.userId || ""))
+      .filter((v) => v);
+    const objectIds = idCandidates.filter((v) => /^[0-9a-fA-F]{24}$/.test(v));
+    const users = await User.find({ _id: { $in: objectIds } })
+      .select("username profilePicture nickname team")
+      .lean();
+    const userMap = new Map(users.map((u) => [String(u._id), u]));
+
+    const leaderboard = responses.map((r) => {
+      const uid = String(r?.user?.id || r?.userId || "");
+      const userHit = userMap.get(uid);
+      const score = Number(r?.totalScore || 0);
+      // lastUpdate = latest update timestamp across logs; higher means later
+      let lastUpdate = Number.MAX_SAFE_INTEGER;
+      if (Array.isArray(r?.logs) && r.logs.length) {
+        lastUpdate = r.logs.reduce((mx, l) => {
+          const t = new Date(l?.updatedAt || l?.createdAt || 0).getTime();
+          return Math.max(mx, isNaN(t) ? 0 : t);
+        }, 0);
+      }
+      const username = userHit?.username || r?.userId || "";
+      const nickname = userHit?.nickname || r?.user?.nickname || "";
+      const teamName = userHit?.team?.name || r?.user?.team?.name || "";
+      const logoTeam = userHit?.team?.logoTeam || r?.user?.team?.logoTeam || "";
+      const img = userHit?.profilePicture || r?.user?.team?.logoTeam || "";
+      return {
+        username,
+        nickname,
+        team: teamName,
+        logoTeam,
+        img,
+        Score: score,
+        _lastUpdate: lastUpdate,
+      };
+    });
+
+    // Sort by score desc, then earlier lastUpdate asc
+    leaderboard.sort((a, b) => {
+      if (b.Score !== a.Score) return b.Score - a.Score;
+      return a._lastUpdate - b._lastUpdate;
+    });
+
+    // Strip private fields
+    const result = leaderboard.map(
+      ({ username, nickname, team, logoTeam, img, Score }) => ({
+        username,
+        nickname,
+        team,
+        logoTeam,
+        img,
+        Score,
+      })
+    );
+
+    res.json({ league_id, leaderboard: result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // Route: Gộp thêm câu hỏi Pickem (player/team), chỉ update nếu đã có PickemChallenge
 // Hàm chấm điểm Pickem cho toàn bộ user
 async function gradePickem(league_id, force = false) {
@@ -362,7 +438,11 @@ async function gradePickem(league_id, force = false) {
           }
           totalScore += add;
         }
-      } else if (ques.type === "team" || ques.type === "player") {
+      } else if (
+        ques.type === "team" ||
+        ques.type === "player" ||
+        ques.type === "lol_champ"
+      ) {
         // Chấm điểm: chỉ cần đúng bất kỳ vị trí nào, không cần đúng thứ tự
         let correctSet = new Set(correctAns);
         let matched = 0;
@@ -452,6 +532,10 @@ router.post("/:league_id/addquestion", async (req, res) => {
           }
         });
         options = Array.from(teamMap.values());
+      } else if (q.type === "lol_champ") {
+        // Build LoL champions list as options; use DDragon champion id for images
+        const champs = await fetchLoLChampions("en_US");
+        options = champs.map(({ id, name }) => ({ name, img: id }));
       } else {
         continue; // skip invalid type
       }
@@ -611,13 +695,17 @@ router.get("/:game_short/:league_id/question/:type", async (req, res) => {
     if (!pickemDoc)
       return res.status(404).json({ message: "Pickem challenge not found" });
 
+    // Support aggregating across ALL game_short when game_short === 'all' (or missing)
+    const wantedGame = (game_short || "").toString().toLowerCase();
+    const includeAllGames = !wantedGame || wantedGame === "all";
+    const wantedType = (type || "").toString().toLowerCase();
+    const includeAllTypes = !wantedType || wantedType === "all";
+
     const questions = (pickemDoc.questions || []).filter((q) => {
       const qGame = (q.game_short || "").toString().toLowerCase();
-      const wantedGame = (game_short || "").toString().toLowerCase();
-      if (qGame !== wantedGame) return false;
-      // if type === 'all', return all types for this game_short
-      if (!type || type.toString().toLowerCase() === "all") return true;
-      return q.type === type;
+      if (!includeAllGames && qGame !== wantedGame) return false;
+      if (!includeAllTypes) return q.type === type;
+      return true;
     });
 
     const sanitized = questions.map((q) => ({
@@ -634,12 +722,30 @@ router.get("/:game_short/:league_id/question/:type", async (req, res) => {
       closeTime: q.closeTime,
     }));
 
+    // Compute totalPoint (filtered set) as sum of (maxChoose * score)
+    const totalPoint = sanitized.reduce(
+      (sum, q) => sum + (Number(q.maxChoose) || 0) * (Number(q.score) || 0),
+      0
+    );
+
+    // Compute league-wide total across ALL game_short (respecting type filter unless type === 'all')
+    const leagueScope = (pickemDoc.questions || []).filter((q) =>
+      includeAllTypes ? true : q.type === type
+    );
+    const totalPointAll = leagueScope.reduce(
+      (sum, q) => sum + (Number(q.maxChoose) || 0) * (Number(q.score) || 0),
+      0
+    );
+
     res.json({
       league_id,
       game_short,
       type,
       count: sanitized.length,
       questions: sanitized,
+      totalPoint,
+      // New: grand total across ALL game_short for this league (and matching type when provided)
+      totalPointAll,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1285,6 +1391,29 @@ const calculatePlayerStats = (player, roundResults) => {
 };
 
 import axios from "axios";
+// Fetch current LoL champions from Data Dragon
+// Fetch current LoL champions from Data Dragon (id for images, name for display)
+async function fetchLoLChampions(locale = "en_US") {
+  try {
+    const versionsResp = await axios.get(
+      "https://ddragon.leagueoflegends.com/api/versions.json"
+    );
+    const versions = Array.isArray(versionsResp.data) ? versionsResp.data : [];
+    const ver = versions[0] || "15.20.1";
+    const champsResp = await axios.get(
+      `https://ddragon.leagueoflegends.com/cdn/${ver}/data/${locale}/champion.json`
+    );
+    const dataObj = champsResp?.data?.data || {};
+    const champions = Object.values(dataObj)
+      .map((c) => ({ id: c?.id, name: c?.name }))
+      .filter((c) => c.id && c.name);
+    champions.sort((a, b) => a.name.localeCompare(b.name));
+    return champions;
+  } catch (e) {
+    console.error("Failed to fetch LoL champions:", e?.message || e);
+    return [];
+  }
+}
 router.post("/signup", signup);
 router.post("/signin", signin);
 router.get("/signout", signout);

@@ -21,10 +21,15 @@ const PickemChallenge = () => {
   const [tempSelection, setTempSelection] = useState([]);
   const [searchQuery, setSearchQuery] = useState(''); // New search state
   const [detailedResults, setDetailedResults] = useState([]);
+  // Total scoreboard
+  const [totalScore, setTotalScore] = useState(0);
+  const [maxPoints, setMaxPoints] = useState(0);
   // Map of questionId -> Set of correct team names
   const [correctMap, setCorrectMap] = useState({});
   const [isLocked, setIsLocked] = useState(false);
   const [globalCountdown, setGlobalCountdown] = useState(''); // Countdown cho thời gian khóa toàn cầu
+  // Header stats for Pick'em header (score + top%)
+  const [pickemStats, setPickemStats] = useState(null);
   // Group questions by type so we can render each type as a separate section
   const questionsByType = (questions || []).reduce((acc, q) => {
     const t = q.type || 'other';
@@ -46,6 +51,8 @@ const PickemChallenge = () => {
   const myAnswersFetchedRef = React.useRef(false);
   const questionsFetchedRef = React.useRef(new Set());
   const questionsInFlightRef = React.useRef(new Set());
+  const initDoneRef = React.useRef(false);
+  const leaderboardFetchedRef = React.useRef(false);
   // helper to normalize strings for robust comparison
   const normalize = (s) => (typeof s === 'string' ? s.trim().toLowerCase() : s);
   // lightweight Levenshtein distance for fuzzy matching minor typos
@@ -176,7 +183,16 @@ const PickemChallenge = () => {
     current: selectedGame === g.slug,
     // provide onClick still for debug, but now navigation will change the URL
     onClick: (e) => {
-      // allow navigation via Link to handle URL change
+      // Prevent route navigation to avoid re-mount and re-fetch; switch in place
+      try {
+        e?.preventDefault?.();
+      } catch {}
+      setSelectedGame(g.slug);
+      // Update URL without navigating (no re-mount)
+      const newUrl = `/${league_id}/pickem/${g.slug}`;
+      if (typeof window !== 'undefined' && window.location?.pathname !== newUrl) {
+        window.history.pushState({}, '', newUrl);
+      }
     },
   }));
 
@@ -185,16 +201,16 @@ const PickemChallenge = () => {
     if (game && game !== selectedGame) setSelectedGame(game);
   }, [game]);
   useEffect(() => {
-    const fetchQuestionsAndPredictions = async () => {
+    // Prefetch all questions and my answers once on page load; no re-fetch on tab change
+    const init = async () => {
       setLoading(true);
       try {
         const leagueId = league_id || 'valorant_test';
         const type = 'all';
 
-        // Fetch myanswer once and cache
-        // Ensure we attempt fetch when either `me` (enriched user) or `currentUser` is available
-        // Use a local variable `apiAnswers` so we can map answers fetched in this run
+        // 1) Fetch my answers once
         let apiAnswers = myAnswersSource;
+        let apiTotalLocal = null;
         if (!myAnswersSource && !myAnswersFetchedRef.current && (me?._id || currentUser?._id)) {
           try {
             const userIdHeader = me?._id || currentUser._id || 'Beacon';
@@ -217,8 +233,14 @@ const PickemChallenge = () => {
                 (predictionResult.data && predictionResult.data.answers) ||
                 predictionResult.answers ||
                 [];
+              const apiTotal =
+                (predictionResult.data && predictionResult.data.totalScore) ||
+                predictionResult.totalScore ||
+                0;
               apiAnswers = sourceAnswers;
               setMyAnswersSource(sourceAnswers);
+              apiTotalLocal = Number(apiTotal) || 0;
+              setTotalScore(apiTotalLocal);
             }
             myAnswersFetchedRef.current = true;
           } catch (err) {
@@ -227,62 +249,56 @@ const PickemChallenge = () => {
           }
         }
 
-        // If we already have questions cached for selectedGame, reuse them
-        const game_short = selectedGame || effectiveGame || 'aov';
-        if (questionsCache[game_short]) {
-          setQuestions(questionsCache[game_short]);
-          // Also rebuild correct map from cached questions
-          try {
-            const qArr = questionsCache[game_short] || [];
-            const cmap = {};
-            qArr.forEach((q) => {
-              cmap[String(q.id)] = buildCorrectSet(q);
-            });
-            setCorrectMap(cmap);
-          } catch (e) {}
-        } else if (!questionsFetchedRef.current.has(game_short)) {
-          // Prevent duplicate in-flight fetches for the same game_short (React StrictMode can double-invoke effects)
-          if (questionsInFlightRef.current.has(game_short)) {
-            // Wait briefly until the first in-flight call populates the cache
-            let waited = 0;
-            while (!questionsFetchedRef.current.has(game_short) && waited < 2000) {
-              await new Promise((r) => setTimeout(r, 50));
-              waited += 50;
-            }
-          } else {
-            questionsInFlightRef.current.add(game_short);
-            const questionResponse = await fetch(
-              `http://localhost:3000/api/auth/${game_short}/${leagueId}/question/${type}`
-            );
-            const questionResult = await questionResponse.json();
-            const fetchedQuestions = questionResult.questions || [];
-            setQuestionsCache((prev) => ({ ...prev, [game_short]: fetchedQuestions }));
-            setQuestions(fetchedQuestions);
-            // Build correct answers map from API questions payload
-            try {
-              const cmap = {};
-              fetchedQuestions.forEach((q) => {
-                cmap[String(q.id)] = buildCorrectSet(q);
-              });
-              setCorrectMap(cmap);
-            } catch (e) {}
-            questionsFetchedRef.current.add(game_short);
-            questionsInFlightRef.current.delete(game_short);
+        // 2) Prefetch questions for ALL game_short upfront
+        const slugs = (gamesList || []).map((g) => g.slug);
+        const fetches = slugs.map(async (slug) => {
+          const r = await fetch(
+            `http://localhost:3000/api/auth/${slug}/${leagueId}/question/${type}`
+          );
+          const j = await r.json();
+          return { slug, result: j };
+        });
+        const results = await Promise.all(fetches);
+        // Build cache and determine league-wide total
+        const nextCache = {};
+        let leagueTotalFromApi = null;
+        let combinedForFallback = [];
+        results.forEach(({ slug, result }) => {
+          const qArr = Array.isArray(result?.questions) ? result.questions : [];
+          nextCache[slug] = qArr;
+          combinedForFallback = combinedForFallback.concat(qArr);
+          if (typeof result?.totalPointAll === 'number' && result.totalPointAll >= 0) {
+            leagueTotalFromApi = result.totalPointAll;
           }
-        }
+        });
+        setQuestionsCache(nextCache);
 
-        // Map myAnswersSource (cached) to predictions using existing logic
-        // prefer answers fetched in this run (apiAnswers) to avoid race with setState
+        // Set questions for current selectedGame from cache
+        const initialQuestions = nextCache[selectedGame] || nextCache[effectiveGame] || [];
+        setQuestions(initialQuestions);
+        // Build correct map for initially displayed questions
+        const cmap = {};
+        initialQuestions.forEach((q) => {
+          cmap[String(q.id)] = buildCorrectSet(q);
+        });
+        setCorrectMap(cmap);
+
+        // Use league-wide total from API; fallback to combined sum across all slugs
+        const fallbackTotal = combinedForFallback.reduce(
+          (acc, q) => acc + (q?.score || 0) * (q?.maxChoose || 1),
+          0
+        );
+        setMaxPoints(typeof leagueTotalFromApi === 'number' ? leagueTotalFromApi : fallbackTotal);
+
+        // 3) Map my answers into predictions once
         const sourceAnswers =
           typeof apiAnswers !== 'undefined' ? apiAnswers : myAnswersSource || [];
-        const fetchedQuestions = questionsCache[selectedGame] || questions;
         const answers = {};
         for (let i = 0; i < sourceAnswers.length; i++) {
           const curr = sourceAnswers[i];
           const item = curr && curr._doc ? curr._doc : curr;
           const qid =
             item?.questionId ?? item?.question_id ?? item?.qid ?? item?.question?.id ?? item?._id;
-          // allow qid === 0 (zero) — only skip if null or undefined
           if (qid === null || typeof qid === 'undefined') continue;
           let vals =
             item.selectedOptions ?? item.selectedTeams ?? item.selected ?? item.answers ?? [];
@@ -290,13 +306,10 @@ const PickemChallenge = () => {
           vals = (vals || []).map((s) => (typeof s === 'string' ? s.trim() : s));
           answers[String(qid)] = vals;
         }
-
-        // debug logs removed
-
         if (Object.keys(answers).length === 0 && sourceAnswers.length > 0) {
-          // fallback: match by option names
+          // fallback: match by option names in the initially displayed set
           const fallback = {};
-          const qList = fetchedQuestions || [];
+          const qList = initialQuestions || [];
           for (let qi = 0; qi < qList.length; qi++) {
             const q = qList[qi];
             const optNames = (q.options || []).map((o) =>
@@ -318,26 +331,62 @@ const PickemChallenge = () => {
               }
             }
           }
-          if (Object.keys(fallback).length > 0) {
-            setPredictions(fallback);
-          } else {
-            setPredictions(answers || {});
-          }
+          if (Object.keys(fallback).length > 0) setPredictions(fallback);
+          else setPredictions(answers || {});
         } else {
           setPredictions(answers || {});
         }
 
+        // 4) Fetch leaderboard ONCE and compute rank (+ optional Top %)
+        if (!leaderboardFetchedRef.current) {
+          leaderboardFetchedRef.current = true;
+          try {
+            const lbResp = await fetch(
+              `http://localhost:3000/api/auth/pickemscore/${leagueId}/leaderboard`
+            );
+            const lbJson = await lbResp.json();
+            const arr = Array.isArray(lbJson?.leaderboard) ? lbJson.leaderboard : [];
+            const total = arr.length || 1;
+            const myId = String(me?._id || currentUser?._id || '');
+            const rankIndex = arr.findIndex((e) => String(e.userId) === myId);
+            const rank = rankIndex >= 0 ? rankIndex + 1 : total; // if not found, worst rank
+            const topPercent = Math.ceil((rank / total) * 100);
+            setPickemStats({ score: Number((apiTotalLocal ?? totalScore) || 0), rank, topPercent });
+          } catch (e) {
+            // Fallback: still show score, default Top 100%
+            setPickemStats({ score: Number((apiTotalLocal ?? totalScore) || 0), rank: undefined, topPercent: 100 });
+          }
+        } else {
+          // If leaderboard already fetched, still ensure score sync
+          setPickemStats((prev) => ({
+            ...(prev || {}),
+            score: Number((apiTotalLocal ?? totalScore) || 0),
+          }));
+        }
+
         setLoading(false);
-      } catch (error) {
+      } catch (e) {
         setLoading(false);
       }
     };
+    if (!currentUser) return;
+    if (initDoneRef.current) return; // run once per page load
+    initDoneRef.current = true;
+    init();
+  }, [currentUser]);
 
-    // Trigger fetch when currentUser is present or when selectedGame changes
-    if (currentUser) {
-      fetchQuestionsAndPredictions();
+  // When switching tabs, only swap questions from cache; don't re-fetch
+  useEffect(() => {
+    const cached = questionsCache[selectedGame];
+    if (cached) {
+      setQuestions(cached);
+      const cmap = {};
+      (cached || []).forEach((q) => {
+        cmap[String(q.id)] = buildCorrectSet(q);
+      });
+      setCorrectMap(cmap);
     }
-  }, [currentUser, selectedGame, myAnswersSource, me]);
+  }, [selectedGame, questionsCache]);
 
   // Fetch correct answers to enable green/red styling
   const getCorrectness = (questionId, teamName, teamShortName, isSelected = false) => {
@@ -466,7 +515,8 @@ const PickemChallenge = () => {
   };
   // Responsive grid helper: if count > 2, use lg:5 cols, else shrink; always 1 col on smallest screens
   const gridClassForCount = (count) => {
-    if (count > 2) return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8';
+    if (count > 2)
+      return ' grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8';
     if (count === 2) return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-8';
     return 'grid grid-cols-1 gap-8';
   };
@@ -476,7 +526,7 @@ const PickemChallenge = () => {
       className={
         'w-full h-[88px] rounded-xl border flex items-center justify-start px-5 gap-4 shadow-sm ' +
         // Always show blue border for selected tiles in preview
-        'border-blue-500 ' +
+        'border-gray-700 ' +
         (correctness === 'correct'
           ? 'bg-green-900/20'
           : correctness === 'wrong'
@@ -502,12 +552,21 @@ const PickemChallenge = () => {
     const firstKey = Array.isArray(selectedKeys) ? selectedKeys[0] : undefined;
     const selectedOption = firstKey ? resolvePickToOption(question, firstKey) : null;
     const correctness = selectedOption ? isOptionCorrect(question.id, selectedOption) : 'unknown';
-    const hasImg = !!selectedOption?.img;
+    const isChamp = question?.type === 'lol_champ';
+    const hasImg = isChamp ? !!selectedOption : !!selectedOption?.img;
+    const champKey = selectedOption?.img || selectedOption?.name;
+    const imageSrc = isChamp
+      ? `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${encodeURIComponent(
+          champKey || ''
+        )}_0.jpg`
+      : selectedOption?.img
+      ? `https://drive.google.com/thumbnail?id=${selectedOption.img}`
+      : '';
     return (
       <div className="w-full">
         <div
-          className={`relative w-full h-44 rounded-lg overflow-hidden border ${
-            selectedOption ? 'border-blue-500' : 'border-gray-700'
+          className={`relative w-[206.4px] h-[152px] rounded-lg overflow-hidden border ${
+            selectedOption ? 'border-gray-700' : 'border-gray-700'
           } ${
             selectedOption && correctness === 'correct'
               ? 'bg-green-900/20'
@@ -518,13 +577,13 @@ const PickemChallenge = () => {
         >
           {hasImg ? (
             <img
-              src={`https://drive.google.com/thumbnail?id=${selectedOption.img}`}
-              alt={selectedOption.name}
-              className="absolute inset-0 w-full h-full object-cover"
+              src={imageSrc}
+              alt={selectedOption?.name}
+              className="absolute inset-0 w-[206.4px] h-[152px] object-cover"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-              Bấm để chọn người chơi
+              {isChamp ? 'Bấm để chọn tướng' : 'Bấm để chọn người chơi'}
             </div>
           )}
           <div className="absolute bottom-0 left-0 right-0 bg-black/50 py-2 text-center">
@@ -630,33 +689,74 @@ const PickemChallenge = () => {
         getNavigation={() => clickableNavigation}
         MyNavbar2={MyNavbar2}
         game={game}
+        pickemStats={pickemStats}
       />
+      <div className="max-w-[1408px] mx-auto">
+        <div className="min-h-screen mt-10 mb-20 px-4 lg:px-8">
+          {/* Single countdown display */}
+          <span className="block text-center text-[20px] text-error font-semibold mt-8 my-5 italic">
+            {globalCountdown}
+          </span>
 
-      <div className="min-h-screen mt-40 mb-20 px-4 sm:px-10 lg:px-8">
-        {/* Single countdown display */}
-        <span className="block text-center text-[20px] text-error font-semibold mt-8 my-5 italic">
-          {globalCountdown}
-        </span>
+          {/* Total Score pill */}
+          <div className="w-full flex items-center justify-start mb-6">
+            <div className="inline-flex items-baseline gap-2 rounded-3xl border border-gray-700 px-4 py-2">
+              <span className="text-yellow-400 font-extrabold tracking-wider">TOTAL:</span>
+              <span className="text-white text-xl font-extrabold">{totalScore || 0}</span>
+              <span className="text-gray-400">/ {maxPoints || 0} pts</span>
+            </div>
+          </div>
 
-        <form className="lg:p-2 p-1">
-          <div className="space-y-8">
-            {Object.entries(questionsByType).map(([t, qList]) => {
-              // Special rendering for single/double elimination brackets: always show inline, no modal
-              if (t === 'single_eli_bracket') {
-                return (
-                  <div key={t} className="space-y-6">
-                    <h2 className="text-xl font-bold text-left capitalize">{t}</h2>
-                    <div className={gridClassForCount(qList.length)}>
-                      {qList.map((question) => (
-                        <div
-                          key={`${t}-${question.id}`}
-                          className="bg-[#0f0f10] border border-gray-700 rounded-lg p-4"
-                        >
-                          <h3 className="w-full text-left text-[15px] font-semibold mb-4 text-gray-200">
-                            {question.question}
-                          </h3>
-                          {question.bracket_id ? (
-                            <PickemBracket
+          <form className="lg:p-2 p-1">
+            <div className="space-y-8">
+              {Object.entries(questionsByType).map(([t, qList]) => {
+                // Special rendering for single/double elimination brackets: always show inline, no modal
+                if (t === 'single_eli_bracket') {
+                  return (
+                    <div key={t} className="space-y-6">
+                      <h2 className="text-xl font-bold text-left capitalize">{t}</h2>
+                      <div className={gridClassForCount(qList.length)}>
+                        {qList.map((question) => (
+                          <div
+                            key={`${t}-${question.id}`}
+                            className="bg-[#0f0f10] border border-gray-700 rounded-lg p-4"
+                          >
+                            <h3 className="w-full text-left text-[15px] font-semibold mb-4 text-gray-200">
+                              {question.question}
+                            </h3>
+                            {question.bracket_id ? (
+                              <PickemBracket
+                                bracket_id={question.bracket_id}
+                                league_id={league_id}
+                                questionId={question.id}
+                                userId={me?._id || currentUser?._id}
+                                preloadedAnswers={predictions[String(question.id)] || []}
+                                correctAnswers={question.correctAnswer || []}
+                                options={question.options || []}
+                                apiBase={import.meta.env?.VITE_API_BASE || 'http://localhost:3000'}
+                              />
+                            ) : (
+                              <p className="text-gray-400 italic">Thiếu bracket_id</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                } else if (t === 'double_eli_bracket') {
+                  return (
+                    <div key={t} className="space-y-6">
+                      <h2 className="text-xl font-bold text-left capitalize">{t}</h2>
+                      <div className={gridClassForCount(qList.length)}>
+                        {qList.map((question) => (
+                          <div
+                            key={`${t}-${question.id}`}
+                            className="bg-[#0f0f10] border border-gray-700 rounded-lg p-4"
+                          >
+                            <h3 className="w-full text-left text-[15px] font-semibold mb-4 text-gray-200">
+                              {question.question}
+                            </h3>
+                            <PickemDoubleBracket
                               bracket_id={question.bracket_id}
                               league_id={league_id}
                               questionId={question.id}
@@ -666,294 +766,277 @@ const PickemChallenge = () => {
                               options={question.options || []}
                               apiBase={import.meta.env?.VITE_API_BASE || 'http://localhost:3000'}
                             />
-                          ) : (
-                            <p className="text-gray-400 italic">Thiếu bracket_id</p>
-                          )}
-                        </div>
-                      ))}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              } else if (t === 'double_eli_bracket') {
+                  );
+                }
+
+                // Default rendering for other types
                 return (
                   <div key={t} className="space-y-6">
                     <h2 className="text-xl font-bold text-left capitalize">{t}</h2>
-                    <div className={gridClassForCount(qList.length)}>
-                      {qList.map((question) => (
-                        <div
-                          key={`${t}-${question.id}`}
-                          className="bg-[#0f0f10] border border-gray-700 rounded-lg p-4"
-                        >
-                          <h3 className="w-full text-left text-[15px] font-semibold mb-4 text-gray-200">
-                            {question.question}
-                          </h3>
-                          <PickemDoubleBracket
-                            bracket_id={question.bracket_id}
-                            league_id={league_id}
-                            questionId={question.id}
-                            userId={me?._id || currentUser?._id}
-                            preloadedAnswers={predictions[String(question.id)] || []}
-                            correctAnswers={question.correctAnswer || []}
-                            options={question.options || []}
-                            apiBase={import.meta.env?.VITE_API_BASE || 'http://localhost:3000'}
-                          />
-                        </div>
-                      ))}
+
+                    {/* maxChoose === 1 */}
+                    <div
+                      className={gridClassForCount(qList.filter((q) => q.maxChoose === 1).length)}
+                    >
+                      {qList
+                        .filter((q) => q.maxChoose === 1)
+                        .map((question) => (
+                          <div
+                            key={`${t}-${question.id}`}
+                            className={cardTileClass}
+                            onClick={() => {
+                              if (!isLocked) openModal(question);
+                            }}
+                          >
+                            {question.type === 'player' || question.type === 'lol_champ' ? (
+                              <PlayerQuestionCard question={question} />
+                            ) : (
+                              <>
+                                <h3 className="w-full text-left text-[15px] font-semibold mb-2 text-gray-200">
+                                  {question.question}
+                                </h3>
+                                <hr className="w-full border-t border-gray-700 my-3" />
+                                <div className="w-full">
+                                  {predictions[question.id]?.length > 0 ? (
+                                    <div
+                                      className={`grid ${getGridColsClass(
+                                        question.maxChoose
+                                      )} gap-4 w-full items-center justify-center`}
+                                    >
+                                      {predictions[question.id].map((team) => {
+                                        const selectedTeam = resolvePickToOption(question, team);
+                                        return selectedTeam ? (
+                                          <StaticOptionTile
+                                            key={team}
+                                            option={selectedTeam}
+                                            correctness={isOptionCorrect(question.id, selectedTeam)}
+                                          />
+                                        ) : null;
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <div className="w-full flex items-center justify-center">
+                                      <p className="text-gray-400 italic">Ấn vào đây để chọn</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* maxChoose === 2 */}
+                    <div
+                      className={gridClassForCount(qList.filter((q) => q.maxChoose === 2).length)}
+                    >
+                      {qList
+                        .filter((q) => q.maxChoose === 2)
+                        .map((question) => (
+                          <div
+                            key={`${t}-${question.id}`}
+                            className={cardTileClass}
+                            onClick={() => {
+                              if (!isLocked) {
+                                openModal(question);
+                              }
+                            }}
+                          >
+                            {question.type === 'player' || question.type === 'lol_champ' ? (
+                              <PlayerQuestionCard question={question} />
+                            ) : (
+                              <>
+                                <h3 className="w-full text-left text-[15px] font-semibold mb-2 text-gray-200">
+                                  {question.question}
+                                </h3>
+                                <hr className="w-full border-t border-gray-700 my-3" />
+                                <div className="w-full">
+                                  {predictions[question.id]?.length > 0 ? (
+                                    <div
+                                      className={`grid ${getGridColsClass(
+                                        question.maxChoose
+                                      )} gap-4 w-full items-center justify-center`}
+                                    >
+                                      {predictions[question.id].map((team) => {
+                                        const selectedTeam = resolvePickToOption(question, team);
+                                        return selectedTeam ? (
+                                          <StaticOptionTile
+                                            key={team}
+                                            option={selectedTeam}
+                                            correctness={isOptionCorrect(question.id, selectedTeam)}
+                                          />
+                                        ) : null;
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <div className="w-full flex items-center justify-center">
+                                      <p className="text-gray-400 italic">Ấn vào đây để chọn</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* maxChoose > 2 */}
+                    <div className={gridClassForCount(qList.filter((q) => q.maxChoose > 2).length)}>
+                      {qList
+                        .filter((q) => q.maxChoose > 2)
+                        .map((question) => (
+                          <div
+                            key={`${t}-${question.id}`}
+                            className={cardTileClass}
+                            onClick={() => {
+                              if (!isLocked) {
+                                openModal(question);
+                              }
+                            }}
+                          >
+                            {question.type === 'player' || question.type === 'lol_champ' ? (
+                              <PlayerQuestionCard question={question} />
+                            ) : (
+                              <>
+                                <h3 className="w-full text-left text-[15px] font-semibold mb-2 text-gray-200">
+                                  {question.question}
+                                </h3>
+                                <hr className="w-full border-t border-gray-700 my-3" />
+                                <div className="w-full">
+                                  {predictions[question.id]?.length > 0 ? (
+                                    <div
+                                      className={`grid ${getGridColsClass(
+                                        question.maxChoose
+                                      )} gap-4 w-full items-center justify-center`}
+                                    >
+                                      {predictions[question.id].map((team) => {
+                                        const selectedTeam = resolvePickToOption(question, team);
+                                        return selectedTeam ? (
+                                          <StaticOptionTile
+                                            key={team}
+                                            option={selectedTeam}
+                                            correctness={isOptionCorrect(question.id, selectedTeam)}
+                                          />
+                                        ) : null;
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <div className="w-full flex items-center justify-center">
+                                      <p className="text-gray-400 italic">Ấn vào đây để chọn</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
                     </div>
                   </div>
                 );
-              }
-
-              // Default rendering for other types
-              return (
-                <div key={t} className="space-y-6">
-                  <h2 className="text-xl font-bold text-left capitalize">{t}</h2>
-
-                  {/* maxChoose === 1 */}
-                  <div className={gridClassForCount(qList.filter((q) => q.maxChoose === 1).length)}>
-                    {qList
-                      .filter((q) => q.maxChoose === 1)
-                      .map((question) => (
-                        <div
-                          key={`${t}-${question.id}`}
-                          className={cardTileClass}
-                          onClick={() => {
-                            if (!isLocked) openModal(question);
-                          }}
-                        >
-                          {question.type === 'player' ? (
-                            <PlayerQuestionCard question={question} />
-                          ) : (
-                            <>
-                              <h3 className="w-full text-left text-[15px] font-semibold mb-2 text-gray-200">
-                                {question.question}
-                              </h3>
-                              <hr className="w-full border-t border-gray-700 my-3" />
-                              <div className="w-full">
-                                {predictions[question.id]?.length > 0 ? (
-                                  <div
-                                    className={`grid ${getGridColsClass(
-                                      question.maxChoose
-                                    )} gap-4 w-full items-center justify-center`}
-                                  >
-                                    {predictions[question.id].map((team) => {
-                                      const selectedTeam = resolvePickToOption(question, team);
-                                      return selectedTeam ? (
-                                        <StaticOptionTile
-                                          key={team}
-                                          option={selectedTeam}
-                                          correctness={isOptionCorrect(question.id, selectedTeam)}
-                                        />
-                                      ) : null;
-                                    })}
-                                  </div>
-                                ) : (
-                                  <div className="w-full flex items-center justify-center">
-                                    <p className="text-gray-400 italic">Ấn vào đây để chọn</p>
-                                  </div>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* maxChoose === 2 */}
-                  <div className={gridClassForCount(qList.filter((q) => q.maxChoose === 2).length)}>
-                    {qList
-                      .filter((q) => q.maxChoose === 2)
-                      .map((question) => (
-                        <div
-                          key={`${t}-${question.id}`}
-                          className={cardTileClass}
-                          onClick={() => {
-                            if (!isLocked) {
-                              openModal(question);
-                            }
-                          }}
-                        >
-                          {question.type === 'player' ? (
-                            <PlayerQuestionCard question={question} />
-                          ) : (
-                            <>
-                              <h3 className="w-full text-left text-[15px] font-semibold mb-2 text-gray-200">
-                                {question.question}
-                              </h3>
-                              <hr className="w-full border-t border-gray-700 my-3" />
-                              <div className="w-full">
-                                {predictions[question.id]?.length > 0 ? (
-                                  <div
-                                    className={`grid ${getGridColsClass(
-                                      question.maxChoose
-                                    )} gap-4 w-full items-center justify-center`}
-                                  >
-                                    {predictions[question.id].map((team) => {
-                                      const selectedTeam = resolvePickToOption(question, team);
-                                      return selectedTeam ? (
-                                        <StaticOptionTile
-                                          key={team}
-                                          option={selectedTeam}
-                                          correctness={isOptionCorrect(question.id, selectedTeam)}
-                                        />
-                                      ) : null;
-                                    })}
-                                  </div>
-                                ) : (
-                                  <div className="w-full flex items-center justify-center">
-                                    <p className="text-gray-400 italic">Ấn vào đây để chọn</p>
-                                  </div>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* maxChoose > 2 */}
-                  <div className={gridClassForCount(qList.filter((q) => q.maxChoose > 2).length)}>
-                    {qList
-                      .filter((q) => q.maxChoose > 2)
-                      .map((question) => (
-                        <div
-                          key={`${t}-${question.id}`}
-                          className={cardTileClass}
-                          onClick={() => {
-                            if (!isLocked) {
-                              openModal(question);
-                            }
-                          }}
-                        >
-                          {question.type === 'player' ? (
-                            <PlayerQuestionCard question={question} />
-                          ) : (
-                            <>
-                              <h3 className="w-full text-left text-[15px] font-semibold mb-2 text-gray-200">
-                                {question.question}
-                              </h3>
-                              <hr className="w-full border-t border-gray-700 my-3" />
-                              <div className="w-full">
-                                {predictions[question.id]?.length > 0 ? (
-                                  <div
-                                    className={`grid ${getGridColsClass(
-                                      question.maxChoose
-                                    )} gap-4 w-full items-center justify-center`}
-                                  >
-                                    {predictions[question.id].map((team) => {
-                                      const selectedTeam = resolvePickToOption(question, team);
-                                      return selectedTeam ? (
-                                        <StaticOptionTile
-                                          key={team}
-                                          option={selectedTeam}
-                                          correctness={isOptionCorrect(question.id, selectedTeam)}
-                                        />
-                                      ) : null;
-                                    })}
-                                  </div>
-                                ) : (
-                                  <div className="w-full flex items-center justify-center">
-                                    <p className="text-gray-400 italic">Ấn vào đây để chọn</p>
-                                  </div>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </form>
-      </div>
-
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        contentLabel="Select Teams"
-        className="bg-[#0f0f10] text-white border border-gray-700 lg:p-8 p-3 rounded-lg shadow-xl max-w-7xl xl:mx-auto mx-2 mt-14 z-[10000] relative lg:mt-10"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[9999]"
-        ariaHideApp={false}
-        shouldCloseOnOverlayClick={true} // Cho phép đóng khi nhấp vào vùng ngoài
-      >
-        <h2 className="text-lg font-semibold mb-4">{currentQuestion?.question}</h2>
-
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          placeholder="Tìm đội hoặc người chơi"
-          className="mb-4 p-2 w-full border bg-[#1c1c1e] text-white placeholder-gray-400 border-gray-700 rounded-lg"
-        />
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto max-h-[300px] lg:max-h-[380px] p-2">
-          {currentQuestion?.type === 'single_eli_bracket' && currentQuestion?.bracket_id ? (
-            <div className="col-span-2 sm:col-span-3 lg:col-span-4">
-              <PickemBracket
-                bracket_id={currentQuestion.bracket_id}
-                league_id={league_id}
-                questionId={currentQuestion.id}
-                userId={me?._id || currentUser?._id}
-                apiBase={import.meta.env?.VITE_API_BASE || 'http://localhost:3000'}
-              />
+              })}
             </div>
-          ) : (
-            filteredOptions?.map((option) => {
-              const selected = isOptionSelected(currentQuestion, option, tempSelection);
-              const correctness = selected
-                ? isOptionCorrect(currentQuestion?.id, option)
-                : 'unknown';
-              const disabled =
-                currentQuestion.maxChoose > 1 &&
-                tempSelection.length >= currentQuestion.maxChoose &&
-                !selected;
-              return (
-                <motion.button
-                  key={option.name}
-                  type="button"
-                  onClick={() => handleTeamSelection(option)}
-                  className={`w-full h-[88px] rounded-xl border transition-colors duration-150 flex items-center justify-start px-5 gap-4 shadow-sm
+          </form>
+        </div>
+
+        <Modal
+          isOpen={isModalOpen}
+          onRequestClose={closeModal}
+          contentLabel="Select Teams"
+          className="bg-[#0f0f10] text-white border border-gray-700 lg:p-8 p-3 rounded-lg shadow-xl max-w-7xl xl:mx-auto mx-2 mt-14 z-[10000] relative lg:mt-10"
+          overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[9999]"
+          ariaHideApp={false}
+          shouldCloseOnOverlayClick={true} // Cho phép đóng khi nhấp vào vùng ngoài
+        >
+          <h2 className="text-lg font-semibold mb-4">{currentQuestion?.question}</h2>
+
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            placeholder="Tìm đội hoặc người chơi"
+            className="mb-4 p-2 w-full border bg-[#1c1c1e] text-white placeholder-gray-400 border-gray-700 rounded-lg"
+          />
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto max-h-[300px] lg:max-h-[380px] p-2">
+            {currentQuestion?.type === 'single_eli_bracket' && currentQuestion?.bracket_id ? (
+              <div className="col-span-2 sm:col-span-3 lg:col-span-4">
+                <PickemBracket
+                  bracket_id={currentQuestion.bracket_id}
+                  league_id={league_id}
+                  questionId={currentQuestion.id}
+                  userId={me?._id || currentUser?._id}
+                  apiBase={import.meta.env?.VITE_API_BASE || 'http://localhost:3000'}
+                />
+              </div>
+            ) : (
+              filteredOptions?.map((option) => {
+                const selected = isOptionSelected(currentQuestion, option, tempSelection);
+                const correctness = selected
+                  ? isOptionCorrect(currentQuestion?.id, option)
+                  : 'unknown';
+                const disabled =
+                  currentQuestion.maxChoose > 1 &&
+                  tempSelection.length >= currentQuestion.maxChoose &&
+                  !selected;
+                const isChamp = currentQuestion?.type === 'lol_champ';
+                const champKey = option?.img || option?.name;
+                const optionImgSrc = isChamp
+                  ? `https://ddragon.leagueoflegends.com/cdn/15.20.1/img/champion/${encodeURIComponent(
+                      champKey || ''
+                    )}.png`
+                  : option?.img
+                  ? `https://drive.google.com/thumbnail?id=${option.img}`
+                  : '';
+                return (
+                  <motion.button
+                    key={option.name}
+                    type="button"
+                    onClick={() => handleTeamSelection(option)}
+                    className={`w-full h-[88px] rounded-xl border transition-colors duration-150 flex items-center justify-start px-5 gap-4 shadow-sm
                   ${
                     selected
-                      ? 'border-blue-500 ring-2 ring-blue-400/40 bg-[#1a1b1e]'
+                      ? 'border-gray-700 ring-2 ring-blue-400/40 bg-[#1a1b1e]'
                       : 'border-gray-700 bg-[#151619] hover:bg-[#1b1c20] hover:border-blue-400/60'
                   }
                   ${selected && correctness === 'correct' ? ' bg-green-900/20' : ''}
                   ${selected && correctness === 'wrong' ? ' bg-red-900/20' : ''}
                   ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
-                  whileHover={{ scale: disabled ? 1 : 1.02 }}
-                  whileTap={{ scale: disabled ? 1 : 0.98 }}
-                  disabled={disabled}
-                >
-                  {option.img && (
-                    <img
-                      src={`https://drive.google.com/thumbnail?id=${option.img}`}
-                      alt={option.name}
-                      className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
-                    />
-                  )}
-                  <span className="text-white font-extrabold uppercase tracking-wide text-base sm:text-lg">
-                    {option.shortName || option.name}
-                  </span>
-                </motion.button>
-              );
-            })
-          )}
-        </div>
-
-        {tempSelection.length === currentQuestion?.maxChoose && (
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={confirmSelection}
-              className="bg-accent text-white px-4 py-3 rounded-lg"
-            >
-              Xác nhận & Gửi
-            </button>
+                    whileHover={{ scale: disabled ? 1 : 1.02 }}
+                    whileTap={{ scale: disabled ? 1 : 0.98 }}
+                    disabled={disabled}
+                  >
+                    {optionImgSrc && (
+                      <img
+                        src={optionImgSrc}
+                        alt={option.name}
+                        className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
+                      />
+                    )}
+                    <span className="text-white font-extrabold uppercase tracking-wide text-base sm:text-lg">
+                      {option.shortName || option.name}
+                    </span>
+                  </motion.button>
+                );
+              })
+            )}
           </div>
-        )}
-      </Modal>
+
+          {tempSelection.length === currentQuestion?.maxChoose && (
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={confirmSelection}
+                className="bg-accent text-white px-4 py-3 rounded-lg"
+              >
+                Xác nhận & Gửi
+              </button>
+            </div>
+          )}
+        </Modal>
+      </div>
     </>
   );
 };

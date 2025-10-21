@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import MyNavbar2 from '../components/Navbar2';
+import LeagueHeader from '../components/header';
+import { useLeagueData } from '../hooks/useLeagueData';
 import { Line } from 'react-chartjs-2';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import 'chart.js/auto';
@@ -11,6 +14,9 @@ Chart.register(annotationPlugin);
 
 const LeaderboardComponent = () => {
   const { currentUser } = useSelector((state) => state.user);
+  const { league_id } = useParams();
+  // League header data (same header as pickem page)
+  const { league, startTime, me } = useLeagueData('aov', league_id, currentUser);
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [rankedLeaderboardData, setRankedLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +27,8 @@ const LeaderboardComponent = () => {
   const [points, setPoints] = useState([]);
   const [counts, setCounts] = useState([]);
   const [scoretop1, setScoreTop1] = useState(null);
+  // Header stats for Pick'em header (score + top%) on leaderboard page
+  const [pickemStats, setPickemStats] = useState(null);
 
   // State to store tier scores
   const [tierScores, setTierScores] = useState({
@@ -38,28 +46,6 @@ const LeaderboardComponent = () => {
     document.title = 'Bảng xếp hạng Dự đoán';
   }, []);
 
-  const navigationAll1 = {
-    aov: [
-      {
-        name: 'Đoán theo trận',
-        href: '/arenaofvalor/pickem/pickemmatch',
-        current: location.pathname === '/arenaofvalor/pickem/pickemmatch',
-      },
-      {
-        name: 'Đoán tổng thể',
-        href: '/arenaofvalor/pickem/pickemall',
-        current: location.pathname === '/arenaofvalor/pickem/pickemall',
-      },
-      {
-        name: 'Bảng xếp hạng',
-        href: '/arenaofvalor/pickem/leaderboard',
-        current: location.pathname === '/arenaofvalor/pickem/leaderboard',
-      },
-    ],
-  };
-
-  const getNavigation = () => navigationAll1.aov;
-
   const LeaderboardRow = ({
     user,
     className,
@@ -76,7 +62,9 @@ const LeaderboardComponent = () => {
       <td className={`px-4 py-3 text-left w-[10%] ${isSticky ? '' : 'first:border-0'}`}>
         <div className="flex items-center justify-center">
           <span
-            className={`text-[12px] font-semibold md:text-[14px] ${highlightUser ? 'text-primary' : ''}`}
+            className={`text-[12px] font-semibold md:text-[14px] ${
+              highlightUser ? 'text-primary' : ''
+            }`}
             style={highlightUser ? { color: tierColor } : {}}
           >
             {user.rank}
@@ -92,18 +80,31 @@ const LeaderboardComponent = () => {
               alt={`${user.name}'s avatar`}
             />
           </div>
-          <span
-            className={`text-[12px] font-semibold md:text-[14px] ${highlightUser ? 'text-primary' : ''}`}
-            style={highlightUser ? { color: tierColor } : {}}
-          >
-            {user.name}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-[12px] font-semibold md:text-[14px] ${
+                highlightUser ? 'text-primary' : ''
+              }`}
+              style={highlightUser ? { color: tierColor } : {}}
+            >
+              {user.name}
+            </span>
+            {user.logoTeam && (
+              <img
+                className="h-10 w-10 object-contain ml-5"
+                src={`https://drive.google.com/thumbnail?id=${user.logoTeam}`}
+                alt={`${user.team || 'team'} logo`}
+              />
+            )}
+          </div>
         </div>
       </td>
       <td className="py-3 px-6 text-center lg:w-[25%] w-[32%]">
         <div className="flex items-center justify-center">
           <span
-            className={`text-[12px] font-semibold md:text-[16px] ${highlightUser ? 'text-primary' : ''}`}
+            className={`text-[12px] font-semibold md:text-[16px] ${
+              highlightUser ? 'text-primary' : ''
+            }`}
             style={highlightUser ? { color: tierColor } : {}}
           >
             {user.score} PTS
@@ -117,41 +118,50 @@ const LeaderboardComponent = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const API_BASE = import.meta.env?.VITE_API_BASE || 'http://localhost:3000';
 
+        // 1) Fetch leaderboard (live, from PickemResponse) for this league
         const leaderboardResponse = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/leaderboardpickem',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
+          `${API_BASE}/api/auth/pickem/${league_id}/leaderboard`
         );
-
-        const maxScoreResponse = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/maxscore',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
         const leaderboardResult = await leaderboardResponse.json();
-        const maxScoreResult = await maxScoreResponse.json();
 
-        if (leaderboardResult.leaderboard && leaderboardResult.leaderboard.length > 0) {
-          const scoretop1 = leaderboardResult.leaderboard[0].score;
-          setScoreTop1(scoretop1);
-          setLeaderboardData(leaderboardResult.leaderboard);
+        // 2) Fetch questions for all game_short to compute Perfect Pick’em (totalPointAll)
+        const questionsResp = await fetch(`${API_BASE}/api/auth/all/${league_id}/question/all`);
+        const questionsJson = await questionsResp.json();
+
+        // Map leaderboard fields to UI shape
+        const rawList = Array.isArray(leaderboardResult)
+          ? leaderboardResult
+          : leaderboardResult?.leaderboard || [];
+        const mapped = (rawList || []).map((u) => ({
+          // keep raw username for identification
+          rawUsername: u.username,
+          name: u.nickname || u.username,
+          avatar: u.img || u.profilePicture || '',
+          score: Number(u.Score ?? u.score ?? 0),
+          team: u.team || '',
+          logoTeam: u.logoTeam || '',
+        }));
+
+        if (mapped.length > 0) {
+          const topScore = mapped[0].score;
+          setScoreTop1(topScore);
+          setLeaderboardData(mapped);
         } else {
-          setLeaderboardData([]); // Không có dữ liệu
+          setLeaderboardData([]);
         }
 
-        if (maxScoreResult.totalMaxPoints) {
-          SetMaxScore(maxScoreResult.totalMaxPoints);
-        }
+        const maxTotal =
+          typeof questionsJson?.totalPointAll === 'number'
+            ? questionsJson.totalPointAll
+            : Array.isArray(questionsJson?.questions)
+            ? questionsJson.questions.reduce(
+                (acc, q) => acc + (q?.score || 0) * (q?.maxChoose || 1),
+                0
+              )
+            : null;
+        if (typeof maxTotal === 'number') SetMaxScore(maxTotal);
       } catch (error) {
         setError(error.message);
       } finally {
@@ -159,8 +169,8 @@ const LeaderboardComponent = () => {
       }
     };
 
-    fetchData();
-  }, []);
+    if (league_id) fetchData();
+  }, [league_id]);
 
   useEffect(() => {
     if (leaderboardData.length > 0) {
@@ -183,9 +193,17 @@ const LeaderboardComponent = () => {
       const rankedData = calculateRanks(leaderboardData);
       setRankedLeaderboardData(rankedData);
 
-      const currentUserRank = rankedData.find((user) => user.name === currentUser.username);
+      const currentUserRank = rankedData.find(
+        (user) => user.rawUsername === currentUser?.username || user.name === currentUser?.username
+      );
       if (currentUserRank) {
         setUserRank({ ...currentUserRank });
+        const total = rankedData.length || 1;
+        const topPercent = Math.ceil((currentUserRank.rank / total) * 100);
+        setPickemStats({ score: Number(currentUserRank.score || 0), rank: currentUserRank.rank, topPercent });
+      } else {
+        // Default if user not in leaderboard yet
+        setPickemStats({ score: 0, rank: undefined, topPercent: 100 });
       }
     }
   }, [leaderboardData, currentUser]);
@@ -251,7 +269,9 @@ const LeaderboardComponent = () => {
             {tiers.map((tier, index) => (
               <tr
                 key={index}
-                className={`border-b-2 border-base-content px-4 ${tier.highlight ? 'font-semibold' : ''}`}
+                className={`border-b-2 border-base-content px-4 ${
+                  tier.highlight ? 'font-semibold' : ''
+                }`}
                 style={{
                   color: tier.highlight ? tier.color : 'inherit',
                   borderBottomColor: tier.highlight ? tier.color : 'rgba(128, 128, 128, 0.18)',
@@ -553,10 +573,19 @@ const LeaderboardComponent = () => {
   if (loading) {
     return (
       <>
-        <MyNavbar2
-          navigation={getNavigation()}
+        {/* Header like pickem page, no pickemStats here */}
+        <LeagueHeader
+          me={me}
+          league={league || { league: { name: '' }, season: {} }}
+          league_id={league_id}
+          startTime={startTime}
+          endTime={league?.season?.time_end}
+          currentUser={currentUser}
           isMenuOpen={isMenuOpen}
           setIsMenuOpen={setIsMenuOpen}
+          getNavigation={() => []}
+          MyNavbar2={MyNavbar2}
+          pickemStats={pickemStats}
         />
         <div className="flex justify-center items-center min-h-screen">
           <span className="loading loading-dots loading-lg text-primary"></span>
@@ -568,10 +597,19 @@ const LeaderboardComponent = () => {
   if (!loading && leaderboardData.length === 0) {
     return (
       <>
-        <MyNavbar2
-          navigation={getNavigation()}
+        {/* Header like pickem page, no pickemStats here */}
+        <LeagueHeader
+          me={me}
+          league={league || { league: { name: '' }, season: {} }}
+          league_id={league_id}
+          startTime={startTime}
+          endTime={league?.season?.time_end}
+          currentUser={currentUser}
           isMenuOpen={isMenuOpen}
           setIsMenuOpen={setIsMenuOpen}
+          getNavigation={() => []}
+          MyNavbar2={MyNavbar2}
+          pickemStats={pickemStats}
         />
         <div className="flex items-center min-h-screen flex-col justify-center align-center w-full text-center text-lg font-semibold text-base-content">
           <img src={Image} className="h-28 w-28 mb-10" alt="Thông báo" />
@@ -586,12 +624,21 @@ const LeaderboardComponent = () => {
 
   return (
     <>
-      <MyNavbar2
-        navigation={getNavigation()}
+      {/* Header like pickem page, no pickemStats here */}
+      <LeagueHeader
+        me={me}
+        league={league || { league: { name: '' }, season: {} }}
+        league_id={league_id}
+        startTime={startTime}
+        endTime={league?.season?.time_end}
+        currentUser={currentUser}
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
+        getNavigation={() => []}
+        MyNavbar2={MyNavbar2}
+        pickemStats={pickemStats}
       />
-      <div className="container mx-auto px-4 py-8 mt-40 mb-2">
+      <div className="container mx-auto px-4 py-8 mt-10 mb-2">
         <h2 className="text-3xl font-bold mb-6 text-center text-base-content">
           Bảng xếp hạng Pick'em Challenge
         </h2>
@@ -608,7 +655,7 @@ const LeaderboardComponent = () => {
           </div>
           <TierRewardsTable userScore={userRank ? userRank.score : 0} tierScores={tierScores} />
         </div>
-        <div className="overflow-hidden">
+        <div className="overflow-hidden mb-12">
           <table className="w-[98%] mx-auto">
             <tbody className="text-gray-600 text-sm font-light">
               {rankedLeaderboardData.slice(0, 20).map((user, index) => (
@@ -616,7 +663,10 @@ const LeaderboardComponent = () => {
                   className="last:!border-b-0"
                   key={user._id || `${user.rank}-${index}`}
                   user={user}
-                  highlightUser={user.name === currentUser.username}
+                  highlightUser={
+                    user.rawUsername === currentUser?.username ||
+                    user.name === currentUser?.username
+                  }
                 />
               ))}
             </tbody>
@@ -638,14 +688,14 @@ const LeaderboardComponent = () => {
                     userRank.score === maxScore
                       ? '#D4AF37'
                       : userRank.score >= tierScores.sTierScore
-                        ? '#ff9800'
-                        : userRank.score >= tierScores.aTierScore
-                          ? '#CC52CE'
-                          : userRank.score >= tierScores.bTierScore
-                            ? '#00bcd4'
-                            : userRank.score >= tierScores.cTierScore
-                              ? '#4caf50'
-                              : '#6A5ACD'
+                      ? '#ff9800'
+                      : userRank.score >= tierScores.aTierScore
+                      ? '#CC52CE'
+                      : userRank.score >= tierScores.bTierScore
+                      ? '#00bcd4'
+                      : userRank.score >= tierScores.cTierScore
+                      ? '#4caf50'
+                      : '#6A5ACD'
                   }
                 />
               </tbody>

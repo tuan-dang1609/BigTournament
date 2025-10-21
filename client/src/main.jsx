@@ -85,6 +85,7 @@ if (rootElement) {
             <Route path="/:game/:league_id/:round/:match/lobby" element={<ValorantLobby />} />
             <Route path="/:game/:league_id/:round/:match/match" element={<MatchStat />} />
             <Route path="/:league_id/pickem/:game" element={<PickemChallenge />} />
+            <Route path="/:league_id/pickem/leaderboard" element={<LeaderboardComponent />} />
 
             <Route
               path="*"
@@ -146,10 +147,7 @@ if (rootElement) {
                         path="/tft/registerdouble"
                         element={<TeamRegistrationTFTDoubleForm />}
                       />
-                      <Route
-                        path="/arenaofvalor/pickem/leaderboard"
-                        element={<LeaderboardComponent />}
-                      />
+
                       <Route path="/profile" element={<Profile />} />
                     </Route>
                   </Routes>

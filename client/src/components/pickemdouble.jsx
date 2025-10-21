@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // Keep the same frontend layout, but refactor data source and interactions to match pickembracket.jsx patterns
 const TournamentBracket = ({
@@ -878,89 +878,6 @@ const TournamentBracket = ({
       })}
     </div>
   );
-  const renderAdvance = (
-    team1,
-    team2,
-    hasMargin = true,
-    additionalMargin = '',
-    onTeamClick,
-    isSelected,
-    stagePrefix
-  ) => (
-    <div
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
-        hasMargin ? 'my-4' : 'mb-0'
-      } ${additionalMargin}`}
-    >
-      {[team1, team2].map((team, index) => {
-        const active = isSelected ? isSelected(team, index) : false;
-        const correctness = getCorrectness(stagePrefix, team?.name, active);
-        return (
-          <div
-            key={index}
-            onClick={() => onTeamClick && onTeamClick(team, index)}
-            className={`2xl:pl-[6px] pl-[4px] flex items-center justify-start border lg:first:mb-[268px] ${
-              active
-                ? `border-[#3d8fce] ${
-                    correctness === 'correct'
-                      ? 'bg-green-200'
-                      : correctness === 'wrong'
-                      ? 'bg-red-200'
-                      : 'bg-white'
-                  }`
-                : 'bg-white border-transparent'
-            } ${onTeamClick ? 'cursor-pointer hover:bg-gray-100' : ''}`}
-          >
-            <div className="flex items-center h-14">
-              <span className="text-black">{team?.name || ''}</span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const renderAdvance2 = (
-    team1,
-    team2,
-    hasMargin = true,
-    additionalMargin = '',
-    onTeamClick,
-    isSelected,
-    stagePrefix
-  ) => (
-    <div
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
-        hasMargin ? 'my-4' : 'mb-0'
-      } ${additionalMargin}`}
-    >
-      {[team1, team2].map((team, index) => {
-        const active = isSelected ? isSelected(team, index) : false;
-        const correctness = getCorrectness(stagePrefix, team?.name, active);
-        return (
-          <div
-            key={index}
-            onClick={() => onTeamClick && onTeamClick(team, index)}
-            className={`2xl:pl-[6px] pl-[4px] flex items-center justify-start border lg:first:mb-[108px] ${
-              active
-                ? `border-[#3d8fce] ${
-                    correctness === 'correct'
-                      ? 'bg-green-200'
-                      : correctness === 'wrong'
-                      ? 'bg-red-200'
-                      : 'bg-white'
-                  }`
-                : 'bg-white border-transparent'
-            } ${onTeamClick ? 'cursor-pointer hover:bg-gray-100' : ''}`}
-          >
-            <div className="flex items-center h-14">
-              <span className="text-black">{team?.name || ''}</span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
 
   const renderSection = (
     title,
@@ -1017,80 +934,6 @@ const TournamentBracket = ({
       </div>
     );
   };
-  const renderAdvanceSection = (
-    title,
-    matchups,
-    className = '',
-    onTeamClickFactory,
-    isSelectedFactory
-  ) => {
-    const styles = roundStyles[title] || { border: 'border-gray-300', titleBg: 'bg-[#D9D9D94D]' };
-
-    return (
-      <div
-        className={`flex flex-col  ${styles.border} overflow-hidden ${
-          title === '1W-1L' ? 'lg:mt-5' : ''
-        }`}
-      >
-        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>
-          {title}
-        </h2>
-        <div className="py-2">
-          {matchups.map((matchup, index) => (
-            <div key={index} className={className}>
-              {renderAdvance(
-                matchup[0] || {},
-                matchup[1] || {},
-                true,
-                '',
-                onTeamClickFactory ? onTeamClickFactory(index) : undefined,
-                isSelectedFactory ? isSelectedFactory(index) : undefined,
-                // LC1 stage correctness
-                title.includes('Last Chance 1') ? 'LS1' : ''
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-  const renderAdvanceSection2 = (
-    title,
-    matchups,
-    className = '',
-    onTeamClickFactory,
-    isSelectedFactory
-  ) => {
-    const styles = roundStyles[title] || { border: 'border-gray-300', titleBg: 'bg-[#D9D9D94D]' };
-
-    return (
-      <div
-        className={`flex flex-col  ${styles.border} overflow-hidden ${
-          title === '1W-1L' ? 'lg:mt-5' : ''
-        }`}
-      >
-        <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>
-          {title}
-        </h2>
-        <div className="py-2">
-          {matchups.map((matchup, index) => (
-            <div key={index} className={className}>
-              {renderAdvance2(
-                matchup[0] || {},
-                matchup[1] || {},
-                true,
-                '',
-                onTeamClickFactory ? onTeamClickFactory(index) : undefined,
-                isSelectedFactory ? isSelectedFactory(index) : undefined,
-                // LC2 stage correctness
-                title.includes('Last Chance 2') ? 'LS2' : ''
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="container mx-auto p-4 relative">
@@ -1100,58 +943,58 @@ const TournamentBracket = ({
         </div>
       ) : (
         <>
-          <div className="flex flex-col lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
-            <div className="w-full lg:w-1/4 relative">
+          <div className="flex flex-col xl:flex-row justify-between space-y-8 xl:space-y-0 xl:space-x-16 relative">
+            <div className="w-full xl:w-1/4 relative">
               <div>
                 {renderSection(
-                  'Tứ kết (BO5)',
+                  'Tứ kết ',
                   ubQF.map((m) => [m.a, m.b]),
-                  'lg:!mb-[48px] lg:last:!mb-[0px] lg:first:!mt-[10px]',
+                  'xl:!mb-[48px] xl:last:!mb-[0px] xl:first:!mt-[10px]',
                   (i) => (team, which) => onQFClick(i, which),
                   (i) => (team, which) => ubQF[i]?.winnerIndex === which
                 )}
-                <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] lg:w-[10%] bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[calc(7.9rem)] lg:left-[110%] h-[165px] w-[2.3px] bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[18.1rem] left-full h-[2px] lg:w-[10%] bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[13rem] lg:left-[110%]  h-[2px] lg:w-[10%] bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[7.9rem] left-full h-[2px] w-[10%] bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[calc(7.9rem)] left-[110%] h-[169px] w-[2.3px] bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[18.4rem] left-full h-[2px] w-[10%] bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[13.15rem] left-[110%]  h-[2px] w-[14%] bg-secondary"></div>
 
-                <div className="hidden lg:block absolute top-[28.2rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[calc(28.2rem)] lg:left-[110%] h-[165px] w-[2.3px] bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[38.4rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[33.3rem] lg:left-[110%]  h-[2px] lg:w-[10%] bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[28.7rem] left-full h-[2px] w-[10%] bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[calc(28.7rem)] left-[110%] h-[169px] w-[2.3px] bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[39.2rem] left-full h-[2px] w-[10%]  bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[33.95rem] left-[110%] h-[2px] w-[14%] bg-secondary"></div>
               </div>
             </div>
-            <div className="w-full lg:w-1/4 relative">
+            <div className="w-full xl:w-1/4 relative">
               {renderSection(
-                'Bán kết (BO5)',
+                'Bán kết ',
                 ubSF.map((m) => [m.a, m.b]),
-                'lg:!mt-[100px] last:!mb-[0px] lg:!mb-[208px]',
+                'xl:!mt-[100px] last:!mb-[0px] xl:!mb-[213px]',
                 (i) => (team, which) => onSFClick(i, which),
                 (i) => (team, which) => ubSF[i]?.winnerIndex === which
               )}
-              <div className="hidden lg:block absolute top-[13.1rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(13.1rem)] lg:left-[110%] h-[325px] w-[2.3px] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[33.3rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[23.2rem] lg:left-[110%]  h-[2px] lg:w-[10%] bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[13.3rem] left-full h-[2px] w-[10%]  bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[calc(13.3rem)] left-[110%] h-[330px] w-[2.3px] bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[33.9rem] left-full h-[2px] w-[10%]  bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[23.6rem] left-[110%] h-[2px] w-[14%] bg-secondary"></div>
             </div>
-            <div className="w-full lg:w-1/4 relative">
+            <div className="w-full xl:w-1/4 relative">
               {renderSection(
-                'Chung kết nhánh thắng (BO5)',
+                'Chung kết nhánh thắng ',
                 [[ubFinal.a, ubFinal.b]],
-                'lg:!mt-[262px] last:!mb-[0px]',
+                'xl:!mt-[266px] last:!mb-[0px]',
                 () => (team, which) => onUBFinalClick(which),
                 () => (team, which) => ubFinal?.winnerIndex === which
               )}
-              <div className="hidden lg:block absolute top-[23.2rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(23.2rem)] lg:left-[110%] h-[560px] w-[2.3px] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[58.1rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[40.0rem] lg:left-[110%]  h-[2px] lg:w-[10%] bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[23.6rem] left-full h-[2px] w-[10%]  bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[calc(23.6rem)] left-[110%] h-[560px] w-[2.3px] bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[58.5rem] left-full h-[2px] w-[10%]  bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[40.1rem] left-[110%]  h-[2px] w-[14%] bg-secondary"></div>
             </div>
-            <div className="hidden lg:block lg:w-1/4 relative">
+            <div className="hidden xl:block xl:w-1/4 relative">
               {renderSection(
                 'Chung kết tổng (BO7)',
                 [[gfFinal.a, gfFinal.b]],
-                'lg:!mt-[530px]',
+                'xl:!mt-[530px]',
                 () => (team, which) => {
                   // Only Grand Final decides 1st/2nd
                   setGfFinal((prev) => {
@@ -1172,38 +1015,38 @@ const TournamentBracket = ({
               )}
             </div>
           </div>
-          <div className="flex flex-col lg:w-[74%] lg:flex-row justify-between space-y-8 lg:space-y-0 lg:space-x-16 relative">
-            <div className="w-full lg:w-1/4 relative">
+          <div className="flex flex-col xl:w-[74%] xl:flex-row justify-between space-y-8 xl:space-y-0 xl:space-x-16 relative">
+            <div className="w-full xl:w-1/4 relative">
               <div>
                 {renderSection(
-                  'Last Chance 1 (BO5)',
+                  'Last Chance 1 ',
                   lc1.map((m) => [m.a, m.b]),
-                  'lg:!mb-[48px] lg:last:!mb-[0px] lg:first:!mt-[10px]',
+                  'xl:!mb-[48px] xl:last:!mb-[0px] xl:first:!mt-[10px]',
                   (i) => (team, which) => onLC1Click(i, which),
                   (i) => (team, which) => lc1[i]?.winnerIndex === which
                 )}
-                <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] lg:w-[29%]  bg-secondary"></div>
-                <div className="hidden lg:block absolute top-[18.1rem] left-full h-[2px] lg:w-[29%] bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[8rem] left-full h-[2px] w-[35%]  bg-secondary"></div>
+                <div className="hidden xl:block absolute top-[18.4rem] left-full h-[2px] w-[35%] bg-secondary"></div>
               </div>
             </div>
-            <div className="w-full lg:w-1/4 relative">
+            <div className="w-full xl:w-1/4 relative">
               {renderSection(
-                'Last Chance 2 (BO5)',
+                'Last Chance 2 ',
                 lc2.map((m) => [m.a, m.b]),
-                'lg:!mb-[48px] lg:last:!mb-[0px] lg:first:!mt-[10px]',
+                'xl:!mb-[48px] xl:last:!mb-[0px] xl:first:!mt-[10px]',
                 (i) => (team, which) => onLC2Click(i, which),
                 (i) => (team, which) => lc2[i]?.winnerIndex === which
               )}
-              <div className="hidden lg:block absolute top-[7.9rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[calc(7.9rem)] lg:left-[110%] h-[165.5px] w-[2.3px] bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[18.1rem] left-full h-[2px] lg:w-[10%]  bg-secondary"></div>
-              <div className="hidden lg:block absolute top-[13rem] lg:left-[110%]  h-[2px] lg:w-[19%] bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[8rem] left-full h-[2px] w-[10%]  bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[calc(8rem)] left-[110%] h-[167.5px] w-[2.3px] bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[18.4rem] left-full h-[2px] w-[10%]  bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[13.2rem] left-[110%]  h-[2px] w-[24%] bg-secondary"></div>
             </div>
-            <div className="w-full lg:w-1/4 relative">
+            <div className="w-full xl:w-1/4 relative">
               {renderSection(
-                'Tranh hạng 4 (BO5)',
+                'Tranh hạng 4 ',
                 [[{ name: getWinner(lc2[0]).name }, { name: getWinner(lc2[1]).name }]],
-                'lg:first:!mt-[98px]',
+                'xl:first:!mt-[98px]',
                 () => (team, which) => {
                   const wA = getWinner(lc2[0]).name;
                   const wB = getWinner(lc2[1]).name;
@@ -1228,13 +1071,13 @@ const TournamentBracket = ({
                   Array.isArray(placements.pos_4) &&
                   placements.pos_4.some((n) => normalize(n) === normalize(team?.name))
               )}
-              <div className="hidden lg:block absolute top-[13rem] lg:left-[100%]  h-[2px] lg:w-[29%] bg-secondary"></div>
+              <div className="hidden xl:block absolute top-[13.1rem] xl:left-[100%]  h-[2px] xl:w-[34%] bg-secondary"></div>
             </div>
-            <div className="w-full lg:w-1/4 relative">
+            <div className="w-full xl:w-1/4 relative">
               {renderSection(
-                'Trang Hạng 3 (BO5)',
+                'Trang Hạng 3 ',
                 [[{ name: getLoser(ubFinal).name }, { name: thirdCandidate }]],
-                'lg:first:!mt-[98px]',
+                'xl:first:!mt-[98px]',
                 () => (team, which) => {
                   const candA = getLoser(ubFinal).name;
                   const candB = thirdCandidate;
@@ -1254,11 +1097,11 @@ const TournamentBracket = ({
                   placements.pos_3.some((n) => normalize(n) === normalize(team?.name))
               )}
             </div>
-            <div className="w-full lg:hidden relative">
+            <div className="w-full xl:hidden relative">
               {renderSection(
                 'Chung kết Tổng (BO7)',
                 [[gfFinal.a, gfFinal.b]],
-                'lg:!mt-[500px] last:!mb-[0px]',
+                'xl:!mt-[500px] last:!mb-[0px]',
                 () => (team, which) => {
                   setGfFinal((prev) => {
                     const next = { ...prev, winnerIndex: which };

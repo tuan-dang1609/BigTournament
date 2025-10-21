@@ -21,7 +21,19 @@ const renderNavItem = (item, isMenuOpen, setIsMenuOpen) => {
       key={item.name}
       to={item.href}
       aria-current={item.current ? 'page' : undefined}
-      onClick={() => isMenuOpen && setIsMenuOpen(false)} // Đóng menu khi click trên mobile
+      onClick={(e) => {
+        // If a custom click handler is provided, prevent navigation and call it
+        if (typeof item.onClick === 'function') {
+          e.preventDefault();
+          try {
+            item.onClick(e);
+          } catch (err) {
+            console.error('Navigation onClick error:', err);
+          }
+        }
+        // Close menu on mobile
+        if (isMenuOpen) setIsMenuOpen(false);
+      }}
       className={
         item.logo
           ? 'flex flex-row p-2 font-bold text-primary gap-x-2 border-2 rounded-2xl border-primary justify-center items-center'
