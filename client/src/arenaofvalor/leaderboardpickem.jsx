@@ -200,7 +200,11 @@ const LeaderboardComponent = () => {
         setUserRank({ ...currentUserRank });
         const total = rankedData.length || 1;
         const topPercent = Math.ceil((currentUserRank.rank / total) * 100);
-        setPickemStats({ score: Number(currentUserRank.score || 0), rank: currentUserRank.rank, topPercent });
+        setPickemStats({
+          score: Number(currentUserRank.score || 0),
+          rank: currentUserRank.rank,
+          topPercent,
+        });
       } else {
         // Default if user not in leaderboard yet
         setPickemStats({ score: 0, rank: undefined, topPercent: 100 });

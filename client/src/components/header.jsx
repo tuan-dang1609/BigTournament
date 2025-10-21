@@ -263,7 +263,9 @@ const LeagueHeader = ({
                         return `Top ${bounded}%`;
                       })()}
                     </div>
-                    <div className="uppercase text-xs tracking-wide text-gray-300 mt-1">Xếp hạng</div>
+                    <div className="uppercase text-xs tracking-wide text-gray-300 mt-1">
+                      Xếp hạng
+                    </div>
                   </div>
                 </div>
               </div>

@@ -354,7 +354,11 @@ const PickemChallenge = () => {
             setPickemStats({ score: Number((apiTotalLocal ?? totalScore) || 0), rank, topPercent });
           } catch (e) {
             // Fallback: still show score, default Top 100%
-            setPickemStats({ score: Number((apiTotalLocal ?? totalScore) || 0), rank: undefined, topPercent: 100 });
+            setPickemStats({
+              score: Number((apiTotalLocal ?? totalScore) || 0),
+              rank: undefined,
+              topPercent: 100,
+            });
           }
         } else {
           // If leaderboard already fetched, still ensure score sync
