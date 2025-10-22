@@ -101,7 +101,7 @@ const TeamRegistrationForm = () => {
         const bodyjson = JSON.stringify({ usernameregister: currentUser._id });
         console.log(bodyjson);
         const response = await fetch(
-          `http://localhost:3000/api/auth/${game}/${league_id}/checkregister`,
+          `https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}/checkregister`,
           {
             method: 'POST',
             headers: {
@@ -329,7 +329,7 @@ const TeamRegistrationForm = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:3000/api/auth/register/${league_id}`,
+        `https://bigtournament-hq9n.onrender.com/api/auth/register/${league_id}`,
         formData
       );
       console.log('🔍 Final payload gửi API:', formData);

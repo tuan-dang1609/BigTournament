@@ -21,6 +21,8 @@ const LeagueHeader = ({
   const [registerPhase, setRegisterPhase] = useState('idle');
   const [joinCountdown, setJoinCountdown] = useState('');
   const [isCheckinPhase, setIsCheckinPhase] = useState(false);
+  // Track whether current user has any pick'em answers; if not (404), show Top ?
+  const [myAnswerMissing, setMyAnswerMissing] = useState(false);
   const dispatch = useDispatch();
   const handleAutoRegister = async () => {
     try {
@@ -120,6 +122,34 @@ const LeagueHeader = ({
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, [league, startTime]);
+
+  // Check if the current user has answers for this league to influence Top display
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        // Only check on Pick'em pages where pickemStats is shown
+        if (!pickemStats || !league_id || !currentUser?._id) {
+          if (!cancelled) setMyAnswerMissing(false);
+          return;
+        }
+        const base = 'https://bigtournament-hq9n.onrender.com/api/auth';
+        const url = `${base}/${league_id}/myanswer`;
+        const res = await axios.get(url, {
+          params: { userId: currentUser._id },
+          validateStatus: () => true, // we handle 404 manually
+          withCredentials: true,
+        });
+        if (!cancelled) setMyAnswerMissing(res.status === 404);
+      } catch (e) {
+        if (!cancelled) setMyAnswerMissing(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [pickemStats, league_id, currentUser?._id]);
   const currentPlayer = league?.players?.find(
     (p) => String(p.usernameregister) === String(currentUser?._id)
   );
@@ -236,6 +266,14 @@ const LeagueHeader = ({
             {/* Header right stats: only show on Pick'em pages when pickemStats is provided */}
             {pickemStats && (
               <div className="sm:absolute relative sm:right-0 sm:bottom-10 sm:mr-4 xl:mr-8 text-white font-semibold">
+                {pickemStats?.userName && (
+                  <div className="mb-2 xl:text-right text-left">
+                    <span className="uppercase text-[14px] tracking-wide text-gray-300">
+                      Đang xem:
+                    </span>
+                    <span className="ml-2 text-base font-extrabold">{pickemStats.userName}</span>
+                  </div>
+                )}
                 <div className="flex flex-row divide-x divide-gray-700 rounded-lg overflow-hidden bg-black/30 border border-gray-700">
                   {/* Score box */}
                   <div className="px-6 py-4 flex flex-col items-center justify-center min-w-[140px]">
@@ -251,6 +289,10 @@ const LeagueHeader = ({
                   <div className="px-6 py-4 flex flex-col items-center justify-center min-w-[160px]">
                     <div className="text-3xl md:text-4xl font-extrabold leading-none">
                       {(() => {
+                        // If we detected no answers for this user (404), show unknown rank
+                        if (myAnswerMissing) {
+                          return 'Top ?';
+                        }
                         const rank = Number(pickemStats?.rank);
                         if (Number.isFinite(rank) && rank > 0) {
                           return `Top ${Math.floor(rank)}`; // Show exact rank

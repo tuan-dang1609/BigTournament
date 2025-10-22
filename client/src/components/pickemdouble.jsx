@@ -9,10 +9,13 @@ const TournamentBracket = ({
   preloadedAnswers,
   correctAnswers = [],
   options = [],
-  apiBase = 'http://localhost:3000',
+  apiBase = 'https://bigtournament-hq9n.onrender.com',
+  readOnly = false,
+  viewUserId = null,
+  onDraftChange,
 }) => {
   const [teams, setTeams] = useState([[], [], [], []]);
-  const DEBUG = true;
+  const DEBUG = false; // disable all debug logging
   const [loading, setLoading] = useState(true);
   const [placements, setPlacements] = useState({
     pos_7_8: [],
@@ -49,17 +52,7 @@ const TournamentBracket = ({
   const fetchedSheetIdRef = useRef(null);
   const sheetInFlightRef = useRef(false);
   document.title = 'Playoff Liên Quân DCN: Season 2';
-  if (typeof window !== 'undefined') {
-    // One-time props dump on mount
-    // eslint-disable-next-line no-console
-    console.debug?.('[PickemDouble] PROPS:', {
-      bracket_id,
-      league_id,
-      questionId,
-      userId,
-      hasPreloaded: Array.isArray(preloadedAnswers) ? preloadedAnswers.length : 'undefined',
-    });
-  }
+  // remove verbose one-time console dumps
 
   // Correctness helpers
   const normalize = (s) => {
@@ -196,19 +189,24 @@ const TournamentBracket = ({
   };
 
   const scheduleSave = (nextPlacements) => {
+    if (readOnly) return; // disable autosave in read-only mode
     if (hydratingRef.current) return; // skip autosave while hydrating UI
     if (!league_id || typeof questionId === 'undefined' || !userId) return;
     const pl = nextPlacements ?? placements;
     const selectedOptions = toSelectedOptions(pl);
+    // FE sync: push selections up so parent can update progress immediately
+    try {
+      if (typeof onDraftChange === 'function') {
+        onDraftChange(questionId, selectedOptions);
+      }
+    } catch {}
     // Also include FE-only stage tokens for logging and rehydration
     const stageTokens = buildStageTokens();
     const selectedWithStages = Array.from(new Set([...selectedOptions, ...stageTokens]));
     const key = JSON.stringify([...selectedWithStages].sort());
     if (key === lastSavedRef.current) return;
     if (DEBUG) {
-      console.debug('[PickemDouble] scheduleSave() placements:', pl);
-      console.debug('[PickemDouble] stageTokens:', stageTokens);
-      console.debug('[PickemDouble] selectedWithStages:', selectedWithStages);
+      /* debug disabled */
     }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
@@ -282,6 +280,7 @@ const TournamentBracket = ({
     m && m.winnerIndex != null ? (m.winnerIndex === 0 ? m.b : m.a) : { name: '' };
 
   const onQFClick = (matchIdx, whichIndex) => {
+    if (readOnly) return;
     setUbQF((prev) => {
       const next = prev.map((m, i) => (i === matchIdx ? { ...m, winnerIndex: whichIndex } : m));
       // Propagate winners to UB SF, losers to LC1
@@ -312,6 +311,7 @@ const TournamentBracket = ({
   };
 
   const onSFClick = (matchIdx, whichIndex) => {
+    if (readOnly) return;
     setUbSF((prev) => {
       const next = prev.map((m, i) => (i === matchIdx ? { ...m, winnerIndex: whichIndex } : m));
       const fw1 = getWinner(next[0]).name;
@@ -335,6 +335,7 @@ const TournamentBracket = ({
   };
 
   const onUBFinalClick = (whichIndex) => {
+    if (readOnly) return;
     setUbFinal((prev) => {
       const next = { ...prev, winnerIndex: whichIndex };
       // Set Grand Final A-side (UB winner); B-side will be 3rd place winner when available
@@ -345,6 +346,7 @@ const TournamentBracket = ({
   };
 
   const onLC1Click = (matchIdx, whichIndex) => {
+    if (readOnly) return;
     setLc1((prev) => {
       const next = prev.map((m, i) => (i === matchIdx ? { ...m, winnerIndex: whichIndex } : m));
       // Update LC2 B-sides with LC1 winners if UB SF losers already known
@@ -368,6 +370,7 @@ const TournamentBracket = ({
   };
 
   const onLC2Click = (matchIdx, whichIndex) => {
+    if (readOnly) return;
     setLc2((prev) => {
       const next = prev.map((m, i) => (i === matchIdx ? { ...m, winnerIndex: whichIndex } : m));
       const lA = getLoser(next[0]).name;
@@ -406,7 +409,9 @@ const TournamentBracket = ({
         }))
       );
       setTeams(updatedTeams);
-      if (DEBUG) console.debug('[PickemDouble] Seed teams from sheet:', updatedTeams);
+      if (DEBUG) {
+        /* debug disabled */
+      }
       // Seed QF from sheet first column
       const qf = [
         createMatch(updatedTeams?.[0]?.[0]?.name, updatedTeams?.[0]?.[1]?.name),
@@ -421,7 +426,7 @@ const TournamentBracket = ({
       setLc2([createMatch('', ''), createMatch('', '')]);
       fetchedSheetIdRef.current = bracket_id;
     } catch (error) {
-      console.error('Failed to fetch teams:', error);
+      // swallow fetch errors (no console)
     } finally {
       sheetInFlightRef.current = false;
       setLoading(false);
@@ -439,30 +444,56 @@ const TournamentBracket = ({
       let norm = null;
       let usedStages = false;
       let data = null;
-      if (DEBUG) console.debug('[PickemDouble] hydrate fetching from myanswer (always)');
-      const urlBase = `${apiBase}/api/auth/${league_id}/myanswer?includeMeta=true`;
-      const url1 =
-        urlBase +
-        (typeof questionId !== 'undefined' ? `&questionId=${encodeURIComponent(questionId)}` : '') +
-        `&userId=${encodeURIComponent(userId)}`;
-      try {
-        const res1 = await fetch(url1);
-        if (res1.ok) data = await res1.json();
-      } catch {}
-      if (!data) {
+      // In read-only viewer mode, call viewer API; otherwise call myanswer
+      if (readOnly && viewUserId) {
+        // Viewer mode: fetch from viewer endpoint
+        if (DEBUG) {
+          /* debug disabled */
+        }
+        const viewerUrl = `${apiBase}/api/auth/${league_id}/pickem/${encodeURIComponent(
+          viewUserId
+        )}?includeMeta=true${
+          typeof questionId !== 'undefined' ? `&questionId=${encodeURIComponent(questionId)}` : ''
+        }&userId=${encodeURIComponent(userId)}`;
         try {
-          const res2 = await fetch(
-            urlBase +
-              (typeof questionId !== 'undefined'
-                ? `&questionId=${encodeURIComponent(questionId)}`
-                : ''),
-            { headers: { 'x-user-id': userId } }
-          );
-          if (res2.ok) data = await res2.json();
+          const res = await fetch(viewerUrl);
+          if (res.ok) data = await res.json();
+        } catch (err) {
+          // ignore viewer fetch errors
+        }
+      } else if (!readOnly) {
+        // Normal mode: fetch from myanswer
+        if (DEBUG) {
+          /* debug disabled */
+        }
+        const urlBase = `${apiBase}/api/auth/${league_id}/myanswer?includeMeta=true`;
+        const url1 =
+          urlBase +
+          (typeof questionId !== 'undefined'
+            ? `&questionId=${encodeURIComponent(questionId)}`
+            : '') +
+          `&userId=${encodeURIComponent(userId)}`;
+        try {
+          const res1 = await fetch(url1);
+          if (res1.ok) data = await res1.json();
         } catch {}
+        if (!data) {
+          try {
+            const res2 = await fetch(
+              urlBase +
+                (typeof questionId !== 'undefined'
+                  ? `&questionId=${encodeURIComponent(questionId)}`
+                  : ''),
+              { headers: { 'x-user-id': userId } }
+            );
+            if (res2.ok) data = await res2.json();
+          } catch {}
+        }
       }
       if (!data && Array.isArray(preloadedAnswers) && preloadedAnswers.length > 0) {
-        if (DEBUG) console.debug('[PickemDouble] fallback to preloadedAnswers');
+        if (DEBUG) {
+          /* debug disabled */
+        }
         const list = Array.isArray(preloadedAnswers) ? preloadedAnswers : [];
         const pl = { pos_7_8: [], pos_5_6: [], pos_4: [], pos_3: [], pos_2: [], pos_1: [] };
         list.forEach((s) => {
@@ -493,7 +524,9 @@ const TournamentBracket = ({
         norm = pl;
       }
       if (data) {
-        if (DEBUG) console.debug('[PickemDouble] myanswer data:', data);
+        if (DEBUG) {
+          /* debug disabled */
+        }
         const answers = (data?.answers || []).filter(
           (a) => Number(a?.questionId) === Number(questionId)
         );
@@ -511,7 +544,9 @@ const TournamentBracket = ({
           } else if (typeof data.logs === 'object' && data.logs.first !== undefined) {
             stageObj = data.logs;
           }
-          if (DEBUG) console.debug('[PickemDouble] stageObj from logs:', stageObj);
+          if (DEBUG) {
+            /* debug disabled */
+          }
         }
         // Fallback: nếu stageObj rỗng, thử lấy từ enriched answer (selectedStages)
         const isEmptyStages = (st) => {
@@ -521,7 +556,9 @@ const TournamentBracket = ({
         };
         if (ans.selectedBracket) {
           const sb = ans.selectedBracket || {};
-          if (DEBUG) console.debug('[PickemDouble] selectedBracket:', sb);
+          if (DEBUG) {
+            /* debug disabled */
+          }
           norm = {
             pos_7_8: sb.pos_7_8 || [],
             pos_5_6: sb.pos_5_6 || [],
@@ -533,7 +570,9 @@ const TournamentBracket = ({
           // Nếu có stages, dựng lại toàn bộ bracket theo các lựa chọn đã lưu
           let useStages = stageObj;
           if (isEmptyStages(useStages) && ans.selectedStages) {
-            if (DEBUG) console.debug('[PickemDouble] fallback to ans.selectedStages');
+            if (DEBUG) {
+              /* debug disabled */
+            }
             useStages = ans.selectedStages;
           }
           if (!isEmptyStages(useStages)) {
@@ -541,7 +580,9 @@ const TournamentBracket = ({
             usedStages = true;
           }
         } else if (Array.isArray(ans.selectedOptions)) {
-          if (DEBUG) console.debug('[PickemDouble] selectedOptions (flat):', ans.selectedOptions);
+          if (DEBUG) {
+            /* debug disabled */
+          }
           const pl = { pos_7_8: [], pos_5_6: [], pos_4: [], pos_3: [], pos_2: [], pos_1: [] };
           ans.selectedOptions.forEach((s) => {
             const [prefix, name] = String(s).split(':');
@@ -571,7 +612,9 @@ const TournamentBracket = ({
           norm = pl;
           let useStages = stageObj;
           if (isEmptyStages(useStages) && ans.selectedStages) {
-            if (DEBUG) console.debug('[PickemDouble] fallback to ans.selectedStages');
+            if (DEBUG) {
+              /* debug disabled */
+            }
             useStages = ans.selectedStages;
           }
           if (!isEmptyStages(useStages)) {
@@ -582,7 +625,9 @@ const TournamentBracket = ({
       }
       if (norm && !usedStages) {
         setPlacements(norm);
-        if (DEBUG) console.debug('[PickemDouble] set placements from norm (no stages):', norm);
+        if (DEBUG) {
+          /* debug disabled */
+        }
         const withStages = [...toSelectedOptions(norm), ...buildStageTokens()];
         lastSavedRef.current = JSON.stringify([...new Set(withStages)].sort());
       }
@@ -824,7 +869,7 @@ const TournamentBracket = ({
   useEffect(() => {
     if (!loading) hydrateFromAnswers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  }, [loading, readOnly]);
 
   // Note: We no longer auto-save on state changes to avoid unintended submits on reload.
   // Saving only occurs via explicit user interactions that call scheduleSave(newPlacements).

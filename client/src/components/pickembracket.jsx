@@ -8,7 +8,9 @@ const TournamentBracketAOV = ({
   preloadedAnswers,
   correctAnswers = [],
   options = [],
-  apiBase = 'http://localhost:3000',
+  apiBase = 'https://bigtournament-hq9n.onrender.com',
+  onDraftChange,
+  readOnly = false,
 }) => {
   const [teams, setTeams] = useState([[], [], [], []]);
   const [loading, setLoading] = useState(true);
@@ -132,8 +134,15 @@ const TournamentBracketAOV = ({
   };
 
   const scheduleSave = (nextTeams, nextWinnerIndex) => {
+    if (readOnly) return; // disable autosave in read-only mode
     if (!league_id || typeof questionId === 'undefined' || !userId) return;
     const selectedOptions = computeSelectedOptions(nextTeams, nextWinnerIndex);
+    // Immediately sync FE draft to shared cache if provided
+    try {
+      if (typeof onDraftChange === 'function') {
+        onDraftChange(questionId, selectedOptions);
+      }
+    } catch {}
     const nextKey = JSON.stringify(selectedOptions || []);
     // Skip if payload unchanged (avoid duplicate saves on same click)
     if (nextKey === lastSavedRef.current) return;
@@ -171,6 +180,7 @@ const TournamentBracketAOV = ({
   };
   // Click a team in Quarterfinals to advance it to the corresponding Semifinal slot
   const handleQuarterfinalSelection = (pairIndex, whichInPair, team) => {
+    if (readOnly) return;
     if (!team || !team.name) return; // ignore empty cells
     setTeams((prev) => {
       // If no change, skip state update and API
@@ -186,6 +196,7 @@ const TournamentBracketAOV = ({
   };
   // Click a team in Semifinals to advance it to the corresponding Final slot
   const handleSemifinalSelection = (pairIndex, whichInPair, team) => {
+    if (readOnly) return;
     if (!team || !team.name) return;
     setTeams((prev) => {
       if (prev?.[2]?.[pairIndex]?.name === team.name) return prev;
@@ -199,6 +210,7 @@ const TournamentBracketAOV = ({
   };
   // Click a team in Final to set champion (winner) visually
   const handleFinalSelection = (_pairIndex, whichInPair, team) => {
+    if (readOnly) return;
     if (!team || !team.name) return;
     if (finalWinnerIndex === whichInPair) return; // no change
     setFinalWinnerIndex(whichInPair);
@@ -231,7 +243,7 @@ const TournamentBracketAOV = ({
       );
       setTeams(updatedTeams);
     } catch (error) {
-      console.error('Failed to fetch teams:', error);
+      // swallow fetch errors to keep console clean
     } finally {
       setLoading(false);
     }

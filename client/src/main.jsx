@@ -73,6 +73,12 @@ if (rootElement) {
         <BrowserRouter>
           <Routes>
             {/* Route KHÔNG có Navbar */}
+            {/* Pick'em routes come first to avoid conflicts with generic :game/:league_id routes */}
+            <Route path="/:league_id/pickem/:type" element={<PickemChallenge />} />
+            {/* Viewer routes to see another user's pick'em (read-only) */}
+            <Route path="/:league_id/pickem/view/:userId" element={<PickemChallenge />} />
+            <Route path="/:league_id/pickem/view/:userId/:type" element={<PickemChallenge />} />
+            <Route path="/:league_id/pickem/leaderboard" element={<LeaderboardComponent />} />
             <Route
               path="/:game/:league_id/match/:teamnameA/:teamnameB/:matchid"
               element={<ValorantMatchCard />}
@@ -84,8 +90,6 @@ if (rootElement) {
             <Route path="/:game/:league_id/bracket" element={<BracketPage />} />
             <Route path="/:game/:league_id/:round/:match/lobby" element={<ValorantLobby />} />
             <Route path="/:game/:league_id/:round/:match/match" element={<MatchStat />} />
-            <Route path="/:league_id/pickem/:game" element={<PickemChallenge />} />
-            <Route path="/:league_id/pickem/leaderboard" element={<LeaderboardComponent />} />
 
             <Route
               path="*"

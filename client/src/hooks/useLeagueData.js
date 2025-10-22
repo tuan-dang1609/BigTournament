@@ -6,7 +6,6 @@ let cachedMe = null;
 let cachedMatchData = {};
 let cachedParams = { game: null, league_id: null, user_id: null };
 
-
 export const useLeagueData = (game, league_id, currentUser, round, Match) => {
   const [league, setLeague] = useState(cachedLeague);
   const [loading, setLoading] = useState(!cachedLeague);
@@ -30,22 +29,25 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
       if (game === 'val' && round && Match) {
         setLoading(true);
         try {
-          const leagueRes = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}`);
+          const leagueRes = await fetch(
+            `https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}`
+          );
           const leagueData = await leagueRes.json();
           setLeague(leagueData);
-          setStartTime(new Date(leagueData.season?.time_start || leagueData.league?.season?.time_start));
+          setStartTime(
+            new Date(leagueData.season?.time_start || leagueData.league?.season?.time_start)
+          );
           const meData = currentUser?._id
-            ? await axios.get(`https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`).then(res => res.data)
+            ? await axios
+                .get(`https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`)
+                .then((res) => res.data)
             : null;
           if (meData) setMe(meData);
-          const res = await fetch(
-            'https://bigtournament-hq9n.onrender.com/api/auth/findmatchid',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ round, Match }),
-            }
-          );
+          const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findmatchid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ round, Match }),
+          });
           if (!res.ok) throw new Error('Match API call failed');
           const matchData = await res.json();
           setMatchid(matchData.matchid);

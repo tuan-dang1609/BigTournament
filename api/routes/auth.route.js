@@ -244,6 +244,7 @@ router.get("/pickem/:league_id/leaderboard", async (req, res) => {
       const logoTeam = userHit?.team?.logoTeam || r?.user?.team?.logoTeam || "";
       const img = userHit?.profilePicture || r?.user?.team?.logoTeam || "";
       return {
+        userId: uid,
         username,
         nickname,
         team: teamName,
@@ -262,7 +263,8 @@ router.get("/pickem/:league_id/leaderboard", async (req, res) => {
 
     // Strip private fields
     const result = leaderboard.map(
-      ({ username, nickname, team, logoTeam, img, Score }) => ({
+      ({ userId, username, nickname, team, logoTeam, img, Score }) => ({
+        userId,
         username,
         nickname,
         team,
@@ -1271,6 +1273,267 @@ router.get("/:league_id/myanswer", async (req, res) => {
     return res.json(responsePayload);
   } catch (err) {
     console.error("Error in /:league_id/myanswer:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route: Lấy câu trả lời Pick'em của bất kỳ user theo league (viewer mode)
+// API: GET /:league_id/pickem/:userid
+// - Params:
+//   - league_id: id của giải đấu
+//   - userid: có thể là ObjectId (24 hex) hoặc username (string)
+// - Query (tùy chọn):
+//   - includeMeta=true|false (mặc định true): có trả kèm thông tin câu hỏi
+//   - includeLogs=true|false (mặc định true): có trả kèm logs stage cho double_eli_bracket
+//   - questionId=<number>: chỉ trả lời cho 1 câu hỏi cụ thể
+router.get("/:league_id/pickem/:userid", async (req, res) => {
+  try {
+    const { league_id, userid } = req.params;
+
+    if (!userid)
+      return res.status(400).json({ error: "Missing userid param in path" });
+
+    const includeLogsParam =
+      typeof req.query.includeLogs !== "undefined"
+        ? req.query.includeLogs
+        : req.body?.includeLogs;
+    const includeLogs =
+      includeLogsParam === true ||
+      includeLogsParam === "true" ||
+      includeLogsParam === undefined;
+
+    const rawQid =
+      typeof req.query.questionId !== "undefined"
+        ? req.query.questionId
+        : req.body?.questionId;
+    const questionIdFilter =
+      typeof rawQid !== "undefined" ? Number(rawQid) : undefined;
+
+    const pickemResDoc = await PickemResponse.findOne({ league_id });
+    if (!pickemResDoc)
+      return res.status(404).json({ error: "No responses for league" });
+
+    // userId trong doc có thể lưu là ObjectId string hoặc username string
+    const userRes = pickemResDoc.responses.find(
+      (r) => String(r.userId) === String(userid)
+    );
+    if (!userRes)
+      return res.status(404).json({ error: "No answers found for this user" });
+
+    // Xây user object: ưu tiên subdoc đã lưu, nếu thiếu thì thử resolve
+    let userObj = userRes.user;
+    if (!userObj) {
+      try {
+        let lookupUser = null;
+        if (/^[0-9a-fA-F]{24}$/.test(String(userid))) {
+          lookupUser = await User.findById(userid).select("-password");
+        } else {
+          lookupUser = await User.findOne({ username: userid }).select(
+            "-password"
+          );
+        }
+        if (lookupUser) {
+          userObj = {
+            id: String(lookupUser._id),
+            nickname: lookupUser.nickname,
+            team: lookupUser.team || undefined,
+          };
+        }
+      } catch (err) {
+        userObj = { id: String(userid) };
+      }
+    }
+
+    const includeMeta = req.query.includeMeta !== "false";
+    if (!includeMeta) {
+      const base = {
+        league_id,
+        userId: userid,
+        user: userObj,
+        totalScore: userRes.totalScore || 0,
+        answers: userRes.answers || [],
+      };
+      if (includeLogs) {
+        const logs = Array.isArray(userRes.logs) ? userRes.logs : [];
+        const latestByQ = new Map();
+        const emptyStages = {
+          qf: [],
+          sf: [],
+          uf: [],
+          ls1: [],
+          ls2: [],
+          fourth: [],
+          third: [],
+          second: [],
+          first: [],
+        };
+        const countTokens = (st) =>
+          (st.qf?.length || 0) +
+          (st.sf?.length || 0) +
+          (st.uf?.length || 0) +
+          (st.ls1?.length || 0) +
+          (st.ls2?.length || 0) +
+          (st.fourth?.length || 0) +
+          (st.third?.length || 0) +
+          (st.second?.length || 0) +
+          (st.first?.length || 0);
+        for (const l of logs) {
+          const key = Number(l.questionId);
+          const ts = new Date(l.updatedAt || l.createdAt || 0).getTime();
+          const stages = l.stages || l.selectedStages || emptyStages;
+          const tokens = countTokens(stages);
+          const current = latestByQ.get(key);
+          if (!current) {
+            latestByQ.set(key, {
+              _ts: ts,
+              _tokens: tokens,
+              questionId: key,
+              stages,
+            });
+          } else if (
+            tokens > current._tokens ||
+            (tokens === current._tokens && ts > current._ts)
+          ) {
+            latestByQ.set(key, {
+              _ts: ts,
+              _tokens: tokens,
+              questionId: key,
+              stages,
+            });
+          }
+        }
+        if (typeof questionIdFilter === "number") {
+          const entry = latestByQ.get(questionIdFilter);
+          return res.json({
+            ...base,
+            logs: entry ? entry.stages : emptyStages,
+          });
+        }
+        const latestArr = Array.from(latestByQ.values()).map(
+          ({ _ts, _tokens, ...rest }) => rest
+        );
+        return res.json({ ...base, logs: latestArr });
+      }
+      return res.json(base);
+    }
+
+    // includeMeta = true -> enrich answers with question metadata
+    const pickemDoc = await PickemChallenge.findOne({ league_id });
+    const enriched = (userRes.answers || []).map((ans) => {
+      const ques = pickemDoc?.questions?.find((q) => q.id === ans.questionId);
+      const base = {
+        questionId: ans.questionId,
+        selectedOptions: ans.selectedOptions,
+        openTime: ans.openTime,
+        closeTime: ans.closeTime,
+        question: ques?.question,
+        type: ques?.type,
+        maxChoose: ques?.maxChoose,
+        score: ques?.score,
+        options: ques?.options || [],
+      };
+      if (ques?.type === "single_eli_bracket") {
+        return {
+          ...base,
+          selectedBracket: deserializeFlatArrayToBracketObject(
+            ans.selectedOptions || []
+          ),
+        };
+      } else if (ques?.type === "double_eli_bracket") {
+        const bracketObj = deserializeFlatArrayToDoubleBracketObject(
+          ans.selectedOptions || []
+        );
+        const stages = deserializeDoubleStageTokens(ans.selectedOptions || []);
+        // Backfill podium
+        stages.first =
+          stages.first && stages.first.length
+            ? stages.first
+            : bracketObj.pos_1 || [];
+        stages.second =
+          stages.second && stages.second.length
+            ? stages.second
+            : bracketObj.pos_2 || [];
+        stages.third =
+          stages.third && stages.third.length
+            ? stages.third
+            : bracketObj.pos_3 || [];
+        stages.fourth =
+          stages.fourth && stages.fourth.length
+            ? stages.fourth
+            : bracketObj.pos_4 || [];
+        return { ...base, selectedBracket: bracketObj, selectedStages: stages };
+      }
+      return base;
+    });
+
+    const responsePayload = {
+      league_id,
+      userId: userid,
+      user: userObj,
+      totalScore: userRes.totalScore || 0,
+      answers: enriched,
+    };
+    if (includeLogs) {
+      const logs = Array.isArray(userRes.logs) ? userRes.logs : [];
+      const latestByQ = new Map();
+      const emptyStages = {
+        qf: [],
+        sf: [],
+        uf: [],
+        ls1: [],
+        ls2: [],
+        fourth: [],
+        third: [],
+        second: [],
+        first: [],
+      };
+      const countTokens = (st) =>
+        (st.qf?.length || 0) +
+        (st.sf?.length || 0) +
+        (st.uf?.length || 0) +
+        (st.ls1?.length || 0) +
+        (st.ls2?.length || 0) +
+        (st.fourth?.length || 0) +
+        (st.third?.length || 0) +
+        (st.second?.length || 0) +
+        (st.first?.length || 0);
+      for (const l of logs) {
+        const key = Number(l.questionId);
+        const ts = new Date(l.updatedAt || l.createdAt || 0).getTime();
+        const stages = l.stages || l.selectedStages || emptyStages;
+        const tokens = countTokens(stages);
+        const current = latestByQ.get(key);
+        if (!current) {
+          latestByQ.set(key, {
+            _ts: ts,
+            _tokens: tokens,
+            questionId: key,
+            stages,
+          });
+        } else if (
+          tokens > current._tokens ||
+          (tokens === current._tokens && ts > current._ts)
+        ) {
+          latestByQ.set(key, {
+            _ts: ts,
+            _tokens: tokens,
+            questionId: key,
+            stages,
+          });
+        }
+      }
+      if (typeof questionIdFilter === "number") {
+        const entry = latestByQ.get(questionIdFilter);
+        responsePayload.logs = entry ? entry.stages : emptyStages;
+      } else {
+        responsePayload.logs = Array.from(latestByQ.values()).map(
+          ({ _ts, _tokens, ...rest }) => rest
+        );
+      }
+    }
+    return res.json(responsePayload);
+  } catch (err) {
+    console.error("Error in /:league_id/pickem/:userid:", err);
     res.status(500).json({ error: err.message });
   }
 });

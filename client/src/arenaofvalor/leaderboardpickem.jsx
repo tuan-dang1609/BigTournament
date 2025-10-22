@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import MyNavbar2 from '../components/Navbar2';
 import LeagueHeader from '../components/header';
 import { useLeagueData } from '../hooks/useLeagueData';
@@ -15,6 +15,7 @@ Chart.register(annotationPlugin);
 const LeaderboardComponent = () => {
   const { currentUser } = useSelector((state) => state.user);
   const { league_id } = useParams();
+  const [lastGame, setLastGame] = useState('aov');
   // League header data (same header as pickem page)
   const { league, startTime, me } = useLeagueData('aov', league_id, currentUser);
   const [leaderboardData, setLeaderboardData] = useState([]);
@@ -44,6 +45,10 @@ const LeaderboardComponent = () => {
     };
     setTimeout(scrollToTop, 0);
     document.title = 'Bảng xếp hạng Dự đoán';
+    try {
+      const g = typeof window !== 'undefined' ? localStorage.getItem('pickem:lastGame') : null;
+      if (g) setLastGame(g);
+    } catch {}
   }, []);
 
   const LeaderboardRow = ({
@@ -100,7 +105,7 @@ const LeaderboardComponent = () => {
         </div>
       </td>
       <td className="py-3 px-6 text-center lg:w-[25%] w-[32%]">
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-3">
           <span
             className={`text-[12px] font-semibold md:text-[16px] ${
               highlightUser ? 'text-primary' : ''
@@ -109,6 +114,30 @@ const LeaderboardComponent = () => {
           >
             {user.score} PTS
           </span>
+          {/* View pick'em of this user (read-only) - hide for current user */}
+          {!highlightUser && (
+            <Link
+              to={`/${league_id}/pickem/view/${encodeURIComponent(
+                user.userId || user.rawUsername || user.name
+              )}/${
+                (typeof window !== 'undefined' && localStorage.getItem('pickem:lastType')) ||
+                'bracket'
+              }`}
+              className="inline-flex items-center justify-center hover:opacity-80"
+              aria-label="Xem Pick'em"
+              title="Xem Pick'em"
+            >
+              {/* Eye icon (inline SVG) */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-5 h-5 md:w-6 md:h-6"
+              >
+                <path d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-2.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" />
+              </svg>
+            </Link>
+          )}
         </div>
       </td>
     </tr>
@@ -118,7 +147,8 @@ const LeaderboardComponent = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const API_BASE = import.meta.env?.VITE_API_BASE || 'http://localhost:3000';
+        const API_BASE =
+          import.meta.env?.VITE_API_BASE || 'https://bigtournament-hq9n.onrender.com';
 
         // 1) Fetch leaderboard (live, from PickemResponse) for this league
         const leaderboardResponse = await fetch(
@@ -135,6 +165,7 @@ const LeaderboardComponent = () => {
           ? leaderboardResult
           : leaderboardResult?.leaderboard || [];
         const mapped = (rawList || []).map((u) => ({
+          userId: u.userId,
           // keep raw username for identification
           rawUsername: u.username,
           name: u.nickname || u.username,
@@ -194,7 +225,10 @@ const LeaderboardComponent = () => {
       setRankedLeaderboardData(rankedData);
 
       const currentUserRank = rankedData.find(
-        (user) => user.rawUsername === currentUser?.username || user.name === currentUser?.username
+        (user) =>
+          user.userId === currentUser?._id ||
+          user.rawUsername === currentUser?.username ||
+          user.name === currentUser?.username
       );
       if (currentUserRank) {
         setUserRank({ ...currentUserRank });
@@ -642,7 +676,18 @@ const LeaderboardComponent = () => {
         MyNavbar2={MyNavbar2}
         pickemStats={pickemStats}
       />
-      <div className="container mx-auto px-4 py-8 mt-10 mb-2">
+      {/* Link back to play picks (pickem) */}
+      <div className="container mx-auto px-4 mt-6 flex justify-end">
+        <Link
+          to={`/${league_id}/pickem/${
+            (typeof window !== 'undefined' && localStorage.getItem('pickem:lastType')) || 'bracket'
+          }`}
+          className="inline-flex items-center justify-center bg-white text-black border border-black rounded-md px-5 py-2 font-extrabold uppercase tracking-wide hover:bg-gray-100 active:scale-[.98] transition"
+        >
+          PLAY CRYSTAL BALL
+        </Link>
+      </div>
+      <div className="container mx-auto px-4 py-8 mt-6 mb-2">
         <h2 className="text-3xl font-bold mb-6 text-center text-base-content">
           Bảng xếp hạng Pick'em Challenge
         </h2>
@@ -668,6 +713,7 @@ const LeaderboardComponent = () => {
                   key={user._id || `${user.rank}-${index}`}
                   user={user}
                   highlightUser={
+                    user.userId === currentUser?._id ||
                     user.rawUsername === currentUser?.username ||
                     user.name === currentUser?.username
                   }
