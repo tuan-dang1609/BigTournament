@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { signOut } from '../../redux/user/userSlice.js';
@@ -18,6 +18,11 @@ const LeagueHeader = ({
   // Optional: show pick'em stats (only provided by pickem.jsx pages)
   pickemStats,
 }) => {
+  const { pathname } = useLocation();
+  // Hide CTAs on Pick'em viewer and bracket pages:
+  // "/:league_id/pickem/view/:userId", "/:league_id/pickem/view/:userId/:type"
+  // and "/:league_id/pickem/bracket"
+  const hidePickemCTAs = pathname.includes('/pickem/view/') || pathname.includes('/pickem/bracket');
   const [registerPhase, setRegisterPhase] = useState('idle');
   const [joinCountdown, setJoinCountdown] = useState('');
   const [isCheckinPhase, setIsCheckinPhase] = useState(false);
@@ -337,11 +342,15 @@ const LeagueHeader = ({
 
             {registerPhase === 'during' && (
               <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
-                <div className="mb-2 sm:mt-0 mt-12">
-                  Thời gian còn lại: <span className="text-orange-500">{joinCountdown}</span>
-                </div>
+                {/* Hide countdown on Pick'em viewer/bracket pages */}
+                {hidePickemCTAs ? null : (
+                  <div className="mb-2 sm:mt-0 mt-12">
+                    Thời gian còn lại: <span className="text-orange-500">{joinCountdown}</span>
+                  </div>
+                )}
 
-                {!currentUser ? (
+                {/* Hide CTA buttons on Pick'em viewer/bracket pages */}
+                {hidePickemCTAs ? null : !currentUser ? (
                   <Link to="/signin">
                     <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
                       Đăng nhập để tham gia

@@ -109,7 +109,6 @@ if (rootElement) {
                     <Route path="/valorant/test/createbanpick" element={<CreateMatch />} />
                     <Route path="/match/:matchId/:role" element={<MatchInterface />} />
                     <Route path="/valorant/test/special" element={<TournamentBracketLOL />} />
-
                     <Route path="/valorant/inputmatch" element={<Inputmatchid />} />
                     <Route path="/valorant/swissstage" element={<SwissStage />} />
                     <Route path="/test/valorant/doubleup" element={<PlayoffValo />} />
