@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 // Define optionSchema for each option in the question
 const optionSchema = new Schema({
   name: { type: String, required: true },
-  img: { type: String, required: true },
+  img: { type: String },
   // Optional team short code (e.g., HLE, TES). Present for team-based questions.
   shortName: { type: String, required: false, default: "" },
 });

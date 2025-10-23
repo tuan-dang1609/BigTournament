@@ -490,7 +490,8 @@ router.post("/:league_id/addquestion", async (req, res) => {
       // Tạo options cho từng câu hỏi
       let options = [];
       if (q.type === "player") {
-        // ...existing code...
+        // Build player options by taking User.profilePicture, fallback to default image id if user not found
+        const DEFAULT_IMG = "1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L";
         const gameShort = q.game_short || q.game;
         let players = leagueDoc.players;
         if (gameShort) {
@@ -501,11 +502,31 @@ router.post("/:league_id/addquestion", async (req, res) => {
               p.game === leagueDoc.league.game_short
           );
         }
-        players.forEach((player) => {
+        // Resolve profile pictures per player (by usernameregister)
+        const LEGACY_DEFAULT_IMG = "1VaB3F9rNKhn4Vfrm4oUq9QaGoINQ6Deg";
+        for (const player of players) {
+          let img = DEFAULT_IMG;
+          try {
+            if (player?.usernameregister) {
+              const userDoc = await User.findById(
+                player.usernameregister
+              ).select("profilePicture");
+              const candidate = (userDoc?.profilePicture || "").trim();
+              // If no image or legacy default image, fall back to the new DEFAULT_IMG
+              img =
+                !candidate || candidate === LEGACY_DEFAULT_IMG
+                  ? DEFAULT_IMG
+                  : candidate;
+            }
+          } catch (e) {
+            img = DEFAULT_IMG;
+          }
           (player.ign || []).forEach((ign) => {
-            options.push({ name: ign, img: player.logoUrl || "" });
+            if (typeof ign === "string" && ign.trim()) {
+              options.push({ name: ign.trim(), img });
+            }
           });
-        });
+        }
       } else if (
         q.type === "team" ||
         q.type === "bracket" ||
@@ -1705,6 +1726,38 @@ router.post("/teams/:league", findteamHOF);
 router.post("/leagues/list", findleagueHOF);
 router.post("/leagues", leagueHOF);
 router.post("/myrankpickem", getUserPickemScore);
+router.post("/:game_name/:league_id/checkregister", async (req, res) => {
+  const { game_name, league_id } = req.params;
+  const { usernameregister } = req.body;
+
+  try {
+    const game = game_name;
+
+    // ✅ Tìm đúng giải theo league_id và game TFT
+    const league = await DCNLeague.findOne({
+      "league.league_id": league_id,
+      "league.game_short": game,
+    });
+
+    if (!league) {
+      return res.status(404).json({ message: "League not found" });
+    }
+
+    // ✅ Kiểm tra xem player có trong players không
+    const player = league.players.find(
+      (p) => String(p.usernameregister) === String(usernameregister)
+    );
+
+    if (player) {
+      return res.status(200).json(player);
+    }
+
+    return res.status(404).json({ message: "Player not found in this league" });
+  } catch (error) {
+    console.error("❌ Error in /:league_id/checkregisterTFT:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 router.post("/checkregisterorz", async (req, res) => {
   try {
     const { usernameregister } = req.body; // usernameregister là currentUser._id
