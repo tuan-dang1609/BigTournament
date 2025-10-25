@@ -12,7 +12,6 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect, Fragment } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import { signOut } from '../../redux/user/userSlice.js';
 const images = import.meta.glob('../image/*.{png,jpg,jpeg,gif}');
 
@@ -23,15 +22,16 @@ function classNames(...classes) {
 export default function Example() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'forest');
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
-      await fetch('https://valosplit2-backend.vercel.app/api/auth/signout');
+      await fetch('https://bigtournament-hq9n.onrender.com/api/auth/signout', {
+        credentials: 'include',
+      });
       dispatch(signOut());
-      navigate('/arenaofvalor');
+      // Stay on the current page after sign out; no navigation
     } catch (error) {
       console.log(error);
     }
@@ -302,7 +302,7 @@ export default function Example() {
                   </Transition>
                 </Menu>
               ) : (
-                <Link to="/signin" className="btn btn-primary ml-3">
+                <Link to="/signin" state={{ from: location }} className="btn btn-primary ml-3">
                   Sign In
                 </Link>
               )}

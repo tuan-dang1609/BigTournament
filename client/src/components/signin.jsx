@@ -19,8 +19,8 @@ function LoginForm() {
   useEffect(() => {
     document.title = 'Đăng nhập';
   }, []);
-  // Check if there's a 'from' location or default to home ('/')
-  const from = location.state?.from?.pathname || '/tft/tft_set_15';
+  // Check if there's a 'from' location
+  const from = location.state?.from?.pathname;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -51,8 +51,17 @@ function LoginForm() {
 
       dispatch(signInSuccess(data));
 
-      // Navigate to the original page or default to '/'
-      navigate(from, { replace: true });
+      // Navigate back to the original page when available.
+      // Fallbacks:
+      // 1) If there's browser history, go back one step (e.g., from /signin back to the page user came from)
+      // 2) Otherwise, go to home '/'
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (error) {
       dispatch(signInFailure(error));
     }

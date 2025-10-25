@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faX } from '@fortawesome/free-solid-svg-icons';
 import { motion } from 'framer-motion';
@@ -11,6 +11,7 @@ import Modal from 'react-modal';
 import PickemBracket from '../components/pickembracket.jsx';
 import PickemDoubleBracket from '../components/pickemdouble.jsx';
 const PickemChallenge = () => {
+  const location = useLocation();
   const { currentUser } = useSelector((state) => state.user);
   const [predictions, setPredictions] = useState({});
   const [questions, setQuestions] = useState([]);
@@ -492,7 +493,11 @@ const PickemChallenge = () => {
         setLoading(false);
       }
     };
-    if (!viewerMode && !currentUser) return;
+    if (!viewerMode && !currentUser) {
+      // Not logged in in personal mode: stop loading so we can show a message prompting sign-in
+      setLoading(false);
+      return;
+    }
     if (initDoneRef.current) return; // run once per page load
     initDoneRef.current = true;
     init();
@@ -658,31 +663,83 @@ const PickemChallenge = () => {
     return 'grid grid-cols-1 gap-8';
   };
   // Static tile (outside modal) to mirror modal style
-  const StaticOptionTile = ({ option, correctness }) => (
-    <div
-      className={
-        'w-full h-[88px] rounded-xl border flex items-center justify-start px-5 gap-4 shadow-sm ' +
-        // Always show blue border for selected tiles in preview
-        'border-gray-700 ' +
-        (correctness === 'correct'
-          ? 'bg-green-900/20'
-          : correctness === 'wrong'
-          ? 'bg-red-900/20'
-          : 'bg-[#151619]')
-      }
-    >
-      {option.img && (
-        <img
-          src={`https://drive.google.com/thumbnail?id=${option.img}`}
-          alt={option.name}
-          className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
-        />
-      )}
-      <span className="text-white font-extrabold uppercase tracking-wide text-base sm:text-lg">
-        {option.shortName || option.name}
-      </span>
-    </div>
-  );
+  const StaticOptionTile = ({ option, correctness, variant, points }) => {
+    if (variant === 'swiss') {
+      const isCorrect = correctness === 'correct';
+      const isWrong = correctness === 'wrong';
+      return (
+        <div
+          className={
+            'w-full h-[88px] rounded-xl overflow-hidden border shadow-sm flex ' +
+            (isCorrect ? 'border-green-500' : isWrong ? 'border-gray-700' : 'border-gray-700')
+          }
+        >
+          {/* Content area */}
+          <div
+            className={
+              'flex-1 h-full flex items-center gap-4 px-5 transition-colors ' +
+              (isCorrect ? 'bg-[#2a2b2e]' : isWrong ? 'bg-[#1f1f22]' : 'bg-[#151619]')
+            }
+          >
+            {option.img && (
+              <img
+                src={`https://drive.google.com/thumbnail?id=${option.img}`}
+                alt={option.name}
+                className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
+              />
+            )}
+            <span className="text-white font-extrabold uppercase tracking-wide text-base sm:text-lg">
+              {option.shortName || option.name}
+            </span>
+          </div>
+          {/* Status strip */}
+          <div
+            className={
+              'w-16 h-full flex flex-col items-center justify-center gap-2 ' +
+              (isCorrect ? 'bg-green-500' : isWrong ? 'bg-red-600' : 'bg-gray-700')
+            }
+            aria-label={isCorrect ? 'Đúng' : isWrong ? 'Sai' : 'Chưa xác định'}
+          >
+            {isCorrect ? (
+              <FontAwesomeIcon icon={faCheck} className="h-5 w-5 text-black" />
+            ) : isWrong ? (
+              <FontAwesomeIcon icon={faX} className="h-5 w-5 text-white" />
+            ) : null}
+            {isCorrect && (
+              <span className="inline-flex items-center justify-center rounded-full bg-green-600 text-white text-xs font-extrabold px-2 py-0.5 border border-white/80">
+                +{Number(points || 0)}
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    }
+    // Default non-swiss tile
+    return (
+      <div
+        className={
+          'w-full h-[88px] rounded-xl border flex items-center justify-start px-5 gap-4 shadow-sm ' +
+          'border-gray-700 ' +
+          (correctness === 'correct'
+            ? 'bg-green-900/20'
+            : correctness === 'wrong'
+            ? 'bg-red-900/20'
+            : 'bg-[#151619]')
+        }
+      >
+        {option.img && (
+          <img
+            src={`https://drive.google.com/thumbnail?id=${option.img}`}
+            alt={option.name}
+            className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
+          />
+        )}
+        <span className="text-white font-extrabold uppercase tracking-wide text-base sm:text-lg">
+          {option.shortName || option.name}
+        </span>
+      </div>
+    );
+  };
   // Player-style card content (image top, overlay name, question text, PTS badge)
   const PlayerQuestionCard = ({ question }) => {
     const selectedKeys = predictions[question.id] || [];
@@ -888,6 +945,17 @@ const PickemChallenge = () => {
         pickemStats={pickemStats}
       />
       <div className="xl:w-[1408px] w-full mx-auto">
+        {/* Prompt to sign in when not logged in (personal mode only) */}
+        {!viewerMode && (!currentUser || !currentUser?._id) && (
+          <div className="px-4 lg:px-8 mt-6">
+            <div className="bg-yellow-100 border border-yellow-300 text-yellow-900 rounded-md px-4 py-3">
+              Vui lòng đăng nhập để chơi Pick'em Challenge.{' '}
+              <Link to="/signin" state={{ from: location }} className="underline font-bold">
+                Đăng nhập
+              </Link>
+            </div>
+          </div>
+        )}
         {/* Link to leaderboard page */}
         <div className="px-4 lg:px-8 mt-6 flex justify-end">
           <Link
@@ -1182,6 +1250,12 @@ const PickemChallenge = () => {
                                                       question.id,
                                                       selectedTeam
                                                     )}
+                                                    variant={
+                                                      question.type === 'swiss_bracket'
+                                                        ? 'swiss'
+                                                        : undefined
+                                                    }
+                                                    points={question?.score}
                                                   />
                                                 ) : null;
                                               })}
@@ -1284,6 +1358,12 @@ const PickemChallenge = () => {
                                                       question.id,
                                                       selectedTeam
                                                     )}
+                                                    variant={
+                                                      question.type === 'swiss_bracket'
+                                                        ? 'swiss'
+                                                        : undefined
+                                                    }
+                                                    points={question?.score}
                                                   />
                                                 ) : null;
                                               })}
@@ -1386,6 +1466,12 @@ const PickemChallenge = () => {
                                                       question.id,
                                                       selectedTeam
                                                     )}
+                                                    variant={
+                                                      question.type === 'swiss_bracket'
+                                                        ? 'swiss'
+                                                        : undefined
+                                                    }
+                                                    points={question?.score}
                                                   />
                                                 ) : null;
                                               })}
