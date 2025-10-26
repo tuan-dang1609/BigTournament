@@ -60,10 +60,25 @@ const PickemChallenge = () => {
   };
   const effectiveGame = inferGameFromLeagueId(league_id);
   const { league, startTime, me } = useLeagueData(effectiveGame, league_id, currentUser);
+  // Key that changes when switching account or view target
+  const userKey = React.useMemo(
+    () => (viewerMode ? String(viewUserId || '') : String(currentUser?._id || '')),
+    [viewerMode, viewUserId, currentUser?._id]
+  );
   // Guards to prevent duplicate fetches
   const myAnswersFetchedRef = React.useRef(false);
   const initDoneRef = React.useRef(false);
   const leaderboardFetchedRef = React.useRef(false);
+  // Clear cached data when switching user/view to avoid stale "myanswer"
+  useEffect(() => {
+    myAnswersFetchedRef.current = false;
+    leaderboardFetchedRef.current = false;
+    initDoneRef.current = false;
+    setMyAnswersSource(null);
+    setPredictions({});
+    setPickemStats(null);
+    setTotalScore(0);
+  }, [userKey]);
   // helper to normalize strings for robust comparison
   const normalize = (s) => (typeof s === 'string' ? s.trim().toLowerCase() : s);
   // lightweight Levenshtein distance for fuzzy matching minor typos
@@ -303,13 +318,15 @@ const PickemChallenge = () => {
                 )}?includeMeta=true`
               );
             } else {
-              const userIdHeader = me?._id || currentUser?._id || 'Beacon';
-              myAnswerResponse = await fetch(`${API_BASE}/api/auth/${leagueId}/myanswer`, {
+              const userIdHeader = currentUser?._id || '';
+              const ts = Date.now();
+              myAnswerResponse = await fetch(`${API_BASE}/api/auth/${leagueId}/myanswer?_=${ts}`, {
                 method: 'GET',
                 headers: {
                   'Content-Type': 'application/json',
                   'x-user-id': userIdHeader,
                 },
+                cache: 'no-store',
               });
             }
             if (myAnswerResponse.status === 404) {
@@ -467,7 +484,7 @@ const PickemChallenge = () => {
             const lbJson = await lbResp.json();
             const arr = Array.isArray(lbJson?.leaderboard) ? lbJson.leaderboard : [];
             const total = arr.length || 1;
-            const myId = String(me?._id || currentUser?._id || '');
+            const myId = String(currentUser?._id || me?._id || '');
             const rankIndex = arr.findIndex((e) => String(e.userId) === myId);
             const rank = rankIndex >= 0 ? rankIndex + 1 : total; // if not found, worst rank
             const topPercent = Math.ceil((rank / total) * 100);
@@ -625,7 +642,7 @@ const PickemChallenge = () => {
       setPredictions({ ...predictions, [currentQuestion.id]: tempSelection });
       try {
         const data = {
-          userId: me._id,
+          userId: currentUser?._id,
           answers: [
             {
               questionId: currentQuestion.id,
@@ -902,7 +919,37 @@ const PickemChallenge = () => {
   const answeredCount = progressData.completedQuestions;
 
   // Debug logs removed per request
-
+  if (!currentUser) {
+    return (
+      <>
+        {/* Hiển thị header giải đấu giống homepage */}
+        <LeagueHeader
+          me={me}
+          league={league || { league: { name: '' }, season: {} }}
+          league_id={league_id}
+          startTime={startTime}
+          endTime={league?.season?.time_end}
+          currentUser={currentUser}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          getNavigation={() => clickableNavigation}
+          MyNavbar2={MyNavbar2}
+          game={effectiveGame}
+        />
+        <div className="flex justify-center flex-col items-center min-h-screen">
+          <span className="">Vui long dang nhap</span>
+          <div className="px-4 lg:px-8 mt-6">
+            <Link
+              to={`/${league_id}/pickem/leaderboard`}
+              className="inline-flex items-center justify-center bg-white text-black border border-black rounded-md px-5 py-2 font-extrabold uppercase tracking-wide hover:bg-gray-100 active:scale-[.98] transition"
+            >
+              Xem BXH
+            </Link>
+          </div>
+        </div>
+      </>
+    );
+  }
   if (loading) {
     return (
       <>
@@ -1067,7 +1114,7 @@ const PickemChallenge = () => {
                                           bracket_id={question.bracket_id}
                                           league_id={league_id}
                                           questionId={question.id}
-                                          userId={me?._id || currentUser?._id}
+                                          userId={currentUser?._id}
                                           onDraftChange={(qid, selected) =>
                                             setPredictions((prev) => ({ ...prev, [qid]: selected }))
                                           }
@@ -1139,7 +1186,7 @@ const PickemChallenge = () => {
                                         bracket_id={question.bracket_id}
                                         league_id={league_id}
                                         questionId={question.id}
-                                        userId={me?._id || currentUser?._id}
+                                        userId={currentUser?._id}
                                         onDraftChange={(qid, selected) =>
                                           setPredictions((prev) => ({ ...prev, [qid]: selected }))
                                         }
@@ -1548,7 +1595,7 @@ const PickemChallenge = () => {
                   bracket_id={currentQuestion.bracket_id}
                   league_id={league_id}
                   questionId={currentQuestion.id}
-                  userId={me?._id || currentUser?._id}
+                  userId={currentUser?._id}
                   onDraftChange={(qid, selected) =>
                     setPredictions((prev) => ({ ...prev, [qid]: selected }))
                   }

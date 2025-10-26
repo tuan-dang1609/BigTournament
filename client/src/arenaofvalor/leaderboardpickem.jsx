@@ -241,7 +241,7 @@ const LeaderboardComponent = () => {
         });
       } else {
         // Default if user not in leaderboard yet
-        setPickemStats({ score: 0, rank: undefined, topPercent: 100 });
+        setPickemStats({ score: undefined, rank: undefined, topPercent: undefined });
       }
     }
   }, [leaderboardData, currentUser]);
@@ -490,87 +490,129 @@ const LeaderboardComponent = () => {
         onClick: (e) => {},
       },
       tooltip: {
-        enabled: false, // Disable tooltips
+        enabled: false,
       },
       annotation: {
-        annotations: {
-          sTierLine: {
-            type: 'line',
-            xMin: tierScores.sTierIndex, // Use the calculated index
-            xMax: tierScores.sTierIndex,
-            borderColor: '#ff9800',
-            borderWidth: 2,
-            borderDash: [10, 5], // Dashed line for S tier
-            label: {
-              content: 'S Tier',
-              enabled: true,
-              position: 'end',
-              color: '#ff9800',
-              backgroundColor: 'rgba(255, 152, 0, 0.5)',
-              padding: 4,
-              font: {
-                size: 12,
+        annotations: (() => {
+          const cIdx = tierScores.cTierIndex;
+          const bIdx = tierScores.bTierIndex;
+          const aIdx = tierScores.aTierIndex;
+          const sIdx = tierScores.sTierIndex;
+          const anns = {};
+          // Background ranges like the mock (cyan, red, purple)
+          if ([cIdx, bIdx].every((v) => Number.isFinite(v))) {
+            anns.rangeCtoB = {
+              type: 'box',
+              xMin: cIdx,
+              xMax: bIdx,
+              backgroundColor: 'rgba(0, 188, 212, 0.18)',
+              borderWidth: 0,
+              drawTime: 'beforeDatasetsDraw',
+            };
+          }
+          if ([bIdx, aIdx].every((v) => Number.isFinite(v))) {
+            anns.rangeBtoA = {
+              type: 'box',
+              xMin: bIdx,
+              xMax: aIdx,
+              backgroundColor: 'rgba(183, 28, 28, 0.16)',
+              borderWidth: 0,
+              drawTime: 'beforeDatasetsDraw',
+            };
+          }
+          if ([aIdx, sIdx].every((v) => Number.isFinite(v))) {
+            anns.rangeAtoS = {
+              type: 'box',
+              xMin: aIdx,
+              xMax: sIdx,
+              backgroundColor: 'rgba(204, 82, 206, 0.14)',
+              borderWidth: 0,
+              drawTime: 'beforeDatasetsDraw',
+            };
+          }
+          // Vertical dashed lines with numeric labels at thresholds
+          if (Number.isFinite(cIdx)) {
+            anns.cTierLine = {
+              type: 'line',
+              xMin: cIdx,
+              xMax: cIdx,
+              borderColor: '#00bcd4',
+              borderWidth: 1.5,
+              borderDash: [6, 6],
+              label: {
+                content: String(tierScores.cTierScore || ''),
+                enabled: true,
+                position: 'start',
+                color: '#00e5ff',
+                backgroundColor: 'rgba(0,0,0,0)',
+                padding: 0,
+                yAdjust: -8,
+                font: { size: 13, weight: 'bold' },
               },
-            },
-          },
-          aTierLine: {
-            type: 'line',
-            xMin: tierScores.aTierIndex,
-            xMax: tierScores.aTierIndex,
-            borderColor: '#CC52CE',
-            borderWidth: 2,
-            borderDash: [10, 5], // Dashed line for A tier
-            label: {
-              content: 'A Tier',
-              enabled: true,
-              position: 'end',
-              color: '#CC52CE',
-              backgroundColor: 'rgba(233, 30, 99, 0.5)',
-              padding: 4,
-              font: {
-                size: 12,
+            };
+          }
+          if (Number.isFinite(bIdx)) {
+            anns.bTierLine = {
+              type: 'line',
+              xMin: bIdx,
+              xMax: bIdx,
+              borderColor: '#ff4238',
+              borderWidth: 1.5,
+              borderDash: [6, 6],
+              label: {
+                content: String(tierScores.bTierScore || ''),
+                enabled: true,
+                position: 'start',
+                color: '#ff4238',
+                backgroundColor: 'rgba(0,0,0,0)',
+                padding: 0,
+                yAdjust: -8,
+                font: { size: 13, weight: 'bold' },
               },
-            },
-          },
-          bTierLine: {
-            type: 'line',
-            xMin: tierScores.bTierIndex,
-            xMax: tierScores.bTierIndex,
-            borderColor: '#00bcd4',
-            borderWidth: 2,
-            borderDash: [10, 5], // Dashed line for B tier
-            label: {
-              content: 'B Tier',
-              enabled: true,
-              position: 'end',
-              color: '#00bcd4',
-              backgroundColor: 'rgba(0, 188, 212, 0.5)',
-              padding: 4,
-              font: {
-                size: 12,
+            };
+          }
+          if (Number.isFinite(aIdx)) {
+            anns.aTierLine = {
+              type: 'line',
+              xMin: aIdx,
+              xMax: aIdx,
+              borderColor: '#9c27b0',
+              borderWidth: 1.5,
+              borderDash: [6, 6],
+              label: {
+                content: String(tierScores.aTierScore || ''),
+                enabled: true,
+                position: 'start',
+                color: '#cc52ce',
+                backgroundColor: 'rgba(0,0,0,0)',
+                padding: 0,
+                yAdjust: -8,
+                font: { size: 13, weight: 'bold' },
               },
-            },
-          },
-          cTierLine: {
-            type: 'line',
-            xMin: tierScores.cTierIndex,
-            xMax: tierScores.cTierIndex,
-            borderColor: '#4caf50',
-            borderWidth: 2,
-            borderDash: [10, 5], // Dashed line for C tier
-            label: {
-              content: 'C Tier',
-              enabled: true,
-              position: 'end',
-              color: '#4caf50',
-              backgroundColor: 'rgba(76, 175, 80, 0.5)',
-              padding: 4,
-              font: {
-                size: 12,
+            };
+          }
+          if (Number.isFinite(sIdx)) {
+            anns.sTierLine = {
+              type: 'line',
+              xMin: sIdx,
+              xMax: sIdx,
+              borderColor: '#ffffff',
+              borderWidth: 1,
+              borderDash: [6, 6],
+              label: {
+                content: String(points[points.length - 1] || ''),
+                enabled: true,
+                position: 'start',
+                color: '#ffffff',
+                backgroundColor: 'rgba(0,0,0,0)',
+                padding: 0,
+                yAdjust: -8,
+                font: { size: 13, weight: 'bold' },
               },
-            },
-          },
-        },
+            };
+          }
+          return anns;
+        })(),
       },
     },
     scales: {
@@ -589,22 +631,12 @@ const LeaderboardComponent = () => {
             return '';
           },
         },
-        grid: {
-          display: false, // Không hiển thị các đường grid
-        },
-        title: {
-          display: true,
-          text: 'Điểm', // Tiêu đề trục X
-          color: 'rgba(128, 128, 128,1)', // Màu trắng cho tiêu đề trục X
-        },
-        border: {
-          color: 'rgba(128, 128, 128,1)', // Màu trắng cho đường trục X
-        },
-        display: true, // Hiển thị trục X
+        grid: { display: false },
+        title: { display: true, text: 'Điểm', color: 'rgba(128, 128, 128,1)' },
+        border: { color: 'rgba(128, 128, 128,1)' },
+        display: true,
       },
-      y: {
-        display: false, // Ẩn trục Y
-      },
+      y: { display: false },
     },
   };
 

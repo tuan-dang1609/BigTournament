@@ -19,10 +19,9 @@ const LeagueHeader = ({
   pickemStats,
 }) => {
   const { pathname } = useLocation();
-  // Hide CTAs on Pick'em viewer and bracket pages:
-  // "/:league_id/pickem/view/:userId", "/:league_id/pickem/view/:userId/:type"
-  // and "/:league_id/pickem/bracket"
-  const hidePickemCTAs = pathname.includes('/pickem/view/') || pathname.includes('/pickem/bracket');
+  // Hide registration/countdown CTAs on ALL Pick'em pages (any route containing "/pickem")
+  // Covers: /:league_id/pickem, /pickem/view/*, /pickem/bracket, etc.
+  const hidePickemCTAs = pathname.includes('/pickem');
   const [registerPhase, setRegisterPhase] = useState('idle');
   const [joinCountdown, setJoinCountdown] = useState('');
   const [isCheckinPhase, setIsCheckinPhase] = useState(false);
@@ -318,7 +317,7 @@ const LeagueHeader = ({
               </div>
             )}
 
-            {registerPhase === 'before' && (
+            {registerPhase === 'before' && !hidePickemCTAs && (
               <div className="sm:absolute relative px-4 md:px-8 sm:right-0 sm:bottom-10 text-sm md:text-base text-white font-semibold text-center sm:text-right">
                 <div className="mb-2">
                   Mở form sau: <span className="text-orange-500">{joinCountdown}</span>
@@ -340,17 +339,13 @@ const LeagueHeader = ({
               </div>
             )}
 
-            {registerPhase === 'during' && (
+            {registerPhase === 'during' && !hidePickemCTAs && (
               <div className="sm:absolute relative px-4 md:px-8 right-0 bottom-10 text-sm md:text-base text-white font-semibold text-right">
-                {/* Hide countdown on Pick'em viewer/bracket pages */}
-                {hidePickemCTAs ? null : (
-                  <div className="mb-2 sm:mt-0 mt-12">
-                    Thời gian còn lại: <span className="text-orange-500">{joinCountdown}</span>
-                  </div>
-                )}
+                <div className="mb-2 sm:mt-0 mt-12">
+                  Thời gian còn lại: <span className="text-orange-500">{joinCountdown}</span>
+                </div>
 
-                {/* Hide CTA buttons on Pick'em viewer/bracket pages */}
-                {hidePickemCTAs ? null : !currentUser ? (
+                {!currentUser ? (
                   <Link to="/signin">
                     <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
                       Đăng nhập để tham gia
