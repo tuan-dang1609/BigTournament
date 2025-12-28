@@ -1750,7 +1750,7 @@ router.get("/findallteam", findAllteam);
 router.get("/findallteamAOV", findAllteamAOV);
 router.get("/findallteamTFT", findAllteamTFT);
 // Get Riot account by Riot ID and then return TFT league data by PUUID
-router.get("/riot/tft/by-riotid/:gameName/:tagLine", async (req, res) => {
+router.get("/tft/:gameName/:tagLine", async (req, res) => {
   const { gameName, tagLine } = req.params;
   try {
     const accountResp = await axios.get(

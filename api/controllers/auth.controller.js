@@ -1047,7 +1047,11 @@ export const signout = (req, res) => {
   // When clearing cookies set the same attributes used when creating them
   const cookieSecure = process.env.NODE_ENV === "production";
   res
-    .clearCookie("access_token", { sameSite: "None", secure: cookieSecure, httpOnly: true })
+    .clearCookie("access_token", {
+      sameSite: "None",
+      secure: cookieSecure,
+      httpOnly: true,
+    })
     .status(200)
     .json("Signout success!");
 };
