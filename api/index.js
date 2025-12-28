@@ -40,7 +40,7 @@ app.use(
       "https://dongchuyennghiep.vercel.app",
     ], // Allow both local and deployed origins
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-user-id"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-api-key"],
     credentials: true,
   })
 );
@@ -193,7 +193,7 @@ app.use((req, res, next) => {
   // Allow custom headers used by the client (e.g. x-user-id)
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-user-id"
+    "Content-Type, Authorization, x-user-id, x-api-key"
   );
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   next();
