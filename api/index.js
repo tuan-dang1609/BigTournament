@@ -39,9 +39,21 @@ const authorizeUrl = provider + "/authorize";
 const tokenUrl = provider + "/token";
 const URLfrontend = "https://dongchuyennghiep.vercel.app";
 // Use dynamic origin reflection so deployed frontends can access the API
+// Restrict CORS to known frontends and reflect the origin when allowed.
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://dongchuyennghiep.vercel.app",
+  // add other frontends here
+];
+
 app.use(
   cors({
-    origin: true, // reflect request origin
+    origin: (origin, callback) => {
+      // allow non-browser requests (like curl, server-to-server) when origin is undefined
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-api-key"],
     credentials: true,
@@ -192,7 +204,7 @@ app.use((req, res, next) => {
     // Echo the origin back so browsers accept the response
     res.setHeader("Access-Control-Allow-Origin", origin);
   } else {
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    // CORS handled by global middleware
   }
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -456,7 +468,7 @@ app.get("/api/tft/match/:matchId", async (req, res) => {
     // Kiểm tra trong MongoDB trước
     let matchDoc = await TFTMatch.findOne({ matchId });
     if (matchDoc) {
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      // CORS handled by global middleware
       return res.json(matchDoc.data);
     }
 
@@ -465,7 +477,7 @@ app.get("/api/tft/match/:matchId", async (req, res) => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       matchDoc = await TFTMatch.findOne({ matchId });
       if (matchDoc) {
-        res.setHeader("Access-Control-Allow-Origin", "*");
+        // CORS handled by global middleware
         return res.json(matchDoc.data);
       }
     }
@@ -483,7 +495,7 @@ app.get("/api/tft/match/:matchId", async (req, res) => {
       matchDoc = new TFTMatch({ matchId, data: response.data });
       await matchDoc.save();
 
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      // CORS handled by global middleware
       res.json(response.data);
     } finally {
       tftMatchLocks.delete(matchId);
@@ -511,8 +523,7 @@ app.get("/api/valorant/dictionary", async (req, res) => {
       maps: response.data.maps || [],
     };
 
-    // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Hoặc chỉ định domain cụ thể thay vì '*'
+    // CORS handled by global middleware
     res.json(filteredData);
   } catch (error) {
     console.error("Error fetching dictionary data:", error.message);
@@ -533,8 +544,7 @@ app.get("/api/lol/match/:matchId", async (req, res) => {
       }
     );
 
-    // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Hoặc chỉ định domain cụ thể thay vì '*'
+    // CORS handled by global middleware
     res.json(response.data);
   } catch (error) {
     console.error("Error fetching match data:", error.message);
@@ -554,8 +564,7 @@ app.get("/api/lol/match/timeline/:matchId", async (req, res) => {
       }
     );
 
-    // Thêm Access-Control-Allow-Origin vào header
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Hoặc chỉ định domain cụ thể thay vì '*'
+    // CORS handled by global middleware
     res.json(response.data);
   } catch (error) {
     console.error("Error fetching match data:", error.message);

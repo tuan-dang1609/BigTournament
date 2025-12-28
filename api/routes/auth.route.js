@@ -12,17 +12,9 @@ import MatchID from "../models/matchid.model.js";
 import PickemResponse from "../models/response.model.js";
 const router = express.Router();
 
-// Router-level CORS + preflight handler (allows x-api-key)
+// Router-level: rely on global CORS middleware in `index.js`.
+// Allow preflight to short-circuit here but do not set Access-Control-Allow-Origin
 router.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, x-api-key, Authorization, Accept"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-  );
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
@@ -1809,7 +1801,7 @@ router.get("/riot/tft/by-riotid/:gameName/:tagLine", async (req, res) => {
         ? parseFloat(((merged.wins * 100) / totalGames).toFixed(2))
         : 0;
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    // CORS handled by global middleware
     return res.json(merged);
   } catch (error) {
     console.error("Error in /riot/tft/by-riotid:", error.message);
@@ -2217,7 +2209,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
           ({ roundResult, ...rest }) => rest
         );
       }
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      // CORS handled by global middleware
       return res.json({ source: "database", matchData: data });
     }
 
@@ -2380,7 +2372,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
         { upsert: true, new: true }
       );
 
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      // CORS handled by global middleware
       res.json({ source: "riot", matchData: finalData });
     } finally {
       matchLocks.delete(matchId);
@@ -2397,7 +2389,7 @@ router.get("/valorant/allmatchdata", async (req, res) => {
   try {
     const allMatches = await ValorantMatch.find({}).lean();
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    // CORS handled by global middleware
     res.json({
       source: "database",
       total: allMatches.length,

@@ -1013,8 +1013,15 @@ export const signin = async (req, res, next) => {
 
     const expiryDate = new Date(Date.now() + 60 * 60 * 1000); // 1 giờ
 
+    // Set cookie with SameSite=None and Secure so it can be sent/cleared from cross-site frontends
+    const cookieSecure = process.env.NODE_ENV === "production";
     res
-      .cookie("access_token", token, { httpOnly: true, expires: expiryDate })
+      .cookie("access_token", token, {
+        httpOnly: true,
+        expires: expiryDate,
+        sameSite: "None",
+        secure: cookieSecure,
+      })
       .status(200)
       .json(rest);
   } catch (error) {
@@ -1037,5 +1044,10 @@ export const findPlayer = async (req, res, next) => {
 };
 
 export const signout = (req, res) => {
-  res.clearCookie("access_token").status(200).json("Signout success!");
+  // When clearing cookies set the same attributes used when creating them
+  const cookieSecure = process.env.NODE_ENV === "production";
+  res
+    .clearCookie("access_token", { sameSite: "None", secure: cookieSecure, httpOnly: true })
+    .status(200)
+    .json("Signout success!");
 };
