@@ -31,14 +31,10 @@ const provider = "https://auth.riotgames.com";
 const authorizeUrl = provider + "/authorize";
 const tokenUrl = provider + "/token";
 const URLfrontend = "https://dongchuyennghiep.vercel.app";
+// Use dynamic origin reflection so deployed frontends can access the API
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://28e7-88-86-155-193.ngrok-free.app",
-      "https://bigtournament-hq9n.onrender.com",
-      "https://dongchuyennghiep.vercel.app",
-    ], // Allow both local and deployed origins
+    origin: true, // reflect request origin
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-api-key"],
     credentials: true,
@@ -179,23 +175,25 @@ const scoreQueue = new Queue("score-processing", {
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://dongchuyennghiep.vercel.app",
-];
-
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
+  // Log origin for debugging CORS issues
+  if (origin) {
+    console.debug(`[CORS] request origin=${origin} method=${req.method} path=${req.path}`);
+    // Echo the origin back so browsers accept the response
     res.setHeader("Access-Control-Allow-Origin", origin);
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", "*");
   }
+
   res.setHeader("Access-Control-Allow-Credentials", "true");
-  // Allow custom headers used by the client (e.g. x-user-id)
+  // Allow custom headers used by the client (e.g. x-user-id and x-api-key)
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Content-Type, Authorization, x-user-id, x-api-key"
   );
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
 app.use(compression());
