@@ -20,6 +20,11 @@ import request from "request";
 import TFTMatch from "./models/tftmatch.model.js";
 
 dotenv.config();
+// Startup info: report whether API key is present (do not print the key value)
+console.info(
+  "API key present:",
+  Boolean(process.env.API_KEY || process.env.API_KEY_DCN || process.env.DCN_API_KEY)
+);
 const app = express();
 const apiKey = process.env.TFT_KEY;
 const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT;

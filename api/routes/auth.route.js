@@ -35,9 +35,9 @@ function requireApiKey(req, res, next) {
   const provided = (
     req.headers["x-api-key"] || req.query.api_key || (req.body && req.body.api_key) || ""
   ).toString();
-  const expected = process.env.API_KEY_DCN;
+  const expected = process.env.API_KEY_DCN || process.env.API_KEY || process.env.DCN_API_KEY;
   if (!expected) {
-    console.error("API_KEY not configured in environment");
+    console.error("API key not configured in environment (checked API_KEY_DCN/API_KEY/DCN_API_KEY)");
     return res.status(500).json({ error: "Server misconfiguration: API key not set" });
   }
   if (!provided || provided !== expected) {
