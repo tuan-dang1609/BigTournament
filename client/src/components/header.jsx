@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { signOut } from '../../redux/user/userSlice.js';
@@ -19,7 +19,10 @@ const LeagueHeader = ({
   pickemStats,
 }) => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const hidePickemCTAs = pathname.includes('/pickem');
+  // If user navigates to a /bootcamp page but this league is not a bootcamp,
+  // we'll render an informative message instead of redirecting.
   const [registerPhase, setRegisterPhase] = useState('idle');
   const [joinCountdown, setJoinCountdown] = useState('');
   const [isCheckinPhase, setIsCheckinPhase] = useState(false);
@@ -32,6 +35,25 @@ const LeagueHeader = ({
   const [otherGameName, setOtherGameName] = useState('');
   const [otherTagLine, setOtherTagLine] = useState('');
   const [selectedRiot, setSelectedRiot] = useState('');
+
+  // If user is on a bootcamp path but this league is not a bootcamp, show a message.
+  // Only show after `league` is defined to avoid flashing during async load.
+  if (pathname.includes('/bootcamp/') && league && !league.isBootcamp) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-lg text-center bg-white shadow-md rounded-lg p-8">
+          <h2 className="text-2xl font-bold mb-2">Trang Bootcamp không khả dụng</h2>
+          <p className="text-gray-700 mb-4">Giải này không có chế độ Bootcamp.</p>
+          <Link
+            to={`/${game}/${league_id}`}
+            className="inline-block bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Quay lại trang giải đấu
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleValidateRiot = async (gameName, tagLine) => {
     setValidationResult({ loading: true });
@@ -63,6 +85,15 @@ const LeagueHeader = ({
 
   const handleAutoRegister = async (riotIdParam) => {
     try {
+      // If this handler was called as an event handler (onClick={handleAutoRegister}),
+      // the first arg will be the click event — ignore it.
+      if (
+        riotIdParam &&
+        typeof riotIdParam === 'object' &&
+        (riotIdParam.nativeEvent || (riotIdParam.target && riotIdParam.target.nodeType))
+      ) {
+        riotIdParam = undefined;
+      }
       const riotToUse = riotIdParam || me.riotID || '';
       const formData = {
         shortName: '',
@@ -402,7 +433,7 @@ const LeagueHeader = ({
                       Đăng ký tham gia
                     </button>
                   </Link>
-                ) : pathname.includes('/bootcamp/') ? (
+                ) : league?.isBootcamp && pathname.includes('/bootcamp/') ? (
                   <div
                     className={`flex ${
                       currentPlayer
@@ -476,7 +507,7 @@ const LeagueHeader = ({
                       </button>
                     )}
                     <button
-                      onClick={handleAutoRegister}
+                      onClick={() => handleAutoRegister()}
                       className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
                     >
                       {currentPlayer ? 'Cập nhật' : 'Đăng ký'}

@@ -76,23 +76,23 @@ const CompetitionPage = () => {
     aov: [
       {
         name: 'Tổng quan',
-        href: `/${game}/${league_id}`,
-        current: location.pathname === `/${game}/${league_id}`,
+        href: `/${game}/bootcamp/${league_id}`,
+        current: location.pathname === `/${game}/bootcamp/${league_id}`,
       },
       {
         name: 'Người chơi',
-        href: `/${game}/${league_id}/players`,
-        current: location.pathname === `/${game}/${league_id}/players`,
+        href: `/${game}/bootcamp/${league_id}/players`,
+        current: location.pathname === `/${game}/bootcamp/${league_id}/players`,
       },
       {
         name: 'BXH',
-        href: `/${game}/${league_id}/leaderboard`,
-        current: location.pathname === `/${game}/${league_id}/leaderboard`,
+        href: `/${game}/bootcamp/${league_id}/leaderboard`,
+        current: location.pathname === `/${game}/bootcamp/${league_id}/leaderboard`,
       },
       {
         name: 'Luật',
-        href: `/${game}/${league_id}/rule`,
-        current: location.pathname === `/${game}/${league_id}/rule`,
+        href: `/${game}/bootcamp/${league_id}/rule`,
+        current: location.pathname === `/${game}/bootcamp/${league_id}/rule`,
       },
     ],
   };

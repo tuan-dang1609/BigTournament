@@ -113,6 +113,7 @@ const DCNLeagueSchema = new mongoose.Schema(
       of: [matchGroupSchema], // 👈 mỗi key (ví dụ: "day1") sẽ chứa một array của matchGroup
       default: {},
     },
+    isBootcamp: Boolean,
   },
   { timestamps: true }
 );

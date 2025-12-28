@@ -113,6 +113,9 @@ if (rootElement) {
             />
             <Route path="/:game/:league_id" element={<TFThompage />} />
             <Route path="/:game/bootcamp/:league_id" element={<Bootcamp />} />
+            <Route path="/:game/bootcamp/:league_id/players" element={<MemberPage />} />
+            <Route path="/:game/bootcamp/:league_id/rule" element={<RulebookAll />} />
+            <Route path="/:game/bootcamp/:league_id/leaderboard" element={<Leaderboard />} />
             <Route path="/:game/:league_id/players" element={<MemberPage />} />
             <Route path="/:game/:league_id/rule" element={<RulebookAll />} />
             <Route path="/:game/:league_id/leaderboard" element={<Leaderboard />} />
