@@ -130,7 +130,7 @@ const TeamRegistrationTFTDoubleForm = () => {
 
     try {
       const response = await axios.post(
-        'https://bigtournament-hq9n.onrender.com/api/auth/register',
+        'https://bigtournament-1.onrender.com/api/auth/register',
         formData
       );
       setSubmitStatus({ success: true, message: 'Team registered successfully!' });

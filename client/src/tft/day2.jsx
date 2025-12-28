@@ -118,7 +118,7 @@ const MatchData = () => {
             }
 
             const response = await fetch(
-              `https://bigtournament-hq9n.onrender.com/api/tft/match/${matchId}`
+              `https://bigtournament-1.onrender.com/api/tft/match/${matchId}`
             );
             if (!response.ok) {
               throw new Error('Failed to fetch match data');
@@ -167,7 +167,7 @@ const MatchData = () => {
           let accounts = JSON.parse(localStorage.getItem('accounts'));
           if (!accounts) {
             const accountResponse = await fetch(
-              `https://bigtournament-hq9n.onrender.com/api/accounts`,
+              `https://bigtournament-1.onrender.com/api/accounts`,
               {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -186,7 +186,9 @@ const MatchData = () => {
             const totalPoints = participant.points.reduce((acc, curr) => acc + curr, 0);
             return {
               ...participant,
-              gameNameTag: `${accounts[index]?.gameName || 'Unknown'}#${accounts[index]?.tagLine || '0000'}`,
+              gameNameTag: `${accounts[index]?.gameName || 'Unknown'}#${
+                accounts[index]?.tagLine || '0000'
+              }`,
               gameName: `${accounts[index]?.gameName || 'Unknown'}`,
               totalPoints,
               note: participant.note,
@@ -239,7 +241,9 @@ const MatchData = () => {
     const { note, checkmate } = checkSpecialCondition(participant);
     return {
       ...participant,
-      gameNameTag: `${accounts[index]?.gameName || 'Unknown'}#${accounts[index]?.tagLine || '0000'}`,
+      gameNameTag: `${accounts[index]?.gameName || 'Unknown'}#${
+        accounts[index]?.tagLine || '0000'
+      }`,
       gameName: `${accounts[index]?.gameName || 'Unknown'}`,
       totalPoints: participant.points.reduce((acc, curr) => acc + curr, 0),
       note,
@@ -269,7 +273,9 @@ const MatchData = () => {
               {pointsDisplay.map((text, index) => (
                 <div
                   key={index}
-                  className={`px-2 lg:my-3 my-2 flex items-center lg:justify-center score-item ${index !== 3 && index !== 7 ? 'lg:border-r' : ''}`}
+                  className={`px-2 lg:my-3 my-2 flex items-center lg:justify-center score-item ${
+                    index !== 3 && index !== 7 ? 'lg:border-r' : ''
+                  }`}
                 >
                   {text}
                 </div>
@@ -296,10 +302,14 @@ const MatchData = () => {
                 className="sr-only"
               />
               <div
-                className={`block bg-gray-300 w-14 h-8 rounded-full ${showPlayers ? 'bg-green-500' : 'bg-gray-500'} transition duration-300 ease-in-out`}
+                className={`block bg-gray-300 w-14 h-8 rounded-full ${
+                  showPlayers ? 'bg-green-500' : 'bg-gray-500'
+                } transition duration-300 ease-in-out`}
               ></div>
               <div
-                className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${showPlayers ? 'transform translate-x-6' : ''}`}
+                className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${
+                  showPlayers ? 'transform translate-x-6' : ''
+                }`}
               ></div>
             </label>
             <span className="ml-2">{showPlayers ? 'Hiển Thị Hạng' : 'Hiển Thị Điểm'}</span>

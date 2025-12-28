@@ -9,7 +9,7 @@ const TournamentBracket = ({
   preloadedAnswers,
   correctAnswers = [],
   options = [],
-  apiBase = 'https://bigtournament-hq9n.onrender.com',
+  apiBase = 'https://bigtournament-1.onrender.com',
   readOnly = false,
   viewUserId = null,
   onDraftChange,

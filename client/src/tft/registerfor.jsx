@@ -101,7 +101,7 @@ const TeamRegistrationForm = () => {
         const bodyjson = JSON.stringify({ usernameregister: currentUser._id });
         console.log(bodyjson);
         const response = await fetch(
-          `https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}/checkregister`,
+          `https://bigtournament-1.onrender.com/api/auth/${game}/${league_id}/checkregister`,
           {
             method: 'POST',
             headers: {
@@ -129,9 +129,7 @@ const TeamRegistrationForm = () => {
   useEffect(() => {
     const fetchAllUsers = async () => {
       try {
-        const response = await axios.get(
-          'https://bigtournament-hq9n.onrender.com/api/auth/alluser'
-        ); // POST request
+        const response = await axios.get('https://bigtournament-1.onrender.com/api/auth/alluser'); // POST request
         const users = Array.isArray(response.data) ? response.data : response.data.users || [];
         setAllUsers(users); // Lưu vào state
       } catch (error) {
@@ -329,7 +327,7 @@ const TeamRegistrationForm = () => {
 
     try {
       const response = await axios.post(
-        `https://bigtournament-hq9n.onrender.com/api/auth/register/${league_id}`,
+        `https://bigtournament-1.onrender.com/api/auth/register/${league_id}`,
         formData
       );
       console.log('🔍 Final payload gửi API:', formData);

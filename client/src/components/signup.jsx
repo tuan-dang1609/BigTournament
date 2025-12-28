@@ -123,7 +123,7 @@ const SignupPage = () => {
       setLoading(true);
       setErrorMessage('');
 
-      const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/signup', {
+      const res = await fetch('https://bigtournament-1.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +203,9 @@ const SignupPage = () => {
                 type="text"
                 name="garenaaccount"
                 id="garenaaccount"
-                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.garenaaccount ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${
+                  errors.garenaaccount ? 'border-red-300' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Nhập Garena ID của bạn"
                 value={formData.garenaaccount}
                 onChange={handleChange}
@@ -230,7 +232,9 @@ const SignupPage = () => {
                 type="text"
                 name="discordID"
                 id="discordID"
-                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.discordID ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${
+                  errors.discordID ? 'border-red-300' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Nhập Discord ID của bạn"
                 value={formData.discordID}
                 onChange={handleChange}
@@ -257,7 +261,9 @@ const SignupPage = () => {
                 type="text"
                 name="nickname"
                 id="nickname"
-                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.nickname ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${
+                  errors.nickname ? 'border-red-300' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Nhập Nickname của bạn"
                 value={formData.nickname}
                 onChange={handleChange}
@@ -283,7 +289,9 @@ const SignupPage = () => {
                 type="text"
                 name="className"
                 id="className"
-                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.nickname ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${
+                  errors.nickname ? 'border-red-300' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Nhập Lớp bạn đang học hiện tại"
                 value={formData.className}
                 onChange={handleChange}
@@ -303,7 +311,9 @@ const SignupPage = () => {
                 type="text"
                 name="username"
                 id="username"
-                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${errors.username ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`bg-white text-black block w-full pl-10 pr-3 py-2 border ${
+                  errors.username ? 'border-red-300' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Điền username"
                 value={formData.username}
                 onChange={handleChange}
@@ -332,7 +342,9 @@ const SignupPage = () => {
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 id="password"
-                className={`bg-white text-black block w-full pl-10 pr-10 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`bg-white text-black block w-full pl-10 pr-10 py-2 border ${
+                  errors.password ? 'border-red-300' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Nhập mật khẩu"
                 value={formData.password}
                 onChange={handleChange}
@@ -374,7 +386,9 @@ const SignupPage = () => {
                 type={showRetypePassword ? 'text' : 'password'}
                 name="retypePassword"
                 id="retypePassword"
-                className={`bg-white text-black block w-full pl-10 pr-10 py-2 border ${errors.retypePassword ? 'border-red-300' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`bg-white text-black block w-full pl-10 pr-10 py-2 border ${
+                  errors.retypePassword ? 'border-red-300' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 placeholder="Nhập lại mật khẩu"
                 value={formData.retypePassword}
                 onChange={handleChange}

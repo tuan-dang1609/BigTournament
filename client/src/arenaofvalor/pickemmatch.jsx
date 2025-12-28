@@ -62,7 +62,7 @@ const PickemChallenge = () => {
       try {
         // Fetch teams
         const teamsResponse = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/allteamAOVcolor',
+          'https://bigtournament-1.onrender.com/api/auth/allteamAOVcolor',
           {
             method: 'POST',
             headers: {
@@ -75,7 +75,7 @@ const PickemChallenge = () => {
         const teamsData = await teamsResponse.json();
         setUserRegister(teamsData);
         const questionsResponse = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/getquestions',
+          'https://bigtournament-1.onrender.com/api/auth/getquestions',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -90,7 +90,7 @@ const PickemChallenge = () => {
 
         setLoading(false);
         const scoreResponse = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/comparepredictions',
+          'https://bigtournament-1.onrender.com/api/auth/comparepredictions',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -109,7 +109,7 @@ const PickemChallenge = () => {
         // Sau khi teams và questions đã được fetch xong, tiếp tục fetch checkuserprediction
         if (currentUser?._id) {
           const predictionsResponse = await fetch(
-            'https://bigtournament-hq9n.onrender.com/api/auth/checkuserprediction',
+            'https://bigtournament-1.onrender.com/api/auth/checkuserprediction',
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -167,8 +167,11 @@ const PickemChallenge = () => {
           const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
           const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
           const seconds = Math.floor((timeDiff / 1000) % 60);
-          newCountdowns[`${question.category}-${question.id}`] =
-            `Khóa lựa chọn sau ${days.toString().padStart(2, '0')}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+          newCountdowns[`${question.category}-${question.id}`] = `Khóa lựa chọn sau ${days
+            .toString()
+            .padStart(2, '0')}d ${hours.toString().padStart(2, '0')}h ${minutes
+            .toString()
+            .padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
         }
       });
 
@@ -196,7 +199,7 @@ const PickemChallenge = () => {
     // Gửi yêu cầu lưu dự đoán với cặp `category-id`
     try {
       const response = await fetch(
-        'https://bigtournament-hq9n.onrender.com/api/auth/submitPrediction',
+        'https://bigtournament-1.onrender.com/api/auth/submitPrediction',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -214,7 +217,7 @@ const PickemChallenge = () => {
 
       if (response.ok) {
         const scoreResponse = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/comparepredictions',
+          'https://bigtournament-1.onrender.com/api/auth/comparepredictions',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -410,7 +413,9 @@ const PickemChallenge = () => {
                                 backgroundColor:
                                   selectedTeam === option.name ? 'initial' : '#cbcbcb',
                               }}
-                              className={`py-6 px-3 flex md:flex-row ${index === 0 ? 'flex-col-reverse' : 'flex-col'} ${getTeamWidth(
+                              className={`py-6 px-3 flex md:flex-row ${
+                                index === 0 ? 'flex-col-reverse' : 'flex-col'
+                              } ${getTeamWidth(
                                 `${question.category}-${question.id}`,
                                 option.name
                               )} text-white font-bold text-xl md:text-2xl rounded-lg flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none`}

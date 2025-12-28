@@ -24,7 +24,7 @@ export default function MatchStat() {
   const fetchPlayerProfiles = async (playerIGNs) => {
     try {
       const response = await fetch(
-        'https://bigtournament-hq9n.onrender.com/api/auth/fetchplayerprofiles',
+        'https://bigtournament-1.onrender.com/api/auth/fetchplayerprofiles',
         {
           method: 'POST',
           headers: {
@@ -44,7 +44,7 @@ export default function MatchStat() {
   const fetchTeamLogos = async () => {
     try {
       const teamResponse = await fetch(
-        'https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV',
+        'https://bigtournament-1.onrender.com/api/auth/findallteamAOV',
         {
           method: 'POST',
           headers: {
@@ -72,7 +72,7 @@ export default function MatchStat() {
 
   const fetchMatchData = async () => {
     try {
-      const response = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findmatchid', {
+      const response = await fetch('https://bigtournament-1.onrender.com/api/auth/findmatchid', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ export default function MatchStat() {
     try {
       const results = await Promise.all(
         matchIds.map((id) =>
-          fetch(`https://bigtournament-hq9n.onrender.com/api/auth/fetchmatchAOV/${id}`, {
+          fetch(`https://bigtournament-1.onrender.com/api/auth/fetchmatchAOV/${id}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -290,7 +290,9 @@ export default function MatchStat() {
             <button
               key={index}
               onClick={() => setSelectedMap(map)}
-              className={`px-4 py-2 text-[11px] font-bold rounded ${selectedMap === map ? 'bg-white text-black' : 'bg-[#4A374A] text-white'}`}
+              className={`px-4 py-2 text-[11px] font-bold rounded ${
+                selectedMap === map ? 'bg-white text-black' : 'bg-[#4A374A] text-white'
+              }`}
             >
               Trận {index + 1}
             </button>
@@ -384,7 +386,9 @@ export default function MatchStat() {
             {teamAProfiles.map((player, index) => (
               <div key={index} className="flex flex-col items-center justify-center">
                 <img
-                  src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`}
+                  src={`https://drive.google.com/thumbnail?id=${
+                    player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'
+                  }`}
                   alt={player.name}
                   className="w-20 h-20 rounded-full mb-2"
                 />
@@ -400,7 +404,9 @@ export default function MatchStat() {
             {teamBProfiles.map((player, index) => (
               <div key={index} className="flex flex-col items-center justify-center">
                 <img
-                  src={`https://drive.google.com/thumbnail?id=${player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'}`}
+                  src={`https://drive.google.com/thumbnail?id=${
+                    player.avatar || '1wRTVjigKJEXt8iZEKnBX5_2jG7Ud3G-L'
+                  }`}
                   alt={player.name}
                   className="w-20 h-20 rounded-full mb-2"
                 />

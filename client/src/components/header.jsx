@@ -52,7 +52,7 @@ const LeagueHeader = ({
       }
 
       const response = await axios.post(
-        `https://bigtournament-hq9n.onrender.com/api/auth/register/${league_id}`,
+        `https://bigtournament-1.onrender.com/api/auth/register/${league_id}`,
         formData
       );
       console.log('✅ Server phản hồi:', response.data);
@@ -66,7 +66,7 @@ const LeagueHeader = ({
   const handleUnregister = async () => {
     try {
       const res = await axios.delete(
-        `https://bigtournament-hq9n.onrender.com/api/auth/unregister/${league?.league?.league_id}`,
+        `https://bigtournament-1.onrender.com/api/auth/unregister/${league?.league?.league_id}`,
         {
           data: {
             usernameregister: currentUser._id,
@@ -137,7 +137,7 @@ const LeagueHeader = ({
           if (!cancelled) setMyAnswerMissing(false);
           return;
         }
-        const base = 'https://bigtournament-hq9n.onrender.com/api/auth';
+        const base = 'https://bigtournament-1.onrender.com/api/auth';
         const url = `${base}/${league_id}/myanswer`;
         const res = await axios.get(url, {
           params: { userId: currentUser._id },
@@ -162,7 +162,7 @@ const LeagueHeader = ({
 
   const handleCheckin = async () => {
     try {
-      const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/league/checkin`, {
+      const res = await fetch(`https://bigtournament-1.onrender.com/api/auth/league/checkin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -211,7 +211,7 @@ const LeagueHeader = ({
                   <button
                     onClick={async () => {
                       try {
-                        await fetch('https://bigtournament-hq9n.onrender.com/api/auth/signout', {
+                        await fetch('https://bigtournament-1.onrender.com/api/auth/signout', {
                           credentials: 'include',
                         });
                         dispatch(signOut()); // xóa currentUser trong Redux

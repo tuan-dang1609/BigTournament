@@ -24,7 +24,7 @@ function App() {
             {!loggedInUser ? (
               <button
                 onClick={() =>
-                  (window.location.href = 'https://bigtournament-hq9n.onrender.com/sso/login-riot')
+                  (window.location.href = 'https://bigtournament-1.onrender.com/sso/login-riot')
                 }
                 className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
               >

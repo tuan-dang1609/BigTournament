@@ -18,7 +18,7 @@ const TournamentBracketAOV = () => {
 
       // Fetch dữ liệu logo của các đội từ backend
       const teamResponse = await fetch(
-        'https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV',
+        'https://bigtournament-1.onrender.com/api/auth/findallteamAOV',
         {
           method: 'POST',
           headers: {
@@ -55,7 +55,7 @@ const TournamentBracketAOV = () => {
   const fetchGames = async () => {
     try {
       const response = await axios.post(
-        'https://bigtournament-hq9n.onrender.com/api/auth/findallmatchid'
+        'https://bigtournament-1.onrender.com/api/auth/findallmatchid'
       );
 
       // Lọc dữ liệu nhận được dựa trên điều kiện game: "Arena Of Valor"
@@ -100,12 +100,16 @@ const TournamentBracketAOV = () => {
   const renderMatchup = (team1, team2, hasMargin = true) => (
     <Link
       to={getMatchLink(team1, team2)}
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'}`}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
+        hasMargin ? 'my-4' : 'mb-0'
+      }`}
     >
       {[team1, team2].map((team, index) => (
         <div
           key={index}
-          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white ${index === 0 ? '' : ''}`}
+          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white ${
+            index === 0 ? '' : ''
+          }`}
         >
           <div className="flex items-center ">
             <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-9 h-9 mr-4 ml-1" />
@@ -124,7 +128,9 @@ const TournamentBracketAOV = () => {
 
     return (
       <div
-        className={`flex flex-col ${className} ${styles.border} rounded-lg border-2 overflow-hidden ${title === '1W-1L' ? 'lg:mt-32' : ''}`}
+        className={`flex flex-col ${className} ${
+          styles.border
+        } rounded-lg border-2 overflow-hidden ${title === '1W-1L' ? 'lg:mt-32' : ''}`}
       >
         <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border-b ${styles.border} `}>
           {title}

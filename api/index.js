@@ -23,14 +23,16 @@ dotenv.config();
 // Startup info: report whether API key is present (do not print the key value)
 console.info(
   "API key present:",
-  Boolean(process.env.API_KEY || process.env.API_KEY_DCN || process.env.DCN_API_KEY)
+  Boolean(
+    process.env.API_KEY || process.env.API_KEY_DCN || process.env.DCN_API_KEY
+  )
 );
 const app = express();
 const apiKey = process.env.TFT_KEY;
 const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT;
 const clientID = process.env.RIOT_CLIENT_ID;
 const clientSecret = process.env.RIOT_CLIENT_SECRET;
-const appBaseUrl = "https://bigtournament-hq9n.onrender.com";
+const appBaseUrl = "https://bigtournament-1.onrender.com";
 const appCallbackUrl = appBaseUrl + "/oauth2-callback";
 const provider = "https://auth.riotgames.com";
 const authorizeUrl = provider + "/authorize";
@@ -184,7 +186,9 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
   // Log origin for debugging CORS issues
   if (origin) {
-    console.debug(`[CORS] request origin=${origin} method=${req.method} path=${req.path}`);
+    console.debug(
+      `[CORS] request origin=${origin} method=${req.method} path=${req.path}`
+    );
     // Echo the origin back so browsers accept the response
     res.setHeader("Access-Control-Allow-Origin", origin);
   } else {
@@ -310,7 +314,7 @@ app.get("/api/valorant/match/:matchId", async (req, res) => {
   try {
     // Gọi API lấy danh sách nhân vật
     const dictionaryResponse = await axios.get(
-      "https://bigtournament-hq9n.onrender.com/api/valorant/dictionary"
+      "https://bigtournament-1.onrender.com/api/valorant/dictionary"
     );
     const characterMap = {};
     const mapMap = {};
@@ -862,7 +866,7 @@ app.use((err, req, res, next) => {
   });
 });
 setInterval(() => {
-  fetch("https://bigtournament-hq9n.onrender.com/")
+  fetch("https://bigtournament-1.onrender.com/")
     .then((res) => console.log("✅ Keep-alive ping success:", res.status))
     .catch((err) => console.error("❌ Keep-alive ping failed:", err.message));
 }, 30000); // mỗi 30 giây

@@ -7,7 +7,7 @@ import MyNavbar2 from '../components/Navbar2';
 import LeagueHeader from '../components/header';
 import { io } from 'socket.io-client';
 
-const socket = io('https://bigtournament-hq9n.onrender.com', {
+const socket = io('https://bigtournament-1.onrender.com', {
   transports: ['websocket'],
   withCredentials: true,
 });
@@ -87,7 +87,7 @@ const ValorantLobby = () => {
   // Compute mapIndex based on matchData.matchid.length (if available)
   const matchidLength =
     matchData && Array.isArray(matchData.matchid)
-      ? matchData.matchid.filter(id => id && id.trim() !== '').length
+      ? matchData.matchid.filter((id) => id && id.trim() !== '').length
       : 0;
   const mapIndex = matchidLength;
   const matchStartTimes =
@@ -141,7 +141,7 @@ const ValorantLobby = () => {
       try {
         // 1. Fetch match data
         const response = await axios.get(
-          `https://bigtournament-hq9n.onrender.com/api/auth/findmatch/${round}/${match}`
+          `https://bigtournament-1.onrender.com/api/auth/findmatch/${round}/${match}`
         );
         setMatchData({ ...response.data.matchData });
         setPlayersReady(response.data.matchData.playersReady || { team1: [], team2: [] });
@@ -210,7 +210,7 @@ const ValorantLobby = () => {
     try {
       // Use GET and send riotIDs as a query parameter (comma-separated)
       const response = await axios.get(
-        'https://bigtournament-hq9n.onrender.com/api/auth/fetchplayerprofilesvalo',
+        'https://bigtournament-1.onrender.com/api/auth/fetchplayerprofilesvalo',
         {
           params: {
             players: riotIDs.join(','),
@@ -262,7 +262,7 @@ const ValorantLobby = () => {
     }
     try {
       const response = await axios.get(
-        `https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}/check-registered-valorant`,
+        `https://bigtournament-1.onrender.com/api/auth/${game}/${league_id}/check-registered-valorant`,
         {
           params: {
             teamA: data.teamA,
@@ -323,7 +323,7 @@ const ValorantLobby = () => {
     const readyArr = Array.isArray(player.isReady) ? player.isReady : [player.isReady];
     const isReadyForMap = readyArr[mapIndex] || false;
     try {
-      await axios.post('https://bigtournament-hq9n.onrender.com/api/auth/updatePlayerReady', {
+      await axios.post('https://bigtournament-1.onrender.com/api/auth/updatePlayerReady', {
         round,
         match,
         riotID: player.riotID,

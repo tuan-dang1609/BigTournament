@@ -49,7 +49,7 @@ const CompetitionPage = () => {
     const fetchTeams = async () => {
       try {
         const response = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/findallteamValorant',
+          'https://bigtournament-1.onrender.com/api/auth/findallteamValorant',
           {
             method: 'GET',
             headers: {
@@ -145,10 +145,14 @@ const CompetitionPage = () => {
                       className="sr-only" // Visually hide the checkbox
                     />
                     <div
-                      className={`block bg-gray-300 w-14 h-8 rounded-full ${showPlayers ? 'bg-green-500' : 'bg-gray-300'} transition duration-300 ease-in-out`}
+                      className={`block bg-gray-300 w-14 h-8 rounded-full ${
+                        showPlayers ? 'bg-green-500' : 'bg-gray-300'
+                      } transition duration-300 ease-in-out`}
                     ></div>
                     <div
-                      className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${showPlayers ? 'transform translate-x-6' : ''}`}
+                      className={`dot absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out ${
+                        showPlayers ? 'transform translate-x-6' : ''
+                      }`}
                     ></div>
                   </label>
                 </div>
@@ -213,10 +217,14 @@ const TeamCard = ({ team, showPlayers }) => {
         <img
           src={logoUrl}
           alt={`${team.teamName} logo`}
-          className={`h-full flex w-full justify-center items-center lg:block object-contain transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-[.19]' : 'opacity-100'}`}
+          className={`h-full flex w-full justify-center items-center lg:block object-contain transition-opacity duration-300 ${
+            isHovered || showPlayers ? 'opacity-[.19]' : 'opacity-100'
+          }`}
         />
         <div
-          className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isHovered || showPlayers ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${
+            isHovered || showPlayers ? 'opacity-100' : 'opacity-0'
+          }`}
         >
           {playersToShow.map((player, playerIndex) => (
             <div

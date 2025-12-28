@@ -28,7 +28,7 @@ export default function Profile() {
   const [fetchedUserData, setFetchedUserData] = useState(null);
 
   const handleRiotLogin = () => {
-    window.location.href = 'https://bigtournament-hq9n.onrender.com/sso/login-riot';
+    window.location.href = 'https://bigtournament-1.onrender.com/sso/login-riot';
     // Set riotID vào formData sau khi người dùng đăng nhập thành công
     setFormData({ ...formData, riotID: loggedInUser });
   };
@@ -47,7 +47,7 @@ export default function Profile() {
       dispatch(updateUserStart());
 
       const res = await fetch(
-        `https://bigtournament-hq9n.onrender.com/api/user/update/${currentUser._id}`,
+        `https://bigtournament-1.onrender.com/api/user/update/${currentUser._id}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -88,7 +88,7 @@ export default function Profile() {
     const fetchUser = async () => {
       try {
         const userRes = await fetch(
-          `https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`
+          `https://bigtournament-1.onrender.com/api/user/${currentUser._id}`
         );
         const data = await userRes.json();
         console.log('Dữ liệu user mới fetch về:', data);
@@ -139,7 +139,7 @@ export default function Profile() {
       try {
         dispatch(updateUserStart());
         const res = await fetch(
-          `https://bigtournament-hq9n.onrender.com/api/user/update/${currentUser._id}`,
+          `https://bigtournament-1.onrender.com/api/user/update/${currentUser._id}`,
           {
             method: 'POST',
             headers: {
@@ -172,7 +172,7 @@ export default function Profile() {
           };
 
           const res = await fetch(
-            `https://bigtournament-hq9n.onrender.com/api/user/update/${currentUser._id}`,
+            `https://bigtournament-1.onrender.com/api/user/update/${currentUser._id}`,
             {
               method: 'POST',
               headers: {
@@ -190,7 +190,7 @@ export default function Profile() {
           } else {
             // ✅ Gọi API get user mới
             const userRes = await fetch(
-              `https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`
+              `https://bigtournament-1.onrender.com/api/user/${currentUser._id}`
             );
             const updatedUser = await userRes.json();
 

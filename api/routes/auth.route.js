@@ -33,12 +33,20 @@ function requireApiKey(req, res, next) {
   if (req.method === "OPTIONS") return next();
 
   const provided = (
-    req.headers["x-api-key"] || req.query.api_key || (req.body && req.body.api_key) || ""
+    req.headers["x-api-key"] ||
+    req.query.api_key ||
+    (req.body && req.body.api_key) ||
+    ""
   ).toString();
-  const expected = process.env.API_KEY_DCN || process.env.API_KEY || process.env.DCN_API_KEY;
+  const expected =
+    process.env.API_KEY_DCN || process.env.API_KEY || process.env.DCN_API_KEY;
   if (!expected) {
-    console.error("API key not configured in environment (checked API_KEY_DCN/API_KEY/DCN_API_KEY)");
-    return res.status(500).json({ error: "Server misconfiguration1: API key not set" });
+    console.error(
+      "API key not configured in environment (checked API_KEY_DCN/API_KEY/DCN_API_KEY)"
+    );
+    return res
+      .status(500)
+      .json({ error: "Server misconfiguration1: API key not set" });
   }
   if (!provided || provided !== expected) {
     return res.status(401).json({ error: "Invalid API key" });
@@ -2232,7 +2240,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
     try {
       // Lấy dictionary cho character/map
       const dictionaryResponse = await axios.get(
-        "https://bigtournament-hq9n.onrender.com/api/valorant/dictionary"
+        "https://bigtournament-1.onrender.com/api/valorant/dictionary"
       );
       const characterMap = {};
       const mapMap = {};
@@ -2528,7 +2536,7 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
       for (const mId of match.matchIds) {
         try {
           const response = await fetch(
-            `https://bigtournament-hq9n.onrender.com/api/valorant/match/${mId}`
+            `https://bigtournament-1.onrender.com/api/valorant/match/${mId}`
           );
           const apiData = await response.json();
           const matchData = apiData.matchData;

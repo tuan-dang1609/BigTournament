@@ -30,15 +30,12 @@ export default function Home() {
   useEffect(() => {
     const fetchGames = async () => {
       try {
-        const response = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/findallgame',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+        const response = await fetch('https://bigtournament-1.onrender.com/api/auth/findallgame', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

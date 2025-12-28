@@ -34,10 +34,10 @@ const PowerRankingAOV = () => {
     const fetchData = async () => {
       try {
         const rankingResponse = await axios.post(
-          'https://bigtournament-hq9n.onrender.com/api/auth/powerrankingaov'
+          'https://bigtournament-1.onrender.com/api/auth/powerrankingaov'
         );
         const allTeamResponse = await axios.post(
-          'https://bigtournament-hq9n.onrender.com/api/auth/findallteamAOV'
+          'https://bigtournament-1.onrender.com/api/auth/findallteamAOV'
         );
 
         const rankingsData = rankingResponse.data.data;
@@ -93,7 +93,7 @@ const PowerRankingAOV = () => {
   const fetchPlayerProfiles = async (playerIGNs) => {
     try {
       const response = await fetch(
-        'https://bigtournament-hq9n.onrender.com/api/auth/fetchplayerprofiles',
+        'https://bigtournament-1.onrender.com/api/auth/fetchplayerprofiles',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -34,15 +34,12 @@ const TournamentBracket = () => {
 
   const fetchGames = async () => {
     try {
-      const response = await fetch(
-        'https://bigtournament-hq9n.onrender.com/api/auth/findallmatchid',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch('https://bigtournament-1.onrender.com/api/auth/findallmatchid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -89,12 +86,16 @@ const TournamentBracket = () => {
   const renderMatchup = (team1, team2, hasMargin = true) => (
     <Link
       to={getMatchLink(team1, team2)}
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'}`}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
+        hasMargin ? 'my-4' : 'mb-0'
+      }`}
     >
       {[team1, team2].map((team, index) => (
         <div
           key={index}
-          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white ${index === 0 ? '' : ''}`}
+          className={`2xl:pl-[6px] pl-[4px] flex items-center justify-between bg-white ${
+            index === 0 ? '' : ''
+          }`}
         >
           <div className="flex items-center ">
             <img src={team?.icon} alt={team?.name || 'Team Logo'} className="w-9 h-9 mr-4 ml-1" />
@@ -113,7 +114,9 @@ const TournamentBracket = () => {
 
     return (
       <div
-        className={`flex flex-col ${className} ${styles.border} rounded-lg border-2 overflow-hidden ${title === '1W-1L' ? 'lg:mt-32' : ''}`}
+        className={`flex flex-col ${className} ${
+          styles.border
+        } rounded-lg border-2 overflow-hidden ${title === '1W-1L' ? 'lg:mt-32' : ''}`}
       >
         <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border-b ${styles.border} `}>
           {title}

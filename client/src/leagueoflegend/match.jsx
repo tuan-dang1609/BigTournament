@@ -26,7 +26,7 @@ export default function MatchStatLOL() {
     const fetchAllMatches = async () => {
       try {
         const matchPromises = matchIds.map((matchId) =>
-          fetch(`https://bigtournament-hq9n.onrender.com/api/lol/match/${matchId}`).then((res) => {
+          fetch(`https://bigtournament-1.onrender.com/api/lol/match/${matchId}`).then((res) => {
             if (!res.ok) {
               throw new Error(`Failed to fetch data for matchId: ${matchId}`);
             }
@@ -34,7 +34,7 @@ export default function MatchStatLOL() {
           })
         );
         const timeline = matchIds.map((matchId) =>
-          fetch(`https://bigtournament-hq9n.onrender.com/api/lol/match/timeline/${matchId}`).then(
+          fetch(`https://bigtournament-1.onrender.com/api/lol/match/timeline/${matchId}`).then(
             (res) => {
               if (!res.ok) {
                 throw new Error(`Failed to fetch data for matchId: ${matchId}`);
@@ -86,7 +86,9 @@ export default function MatchStatLOL() {
             <button
               key={index}
               onClick={() => setSelectedMatchId(matchId)} // Cập nhật selectedMatchId
-              className={`px-4 py-2 text-[11px] font-bold rounded ${selectedMatchId === matchId ? 'bg-white text-black' : 'bg-[#4A374A] text-white'}`}
+              className={`px-4 py-2 text-[11px] font-bold rounded ${
+                selectedMatchId === matchId ? 'bg-white text-black' : 'bg-[#4A374A] text-white'
+              }`}
             >
               Trận {index + 1}
             </button>
@@ -100,13 +102,17 @@ export default function MatchStatLOL() {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setSelectedTab('table')}
-          className={`px-4 py-2 text-[11px] font-bold rounded ${selectedTab === 'table' ? 'bg-white text-black' : 'bg-[#4A374A] text-white'}`}
+          className={`px-4 py-2 text-[11px] font-bold rounded ${
+            selectedTab === 'table' ? 'bg-white text-black' : 'bg-[#4A374A] text-white'
+          }`}
         >
           Bảng Thống Kê
         </button>
         <button
           onClick={() => setSelectedTab('chart')}
-          className={`px-4 py-2 text-[11px] font-bold rounded ${selectedTab === 'chart' ? 'bg-white text-black' : 'bg-[#4A374A] text-white'}`}
+          className={`px-4 py-2 text-[11px] font-bold rounded ${
+            selectedTab === 'chart' ? 'bg-white text-black' : 'bg-[#4A374A] text-white'
+          }`}
         >
           Biểu Đồ
         </button>

@@ -17,7 +17,7 @@ const TeamPageHOF = () => {
     const fetchLeagues = async () => {
       try {
         const response = await axios.post(
-          'https://bigtournament-hq9n.onrender.com/api/auth/leagues/list'
+          'https://bigtournament-1.onrender.com/api/auth/leagues/list'
         );
 
         // Lọc danh sách giải đấu dựa trên điều kiện "Arena Of Valor"
@@ -36,7 +36,7 @@ const TeamPageHOF = () => {
     const fetchTeams = async () => {
       try {
         const response = await axios.post(
-          `https://bigtournament-hq9n.onrender.com/api/auth/teams/${selectedLeague}`
+          `https://bigtournament-1.onrender.com/api/auth/teams/${selectedLeague}`
         );
 
         // Lọc chỉ các đội thuộc trò chơi "Arena Of Valor" và sắp xếp theo rank
@@ -82,7 +82,13 @@ const TeamPageHOF = () => {
             {team.rank <= 3 && (
               <div className="relative mr-4">
                 <FaTrophy
-                  className={`text-4xl ${team.rank === 1 ? 'text-yellow-400' : team.rank === 2 ? 'text-gray-400' : 'text-orange-400'}`}
+                  className={`text-4xl ${
+                    team.rank === 1
+                      ? 'text-yellow-400'
+                      : team.rank === 2
+                      ? 'text-gray-400'
+                      : 'text-orange-400'
+                  }`}
                 />
                 <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-white text-black rounded-full text-xs font-bold px-1">
                   {team.rank}
@@ -136,7 +142,9 @@ const TeamPageHOF = () => {
                   <button
                     key={league.id}
                     onClick={() => setSelectedLeague(league.id)}
-                    className={`p-4 rounded-lg font-semibold transition-all duration-300 text-left ${selectedLeague === league.id ? league.color : ''}`}
+                    className={`p-4 rounded-lg font-semibold transition-all duration-300 text-left ${
+                      selectedLeague === league.id ? league.color : ''
+                    }`}
                     aria-pressed={selectedLeague === league.id}
                   >
                     <span className="text-white">{league.name}</span>

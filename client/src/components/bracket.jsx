@@ -68,13 +68,10 @@ const TournamentBracket = ({ league, game, league_id }) => {
   // Fetch all match data for the bracket
   const fetchGames = async () => {
     try {
-      const response = await fetch(
-        'https://bigtournament-hq9n.onrender.com/api/auth/findallmatchid',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      const response = await fetch('https://bigtournament-1.onrender.com/api/auth/findallmatchid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setMatchId(data);

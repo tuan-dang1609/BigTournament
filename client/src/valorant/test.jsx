@@ -27,7 +27,7 @@ export default function CreateMatch() {
     e.preventDefault();
     setCreating(true);
     // 1. Create the match (banpick)
-    const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/create`, {
+    const res = await fetch(`https://bigtournament-1.onrender.com/api/auth/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -48,7 +48,7 @@ export default function CreateMatch() {
       scoreA: 0,
       scoreB: 0,
     };
-    await fetch('https://bigtournament-hq9n.onrender.com/api/auth/addmatch', {
+    await fetch('https://bigtournament-1.onrender.com/api/auth/addmatch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(matchidPayload),

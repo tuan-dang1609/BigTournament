@@ -30,7 +30,7 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
         setLoading(true);
         try {
           const leagueRes = await fetch(
-            `https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}`
+            `https://bigtournament-1.onrender.com/api/auth/${game}/${league_id}`
           );
           const leagueData = await leagueRes.json();
           setLeague(leagueData);
@@ -39,11 +39,11 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
           );
           const meData = currentUser?._id
             ? await axios
-                .get(`https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`)
+                .get(`https://bigtournament-1.onrender.com/api/user/${currentUser._id}`)
                 .then((res) => res.data)
             : null;
           if (meData) setMe(meData);
-          const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/findmatchid', {
+          const res = await fetch('https://bigtournament-1.onrender.com/api/auth/findmatchid', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ round, Match }),
@@ -67,7 +67,7 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
           setbanpickid(matchData.banpickid || '');
           const matchDetailPromises = (matchData.matchid || []).map(async (id) => {
             const res = await fetch(
-              `https://bigtournament-hq9n.onrender.com/api/auth/valorant/matchdata/${id}`
+              `https://bigtournament-1.onrender.com/api/auth/valorant/matchdata/${id}`
             );
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             const data = await res.json();
@@ -101,11 +101,11 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
 
       try {
         const leaguePromise = fetch(
-          `https://bigtournament-hq9n.onrender.com/api/auth/${game}/${league_id}`
+          `https://bigtournament-1.onrender.com/api/auth/${game}/${league_id}`
         ).then((res) => res.json());
         const mePromise = currentUser?._id
           ? axios
-              .get(`https://bigtournament-hq9n.onrender.com/api/user/${currentUser._id}`)
+              .get(`https://bigtournament-1.onrender.com/api/user/${currentUser._id}`)
               .then((res) => res.data)
           : Promise.resolve(null);
 
@@ -139,7 +139,7 @@ export const useLeagueData = (game, league_id, currentUser, round, Match) => {
           if (cachedMatchData[matchId]) {
             return Promise.resolve({ matchId, data: cachedMatchData[matchId] });
           }
-          return fetch(`https://bigtournament-hq9n.onrender.com/api/tft/match/${matchId}`)
+          return fetch(`https://bigtournament-1.onrender.com/api/tft/match/${matchId}`)
             .then((res) => res.json())
             .then((data) => {
               cachedMatchData[matchId] = data;

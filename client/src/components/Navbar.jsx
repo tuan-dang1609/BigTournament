@@ -27,7 +27,7 @@ export default function Example() {
 
   const handleSignOut = async () => {
     try {
-      await fetch('https://bigtournament-hq9n.onrender.com/api/auth/signout', {
+      await fetch('https://bigtournament-1.onrender.com/api/auth/signout', {
         credentials: 'include',
       });
       dispatch(signOut());

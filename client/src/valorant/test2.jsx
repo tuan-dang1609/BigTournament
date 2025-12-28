@@ -10,7 +10,7 @@ export default function MatchInterface() {
 
   useEffect(() => {
     const socket = io(
-      import.meta.env.DEV ? 'http://localhost:3000' : 'https://bigtournament-hq9n.onrender.com',
+      import.meta.env.DEV ? 'http://localhost:3000' : 'https://bigtournament-1.onrender.com',
       {
         transports: ['websocket'], // ✅ bắt buộc
         withCredentials: true,
@@ -37,7 +37,7 @@ export default function MatchInterface() {
   useEffect(() => {
     const fetchMatch = async () => {
       try {
-        const res = await fetch(`https://bigtournament-hq9n.onrender.com/api/auth/status`, {
+        const res = await fetch(`https://bigtournament-1.onrender.com/api/auth/status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ matchId }),

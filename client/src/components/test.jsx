@@ -1016,7 +1016,7 @@ function TournamentForm() {
         }}
         onClick={async () => {
           try {
-            const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/dcn-league', {
+            const res = await fetch('https://bigtournament-1.onrender.com/api/auth/dcn-league', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(form),

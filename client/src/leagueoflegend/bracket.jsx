@@ -34,15 +34,12 @@ const TournamentBracket = () => {
 
   const fetchGames = async () => {
     try {
-      const response = await fetch(
-        'https://bigtournament-hq9n.onrender.com/api/auth/findallmatchid',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch('https://bigtournament-1.onrender.com/api/auth/findallmatchid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -89,7 +86,9 @@ const TournamentBracket = () => {
   const renderMatchup = (team1, team2, hasMargin = true, additionalMargin = '') => (
     <Link
       to={getMatchLink(team1, team2)}
-      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${hasMargin ? 'my-4' : 'mb-0'} ${additionalMargin}`}
+      className={`relative flex flex-col gap-y-[3px] overflow-hidden ${
+        hasMargin ? 'my-4' : 'mb-0'
+      } ${additionalMargin}`}
     >
       {[team1, team2].map((team, index) => (
         <div
@@ -113,7 +112,9 @@ const TournamentBracket = () => {
 
     return (
       <div
-        className={`flex flex-col  ${styles.border} overflow-hidden ${title === '1W-1L' ? 'lg:mt-32' : ''}`}
+        className={`flex flex-col  ${styles.border} overflow-hidden ${
+          title === '1W-1L' ? 'lg:mt-32' : ''
+        }`}
       >
         <h2 className={`text-lg font-bold p-2 ${styles.titleBg} border ${styles.border} `}>
           {title}

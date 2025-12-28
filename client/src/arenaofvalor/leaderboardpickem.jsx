@@ -147,8 +147,7 @@ const LeaderboardComponent = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const API_BASE =
-          import.meta.env?.VITE_API_BASE || 'https://bigtournament-hq9n.onrender.com';
+        const API_BASE = import.meta.env?.VITE_API_BASE || 'https://bigtournament-1.onrender.com';
 
         // 1) Fetch leaderboard (live, from PickemResponse) for this league
         const leaderboardResponse = await fetch(

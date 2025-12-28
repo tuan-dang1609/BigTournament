@@ -302,8 +302,7 @@ const PickemChallenge = () => {
       try {
         const leagueId = league_id || 'valorant_test';
         const qType = 'all';
-        const API_BASE =
-          import.meta.env?.VITE_API_BASE || 'https://bigtournament-hq9n.onrender.com';
+        const API_BASE = import.meta.env?.VITE_API_BASE || 'https://bigtournament-1.onrender.com';
 
         // 1) Fetch answers once (mine or target user's)
         let apiAnswers = myAnswersSource;
@@ -653,7 +652,7 @@ const PickemChallenge = () => {
           ],
         };
         const response = await fetch(
-          `https://bigtournament-hq9n.onrender.com/api/auth/${league_id}/submitPrediction`,
+          `https://bigtournament-1.onrender.com/api/auth/${league_id}/submitPrediction`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1123,7 +1122,7 @@ const PickemChallenge = () => {
                                           options={question.options || []}
                                           apiBase={
                                             import.meta.env?.VITE_API_BASE ||
-                                            'https://bigtournament-hq9n.onrender.com'
+                                            'https://bigtournament-1.onrender.com'
                                           }
                                           readOnly={
                                             viewerMode ||
@@ -1195,7 +1194,7 @@ const PickemChallenge = () => {
                                         options={question.options || []}
                                         apiBase={
                                           import.meta.env?.VITE_API_BASE ||
-                                          'https://bigtournament-hq9n.onrender.com'
+                                          'https://bigtournament-1.onrender.com'
                                         }
                                         readOnly={
                                           viewerMode ||
@@ -1599,9 +1598,7 @@ const PickemChallenge = () => {
                   onDraftChange={(qid, selected) =>
                     setPredictions((prev) => ({ ...prev, [qid]: selected }))
                   }
-                  apiBase={
-                    import.meta.env?.VITE_API_BASE || 'https://bigtournament-hq9n.onrender.com'
-                  }
+                  apiBase={import.meta.env?.VITE_API_BASE || 'https://bigtournament-1.onrender.com'}
                   readOnly={viewerMode || isLocked}
                 />
               </div>

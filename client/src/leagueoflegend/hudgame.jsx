@@ -8,7 +8,7 @@ const LiveGameDataLOL = () => {
     const fetchGameData = async () => {
       try {
         const response = await fetch(
-          'https://bigtournament-hq9n.onrender.com/api/auth/register/api/livegame'
+          'https://bigtournament-1.onrender.com/api/auth/register/api/livegame'
         ); // Proxy backend
         const data = await response.json();
         setGameData(data);

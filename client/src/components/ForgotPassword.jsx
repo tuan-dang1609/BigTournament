@@ -11,7 +11,7 @@ function ForgotPassword() {
     e.preventDefault();
 
     try {
-      const res = await fetch('https://bigtournament-hq9n.onrender.com/api/auth/alluser', {
+      const res = await fetch('https://bigtournament-1.onrender.com/api/auth/alluser', {
         method: 'GET',
       });
       const users = await res.json();
@@ -28,7 +28,7 @@ function ForgotPassword() {
       }
       // Gửi yêu cầu reset password
       const updateRes = await fetch(
-        `https://bigtournament-hq9n.onrender.com/api/user/update/${matchedUser.id}`,
+        `https://bigtournament-1.onrender.com/api/user/update/${matchedUser.id}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -90,7 +90,9 @@ function ForgotPassword() {
 
         {message && (
           <p
-            className={`mt-4 text-center text-sm ${message.type === 'error' ? 'text-red-600' : 'text-green-600'}`}
+            className={`mt-4 text-center text-sm ${
+              message.type === 'error' ? 'text-red-600' : 'text-green-600'
+            }`}
           >
             {message.text}
           </p>
