@@ -19,17 +19,51 @@ const LeagueHeader = ({
   pickemStats,
 }) => {
   const { pathname } = useLocation();
-  // Hide registration/countdown CTAs on ALL Pick'em pages (any route containing "/pickem")
-  // Covers: /:league_id/pickem, /pickem/view/*, /pickem/bracket, etc.
   const hidePickemCTAs = pathname.includes('/pickem');
   const [registerPhase, setRegisterPhase] = useState('idle');
   const [joinCountdown, setJoinCountdown] = useState('');
   const [isCheckinPhase, setIsCheckinPhase] = useState(false);
-  // Track whether current user has any pick'em answers; if not (404), show Top ?
   const [myAnswerMissing, setMyAnswerMissing] = useState(false);
   const dispatch = useDispatch();
-  const handleAutoRegister = async () => {
+  const [showBootcampModal, setShowBootcampModal] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState(null);
+  const [useOther, setUseOther] = useState(false);
+  const [otherGameName, setOtherGameName] = useState('');
+  const [otherTagLine, setOtherTagLine] = useState('');
+  const [selectedRiot, setSelectedRiot] = useState('');
+
+  const handleValidateRiot = async (gameName, tagLine) => {
+    setValidationResult({ loading: true });
     try {
+      const url = `https://bigtournament-1.onrender.com/api/auth/tft/${encodeURIComponent(
+        gameName
+      )}/${encodeURIComponent(tagLine)}`;
+      const res = await axios.get(url, { validateStatus: () => true });
+      const data = res.data || {};
+      // If API returned structured 404 error, treat as invalid
+      let result;
+      if (data?.error?.status?.status_code === 404) {
+        result = { ok: false, error: data.error.status.message };
+      } else {
+        // Consider valid when response does NOT have tier and rank
+        const isValid = !data.tier && !data.rank;
+        result = { ok: isValid, data, error: isValid ? undefined : 'Riot ID không hợp lệ' };
+      }
+      setValidationResult(result);
+      return result;
+    } catch (err) {
+      const result = { ok: false, error: err.message };
+      setValidationResult(result);
+      return result;
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const handleAutoRegister = async (riotIdParam) => {
+    try {
+      const riotToUse = riotIdParam || me.riotID || '';
       const formData = {
         shortName: '',
         logoUrl: me.profilePicture || '', // Avatar cá nhân
@@ -37,7 +71,7 @@ const LeagueHeader = ({
         classTeam: me.className || '',
         games: ['Teamfight Tactics'],
         gameMembers: {
-          'Teamfight Tactics': [me.riotID || ''],
+          'Teamfight Tactics': [riotToUse],
         },
         usernameregister: me._id,
         discordID: me.discordID || '',
@@ -183,6 +217,11 @@ const LeagueHeader = ({
       alert('Lỗi khi check-in.');
     }
   };
+
+  // Clear validation state while user is editing or switching options.
+  React.useEffect(() => {
+    setValidationResult(null);
+  }, [useOther, otherGameName, otherTagLine]);
 
   return (
     <>
@@ -363,6 +402,63 @@ const LeagueHeader = ({
                       Đăng ký tham gia
                     </button>
                   </Link>
+                ) : pathname.includes('/bootcamp/') ? (
+                  <div
+                    className={`flex ${
+                      currentPlayer
+                        ? 'sm:justify-end justify-center gap-2'
+                        : 'sm:justify-end justify-center'
+                    }`}
+                  >
+                    {currentPlayer && (
+                      <button
+                        onClick={handleUnregister}
+                        className="bg-red-500 text-white font-bold px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
+                      >
+                        Hủy đăng ký
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        // Open bootcamp modal and prefill selection based on previous registration
+                        const linked = me?.riotID || '';
+                        setValidationResult(null);
+                        // If user already registered in this league, prefill from their registration
+                        if (
+                          currentPlayer &&
+                          Array.isArray(currentPlayer.ign) &&
+                          currentPlayer.ign.length > 0
+                        ) {
+                          const regIgn = currentPlayer.ign[0] || '';
+                          if (regIgn === linked) {
+                            // Registered IGN matches linked RiotID -> keep linked selected
+                            setSelectedRiot(linked);
+                            setUseOther(false);
+                            setShowBootcampModal(true);
+                            // do not auto-validate when opening modal; validation runs only on Confirm
+                          } else {
+                            // Registered IGN differs -> prefill "other" inputs with registered IGN
+                            const parts = regIgn.split('#');
+                            setUseOther(true);
+                            setOtherGameName(parts[0] || '');
+                            setOtherTagLine(parts[1] || '');
+                            setSelectedRiot(regIgn);
+                            setShowBootcampModal(true);
+                            // do not auto-validate when opening modal; validation runs only on Confirm
+                          }
+                        } else {
+                          // No previous registration: default to linked RiotID
+                          setSelectedRiot(linked);
+                          setUseOther(false);
+                          setShowBootcampModal(true);
+                          // do not auto-validate when opening modal; validation runs only on Confirm
+                        }
+                      }}
+                      className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
+                    >
+                      {currentPlayer ? 'Cập nhật' : 'Đăng ký'}
+                    </button>
+                  </div>
                 ) : (
                   <div
                     className={`flex ${
@@ -414,6 +510,190 @@ const LeagueHeader = ({
           </div>
         </div>
       </header>
+
+      {showBootcampModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShowBootcampModal(false)}
+          />
+          <div className="relative bg-base-100 rounded-lg max-w-xl w-full mx-4 p-6 z-10">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Chọn Riot ID để đăng ký Bootcamp</h2>
+              <button onClick={() => setShowBootcampModal(false)} className="text-gray-500">
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Linked RiotID option (use me.riotID if present) */}
+              {me?.riotID && (
+                <div className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="bootcampRiot"
+                        checked={selectedRiot === me.riotID}
+                        onChange={() => {
+                          setSelectedRiot(me.riotID);
+                          setUseOther(false);
+                          setValidationResult(null);
+                        }}
+                      />
+                      <span className="font-medium">{me.riotID}</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-3 border rounded">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="bootcampRiot"
+                    checked={useOther}
+                    onChange={() => {
+                      // When user switches to "use other", prefill with previous registration if present
+                      setUseOther(true);
+                      setSelectedRiot('');
+                      if (
+                        currentPlayer &&
+                        Array.isArray(currentPlayer.ign) &&
+                        currentPlayer.ign.length > 0
+                      ) {
+                        const regIgn = currentPlayer.ign[0] || '';
+                        // If registered IGN differs from linked RiotID, prefill inputs
+                        if (regIgn && regIgn !== (me?.riotID || '')) {
+                          const parts = regIgn.split('#');
+                          setOtherGameName(parts[0] || '');
+                          setOtherTagLine(parts[1] || '');
+                          setSelectedRiot(regIgn);
+                          // validation will run when user confirms
+                          // if parts are present, prefill selectedRiot
+                          // but do not auto-validate here
+                        }
+                      }
+                    }}
+                  />
+                  <span className="font-medium">Dùng Riot ID khác</span>
+                </label>
+
+                {useOther && (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        placeholder="Game Name"
+                        value={otherGameName}
+                        onChange={(e) => setOtherGameName(e.target.value)}
+                        className="flex-1 p-2 border rounded"
+                      />
+                      <input
+                        placeholder="Tag Line"
+                        value={otherTagLine}
+                        onChange={(e) => setOtherTagLine(e.target.value)}
+                        className="flex-1 p-2 border rounded"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {validationResult && validationResult.loading ? (
+                <div className="rounded text-sm text-gray-500" role="status">
+                  Đang kiểm tra...
+                </div>
+              ) : validationResult && validationResult.ok ? (
+                <div className="rounded text-sm" role="status">
+                  <div className="text-green-700 font-semibold flex items-center">✅ Hợp lệ</div>
+                </div>
+              ) : validationResult && validationResult.ok === false ? (
+                <div className="rounded text-sm" role="status">
+                  {validationResult.data &&
+                  (validationResult.data.tier || validationResult.data.rank) ? (
+                    <div className="text-red-600 font-semibold">
+                      ❌ Tài khoản đã đấu rank: {validationResult.data.tier || ''}{' '}
+                      {validationResult.data.rank ? `(${validationResult.data.rank})` : ''}
+                    </div>
+                  ) : validationResult.error ? (
+                    /404|not found|Không tìm|không tồn tại/i.test(
+                      String(validationResult.error)
+                    ) ? (
+                      <div className="text-red-600 font-semibold">❌ Tài khoản không tồn tại</div>
+                    ) : (
+                      <div className="text-red-500 font-semibold">
+                        ❌ Tài khoản không hợp lệ
+                        {validationResult.error ? ` - ${validationResult.error}` : ''}
+                      </div>
+                    )
+                  ) : (
+                    <div className="text-red-600">❌ Tài khoản không hợp lệ</div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setShowBootcampModal(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={async () => {
+                  // When user clicks Confirm, run validation first; if valid, submit registration.
+                  // Determine riot to check
+                  const riotToUse =
+                    (useOther ? `${otherGameName || ''}#${otherTagLine || ''}` : selectedRiot) ||
+                    me?.riotID ||
+                    '';
+                  const parts = (riotToUse || '').split('#');
+                  if (!parts[0] || !parts[1]) {
+                    setValidationResult({
+                      ok: false,
+                      error: 'Vui lòng nhập đầy đủ Game Name và Tag Line',
+                    });
+                    return;
+                  }
+                  setValidating(true);
+                  const result = await handleValidateRiot(parts[0], parts[1]);
+                  setValidating(false);
+                  if (result?.ok) {
+                    // check for IGN conflict: someone else in this league already registered this IGN
+                    const normalized = riotToUse.trim();
+                    const conflict = (league?.players || []).some(
+                      (p) =>
+                        Array.isArray(p.ign) &&
+                        p.ign.includes(normalized) &&
+                        String(p.usernameregister) !== String(currentUser?._id)
+                    );
+                    if (conflict) {
+                      setValidationResult({
+                        ok: false,
+                        error: 'IGN này đã được người khác đăng ký. Vui lòng dùng tài khoản khác.',
+                        conflict: true,
+                      });
+                      return;
+                    }
+                    // proceed to register
+                    await handleAutoRegister(riotToUse);
+                    setShowBootcampModal(false);
+                  } else {
+                    // keep modal open and show error (handled by validationResult)
+                  }
+                }}
+                className={`bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200 ${
+                  validating ? 'opacity-60 cursor-wait' : ''
+                }`}
+                disabled={validating}
+              >
+                {validating ? 'Đang kiểm tra...' : 'Xác nhận'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         <MyNavbar2

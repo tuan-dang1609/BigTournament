@@ -35,6 +35,7 @@ import HallOfFameValo from './valorant/halloffame.jsx';
 import MatchStatAOV from './arenaofvalor/statmatch.jsx';
 import TFTRegister from './tft/registerfor.jsx';
 import TFThompage from './tft/homepage.jsx';
+import Bootcamp from './tft/Bootcamp.jsx';
 import LiveGameDataLOL from './leagueoflegend/hudgame.jsx';
 import TournamentBracketLOL from './leagueoflegend/bracket.jsx';
 import TournamentBracketAOV16 from './arenaofvalor/bracket_16team.jsx';
@@ -111,6 +112,7 @@ if (rootElement) {
               element={<ValorantMatchCard />}
             />
             <Route path="/:game/:league_id" element={<TFThompage />} />
+            <Route path="/:game/bootcamp/:league_id" element={<Bootcamp />} />
             <Route path="/:game/:league_id/players" element={<MemberPage />} />
             <Route path="/:game/:league_id/rule" element={<RulebookAll />} />
             <Route path="/:game/:league_id/leaderboard" element={<Leaderboard />} />
