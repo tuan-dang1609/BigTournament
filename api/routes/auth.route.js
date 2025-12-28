@@ -1712,6 +1712,67 @@ router.post("/findmatchid", findmatchID);
 router.get("/findallteam", findAllteam);
 router.get("/findallteamAOV", findAllteamAOV);
 router.get("/findallteamTFT", findAllteamTFT);
+// Get Riot account by Riot ID and then return TFT league data by PUUID
+router.get("/riot/tft/by-riotid/:gameName/:tagLine", async (req, res) => {
+  const { gameName, tagLine } = req.params;
+  try {
+    const accountResp = await axios.get(
+      `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(
+        gameName
+      )}/${encodeURIComponent(tagLine)}`,
+      { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+    );
+
+    const { puuid } = accountResp.data;
+
+    const leagueResp = await axios.get(
+      `https://vn2.api.riotgames.com/tft/league/v1/by-puuid/${encodeURIComponent(
+        puuid
+      )}`,
+      { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+    );
+
+    // Filter only entries with queueType === 'RANKED_TFT'
+    const rawLeague = Array.isArray(leagueResp.data) ? leagueResp.data : [];
+    const filtered = rawLeague.filter(
+      (entry) => entry && entry.queueType === "RANKED_TFT"
+    );
+
+    // Merge into single response object (include gameName/tagLine and ranked fields)
+    const first = filtered[0] || null;
+    const merged = {
+      gameName: accountResp.data.gameName || gameName,
+      tagLine: accountResp.data.tagLine || tagLine,
+    };
+
+    // Populate ranked fields with safe defaults so response always contains them
+    merged.queueType = first?.queueType;
+    merged.leagueId = first?.leagueId;
+    merged.tier = first?.tier;
+    merged.rank = first?.rank;
+    merged.leaguePoints =
+      typeof first?.leaguePoints === "number" ? first.leaguePoints : null;
+    merged.wins = typeof first?.wins === "number" ? first.wins : 0;
+    merged.losses = typeof first?.losses === "number" ? first.losses : 0;
+    merged.veteran = Boolean(first?.veteran);
+    merged.inactive = Boolean(first?.inactive);
+    merged.freshBlood = Boolean(first?.freshBlood);
+    merged.hotStreak = Boolean(first?.hotStreak);
+    const totalGames = merged.wins + merged.losses;
+    merged.winrate =
+      totalGames > 0
+        ? parseFloat(((merged.wins * 100) / totalGames).toFixed(2))
+        : 0;
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    return res.json(merged);
+  } catch (error) {
+    console.error("Error in /riot/tft/by-riotid:", error.message);
+    return res
+      .status(error.response?.status || 500)
+      .json({ error: error.response?.data || error.message });
+  }
+});
 router.get("/findallteamValorant", findAllteamValorant);
 router.post("/findallteamTFTDouble", findAllteamTFTDouble);
 router.post("/checkuserprediction", finduserPrediction);
