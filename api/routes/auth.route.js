@@ -12,6 +12,25 @@ import MatchID from "../models/matchid.model.js";
 import PickemResponse from "../models/response.model.js";
 const router = express.Router();
 
+// Middleware: require a single API key for all routes in this router
+function requireApiKey(req, res, next) {
+  const provided = (
+    req.headers["x-api-key"] || req.query.api_key || (req.body && req.body.api_key) || ""
+  ).toString();
+  const expected = process.env.API_KEY;
+  if (!expected) {
+    console.error("API_KEY not configured in environment");
+    return res.status(500).json({ error: "Server misconfiguration: API key not set" });
+  }
+  if (!provided || provided !== expected) {
+    return res.status(401).json({ error: "Invalid API key" });
+  }
+  next();
+}
+
+// Apply to all routes declared after this line
+router.use(requireApiKey);
+
 // Helpers for single elimination bracket serialization without schema changes
 const BRACKET_PREFIX = {
   quarterfinal: "QF",

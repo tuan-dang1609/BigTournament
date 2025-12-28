@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import axios from 'axios';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './components/homepage.jsx';
 import Navbar from './components/Navbar.jsx';
@@ -64,6 +65,32 @@ import ValorantLobby from './valorant/lobby.jsx';
 import TournamentForm from './components/test.jsx';
 // Check if the root element exists
 const rootElement = document.getElementById('root');
+
+// Global API key for frontend requests
+const FRONTEND_API_KEY = import.meta.env.VITE_API_KEY || 'HoangTuan2004';
+
+// Configure axios default header
+try {
+  axios.defaults.headers.common['x-api-key'] = FRONTEND_API_KEY;
+} catch (e) {
+  // ignore
+}
+
+// Monkey-patch fetch to include the API key header when not provided
+if (typeof window !== 'undefined' && window.fetch) {
+  const _originalFetch = window.fetch.bind(window);
+  window.fetch = (input, init = {}) => {
+    try {
+      init = init || {};
+      const headers = new Headers(init.headers || {});
+      if (!headers.has('x-api-key')) headers.set('x-api-key', FRONTEND_API_KEY);
+      init.headers = headers;
+    } catch (err) {
+      // ignore header errors and fallback to original init
+    }
+    return _originalFetch(input, init);
+  };
+}
 
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
