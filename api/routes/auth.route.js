@@ -12,8 +12,26 @@ import MatchID from "../models/matchid.model.js";
 import PickemResponse from "../models/response.model.js";
 const router = express.Router();
 
+// Router-level CORS + preflight handler (allows x-api-key)
+router.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, x-api-key, Authorization, Accept"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+  );
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 // Middleware: require a single API key for all routes in this router
 function requireApiKey(req, res, next) {
+  // allow preflight through
+  if (req.method === "OPTIONS") return next();
+
   const provided = (
     req.headers["x-api-key"] || req.query.api_key || (req.body && req.body.api_key) || ""
   ).toString();
