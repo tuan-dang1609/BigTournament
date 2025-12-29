@@ -41,6 +41,21 @@ const BootcampLeagueSchema = new Schema(
     isBootcamp: { type: Boolean, default: true },
     isCompleted: { type: Boolean, default: false },
     rank_league: { type: [RankEntrySchema], default: [] },
+      rank_last_updated: { type: Date, default: null },
+      // Rounds define scheduled elimination checkpoints.
+      // Example: { name: 'Đợt 1', runAt: Date, take: 15 }
+      rounds: {
+        type: [
+          {
+            name: { type: String },
+            runAt: { type: Date },
+            take: { type: Number, default: 0 },
+            executed: { type: Boolean, default: false },
+            executedAt: { type: Date, default: null },
+          },
+        ],
+        default: [],
+      },
   },
   { timestamps: true }
 );

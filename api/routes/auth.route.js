@@ -46,6 +46,44 @@ function requireApiKey(req, res, next) {
   }
   next();
 }
+// Scheduler: run updateBootcampRanksInternal for active bootcamp leagues
+// Interval can be configured via env `BOOTCAMP_SCHEDULE_MS` (milliseconds).
+// Default: 1 minute (60_000 ms)
+const SCHEDULER_INTERVAL_MS = 1 * 60 * 1000;
+const _runningBootcampLeagues = new Set();
+async function scheduledBootcampUpdater() {
+  try {
+    const now = new Date();
+    const dcns = await DCNLeague.find({ isBootcamp: true }).lean();
+    for (const dcn of dcns || []) {
+      const league_id = dcn?.league?.league_id;
+      if (!league_id) continue;
+      const timeStart = dcn.season?.time_start
+        ? new Date(dcn.season.time_start)
+        : null;
+      const timeEnd = dcn.season?.time_end
+        ? new Date(dcn.season.time_end)
+        : null;
+      if (timeStart && now < timeStart) continue;
+      if (timeEnd && now > timeEnd) continue;
+      if (_runningBootcampLeagues.has(league_id)) continue;
+      _runningBootcampLeagues.add(league_id);
+      // fire-and-forget but ensure we clean up the running set
+      updateBootcampRanksInternal(league_id)
+        .catch(() => {})
+        .finally(() => {
+          _runningBootcampLeagues.delete(league_id);
+        });
+    }
+  } catch (err) {
+    // keep scheduler silent
+  }
+}
+
+// start scheduler
+setInterval(scheduledBootcampUpdater, SCHEDULER_INTERVAL_MS);
+// run once immediately
+scheduledBootcampUpdater();
 
 // Apply to all routes declared after this line
 router.use(requireApiKey);
@@ -1815,211 +1853,371 @@ router.get("/tft/:gameName/:tagLine", async (req, res) => {
 // Route: Update bootcamp ranks for a given league_id
 // This endpoint will fetch current ranked data from Riot for participants
 // and update the `rank_league` array in the Bootcamp schema.
-// It is intended to be triggered periodically (every 30 minutes externally)
-// between the DCN league `season.time_start` and `season.time_end`.
+// The implementation below is also exposed as an internal function so it can be
+// called from a scheduler without going through HTTP.
+async function updateBootcampRanksInternal(league_id, force = false) {
+  const dcn = await DCNLeague.findOne({ "league.league_id": league_id });
+  if (!dcn) throw new Error("DCN league not found");
+
+  const timeStart = dcn.season?.time_start
+    ? new Date(dcn.season.time_start)
+    : null;
+  const timeEnd = dcn.season?.time_end ? new Date(dcn.season.time_end) : null;
+
+  let boot = await BootcampLeague.findOne({ league_id });
+  if (!boot) {
+    const gameShort = dcn.league?.game_short || "tft";
+    boot = new BootcampLeague({
+      league_id,
+      game_short: gameShort,
+      isBootcamp: Boolean(dcn.isBootcamp) || true,
+      isCompleted: false,
+      rank_league: [],
+    });
+    await boot.save();
+  }
+
+  const now = new Date();
+  if (!force) {
+    if (boot.isCompleted) throw new Error("Bootcamp already completed");
+    if (timeStart && now < timeStart)
+      throw new Error("Bootcamp not started yet");
+  }
+
+  const allPlayers = Array.isArray(dcn.players) ? dcn.players : [];
+
+  const playersWithIgn = allPlayers.filter((p) => {
+    if (!p) return false;
+    const rawIgn = p.ign;
+    if (!rawIgn) return false;
+    if (Array.isArray(rawIgn)) return rawIgn.length > 0;
+    if (typeof rawIgn === "string") return rawIgn.trim().length > 0;
+    if (typeof rawIgn === "object")
+      return Boolean(rawIgn.gameName || rawIgn.tagLine || rawIgn.ign);
+    return false;
+  });
+
+  const results = [];
+
+  for (const p of playersWithIgn) {
+    let igns = [];
+    const rawIgn = p.ign;
+    if (Array.isArray(rawIgn)) {
+      igns = rawIgn.slice();
+    } else if (typeof rawIgn === "string") {
+      igns = rawIgn
+        .split(/[,;|]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    } else if (rawIgn && typeof rawIgn === "object") {
+      if (rawIgn.gameName && rawIgn.tagLine)
+        igns = [`${rawIgn.gameName}#${rawIgn.tagLine}`];
+      else if (rawIgn.ign) {
+        if (Array.isArray(rawIgn.ign)) igns = rawIgn.ign.slice();
+        else if (typeof rawIgn.ign === "string") igns = [rawIgn.ign.trim()];
+      }
+    }
+
+    for (const ignRaw of igns) {
+      if (!ignRaw || typeof ignRaw !== "string") continue;
+      let sepIndex = ignRaw.lastIndexOf("#");
+      if (sepIndex === -1) sepIndex = ignRaw.lastIndexOf(".");
+      if (sepIndex <= 0) continue;
+      const gameName = ignRaw.slice(0, sepIndex).trim();
+      const tagLine = ignRaw.slice(sepIndex + 1).trim();
+      if (!gameName || !tagLine) continue;
+
+      try {
+        const accountResp = await axios.get(
+          `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(
+            gameName
+          )}/${encodeURIComponent(tagLine)}`,
+          { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+        );
+
+        const { puuid } = accountResp.data;
+
+        const leagueResp = await axios.get(
+          `https://vn2.api.riotgames.com/tft/league/v1/by-puuid/${encodeURIComponent(
+            puuid
+          )}`,
+          { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+        );
+
+        const rawLeague = Array.isArray(leagueResp.data) ? leagueResp.data : [];
+        const filtered = rawLeague.filter(
+          (entry) => entry && entry.queueType === "RANKED_TFT"
+        );
+        const first = filtered[0] || null;
+
+        const merged = {
+          gameName: accountResp.data.gameName || gameName,
+          tagLine: accountResp.data.tagLine || tagLine,
+          queueType: first?.queueType,
+          leagueId: first?.leagueId,
+          tier: first?.tier || null,
+          rank: first?.rank || null,
+          leaguePoints:
+            typeof first?.leaguePoints === "number" ? first.leaguePoints : null,
+          wins: typeof first?.wins === "number" ? first.wins : 0,
+          losses: typeof first?.losses === "number" ? first.losses : 0,
+          veteran: Boolean(first?.veteran),
+          inactive: Boolean(first?.inactive),
+          freshBlood: Boolean(first?.freshBlood),
+          hotStreak: Boolean(first?.hotStreak),
+          puuid,
+          usernameregister: p.usernameregister,
+          logoUrl: p.logoUrl || null,
+          teamLogo: p.team?.logoTeam || null,
+          team: p.team || null,
+          classTeam: p.classTeam || null,
+          discordID: p.discordID || null,
+        };
+        results.push(merged);
+      } catch (err) {
+        continue;
+      }
+    }
+  }
+
+  const entries = results.map((r) => {
+    const totalGames = Number(r.wins || 0) + Number(r.losses || 0);
+    const winrate =
+      totalGames > 0
+        ? parseFloat(((Number(r.wins || 0) * 100) / totalGames).toFixed(2))
+        : 0;
+    return {
+      gameName: r.gameName || "",
+      tagLine: r.tagLine || "",
+      leagueId: r.leagueId || null,
+      tier: r.tier || null,
+      rank: r.rank || null,
+      leaguePoints: typeof r.leaguePoints === "number" ? r.leaguePoints : null,
+      wins: typeof r.wins === "number" ? r.wins : 0,
+      losses: typeof r.losses === "number" ? r.losses : 0,
+      veteran: Boolean(r.veteran),
+      hotStreak: Boolean(r.hotStreak),
+      inactive: Boolean(r.inactive),
+      freshBlood: Boolean(r.freshBlood),
+      winrate,
+      isEliminated: !r.tier,
+      puuid: r.puuid || null,
+      lastUpdated: new Date(),
+      usernameregister: r.usernameregister,
+      logoUrl: r.logoUrl || null,
+      teamLogo: r.teamLogo || null,
+      team: r.team || null,
+      classTeam: r.classTeam || null,
+      discordID: r.discordID || null,
+    };
+  });
+
+  const tierOrder = [
+    "CHALLENGER",
+    "GRANDMASTER",
+    "MASTER",
+    "DIAMOND",
+    "PLATINUM",
+    "GOLD",
+    "SILVER",
+    "BRONZE",
+    "IRON",
+  ];
+  const rankOrder = { I: 1, II: 2, III: 3, IV: 4 };
+  entries.sort((a, b) => {
+    const ai = tierOrder.indexOf((a.tier || "").toUpperCase());
+    const bi = tierOrder.indexOf((b.tier || "").toUpperCase());
+    if (ai !== bi) return ai - bi;
+    const ar = rankOrder[(a.rank || "").toUpperCase()] || 999;
+    const br = rankOrder[(b.rank || "").toUpperCase()] || 999;
+    if (ar !== br) return ar - br;
+    const ap = Number(b.leaguePoints || 0);
+    const bp = Number(a.leaguePoints || 0);
+    return ap - bp;
+  });
+
+  // Apply any scheduled rounds whose runAt <= now and not yet executed.
+  try {
+    if (Array.isArray(boot.rounds) && boot.rounds.length) {
+      // sort rounds by runAt ascending so earlier rounds apply first
+      const roundsWithIndex = boot.rounds
+        .map((r, idx) => ({ r, idx }))
+        .filter(({ r }) => r && r.runAt)
+        .sort((a, b) => new Date(a.r.runAt) - new Date(b.r.runAt));
+
+      for (const { r, idx } of roundsWithIndex) {
+        // only apply rounds that haven't been executed yet and are due
+        if (r.executed) continue;
+        const runAtDate = new Date(r.runAt);
+        if (isNaN(runAtDate.getTime())) continue;
+        if (runAtDate <= now) {
+          const takeN = Number(r.take) || 0;
+          if (takeN > 0) {
+            // entries are already sorted by rank; mark top `takeN` as not eliminated
+            entries.forEach((e, i) => {
+              e.isEliminated = i < takeN ? false : true;
+            });
+          }
+          // mark the round as executed
+          boot.rounds[idx].executed = true;
+          boot.rounds[idx].executedAt = now;
+        }
+      }
+    }
+  } catch (err) {
+    // don't fail the whole update if rounds processing errors; log and continue
+    console.error("Error applying bootcamp rounds:", err && err.message ? err.message : err);
+  }
+
+  boot.rank_league = entries;
+  // record when the rank list was last updated
+  boot.rank_last_updated = new Date();
+  if (timeEnd && now > timeEnd) boot.isCompleted = true;
+  await boot.save();
+
+  return { updated: entries.length, boot };
+}
+
 router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
   const { league_id } = req.params;
   const force = req.body?.force === true;
-
   try {
-    const dcn = await DCNLeague.findOne({ "league.league_id": league_id });
-    if (!dcn) return res.status(404).json({ message: "DCN league not found" });
+    const result = await updateBootcampRanksInternal(league_id, force);
+    return res.json({
+      success: true,
+      updated: result.updated,
+      boot: result.boot,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || String(error) });
+  }
+});
 
-    const timeStart = dcn.season?.time_start
-      ? new Date(dcn.season.time_start)
-      : null;
-    const timeEnd = dcn.season?.time_end ? new Date(dcn.season.time_end) : null;
+// Admin: list rounds for a bootcamp
+router.get("/:game/:league_id/bootcamp/rounds", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    const boot = await BootcampLeague.findOne({ league_id }).lean();
+    if (!boot) return res.status(404).json({ message: "Bootcamp not found" });
+    return res.json({ rounds: boot.rounds || [] });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin: replace all rounds (upsert bootcamp document if missing)
+router.post("/:game/:league_id/bootcamp/rounds", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    const { rounds } = req.body;
+    if (!Array.isArray(rounds))
+      return res.status(400).json({ message: "rounds must be an array" });
+
+    const parseRunAt = (raw) => {
+      if (!raw) return null;
+      // If it's already a Date or number, convert directly
+      if (raw instanceof Date) return raw;
+      if (typeof raw === "number") return new Date(raw);
+      if (typeof raw === "string") {
+        // If string already contains timezone info (Z or +/-offset), let Date parse it
+        if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(raw)) return new Date(raw);
+        // If it's a plain date (YYYY-MM-DD) or datetime without tz, assume GMT+7
+        // Normalize formats like '2026-01-03' -> '2026-01-03T00:00:00+07:00'
+        let s = raw.trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = s + "T00:00:00";
+        // Append +07:00 timezone
+        return new Date(s + "+07:00");
+      }
+      return null;
+    };
+
+    const normalized = rounds.map((r) => ({
+      name: r.name || "",
+      runAt: r.runAt ? parseRunAt(r.runAt) : null,
+      take: typeof r.take === "number" ? r.take : Number(r.take) || 0,
+      executed: Boolean(r.executed),
+      executedAt: r.executedAt ? parseRunAt(r.executedAt) : null,
+    }));
 
     let boot = await BootcampLeague.findOne({ league_id });
     if (!boot) {
-      const gameShort = dcn.league?.game_short || "tft";
       boot = new BootcampLeague({
         league_id,
-        game_short: gameShort,
-        isBootcamp: Boolean(dcn.isBootcamp) || true,
+        game_short: req.params.game || "tft",
+        isBootcamp: true,
         isCompleted: false,
         rank_league: [],
+        rounds: normalized,
       });
+      await boot.save();
+    } else {
+      boot.rounds = normalized;
       await boot.save();
     }
 
-    const now = new Date();
-    if (!force) {
-      if (boot.isCompleted)
-        return res.status(409).json({ message: "Bootcamp already completed" });
-      if (timeStart && now < timeStart)
-        return res.status(400).json({ message: "Bootcamp not started yet" });
-    }
+    return res.json({ success: true, rounds: boot.rounds });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 
-    const allPlayers = Array.isArray(dcn.players) ? dcn.players : [];
+// Admin: update a single round by index
+router.patch("/:game/:league_id/bootcamp/rounds/:idx", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    const idx = Number(req.params.idx);
+    const { name, runAt, take, executed } = req.body;
+    const boot = await BootcampLeague.findOne({ league_id });
+    if (!boot) return res.status(404).json({ message: "Bootcamp not found" });
+    if (!Array.isArray(boot.rounds) || idx < 0 || idx >= boot.rounds.length)
+      return res.status(400).json({ message: "Invalid round index" });
 
-    // Only process players that have an `ign` value (string or array)
-    const playersWithIgn = allPlayers.filter((p) => {
-      if (!p) return false;
-      const rawIgn = p.ign;
-      if (!rawIgn) return false;
-      if (Array.isArray(rawIgn)) return rawIgn.length > 0;
-      if (typeof rawIgn === "string") return rawIgn.trim().length > 0;
-      if (typeof rawIgn === "object")
-        return Boolean(rawIgn.gameName || rawIgn.tagLine || rawIgn.ign);
-      return false;
-    });
-
-    const results = [];
-
-    for (const p of playersWithIgn) {
-      // Normalize p.ign to an array of strings
-      let igns = [];
-      const rawIgn = p.ign;
-      if (Array.isArray(rawIgn)) {
-        igns = rawIgn.slice();
-      } else if (typeof rawIgn === "string") {
-        igns = rawIgn
-          .split(/[,;|]+/)
-          .map((s) => s.trim())
-          .filter(Boolean);
-      } else if (rawIgn && typeof rawIgn === "object") {
-        if (rawIgn.gameName && rawIgn.tagLine)
-          igns = [`${rawIgn.gameName}#${rawIgn.tagLine}`];
-        else if (rawIgn.ign) {
-          if (Array.isArray(rawIgn.ign)) igns = rawIgn.ign.slice();
-          else if (typeof rawIgn.ign === "string") igns = [rawIgn.ign.trim()];
-        }
-      }
-
-      for (const ignRaw of igns) {
-        if (!ignRaw || typeof ignRaw !== "string") continue;
-        let sepIndex = ignRaw.lastIndexOf("#");
-        if (sepIndex === -1) sepIndex = ignRaw.lastIndexOf(".");
-        if (sepIndex <= 0) continue;
-        const gameName = ignRaw.slice(0, sepIndex).trim();
-        const tagLine = ignRaw.slice(sepIndex + 1).trim();
-        if (!gameName || !tagLine) continue;
-
-        try {
-          const accountResp = await axios.get(
-            `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(
-              gameName
-            )}/${encodeURIComponent(tagLine)}`,
-            { headers: { "X-Riot-Token": process.env.TFT_KEY } }
-          );
-
-          const { puuid } = accountResp.data;
-
-          const leagueResp = await axios.get(
-            `https://vn2.api.riotgames.com/tft/league/v1/by-puuid/${encodeURIComponent(
-              puuid
-            )}`,
-            { headers: { "X-Riot-Token": process.env.TFT_KEY } }
-          );
-
-          const rawLeague = Array.isArray(leagueResp.data)
-            ? leagueResp.data
-            : [];
-          const filtered = rawLeague.filter(
-            (entry) => entry && entry.queueType === "RANKED_TFT"
-          );
-          const first = filtered[0] || null;
-
-          const merged = {
-            gameName: accountResp.data.gameName || gameName,
-            tagLine: accountResp.data.tagLine || tagLine,
-            queueType: first?.queueType,
-            leagueId: first?.leagueId,
-            tier: first?.tier || null,
-            rank: first?.rank || null,
-            leaguePoints:
-              typeof first?.leaguePoints === "number"
-                ? first.leaguePoints
-                : null,
-            wins: typeof first?.wins === "number" ? first.wins : 0,
-            losses: typeof first?.losses === "number" ? first.losses : 0,
-            veteran: Boolean(first?.veteran),
-            inactive: Boolean(first?.inactive),
-            freshBlood: Boolean(first?.freshBlood),
-            hotStreak: Boolean(first?.hotStreak),
-            puuid,
-            usernameregister: p.usernameregister,
-            // include optional profile fields from DCN player entry
-            logoUrl: p.logoUrl || null,
-            teamLogo: p.team?.logoTeam || null,
-            team: p.team || null,
-            classTeam: p.classTeam || null,
-            discordID: p.discordID || null,
-          };
-          results.push(merged);
-        } catch (err) {
-          // skip failures silently (per user request: no logs)
-          continue;
+    const round = boot.rounds[idx];
+    if (name !== undefined) round.name = name;
+    if (runAt !== undefined) {
+      // interpret runAt without timezone as GMT+7
+      if (runAt === null) round.runAt = null;
+      else if (runAt instanceof Date) round.runAt = runAt;
+      else if (typeof runAt === "number") round.runAt = new Date(runAt);
+      else if (typeof runAt === "string") {
+        if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(runAt)) round.runAt = new Date(runAt);
+        else {
+          let s = runAt.trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = s + "T00:00:00";
+          round.runAt = new Date(s + "+07:00");
         }
       }
     }
+    if (take !== undefined)
+      round.take = typeof take === "number" ? take : Number(take) || 0;
+    if (executed !== undefined) {
+      round.executed = Boolean(executed);
+      if (round.executed && !round.executedAt) round.executedAt = new Date();
+      if (!round.executed) round.executedAt = null;
+    }
 
-    const entries = results.map((r) => {
-      const totalGames = Number(r.wins || 0) + Number(r.losses || 0);
-      const winrate =
-        totalGames > 0
-          ? parseFloat(((Number(r.wins || 0) * 100) / totalGames).toFixed(2))
-          : 0;
-      return {
-        gameName: r.gameName || "",
-        tagLine: r.tagLine || "",
-        leagueId: r.leagueId || null,
-        tier: r.tier || null,
-        rank: r.rank || null,
-        leaguePoints:
-          typeof r.leaguePoints === "number" ? r.leaguePoints : null,
-        wins: typeof r.wins === "number" ? r.wins : 0,
-        losses: typeof r.losses === "number" ? r.losses : 0,
-        veteran: Boolean(r.veteran),
-        hotStreak: Boolean(r.hotStreak),
-        inactive: Boolean(r.inactive),
-        freshBlood: Boolean(r.freshBlood),
-        winrate,
-        isEliminated: !r.tier,
-        puuid: r.puuid || null,
-        lastUpdated: new Date(),
-        usernameregister: r.usernameregister,
-        logoUrl: r.logoUrl || null,
-        teamLogo: r.teamLogo || null,
-        team: r.team || null,
-        classTeam: r.classTeam || null,
-        discordID: r.discordID || null,
-      };
-    });
-
-    // Sorting
-    const tierOrder = [
-      "CHALLENGER",
-      "GRANDMASTER",
-      "MASTER",
-      "DIAMOND",
-      "PLATINUM",
-      "GOLD",
-      "SILVER",
-      "BRONZE",
-      "IRON",
-    ];
-    const rankOrder = { I: 1, II: 2, III: 3, IV: 4 };
-    entries.sort((a, b) => {
-      const ai = tierOrder.indexOf((a.tier || "").toUpperCase());
-      const bi = tierOrder.indexOf((b.tier || "").toUpperCase());
-      if (ai !== bi) return ai - bi;
-      const ar = rankOrder[(a.rank || "").toUpperCase()] || 999;
-      const br = rankOrder[(b.rank || "").toUpperCase()] || 999;
-      if (ar !== br) return ar - br;
-      const ap = Number(b.leaguePoints || 0);
-      const bp = Number(a.leaguePoints || 0);
-      return ap - bp;
-    });
-
-    boot.rank_league = entries;
-    if (timeEnd && now > timeEnd) boot.isCompleted = true;
     await boot.save();
+    return res.json({ success: true, round });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 
-    return res.json({ success: true, updated: entries.length, boot });
-  } catch (error) {
-    return res.status(500).json({ error: error.message || String(error) });
+// Admin: delete a round by index
+router.delete("/:game/:league_id/bootcamp/rounds/:idx", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    const idx = Number(req.params.idx);
+    const boot = await BootcampLeague.findOne({ league_id });
+    if (!boot) return res.status(404).json({ message: "Bootcamp not found" });
+    if (!Array.isArray(boot.rounds) || idx < 0 || idx >= boot.rounds.length)
+      return res.status(400).json({ message: "Invalid round index" });
+
+    boot.rounds.splice(idx, 1);
+    await boot.save();
+    return res.json({ success: true, rounds: boot.rounds });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
@@ -2042,16 +2240,26 @@ router.get("/:game/bootcamp/:league_id/leaderboard", async (req, res) => {
       : null;
     const now = new Date();
 
-    const formatDate = (dt) => {
+    const formatDate = (dt, tzOffsetMinutes = null) => {
       if (!dt) return null;
       const pad = (n) => String(n).padStart(2, "0");
-      return `${pad(dt.getDate())}/${pad(
-        dt.getMonth() + 1
-      )}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      if (tzOffsetMinutes == null) {
+        return `${pad(dt.getDate())}/${pad(
+          dt.getMonth() + 1
+        )}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      }
+      // create a Date shifted by tzOffsetMinutes and use UTC fields to format
+      const shifted = new Date(dt.getTime() + tzOffsetMinutes * 60 * 1000);
+      return `${pad(shifted.getUTCDate())}/${pad(
+        shifted.getUTCMonth() + 1
+      )}/${shifted.getUTCFullYear()} ${pad(shifted.getUTCHours())}:${pad(
+        shifted.getUTCMinutes()
+      )}`;
     };
 
     let nextRun = null;
-    const intervalMs = 30 * 60 * 1000; // 30 minutes
+    // use env override if provided so scheduler frequency is configurable
+    const intervalMs = SCHEDULER_INTERVAL_MS; // default 1 minute
 
     if (!timeStart) {
       nextRun = null; // schedule unknown
@@ -2075,9 +2283,22 @@ router.get("/:game/bootcamp/:league_id/leaderboard", async (req, res) => {
     const nextRunInfo = nextRun
       ? {
           iso: nextRun.toISOString(),
-          human: formatDate(nextRun),
+          // format human in GMT+7 as requested
+          human: formatDate(nextRun, 7 * 60),
           msRemaining: Math.max(0, nextRun.getTime() - now.getTime()),
-          intervalMinutes: 30,
+          intervalMinutes: Math.round(SCHEDULER_INTERVAL_MS / (60 * 1000)),
+        }
+      : null;
+
+    // rank_last_updated info
+    const rankLast = doc?.rank_last_updated
+      ? new Date(doc.rank_last_updated)
+      : null;
+    const rankLastInfo = rankLast
+      ? {
+          iso: rankLast.toISOString(),
+          human: formatDate(rankLast),
+          msAgo: Math.max(0, now.getTime() - rankLast.getTime()),
         }
       : null;
 
@@ -2085,6 +2306,7 @@ router.get("/:game/bootcamp/:league_id/leaderboard", async (req, res) => {
       timeStart: timeStart ? timeStart.toISOString() : null,
       timeEnd: timeEnd ? timeEnd.toISOString() : null,
       nextRun: nextRunInfo,
+      rankLastUpdated: rankLastInfo,
       ...doc,
     });
   } catch (error) {
