@@ -1822,7 +1822,6 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
   const force = req.body?.force === true;
 
   try {
-    // Load DCN league first (used to determine time window and game_short)
     const dcn = await DCNLeague.findOne({ "league.league_id": league_id });
     if (!dcn) return res.status(404).json({ message: "DCN league not found" });
 
@@ -1831,7 +1830,6 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
       : null;
     const timeEnd = dcn.season?.time_end ? new Date(dcn.season.time_end) : null;
 
-    // Find or create Bootcamp document for this league
     let boot = await BootcampLeague.findOne({ league_id });
     if (!boot) {
       const gameShort = dcn.league?.game_short || "tft";
@@ -1844,8 +1842,8 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
       });
       await boot.save();
     }
-    const now = new Date();
 
+    const now = new Date();
     if (!force) {
       if (boot.isCompleted)
         return res.status(409).json({ message: "Bootcamp already completed" });
@@ -1853,108 +1851,29 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
         return res.status(400).json({ message: "Bootcamp not started yet" });
     }
 
-    // Collect players from DCNLeague that match this game_short.
-    // Relax filter: include players where p.game is missing (fallback),
-    // because some DCN docs may not set per-player `game` field.
     const allPlayers = Array.isArray(dcn.players) ? dcn.players : [];
 
-    // normalize helper: remove non-alphanumeric and lowercase
-    const normalize = (s) =>
-      String(s || "")
-        .replace(/[^a-z0-9 ]/gi, "")
-        .toLowerCase();
-    const targetRaw = String(
-      boot.game_short || dcn.league?.game_short || "tft"
-    ).toLowerCase();
-
-    // alias map: map canonical short -> possible raw names
-    const aliasMap = {
-      tft: [
-        "tft",
-        "teamfight tactics",
-        "teamfighttactics",
-        "team fight tactics",
-      ],
-      lol: ["lol", "league of legends"],
-      valorant: ["valorant", "valo"],
-    };
-
-    // find aliases for targetNorm; fallback to targetRaw itself
-    const findAliases = (raw) => {
-      const key = Object.keys(aliasMap).find((k) => aliasMap[k].includes(raw));
-      return key ? aliasMap[key] : [raw];
-    };
-
-    const targetAliases = findAliases(targetRaw).map((s) => normalize(s));
-
-    // Prepare debug lists
-    const allPlayersSummary = allPlayers.map((p) => ({
-      usernameregister: p.usernameregister,
-      game: p.game || null,
-      ign: p.ign,
-    }));
-
-    // Match when player game is empty OR any alias matches normalized playerGame
-    const players = allPlayers.filter((p) => {
-      const playerGameRaw = String(p.game || "").toLowerCase();
-      if (!playerGameRaw) return true; // include when player.game missing
-      const playerNorm = normalize(playerGameRaw);
-      // check if playerNorm matches any alias or contains alias
-      for (const a of targetAliases) {
-        if (playerNorm === a) return true;
-        if (playerNorm.includes(a)) return true;
-        if (a.includes(playerNorm)) return true;
-      }
+    // Only process players that have an `ign` value (string or array)
+    const playersWithIgn = allPlayers.filter((p) => {
+      if (!p) return false;
+      const rawIgn = p.ign;
+      if (!rawIgn) return false;
+      if (Array.isArray(rawIgn)) return rawIgn.length > 0;
+      if (typeof rawIgn === "string") return rawIgn.trim().length > 0;
+      if (typeof rawIgn === "object")
+        return Boolean(rawIgn.gameName || rawIgn.tagLine || rawIgn.ign);
       return false;
     });
 
-    const filteredPlayersSummary = players.map((p) => ({
-      usernameregister: p.usernameregister,
-      game: p.game || null,
-      ign: p.ign,
-    }));
-
-    // debug info
-    const debug = {
-      dcnPlayersCount: allPlayers.length,
-      filteredPlayersCount: players.length,
-      boot_game_short: boot.game_short,
-      dcn_league_game_short: dcn.league?.game_short || null,
-      allPlayersSummary,
-      filteredPlayersSummary,
-      targetRaw,
-      targetAliases,
-    };
-    console.info(
-      "[bootcamp:updateRanks] debug=",
-      JSON.stringify(debug, null, 2)
-    );
-
-    // Log selected players for visibility
-    console.info(
-      "[bootcamp:updateRanks] selectedPlayers=",
-      JSON.stringify(filteredPlayersSummary, null, 2)
-    );
-
     const results = [];
-    const logs = [];
 
-    for (const p of players) {
-      console.info(
-        "[bootcamp:updateRanks] processing user=",
-        p.usernameregister,
-        "game=",
-        p.game,
-        "ign=",
-        JSON.stringify(p.ign)
-      );
+    for (const p of playersWithIgn) {
       // Normalize p.ign to an array of strings
       let igns = [];
       const rawIgn = p.ign;
       if (Array.isArray(rawIgn)) {
         igns = rawIgn.slice();
       } else if (typeof rawIgn === "string") {
-        // allow comma/semicolon/pipe separated list in a single string
         igns = rawIgn
           .split(/[,;|]+/)
           .map((s) => s.trim())
@@ -1969,66 +1888,15 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
       }
 
       for (const ignRaw of igns) {
-        console.info(
-          "[bootcamp:updateRanks] attempt IGN=",
-          ignRaw,
-          "for user=",
-          p.usernameregister
-        );
-        if (!ignRaw || typeof ignRaw !== "string") {
-          logs.push({
-            usernameregister: p.usernameregister,
-            gameName: null,
-            tagLine: null,
-            tier: null,
-            rank: null,
-            leaguePoints: null,
-            puuid: null,
-            error: "invalid ign type",
-          });
-          continue;
-        }
-        // split on last '#' or last '.' (prefer '#') to support names containing dots
+        if (!ignRaw || typeof ignRaw !== "string") continue;
         let sepIndex = ignRaw.lastIndexOf("#");
         if (sepIndex === -1) sepIndex = ignRaw.lastIndexOf(".");
-        if (sepIndex <= 0) {
-          // cannot parse tagLine, skip but log
-          results.push({
-            gameName: ignRaw,
-            tagLine: null,
-            error: "missing tag separator",
-            usernameregister: p.usernameregister,
-          });
-          logs.push({
-            usernameregister: p.usernameregister,
-            gameName: ignRaw,
-            tagLine: null,
-            tier: null,
-            rank: null,
-            leaguePoints: null,
-            puuid: null,
-            error: "missing tag separator",
-          });
-          continue;
-        }
+        if (sepIndex <= 0) continue;
         const gameName = ignRaw.slice(0, sepIndex).trim();
         const tagLine = ignRaw.slice(sepIndex + 1).trim();
-        if (!gameName || !tagLine) {
-          results.push({
-            gameName: ignRaw,
-            tagLine: null,
-            error: "invalid riot id format",
-            usernameregister: p.usernameregister,
-          });
-          continue;
-        }
+        if (!gameName || !tagLine) continue;
 
         try {
-          console.info(
-            "[bootcamp:updateRanks] calling Riot for",
-            gameName,
-            tagLine
-          );
           const accountResp = await axios.get(
             `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(
               gameName
@@ -2058,8 +1926,8 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
             tagLine: accountResp.data.tagLine || tagLine,
             queueType: first?.queueType,
             leagueId: first?.leagueId,
-            tier: first?.tier,
-            rank: first?.rank,
+            tier: first?.tier || null,
+            rank: first?.rank || null,
             leaguePoints:
               typeof first?.leaguePoints === "number"
                 ? first.leaguePoints
@@ -2072,48 +1940,21 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
             hotStreak: Boolean(first?.hotStreak),
             puuid,
             usernameregister: p.usernameregister,
+            // include optional profile fields from DCN player entry
+            logoUrl: p.logoUrl || null,
+            teamLogo: p.team?.logoTeam || null,
+            team: p.team || null,
+            classTeam: p.classTeam || null,
+            discordID: p.discordID || null,
           };
           results.push(merged);
-          logs.push({
-            usernameregister: p.usernameregister,
-            gameName: merged.gameName,
-            tagLine: merged.tagLine,
-            tier: merged.tier,
-            rank: merged.rank,
-            leaguePoints: merged.leaguePoints,
-            puuid: merged.puuid,
-            error: null,
-          });
         } catch (err) {
-          const errInfo = err.response?.data || err.message;
-          results.push({
-            gameName,
-            tagLine,
-            error: errInfo,
-            usernameregister: p.usernameregister,
-          });
-          logs.push({
-            usernameregister: p.usernameregister,
-            gameName,
-            tagLine,
-            tier: null,
-            rank: null,
-            leaguePoints: null,
-            puuid: null,
-            error: errInfo,
-          });
-          console.error(
-            "[bootcamp:updateRanks] Riot error for",
-            gameName,
-            tagLine,
-            "->",
-            errInfo
-          );
+          // skip failures silently (per user request: no logs)
+          continue;
         }
       }
     }
 
-    // Map to rank entries
     const entries = results.map((r) => {
       const totalGames = Number(r.wins || 0) + Number(r.losses || 0);
       const winrate =
@@ -2139,10 +1980,15 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
         puuid: r.puuid || null,
         lastUpdated: new Date(),
         usernameregister: r.usernameregister,
+        logoUrl: r.logoUrl || null,
+        teamLogo: r.teamLogo || null,
+        team: r.team || null,
+        classTeam: r.classTeam || null,
+        discordID: r.discordID || null,
       };
     });
 
-    // Sorting: tier -> rank -> leaguePoints(desc)
+    // Sorting
     const tierOrder = [
       "CHALLENGER",
       "GRANDMASTER",
@@ -2155,7 +2001,6 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
       "IRON",
     ];
     const rankOrder = { I: 1, II: 2, III: 3, IV: 4 };
-
     entries.sort((a, b) => {
       const ai = tierOrder.indexOf((a.tier || "").toUpperCase());
       const bi = tierOrder.indexOf((b.tier || "").toUpperCase());
@@ -2169,31 +2014,11 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
     });
 
     boot.rank_league = entries;
-
-    // If timeEnd passed, set isCompleted true (run final update)
-    if (timeEnd && now > timeEnd) {
-      boot.isCompleted = true;
-    }
-
+    if (timeEnd && now > timeEnd) boot.isCompleted = true;
     await boot.save();
 
-    console.info(
-      "[bootcamp:updateRanks] league_id=",
-      league_id,
-      "updated=",
-      entries.length
-    );
-    console.info("[bootcamp:updateRanks] logs=", JSON.stringify(logs, null, 2));
-
-    return res.json({
-      success: true,
-      updated: entries.length,
-      boot,
-      logs,
-      debug,
-    });
+    return res.json({ success: true, updated: entries.length, boot });
   } catch (error) {
-    console.error("Error updating bootcamp ranks:", error);
     return res.status(500).json({ error: error.message || String(error) });
   }
 });

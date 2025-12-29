@@ -7,6 +7,15 @@ const RankEntrySchema = new Schema(
   {
     gameName: { type: String },
     tagLine: { type: String },
+    discordID: String,
+    classTeam: String,
+    team: {
+      name: String,
+      logoTeam: String,
+      shortName: String,
+    },
+    usernameregister: String,
+    logoUrl: String,
     leagueId: { type: String },
     tier: { type: String },
     rank: { type: String },
