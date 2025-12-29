@@ -74,25 +74,47 @@ export default function Rulebook() {
 
   const navigationAll1 = {
     aov: [
-      {
-        name: 'Tổng quan',
-        href: `/${game}/${league_id}`,
-        current: location.pathname === `/${game}/${league_id}`,
-      },
+      // Add optional /bootcamp segment when current path includes it
+      (() => {
+        const bootcampSegment = location.pathname.includes('/bootcamp/') ? '/bootcamp' : '';
+        return {
+          name: 'Tổng quan',
+          href: `/${game}${bootcampSegment}/${league_id}`,
+          current: location.pathname === `/${game}${bootcampSegment}/${league_id}`,
+        };
+      })(),
       {
         name: 'Người chơi',
-        href: `/${game}/${league_id}/players`,
-        current: location.pathname === `/${game}/${league_id}/players`,
+        href: `/${game}${
+          location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
+        }/${league_id}/players`,
+        current:
+          location.pathname ===
+          `/${game}${
+            location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
+          }/${league_id}/players`,
       },
       {
         name: 'BXH',
-        href: `/${game}/${league_id}/leaderboard`,
-        current: location.pathname === `/${game}/${league_id}/leaderboard`,
+        href: `/${game}${
+          location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
+        }/${league_id}/leaderboard`,
+        current:
+          location.pathname ===
+          `/${game}${
+            location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
+          }/${league_id}/leaderboard`,
       },
       {
         name: 'Luật',
-        href: `/${game}/${league_id}/rule`,
-        current: location.pathname === `/${game}/${league_id}/rule`,
+        href: `/${game}${
+          location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
+        }/${league_id}/rule`,
+        current:
+          location.pathname ===
+          `/${game}${
+            location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
+          }/${league_id}/rule`,
       },
     ],
   };

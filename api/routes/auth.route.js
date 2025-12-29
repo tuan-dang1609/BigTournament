@@ -5,6 +5,7 @@ import User from "../models/user.model.js";
 import BanPickValo from "../models/veto.model.js";
 import Organization from "../models/team.model.js";
 import DCNLeague from "../models/tournament.model.js";
+import BootcampLeague from "../models/bootcamp.model.js";
 
 import Bracket from "../models/bracket.model.js";
 import ValorantMatch from "../models/valorantmatch.model.js";
@@ -1808,6 +1809,462 @@ router.get("/tft/:gameName/:tagLine", async (req, res) => {
     return res
       .status(error.response?.status || 500)
       .json({ error: error.response?.data || error.message });
+  }
+});
+
+// Route: Update bootcamp ranks for a given league_id
+// This endpoint will fetch current ranked data from Riot for participants
+// and update the `rank_league` array in the Bootcamp schema.
+// It is intended to be triggered periodically (every 30 minutes externally)
+// between the DCN league `season.time_start` and `season.time_end`.
+router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
+  const { league_id } = req.params;
+  const force = req.body?.force === true;
+
+  try {
+    // Load DCN league first (used to determine time window and game_short)
+    const dcn = await DCNLeague.findOne({ "league.league_id": league_id });
+    if (!dcn) return res.status(404).json({ message: "DCN league not found" });
+
+    const timeStart = dcn.season?.time_start
+      ? new Date(dcn.season.time_start)
+      : null;
+    const timeEnd = dcn.season?.time_end ? new Date(dcn.season.time_end) : null;
+
+    // Find or create Bootcamp document for this league
+    let boot = await BootcampLeague.findOne({ league_id });
+    if (!boot) {
+      const gameShort = dcn.league?.game_short || "tft";
+      boot = new BootcampLeague({
+        league_id,
+        game_short: gameShort,
+        isBootcamp: Boolean(dcn.isBootcamp) || true,
+        isCompleted: false,
+        rank_league: [],
+      });
+      await boot.save();
+    }
+    const now = new Date();
+
+    if (!force) {
+      if (boot.isCompleted)
+        return res.status(409).json({ message: "Bootcamp already completed" });
+      if (timeStart && now < timeStart)
+        return res.status(400).json({ message: "Bootcamp not started yet" });
+    }
+
+    // Collect players from DCNLeague that match this game_short.
+    // Relax filter: include players where p.game is missing (fallback),
+    // because some DCN docs may not set per-player `game` field.
+    const allPlayers = Array.isArray(dcn.players) ? dcn.players : [];
+
+    // normalize helper: remove non-alphanumeric and lowercase
+    const normalize = (s) =>
+      String(s || "")
+        .replace(/[^a-z0-9 ]/gi, "")
+        .toLowerCase();
+    const targetRaw = String(
+      boot.game_short || dcn.league?.game_short || "tft"
+    ).toLowerCase();
+
+    // alias map: map canonical short -> possible raw names
+    const aliasMap = {
+      tft: [
+        "tft",
+        "teamfight tactics",
+        "teamfighttactics",
+        "team fight tactics",
+      ],
+      lol: ["lol", "league of legends"],
+      valorant: ["valorant", "valo"],
+    };
+
+    // find aliases for targetNorm; fallback to targetRaw itself
+    const findAliases = (raw) => {
+      const key = Object.keys(aliasMap).find((k) => aliasMap[k].includes(raw));
+      return key ? aliasMap[key] : [raw];
+    };
+
+    const targetAliases = findAliases(targetRaw).map((s) => normalize(s));
+
+    // Prepare debug lists
+    const allPlayersSummary = allPlayers.map((p) => ({
+      usernameregister: p.usernameregister,
+      game: p.game || null,
+      ign: p.ign,
+    }));
+
+    // Match when player game is empty OR any alias matches normalized playerGame
+    const players = allPlayers.filter((p) => {
+      const playerGameRaw = String(p.game || "").toLowerCase();
+      if (!playerGameRaw) return true; // include when player.game missing
+      const playerNorm = normalize(playerGameRaw);
+      // check if playerNorm matches any alias or contains alias
+      for (const a of targetAliases) {
+        if (playerNorm === a) return true;
+        if (playerNorm.includes(a)) return true;
+        if (a.includes(playerNorm)) return true;
+      }
+      return false;
+    });
+
+    const filteredPlayersSummary = players.map((p) => ({
+      usernameregister: p.usernameregister,
+      game: p.game || null,
+      ign: p.ign,
+    }));
+
+    // debug info
+    const debug = {
+      dcnPlayersCount: allPlayers.length,
+      filteredPlayersCount: players.length,
+      boot_game_short: boot.game_short,
+      dcn_league_game_short: dcn.league?.game_short || null,
+      allPlayersSummary,
+      filteredPlayersSummary,
+      targetRaw,
+      targetAliases,
+    };
+    console.info(
+      "[bootcamp:updateRanks] debug=",
+      JSON.stringify(debug, null, 2)
+    );
+
+    // Log selected players for visibility
+    console.info(
+      "[bootcamp:updateRanks] selectedPlayers=",
+      JSON.stringify(filteredPlayersSummary, null, 2)
+    );
+
+    const results = [];
+    const logs = [];
+
+    for (const p of players) {
+      console.info(
+        "[bootcamp:updateRanks] processing user=",
+        p.usernameregister,
+        "game=",
+        p.game,
+        "ign=",
+        JSON.stringify(p.ign)
+      );
+      // Normalize p.ign to an array of strings
+      let igns = [];
+      const rawIgn = p.ign;
+      if (Array.isArray(rawIgn)) {
+        igns = rawIgn.slice();
+      } else if (typeof rawIgn === "string") {
+        // allow comma/semicolon/pipe separated list in a single string
+        igns = rawIgn
+          .split(/[,;|]+/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+      } else if (rawIgn && typeof rawIgn === "object") {
+        if (rawIgn.gameName && rawIgn.tagLine)
+          igns = [`${rawIgn.gameName}#${rawIgn.tagLine}`];
+        else if (rawIgn.ign) {
+          if (Array.isArray(rawIgn.ign)) igns = rawIgn.ign.slice();
+          else if (typeof rawIgn.ign === "string") igns = [rawIgn.ign.trim()];
+        }
+      }
+
+      for (const ignRaw of igns) {
+        console.info(
+          "[bootcamp:updateRanks] attempt IGN=",
+          ignRaw,
+          "for user=",
+          p.usernameregister
+        );
+        if (!ignRaw || typeof ignRaw !== "string") {
+          logs.push({
+            usernameregister: p.usernameregister,
+            gameName: null,
+            tagLine: null,
+            tier: null,
+            rank: null,
+            leaguePoints: null,
+            puuid: null,
+            error: "invalid ign type",
+          });
+          continue;
+        }
+        // split on last '#' or last '.' (prefer '#') to support names containing dots
+        let sepIndex = ignRaw.lastIndexOf("#");
+        if (sepIndex === -1) sepIndex = ignRaw.lastIndexOf(".");
+        if (sepIndex <= 0) {
+          // cannot parse tagLine, skip but log
+          results.push({
+            gameName: ignRaw,
+            tagLine: null,
+            error: "missing tag separator",
+            usernameregister: p.usernameregister,
+          });
+          logs.push({
+            usernameregister: p.usernameregister,
+            gameName: ignRaw,
+            tagLine: null,
+            tier: null,
+            rank: null,
+            leaguePoints: null,
+            puuid: null,
+            error: "missing tag separator",
+          });
+          continue;
+        }
+        const gameName = ignRaw.slice(0, sepIndex).trim();
+        const tagLine = ignRaw.slice(sepIndex + 1).trim();
+        if (!gameName || !tagLine) {
+          results.push({
+            gameName: ignRaw,
+            tagLine: null,
+            error: "invalid riot id format",
+            usernameregister: p.usernameregister,
+          });
+          continue;
+        }
+
+        try {
+          console.info(
+            "[bootcamp:updateRanks] calling Riot for",
+            gameName,
+            tagLine
+          );
+          const accountResp = await axios.get(
+            `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(
+              gameName
+            )}/${encodeURIComponent(tagLine)}`,
+            { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+          );
+
+          const { puuid } = accountResp.data;
+
+          const leagueResp = await axios.get(
+            `https://vn2.api.riotgames.com/tft/league/v1/by-puuid/${encodeURIComponent(
+              puuid
+            )}`,
+            { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+          );
+
+          const rawLeague = Array.isArray(leagueResp.data)
+            ? leagueResp.data
+            : [];
+          const filtered = rawLeague.filter(
+            (entry) => entry && entry.queueType === "RANKED_TFT"
+          );
+          const first = filtered[0] || null;
+
+          const merged = {
+            gameName: accountResp.data.gameName || gameName,
+            tagLine: accountResp.data.tagLine || tagLine,
+            queueType: first?.queueType,
+            leagueId: first?.leagueId,
+            tier: first?.tier,
+            rank: first?.rank,
+            leaguePoints:
+              typeof first?.leaguePoints === "number"
+                ? first.leaguePoints
+                : null,
+            wins: typeof first?.wins === "number" ? first.wins : 0,
+            losses: typeof first?.losses === "number" ? first.losses : 0,
+            veteran: Boolean(first?.veteran),
+            inactive: Boolean(first?.inactive),
+            freshBlood: Boolean(first?.freshBlood),
+            hotStreak: Boolean(first?.hotStreak),
+            puuid,
+            usernameregister: p.usernameregister,
+          };
+          results.push(merged);
+          logs.push({
+            usernameregister: p.usernameregister,
+            gameName: merged.gameName,
+            tagLine: merged.tagLine,
+            tier: merged.tier,
+            rank: merged.rank,
+            leaguePoints: merged.leaguePoints,
+            puuid: merged.puuid,
+            error: null,
+          });
+        } catch (err) {
+          const errInfo = err.response?.data || err.message;
+          results.push({
+            gameName,
+            tagLine,
+            error: errInfo,
+            usernameregister: p.usernameregister,
+          });
+          logs.push({
+            usernameregister: p.usernameregister,
+            gameName,
+            tagLine,
+            tier: null,
+            rank: null,
+            leaguePoints: null,
+            puuid: null,
+            error: errInfo,
+          });
+          console.error(
+            "[bootcamp:updateRanks] Riot error for",
+            gameName,
+            tagLine,
+            "->",
+            errInfo
+          );
+        }
+      }
+    }
+
+    // Map to rank entries
+    const entries = results.map((r) => {
+      const totalGames = Number(r.wins || 0) + Number(r.losses || 0);
+      const winrate =
+        totalGames > 0
+          ? parseFloat(((Number(r.wins || 0) * 100) / totalGames).toFixed(2))
+          : 0;
+      return {
+        gameName: r.gameName || "",
+        tagLine: r.tagLine || "",
+        leagueId: r.leagueId || null,
+        tier: r.tier || null,
+        rank: r.rank || null,
+        leaguePoints:
+          typeof r.leaguePoints === "number" ? r.leaguePoints : null,
+        wins: typeof r.wins === "number" ? r.wins : 0,
+        losses: typeof r.losses === "number" ? r.losses : 0,
+        veteran: Boolean(r.veteran),
+        hotStreak: Boolean(r.hotStreak),
+        inactive: Boolean(r.inactive),
+        freshBlood: Boolean(r.freshBlood),
+        winrate,
+        isEliminated: !r.tier,
+        puuid: r.puuid || null,
+        lastUpdated: new Date(),
+        usernameregister: r.usernameregister,
+      };
+    });
+
+    // Sorting: tier -> rank -> leaguePoints(desc)
+    const tierOrder = [
+      "CHALLENGER",
+      "GRANDMASTER",
+      "MASTER",
+      "DIAMOND",
+      "PLATINUM",
+      "GOLD",
+      "SILVER",
+      "BRONZE",
+      "IRON",
+    ];
+    const rankOrder = { I: 1, II: 2, III: 3, IV: 4 };
+
+    entries.sort((a, b) => {
+      const ai = tierOrder.indexOf((a.tier || "").toUpperCase());
+      const bi = tierOrder.indexOf((b.tier || "").toUpperCase());
+      if (ai !== bi) return ai - bi;
+      const ar = rankOrder[(a.rank || "").toUpperCase()] || 999;
+      const br = rankOrder[(b.rank || "").toUpperCase()] || 999;
+      if (ar !== br) return ar - br;
+      const ap = Number(b.leaguePoints || 0);
+      const bp = Number(a.leaguePoints || 0);
+      return ap - bp;
+    });
+
+    boot.rank_league = entries;
+
+    // If timeEnd passed, set isCompleted true (run final update)
+    if (timeEnd && now > timeEnd) {
+      boot.isCompleted = true;
+    }
+
+    await boot.save();
+
+    console.info(
+      "[bootcamp:updateRanks] league_id=",
+      league_id,
+      "updated=",
+      entries.length
+    );
+    console.info("[bootcamp:updateRanks] logs=", JSON.stringify(logs, null, 2));
+
+    return res.json({
+      success: true,
+      updated: entries.length,
+      boot,
+      logs,
+      debug,
+    });
+  } catch (error) {
+    console.error("Error updating bootcamp ranks:", error);
+    return res.status(500).json({ error: error.message || String(error) });
+  }
+});
+
+// GET single bootcamp by league_id
+router.get("/:game/bootcamp/:league_id/leaderboard", async (req, res) => {
+  try {
+    const { league_id } = req.params;
+    const doc = await BootcampLeague.findOne({ league_id }).lean();
+    if (!doc) return res.status(404).json({ message: "Not found" });
+
+    // Fetch DCN league to compute schedule (season.time_start / time_end)
+    const dcn = await DCNLeague.findOne({
+      "league.league_id": league_id,
+    }).lean();
+    const timeStart = dcn?.season?.time_start
+      ? new Date(dcn.season.time_start)
+      : null;
+    const timeEnd = dcn?.season?.time_end
+      ? new Date(dcn.season.time_end)
+      : null;
+    const now = new Date();
+
+    const formatDate = (dt) => {
+      if (!dt) return null;
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${pad(dt.getDate())}/${pad(
+        dt.getMonth() + 1
+      )}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+    };
+
+    let nextRun = null;
+    const intervalMs = 30 * 60 * 1000; // 30 minutes
+
+    if (!timeStart) {
+      nextRun = null; // schedule unknown
+    } else if (now < timeStart) {
+      nextRun = new Date(timeStart);
+    } else if (timeEnd && now > timeEnd) {
+      nextRun = null; // finished
+    } else {
+      const diff = now.getTime() - timeStart.getTime();
+      const elapsed = Math.floor(diff / intervalMs);
+      const candidate = new Date(
+        timeStart.getTime() + (elapsed + 1) * intervalMs
+      );
+      if (timeEnd && candidate > timeEnd) {
+        nextRun = null; // no further runs
+      } else {
+        nextRun = candidate;
+      }
+    }
+
+    const nextRunInfo = nextRun
+      ? {
+          iso: nextRun.toISOString(),
+          human: formatDate(nextRun),
+          msRemaining: Math.max(0, nextRun.getTime() - now.getTime()),
+          intervalMinutes: 30,
+        }
+      : null;
+
+    return res.json({
+      timeStart: timeStart ? timeStart.toISOString() : null,
+      timeEnd: timeEnd ? timeEnd.toISOString() : null,
+      nextRun: nextRunInfo,
+      ...doc,
+    });
+  } catch (error) {
+    console.error("Error fetching bootcamp doc:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 router.get("/findallteamValorant", findAllteamValorant);

@@ -60,6 +60,7 @@ import ForgotPassword from './components/ForgotPassword.jsx';
 import MemberPage from './tft/allplayer.jsx';
 import RulebookAll from './components/rule.jsx';
 import Leaderboard from './tft/leaderboard.jsx';
+import LeaderboardBootcamp from './tft/leaderboardbootcamp.jsx';
 import BracketPage from './components/bracket.jsx';
 import ValorantMatchCard from './components/aftermatchdata.jsx';
 import ValorantLobby from './valorant/lobby.jsx';
@@ -115,7 +116,10 @@ if (rootElement) {
             <Route path="/:game/bootcamp/:league_id" element={<Bootcamp />} />
             <Route path="/:game/bootcamp/:league_id/players" element={<MemberPage />} />
             <Route path="/:game/bootcamp/:league_id/rule" element={<RulebookAll />} />
-            <Route path="/:game/bootcamp/:league_id/leaderboard" element={<Leaderboard />} />
+            <Route
+              path="/:game/bootcamp/:league_id/leaderboard"
+              element={<LeaderboardBootcamp />}
+            />
             <Route path="/:game/:league_id/players" element={<MemberPage />} />
             <Route path="/:game/:league_id/rule" element={<RulebookAll />} />
             <Route path="/:game/:league_id/leaderboard" element={<Leaderboard />} />
