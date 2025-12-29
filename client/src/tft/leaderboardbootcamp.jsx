@@ -18,6 +18,12 @@ const Leaderboard = () => {
 
   const [leaderboardData, setLeaderboardData] = useState([]);
 
+  const formatTierFile = (tier) => {
+    if (!tier) return 'Unranked';
+    const t = String(tier).toLowerCase();
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  };
+
   useEffect(() => {
     const scrollToTop = () => {
       document.documentElement.scrollTop = 0;
@@ -43,7 +49,9 @@ const Leaderboard = () => {
           // many existing players store logoUrl and team.logoTeam
           puuidToProfile[p.puuid] = {
             avatar: p.logoUrl ? `https://drive.google.com/thumbnail?id=${p.logoUrl}` : null,
-            teamLogo: p.team?.logoTeam ? `https://drive.google.com/thumbnail?id=${p.team.logoTeam}` : null,
+            teamLogo: p.team?.logoTeam
+              ? `https://drive.google.com/thumbnail?id=${p.team.logoTeam}`
+              : null,
             riotId,
           };
         });
@@ -56,7 +64,9 @@ const Leaderboard = () => {
         }));
 
         // sort by leaguePoints then wins
-        mapped.sort((a, b) => (b.leaguePoints || 0) - (a.leaguePoints || 0) || (b.wins || 0) - (a.wins || 0));
+        mapped.sort(
+          (a, b) => (b.leaguePoints || 0) - (a.leaguePoints || 0) || (b.wins || 0) - (a.wins || 0)
+        );
         setLeaderboardData(mapped);
       } catch (err) {
         console.error('Error fetching bootcamp leaderboard', err);
@@ -116,20 +126,15 @@ const Leaderboard = () => {
         game={game}
       />
 
-
-
       <div className="overflow-x-auto mt-6 px-4 bg-base-100">
-        <table className="table table-auto min-w-max text-center lg:w-full w-full">
+        <table className="table table-auto min-w-max text-center lg:w-full w-full font-semibold">
           <thead>
             <tr>
               <th className="sticky left-0 bg-base-100 z-20">Tên người chơi</th>
-              <th className="bg-base-100 z-20">Tổ chức</th>
-              <th>Hạng</th>
-              <th>LP</th>
+              <th className="bg-base-100 z-20">Rank</th>
               <th>Wins</th>
               <th>Losses</th>
               <th>Winrate</th>
-              
             </tr>
           </thead>
           <tbody>
@@ -145,21 +150,26 @@ const Leaderboard = () => {
                     {player.name}
                   </span>
                 </td>
-                <td className="z-10">
-                  <img
-                    src={player.teamLogo || ''}
-                    alt="team-logo"
-                    className={`w-10 h-10 rounded-full object-cover mx-auto ${
-                      !player.teamLogo ? 'invisible' : ''
-                    }`}
-                  />
+
+                <td className="items-center justify-center">
+                  <div className="flex items-center justify-center gap-x-2 whitespace-nowrap">
+                    <img
+                      src={`/ranklol/${formatTierFile(player.tier)}.png`}
+                      className="w-16 h-16"
+                    />
+                    <span>
+                      {player.rank
+                        ? player.rank
+                        : player.tier
+                        ? formatTierFile(player.tier)
+                        : '-'}
+                    </span>
+                    <span>{player.leaguePoints ?? '-'} LP</span>
+                  </div>
                 </td>
-                <td>{player.tier ? `${player.tier} ${player.rank || ''}` : '-'}</td>
-                <td>{player.leaguePoints ?? '-'}</td>
                 <td>{player.wins ?? '-'}</td>
                 <td>{player.losses ?? '-'}</td>
                 <td>{player.winrate ? `${player.winrate}%` : '-'}</td>
-                
               </tr>
             ))}
           </tbody>
