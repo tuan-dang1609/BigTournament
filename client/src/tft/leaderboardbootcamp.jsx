@@ -16,31 +16,7 @@ const Leaderboard = () => {
     (p) => String(p.usernameregister) === String(currentUser?._id)
   );
 
-  const [selectedDay, setSelectedDay] = useState(null);
   const [leaderboardData, setLeaderboardData] = useState([]);
-  const [columnCount, setColumnCount] = useState(0);
-  const daySchedule = {
-    day1: new Date('2025-09-02T22:00:00'), // ví dụ: ngày thi đấu vòng loại 1
-    day2: new Date('2025-09-02T23:00:00'), // ví dụ: vòng loại 2
-  };
-  useEffect(() => {
-    if (!league?.matches) return;
-
-    const today = new Date();
-    let closestDay = null;
-
-    for (const [dayKey, date] of Object.entries(daySchedule)) {
-      if (!league.matches[dayKey]) continue;
-
-      if (!closestDay || Math.abs(today - date) < Math.abs(today - closestDay.date)) {
-        closestDay = { key: dayKey, date };
-      }
-    }
-
-    if (closestDay) {
-      setSelectedDay(closestDay.key);
-    }
-  }, [league]);
 
   useEffect(() => {
     const scrollToTop = () => {
@@ -52,182 +28,43 @@ const Leaderboard = () => {
       document.title = `${league.league.name}`;
     }
   }, [league]);
-
   useEffect(() => {
-    const generateLeaderboard = () => {
-      // DEBUG LOGS
-      console.log('league.players', league?.players);
-      // registeredPuuids will be filled below
-      if (!league || !league.matches || !league.matches[selectedDay]) return;
+    const fetchBootcampLeaderboard = async () => {
+      try {
+        const res = await fetch(`/api/auth/${game}/bootcamp/${league_id}/leaderboard`);
+        if (!res.ok) throw new Error('Failed to fetch bootcamp leaderboard');
+        const data = await res.json();
+        const entries = data.rank_league || [];
 
-      const lobbies = league.matches[selectedDay];
-      const maxMatches = Math.max(...lobbies.map((l) => l.matchIds.length));
-      setColumnCount(maxMatches);
-
-      const playerScores = {};
-      // Map riotID -> puuid (from match data)
-      const riotIdToPuuid = {};
-      // Duyệt qua tất cả match để lấy mapping riotID -> puuid
-      Object.values(allMatchData).forEach((match) => {
-        match.info.participants.forEach((p) => {
-          const riotId = `${p.riotIdGameName}#${p.riotIdTagline}`;
-          riotIdToPuuid[riotId] = p.puuid;
-        });
-      });
-
-      // Map puuid <-> player info, registeredPuuids
-      const puuidToPlayer = {};
-      const registeredPuuids = new Set();
-      league.players.forEach((p) => {
-        const riotId = p.ign?.[0];
-        const puuid = riotIdToPuuid[riotId];
-        if (puuid) {
-          puuidToPlayer[puuid] = { ...p, riotId };
-          registeredPuuids.add(puuid);
-        }
-      });
-      console.log('registeredPuuids', Array.from(registeredPuuids));
-
-      for (let matchIndex = 0; matchIndex < maxMatches; matchIndex++) {
-        // DEBUG
-        console.log('lobbies', lobbies);
-        const presentPlayers = new Set();
-        let matchExists = false;
-
-        for (const lobby of lobbies) {
-          // DEBUG
-          // console.log('lobby', lobby);
-          const matchId = lobby.matchIds[matchIndex];
-          if (matchId === '0' || !allMatchData[matchId]) continue;
-          matchExists = true;
-
-          const match = allMatchData[matchId];
-          // DEBUG
-          // console.log('match', match);
-          const participants = match.info.participants.map((p) => ({
-            puuid: p.puuid,
-            placement: p.placement,
-          }));
-          // DEBUG
-          // console.log('participants', participants);
-
-          const outsiders = participants.filter((p) => !registeredPuuids.has(p.puuid));
-          const outsidersPlacements = outsiders.map((p) => p.placement);
-
-          match.info.participants.forEach((p) => {
-            // DEBUG
-            // console.log('participant', p);
-            const puuid = p.puuid;
-            let score = 9 - p.placement;
-
-            if (!registeredPuuids.has(puuid)) return;
-
-            presentPlayers.add(puuid);
-
-            const outsiderAbove = outsidersPlacements.filter((o) => o < p.placement).length;
-            if (outsiderAbove > 0) {
-              score += outsiderAbove;
-            }
-
-            if (!playerScores[puuid]) {
-              playerScores[puuid] = {
-                puuid,
-                riotId: puuidToPlayer[puuid]?.riotId || '',
-                scores: Array(maxMatches).fill(0),
-                total: 0,
-              };
-            }
-
-            playerScores[puuid].scores[matchIndex] = score;
-            playerScores[puuid].total += score;
-          });
-        }
-
-        registeredPuuids.forEach((puuid) => {
-          if (!playerScores[puuid]) {
-            playerScores[puuid] = {
-              puuid,
-              riotId: puuidToPlayer[puuid]?.riotId || '',
-              scores: Array(maxMatches).fill(0),
-              total: 0,
-            };
-          }
-
-          if (matchExists && !presentPlayers.has(puuid)) {
-            playerScores[puuid].scores[matchIndex] = 1;
-            playerScores[puuid].total += 1;
-          }
-        });
-      }
-
-      const sorted = Object.values(playerScores).sort((a, b) => b.total - a.total);
-      console.log('playerScores', playerScores);
-
-      // === LỌC TOP 8 NGÀY TRƯỚC NẾU LÀ NGÀY CUỐI ===
-      let filtered = sorted;
-
-      const matchKeys = Object.keys(league.matches);
-      const lastDayKey = matchKeys[matchKeys.length - 1];
-      const prevDayKey = matchKeys[matchKeys.length - 2];
-
-      if (selectedDay === lastDayKey && league.matches[prevDayKey]) {
-        const prevLobbies = league.matches[prevDayKey];
-        const maxMatchesPrev = Math.max(...prevLobbies.map((l) => l.matchIds.length));
-        const prevScores = {};
-
-        for (let matchIndex = 0; matchIndex < maxMatchesPrev; matchIndex++) {
-          for (const lobby of prevLobbies) {
-            const matchId = lobby.matchIds[matchIndex];
-            if (matchId === '0' || !allMatchData[matchId]) continue;
-
-            const match = allMatchData[matchId];
-            match.info.participants.forEach((p) => {
-              const puuid = p.puuid;
-              if (!registeredPuuids.has(puuid)) return;
-
-              if (!prevScores[puuid]) prevScores[puuid] = 0;
-              prevScores[puuid] += 9 - p.placement;
-            });
-          }
-        }
-
-        const top8Puuids = Object.entries(prevScores)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 8)
-          .map(([puuid]) => puuid);
-
-        filtered = sorted.filter((p) => top8Puuids.includes(p.puuid));
-      }
-
-      // GẮN AVATAR VÀ LOGO
-      const playerMap = {};
-      league.players.forEach((p) => {
-        const riotId = p.ign?.[0];
-        const puuid = riotIdToPuuid[riotId];
-        const avatar = `https://drive.google.com/thumbnail?id=${p.logoUrl}`;
-        const teamLogo = `https://drive.google.com/thumbnail?id=${p.team.logoTeam}`;
-        if (puuid) {
-          playerMap[puuid] = {
-            avatar: avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-            teamLogo: teamLogo || null,
-            riotId: riotId || '',
+        // attach avatar/teamLogo from league.players when possible
+        const puuidToProfile = {};
+        (league?.players || []).forEach((p) => {
+          const riotId = p.ign?.[0];
+          // many existing players store logoUrl and team.logoTeam
+          puuidToProfile[p.puuid] = {
+            avatar: p.logoUrl ? `https://drive.google.com/thumbnail?id=${p.logoUrl}` : null,
+            teamLogo: p.team?.logoTeam ? `https://drive.google.com/thumbnail?id=${p.team.logoTeam}` : null,
+            riotId,
           };
-        }
-      });
+        });
 
-      const leaderboardWithProfile = filtered.map((p) => ({
-        ...p,
-        avatar: playerMap[p.puuid]?.avatar,
-        teamLogo: playerMap[p.puuid]?.teamLogo,
-        name: playerMap[p.puuid]?.riotId || p.riotId || p.puuid,
-      }));
+        const mapped = entries.map((e) => ({
+          ...e,
+          name: `${e.gameName || ''}${e.tagLine ? '#' + e.tagLine : ''}`,
+          avatar: puuidToProfile[e.puuid]?.avatar || null,
+          teamLogo: puuidToProfile[e.puuid]?.teamLogo || null,
+        }));
 
-      setLeaderboardData(leaderboardWithProfile);
-      console.log('leaderboardData', leaderboardWithProfile);
+        // sort by leaguePoints then wins
+        mapped.sort((a, b) => (b.leaguePoints || 0) - (a.leaguePoints || 0) || (b.wins || 0) - (a.wins || 0));
+        setLeaderboardData(mapped);
+      } catch (err) {
+        console.error('Error fetching bootcamp leaderboard', err);
+      }
     };
 
-    generateLeaderboard();
-  }, [selectedDay, league, allMatchData]);
+    fetchBootcampLeaderboard();
+  }, [game, league_id, league]);
 
   const navigationAll1 = {
     aov: [
@@ -279,42 +116,28 @@ const Leaderboard = () => {
         game={game}
       />
 
-      <div className="flex justify-center mt-4">
-        <select
-          value={selectedDay || ''}
-          onChange={(e) => setSelectedDay(e.target.value)}
-          className="text-white p-2 rounded"
-          disabled={!selectedDay}
-        >
-          {Object.keys(league?.matches || {}).map((dayKey, index) => (
-            <option key={dayKey} value={dayKey}>
-              Vòng {index + 1}
-            </option>
-          ))}
-        </select>
-      </div>
+
 
       <div className="overflow-x-auto mt-6 px-4 bg-base-100">
-        <table className="table table-auto min-w-max text-center lg:w-full w-[120%]">
+        <table className="table table-auto min-w-max text-center lg:w-full w-full">
           <thead>
             <tr>
               <th className="sticky left-0 bg-base-100 z-20">Tên người chơi</th>
-              <th className=" bg-base-100 z-20">Tổ chức</th>
-              <th>Tổng điểm</th>
-              {Array.from({ length: columnCount }).map((_, i) => (
-                <th key={i}>Trận {i + 1}</th>
-              ))}
+              <th className="bg-base-100 z-20">Tổ chức</th>
+              <th>Hạng</th>
+              <th>LP</th>
+              <th>Wins</th>
+              <th>Losses</th>
+              <th>Winrate</th>
+              
             </tr>
           </thead>
           <tbody>
-            {(selectedDay === Object.keys(league.matches).slice(-1)[0]
-              ? leaderboardData.slice(0, 8)
-              : leaderboardData
-            ).map((player, index) => (
-              <tr key={index}>
+            {leaderboardData.map((player, index) => (
+              <tr key={player.puuid || index}>
                 <td className="sticky left-0 bg-base-100 z-10 flex items-center space-x-4 py-2 pl-2">
                   <img
-                    src={`${player.avatar}`}
+                    src={player.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
                     alt="player-logo"
                     className="w-10 h-10 rounded-full object-cover"
                   />
@@ -327,14 +150,16 @@ const Leaderboard = () => {
                     src={player.teamLogo || ''}
                     alt="team-logo"
                     className={`w-10 h-10 rounded-full object-cover mx-auto ${
-                      player.teamLogo == 'https://drive.google.com/thumbnail?id=' ? 'invisible' : ''
+                      !player.teamLogo ? 'invisible' : ''
                     }`}
                   />
                 </td>
-                <td>{player.total}</td>
-                {player.scores.map((score, idx) => (
-                  <td key={idx}>{score}</td>
-                ))}
+                <td>{player.tier ? `${player.tier} ${player.rank || ''}` : '-'}</td>
+                <td>{player.leaguePoints ?? '-'}</td>
+                <td>{player.wins ?? '-'}</td>
+                <td>{player.losses ?? '-'}</td>
+                <td>{player.winrate ? `${player.winrate}%` : '-'}</td>
+                
               </tr>
             ))}
           </tbody>
