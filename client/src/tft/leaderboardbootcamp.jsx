@@ -88,10 +88,7 @@ const Leaderboard = () => {
         teamLogo: puuidToProfile[e.puuid]?.teamLogo || null,
       }));
 
-      // sort by leaguePoints then wins
-      mapped.sort(
-        (a, b) => (b.leaguePoints || 0) - (a.leaguePoints || 0) || (b.wins || 0) - (a.wins || 0)
-      );
+      // backend returns leaderboard in correct order; do not sort on frontend
       setLeaderboardData(mapped);
     } catch (err) {
       console.error('Error fetching bootcamp leaderboard', err);
