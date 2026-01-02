@@ -227,7 +227,7 @@ const CompetitionPage = () => {
           <section className=" py-12 text-white ">
             <div className="justify-between items-center mb-4 md:hidden flex">
               <h2 className="text-2xl font-bold">Người chơi</h2>
-              <Link to={`/${game}/${league_id}/players`}>
+              <Link to={`/${game}/bootcamp/${league_id}/players`}>
                 <button className="text-orange-500 font-bold hover:underline text-sm">
                   XEM TẤT CẢ
                 </button>
