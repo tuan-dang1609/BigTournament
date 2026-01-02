@@ -421,18 +421,6 @@ const LeagueHeader = ({
                       Đăng nhập để tham gia
                     </button>
                   </Link>
-                ) : me?.riotID === '' || me?.riotID === 'Đăng nhập bằng Riot Games' ? (
-                  <Link to="/profile">
-                    <button className="bg-yellow-400 text-black font-bold px-4 py-2 rounded-md hover:bg-yellow-500 transition duration-200">
-                      Cập nhật Riot ID
-                    </button>
-                  </Link>
-                ) : game !== 'tft' ? (
-                  <Link to={`/${game}/${league_id}/register`}>
-                    <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
-                      Đăng ký tham gia
-                    </button>
-                  </Link>
                 ) : league?.isBootcamp && pathname.includes('/bootcamp/') ? (
                   <div
                     className={`flex ${
@@ -490,29 +478,43 @@ const LeagueHeader = ({
                       {currentPlayer ? 'Cập nhật' : 'Đăng ký'}
                     </button>
                   </div>
-                ) : (
-                  <div
-                    className={`flex ${
-                      currentPlayer
-                        ? 'sm:justify-end justify-center gap-2'
-                        : 'sm:justify-end justify-center'
-                    }`}
-                  >
-                    {currentPlayer && (
-                      <button
-                        onClick={handleUnregister}
-                        className="bg-red-500 text-white font-bold px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
-                      >
-                        Hủy đăng ký
+                ) : game === 'tft' ? (
+                  me?.riotID === '' || me?.riotID === 'Đăng nhập bằng Riot Games' ? (
+                    <Link to="/profile">
+                      <button className="bg-yellow-400 text-black font-bold px-4 py-2 rounded-md hover:bg-yellow-500 transition duration-200">
+                        Cập nhật Riot ID
                       </button>
-                    )}
-                    <button
-                      onClick={() => handleAutoRegister()}
-                      className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
+                    </Link>
+                  ) : (
+                    <div
+                      className={`flex ${
+                        currentPlayer
+                          ? 'sm:justify-end justify-center gap-2'
+                          : 'sm:justify-end justify-center'
+                      }`}
                     >
-                      {currentPlayer ? 'Cập nhật' : 'Đăng ký'}
+                      {currentPlayer && (
+                        <button
+                          onClick={handleUnregister}
+                          className="bg-red-500 text-white font-bold px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
+                        >
+                          Hủy đăng ký
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleAutoRegister()}
+                        className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200"
+                      >
+                        {currentPlayer ? 'Cập nhật' : 'Đăng ký'}
+                      </button>
+                    </div>
+                  )
+                ) : (
+                  <Link to={`/${game}/${league_id}/register`}>
+                    <button className="bg-gradient-to-r from-[#f9febc] to-[#a8eabb] text-black font-bold px-4 py-2 rounded-md hover:opacity-90 transition duration-200">
+                      Đăng ký tham gia
                     </button>
-                  </div>
+                  </Link>
                 )}
               </div>
             )}

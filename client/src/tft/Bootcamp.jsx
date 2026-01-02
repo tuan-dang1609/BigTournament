@@ -72,6 +72,7 @@ const CompetitionPage = () => {
     }
   }, [league]);
 
+  const isBootcampPath = location.pathname.includes('/bootcamp/');
   const navigationAll1 = {
     aov: [
       {
@@ -79,11 +80,16 @@ const CompetitionPage = () => {
         href: `/${game}/bootcamp/${league_id}`,
         current: location.pathname === `/${game}/bootcamp/${league_id}`,
       },
-      {
-        name: 'Người chơi',
-        href: `/${game}/bootcamp/${league_id}/players`,
-        current: location.pathname === `/${game}/bootcamp/${league_id}/players`,
-      },
+      // Ẩn tab người chơi khi đang ở bootcamp
+      ...(!isBootcampPath
+        ? [
+            {
+              name: 'Người chơi',
+              href: `/${game}/bootcamp/${league_id}/players`,
+              current: location.pathname === `/${game}/bootcamp/${league_id}/players`,
+            },
+          ]
+        : []),
       {
         name: 'BXH',
         href: `/${game}/bootcamp/${league_id}/leaderboard`,

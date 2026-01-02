@@ -54,7 +54,9 @@ const Leaderboard = () => {
   }, [league]);
   const fetchBootcampLeaderboard = async () => {
     try {
-      const res = await fetch(`/api/auth/${game}/bootcamp/${league_id}/leaderboard`);
+      const res = await fetch(
+        `https://bigtournament-1.onrender.com/api/auth/${game}/bootcamp/${league_id}/leaderboard`
+      );
       if (!res.ok) throw new Error('Failed to fetch bootcamp leaderboard');
       const data = await res.json();
       const entries = data.rank_league || [];
@@ -142,22 +144,17 @@ const Leaderboard = () => {
       {
         name: 'Tổng quan',
         href: `/${game}/bootcamp/${league_id}`,
-        current: location.pathname === `/${game}/${league_id}`,
-      },
-      {
-        name: 'Người chơi',
-        href: `/${game}/bootcamp/${league_id}/players`,
-        current: location.pathname === `/${game}/${league_id}/players`,
+        current: location.pathname === `/${game}/bootcamp/${league_id}`,
       },
       {
         name: 'BXH',
         href: `/${game}/bootcamp/${league_id}/leaderboard`,
-        current: location.pathname === `/${game}/${league_id}/leaderboard`,
+        current: location.pathname === `/${game}/bootcamp/${league_id}/leaderboard`,
       },
       {
         name: 'Luật',
         href: `/${game}/bootcamp/${league_id}/rule`,
-        current: location.pathname === `/${game}/${league_id}/rule`,
+        current: location.pathname === `/${game}/bootcamp/${league_id}/rule`,
       },
     ],
   };

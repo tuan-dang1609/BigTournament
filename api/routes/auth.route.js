@@ -49,7 +49,7 @@ function requireApiKey(req, res, next) {
 // Scheduler: run updateBootcampRanksInternal for active bootcamp leagues
 // Interval can be configured via env `BOOTCAMP_SCHEDULE_MS` (milliseconds).
 // Default: 1 minute (60_000 ms)
-const SCHEDULER_INTERVAL_MS = 1 * 60 * 1000;
+const SCHEDULER_INTERVAL_MS = 15 * 60 * 1000;
 const _runningBootcampLeagues = new Set();
 async function scheduledBootcampUpdater() {
   try {
@@ -1877,14 +1877,86 @@ async function updateBootcampRanksInternal(league_id, force = false) {
     await boot.save();
   }
 
+  // Track eliminated players by puuid to skip Riot fetches on subsequent runs
+  const normalizePuuid = (val) => (val || "").toString().trim().toLowerCase();
+  // Track original casing for persistence while using normalized keys for lookup
+  const puuidOriginalMap = new Map();
+  const rememberOriginal = (norm, original) => {
+    if (!norm) return;
+    if (!original) return;
+    if (!puuidOriginalMap.has(norm)) puuidOriginalMap.set(norm, original);
+  };
+  const eliminatedSet = new Set();
+  (Array.isArray(boot.eliminated) ? boot.eliminated : [])
+    .filter(Boolean)
+    .forEach((orig) => {
+      const norm = normalizePuuid(orig);
+      if (!norm) return;
+      eliminatedSet.add(norm);
+      eliminatedPuuidSet.add(norm);
+      rememberOriginal(norm, orig);
+    });
+  // Track elimination round label per puuid for sticky eliminationAt
+  const eliminatedRoundMap = new Map();
+  const savedEliminatedRoundMap = new Map();
+  const eliminatedPuuidSet = new Set();
+  const addStoredRound = (k, v) => {
+    const key = normalizePuuid(k);
+    if (!key) return;
+    const val = typeof v === "string" ? v : null;
+    eliminatedRoundMap.set(key, val);
+    savedEliminatedRoundMap.set(key, val);
+    rememberOriginal(key, k);
+    eliminatedPuuidSet.add(key);
+  };
+  if (boot.eliminatedRounds) {
+    if (typeof boot.eliminatedRounds.forEach === "function") {
+      boot.eliminatedRounds.forEach((v, k) => addStoredRound(k, v));
+    } else if (typeof boot.eliminatedRounds === "object") {
+      Object.entries(boot.eliminatedRounds).forEach(([k, v]) =>
+        addStoredRound(k, v)
+      );
+    }
+  }
+
   const now = new Date();
   if (!force) {
-    if (boot.isCompleted) throw new Error("Bootcamp already completed");
+    if (boot.isCompleted) {
+      const freshBoot = await BootcampLeague.findOne({ league_id }).lean();
+      return {
+        updated: 0,
+        boot: freshBoot || boot.toObject(),
+        stats: { skipped: true },
+      };
+    }
     if (timeStart && now < timeStart)
       throw new Error("Bootcamp not started yet");
   }
 
   const allPlayers = Array.isArray(dcn.players) ? dcn.players : [];
+
+  const makeKey = (e) =>
+    (e?.puuid || `${e?.gameName || ""}#${e?.tagLine || ""}`).toLowerCase();
+
+  // Cache previous rank entries to preserve eliminated players without refetching Riot data
+  const prevMap = new Map();
+  const prevByPuuid = new Map();
+  if (Array.isArray(boot.rank_league)) {
+    for (const prev of boot.rank_league) {
+      const k = makeKey(prev);
+      if (!k) continue;
+      prevMap.set(k, prev);
+      if (prev.puuid) prevByPuuid.set(normalizePuuid(prev.puuid), prev);
+      if (prev.isEliminated && prev.puuid) {
+        const norm = normalizePuuid(prev.puuid);
+        eliminatedSet.add(norm);
+        eliminatedPuuidSet.add(norm);
+        rememberOriginal(norm, prev.puuid);
+        if (prev.eliminationAt)
+          eliminatedRoundMap.set(norm, prev.eliminationAt);
+      }
+    }
+  }
 
   const playersWithIgn = allPlayers.filter((p) => {
     if (!p) return false;
@@ -1896,6 +1968,14 @@ async function updateBootcampRanksInternal(league_id, force = false) {
       return Boolean(rawIgn.gameName || rawIgn.tagLine || rawIgn.ign);
     return false;
   });
+
+  const stats = {
+    playersTotal: allPlayers.length,
+    playersWithIgn: playersWithIgn.length,
+    ignTried: 0,
+    successes: 0,
+    errorsByStatus: {},
+  };
 
   const results = [];
 
@@ -1918,6 +1998,7 @@ async function updateBootcampRanksInternal(league_id, force = false) {
       }
     }
 
+    let handled = false;
     for (const ignRaw of igns) {
       if (!ignRaw || typeof ignRaw !== "string") continue;
       let sepIndex = ignRaw.lastIndexOf("#");
@@ -1926,6 +2007,44 @@ async function updateBootcampRanksInternal(league_id, force = false) {
       const gameName = ignRaw.slice(0, sepIndex).trim();
       const tagLine = ignRaw.slice(sepIndex + 1).trim();
       if (!gameName || !tagLine) continue;
+
+      // If previously eliminated, keep their stored rank/tier and skip Riot fetches
+      const key = `${gameName}#${tagLine}`.toLowerCase();
+      const prev = prevMap.get(key);
+      const prevNormPuuid = prev?.puuid ? normalizePuuid(prev.puuid) : null;
+      const prevStoredRound = prevNormPuuid
+        ? savedEliminatedRoundMap.get(prevNormPuuid)
+        : null;
+      if (prevNormPuuid && eliminatedPuuidSet.has(prevNormPuuid)) {
+        results.push({
+          ...prev,
+          isEliminated: true,
+          eliminationAt: prev.eliminationAt || prevStoredRound || null,
+        });
+        handled = true;
+        break;
+      }
+      if (prevStoredRound) {
+        results.push({
+          ...prev,
+          isEliminated: true,
+          eliminationAt: prev.eliminationAt || prevStoredRound,
+        });
+        handled = true;
+        break;
+      }
+      if (prev && prev.puuid && eliminatedSet.has(normalizePuuid(prev.puuid))) {
+        results.push({ ...prev, isEliminated: true });
+        handled = true;
+        break;
+      }
+      if (prev && prev.isEliminated) {
+        results.push({ ...prev });
+        handled = true;
+        break;
+      }
+
+      stats.ignTried += 1;
 
       try {
         const accountResp = await axios.get(
@@ -1936,6 +2055,24 @@ async function updateBootcampRanksInternal(league_id, force = false) {
         );
 
         const { puuid } = accountResp.data;
+
+        // If puuid already marked in eliminatedRounds, skip league fetch and reuse prev snapshot
+        const normPuuid = normalizePuuid(puuid);
+        if (eliminatedPuuidSet.has(normPuuid)) {
+          const prevByKey = prevByPuuid.get(normPuuid);
+          if (prevByKey) {
+            results.push({
+              ...prevByKey,
+              isEliminated: true,
+              eliminationAt:
+                prevByKey.eliminationAt ||
+                savedEliminatedRoundMap.get(normPuuid) ||
+                null,
+            });
+            handled = true;
+            break;
+          }
+        }
 
         const leagueResp = await axios.get(
           `https://vn2.api.riotgames.com/tft/league/v1/by-puuid/${encodeURIComponent(
@@ -1974,13 +2111,44 @@ async function updateBootcampRanksInternal(league_id, force = false) {
           discordID: p.discordID || null,
         };
         results.push(merged);
+        stats.successes += 1;
       } catch (err) {
+        const status = err?.response?.status || "unknown";
+        stats.errorsByStatus[status] = (stats.errorsByStatus[status] || 0) + 1;
+        // Ensure placeholder entry so headcount remains stable even when Riot fetch fails
+        results.push({
+          gameName,
+          tagLine,
+          leagueId: null,
+          tier: null,
+          rank: null,
+          leaguePoints: null,
+          wins: 0,
+          losses: 0,
+          veteran: false,
+          hotStreak: false,
+          inactive: false,
+          freshBlood: false,
+          winrate: 0,
+          isEliminated: true, // default eliminated when no data
+          eliminationAt: null,
+          puuid: null,
+          lastUpdated: new Date(),
+          usernameregister: p.usernameregister,
+          logoUrl: p.logoUrl || null,
+          teamLogo: p.team?.logoTeam || null,
+          team: p.team || null,
+          classTeam: p.classTeam || null,
+          discordID: p.discordID || null,
+        });
         continue;
       }
     }
+
+    if (handled) continue;
   }
 
-  const entries = results.map((r) => {
+  let entries = results.map((r) => {
     const totalGames = Number(r.wins || 0) + Number(r.losses || 0);
     const winrate =
       totalGames > 0
@@ -2000,7 +2168,12 @@ async function updateBootcampRanksInternal(league_id, force = false) {
       inactive: Boolean(r.inactive),
       freshBlood: Boolean(r.freshBlood),
       winrate,
-      isEliminated: !r.tier,
+      isEliminated:
+        typeof r.isEliminated === "boolean" ? r.isEliminated : !r.tier,
+      eliminationAt:
+        r.eliminationAt !== undefined && r.eliminationAt !== null
+          ? r.eliminationAt
+          : null,
       puuid: r.puuid || null,
       lastUpdated: new Date(),
       usernameregister: r.usernameregister,
@@ -2012,28 +2185,114 @@ async function updateBootcampRanksInternal(league_id, force = false) {
     };
   });
 
-  const tierOrder = [
+  // Logging: puuid, ign, in-eliminatedRounds, tier, rank, LP, wins, losses
+  entries.forEach((e) => {
+    const key = e.puuid ? normalizePuuid(e.puuid) : null;
+    const inStored = key
+      ? savedEliminatedRoundMap.has(key) || eliminatedPuuidSet.has(key)
+      : false;
+    console.log(
+      `${e.puuid || "null"}, ${e.gameName || ""}#${
+        e.tagLine || ""
+      }, inEliminatedRounds=${inStored}, tier=${e.tier || "-"}, rank=${
+        e.rank || "-"
+      }, lp=${e.leaguePoints ?? "-"}, wins=${e.wins ?? "-"}, losses=${
+        e.losses ?? "-"
+      }`
+    );
+  });
+
+  // Reapply stored elimination rounds immediately to avoid any later overwrite
+  entries.forEach((e) => {
+    const key = e.puuid ? normalizePuuid(e.puuid) : null;
+    if (!key) return;
+    const storedRound = savedEliminatedRoundMap.get(key);
+    if (storedRound) {
+      e.isEliminated = true;
+      e.eliminationAt = storedRound;
+      const prev = prevByPuuid.get(key);
+      if (prev) {
+        e.tier = prev.tier;
+        e.rank = prev.rank;
+        e.leaguePoints = prev.leaguePoints;
+        e.wins = prev.wins;
+        e.losses = prev.losses;
+        e.veteran = prev.veteran;
+        e.hotStreak = prev.hotStreak;
+        e.inactive = prev.inactive;
+        e.freshBlood = prev.freshBlood;
+        e.winrate = prev.winrate;
+        e.queueType = prev.queueType || e.queueType;
+        e.leagueId = prev.leagueId || e.leagueId;
+      }
+    }
+  });
+
+  // Order by tier (highest to lowest) before applying elimination rounds.
+  // Tie-breakers: leaguePoints desc, winrate desc, then original index for stability.
+  const tierOrderList = [
     "CHALLENGER",
     "GRANDMASTER",
     "MASTER",
     "DIAMOND",
+    "EMERALD",
     "PLATINUM",
     "GOLD",
     "SILVER",
     "BRONZE",
     "IRON",
+    "UNRANKED",
   ];
-  const rankOrder = { I: 1, II: 2, III: 3, IV: 4 };
-  entries.sort((a, b) => {
-    const ai = tierOrder.indexOf((a.tier || "").toUpperCase());
-    const bi = tierOrder.indexOf((b.tier || "").toUpperCase());
-    if (ai !== bi) return ai - bi;
-    const ar = rankOrder[(a.rank || "").toUpperCase()] || 999;
-    const br = rankOrder[(b.rank || "").toUpperCase()] || 999;
-    if (ar !== br) return ar - br;
-    const ap = Number(b.leaguePoints || 0);
-    const bp = Number(a.leaguePoints || 0);
-    return ap - bp;
+  const tierOrder = new Map(tierOrderList.map((t, idx) => [t, idx]));
+  const normalizeTier = (tier) => (tier || "").toString().trim().toUpperCase();
+  const tierRankValue = (tier) => {
+    const norm = normalizeTier(tier);
+    return tierOrder.has(norm) ? tierOrder.get(norm) : tierOrderList.length;
+  };
+
+  const rankOrderList = ["I", "II", "III", "IV"];
+  const rankOrder = new Map(rankOrderList.map((r, idx) => [r, idx]));
+  const normalizeRank = (rank) => (rank || "").toString().trim().toUpperCase();
+  const rankRankValue = (rank) => {
+    const norm = normalizeRank(rank);
+    return rankOrder.has(norm) ? rankOrder.get(norm) : rankOrderList.length;
+  };
+
+  entries = entries
+    .map((e, idx) => ({ ...e, _origIdx: idx }))
+    .sort((a, b) => {
+      const ta = tierRankValue(a.tier);
+      const tb = tierRankValue(b.tier);
+      if (ta !== tb) return ta - tb;
+      const ra = rankRankValue(a.rank);
+      const rb = rankRankValue(b.rank);
+      if (ra !== rb) return ra - rb;
+      const lpA =
+        typeof a.leaguePoints === "number" ? a.leaguePoints : -Infinity;
+      const lpB =
+        typeof b.leaguePoints === "number" ? b.leaguePoints : -Infinity;
+      if (lpA !== lpB) return lpB - lpA;
+      const wrA = typeof a.winrate === "number" ? a.winrate : 0;
+      const wrB = typeof b.winrate === "number" ? b.winrate : 0;
+      if (wrA !== wrB) return wrB - wrA;
+      return a._origIdx - b._origIdx;
+    })
+    .map(({ _origIdx, ...rest }) => rest);
+
+  // Immediately mark any entries whose puuid is already in eliminatedSet
+  const fallbackElimLabel =
+    (boot.rounds && boot.rounds[0] && boot.rounds[0].name) || "eliminated";
+  // Reset elimination flags unless a stored round exists
+  entries.forEach((e) => {
+    const key = e.puuid ? normalizePuuid(e.puuid) : null;
+    const storedRound = key ? savedEliminatedRoundMap.get(key) : null;
+    if (storedRound) {
+      e.isEliminated = true;
+      e.eliminationAt = storedRound;
+    } else {
+      e.isEliminated = false;
+      e.eliminationAt = null;
+    }
   });
 
   // Apply any scheduled rounds whose runAt <= now and not yet executed.
@@ -2043,39 +2302,231 @@ async function updateBootcampRanksInternal(league_id, force = false) {
       const roundsWithIndex = boot.rounds
         .map((r, idx) => ({ r, idx }))
         .filter(({ r }) => r && r.runAt)
-        .sort((a, b) => new Date(a.r.runAt) - new Date(b.r.runAt));
+        .sort((a, b) => {
+          const ta = new Date(a.r.runAt).getTime();
+          const tb = new Date(b.r.runAt).getTime();
+          if (ta !== tb) return ta - tb;
+          return a.idx - b.idx; // stable order for same timestamp
+        });
+
+      const computeTakeN = (round, total) => {
+        const raw =
+          typeof round.take === "number" ? round.take : Number(round.take);
+        const val = Number.isFinite(raw) ? raw : 0;
+        const isPercent = round.takeIsPercent === true;
+        if (isPercent) {
+          const pct = Math.max(0, val);
+          return Math.min(total, Math.ceil((pct / 100) * total));
+        }
+        return Math.min(total, Math.max(0, Math.floor(val)));
+      };
 
       for (const { r, idx } of roundsWithIndex) {
-        // only apply rounds that haven't been executed yet and are due
-        if (r.executed) continue;
+        // apply rounds that are due; even if already executed, we re-apply to keep state consistent
         const runAtDate = new Date(r.runAt);
         if (isNaN(runAtDate.getTime())) continue;
         if (runAtDate <= now) {
-          const takeN = Number(r.take) || 0;
+          const takeN = computeTakeN(r, entries.length);
           if (takeN > 0) {
             // entries are already sorted by rank; mark top `takeN` as not eliminated
             entries.forEach((e, i) => {
-              e.isEliminated = i < takeN ? false : true;
+              if (e.isEliminated) return; // once eliminated, stay eliminated
+              if (i >= takeN) {
+                e.isEliminated = true;
+                if (!e.eliminationAt) e.eliminationAt = r.name || null;
+                if (e.puuid) {
+                  const norm = normalizePuuid(e.puuid);
+                  eliminatedSet.add(norm);
+                  rememberOriginal(norm, e.puuid);
+                  eliminatedRoundMap.set(
+                    norm,
+                    e.eliminationAt || r.name || null
+                  );
+                }
+              }
             });
           }
           // mark the round as executed
-          boot.rounds[idx].executed = true;
-          boot.rounds[idx].executedAt = now;
+          if (!boot.rounds[idx].executed) {
+            boot.rounds[idx].executed = true;
+            boot.rounds[idx].executedAt = now;
+          }
         }
       }
     }
   } catch (err) {
     // don't fail the whole update if rounds processing errors; log and continue
-    console.error("Error applying bootcamp rounds:", err && err.message ? err.message : err);
+    console.error(
+      "Error applying bootcamp rounds:",
+      err && err.message ? err.message : err
+    );
   }
 
-  boot.rank_league = entries;
+  // Reapply stored elimination rounds (from previous runs) to keep flags consistent
+  entries.forEach((e) => {
+    const key = e.puuid ? normalizePuuid(e.puuid) : null;
+    if (!key) return;
+    const storedRound = savedEliminatedRoundMap.get(key);
+    if (storedRound) {
+      e.isEliminated = true;
+      e.eliminationAt = storedRound;
+    }
+  });
+
+  // Final merge to guarantee we never lose prior entries even if Riot fetch failed
+  // or the player list changed. Prev elimination state stays sticky.
+
+  const mergedMap = new Map();
+  // seed with previous entries
+  if (Array.isArray(boot.rank_league)) {
+    for (const prev of boot.rank_league) {
+      const k = makeKey(prev);
+      if (!k) continue;
+      mergedMap.set(k, { ...prev });
+    }
+  }
+  // overlay current entries, but never un-eliminate someone already eliminated
+  for (const cur of entries) {
+    const k = makeKey(cur);
+    if (!k) continue;
+    const prev = mergedMap.get(k);
+    // Prefer current computation; do not force prior elimination
+    mergedMap.set(k, { ...(prev || {}), ...cur });
+  }
+
+  const mergedEntries = Array.from(mergedMap.values());
+
+  // Capture eliminated puuid using current computation plus any stored rounds
+  eliminatedSet.clear();
+  eliminatedRoundMap.clear();
+  mergedEntries.forEach((e) => {
+    const key = e.puuid ? normalizePuuid(e.puuid) : null;
+    const storedRound = key ? savedEliminatedRoundMap.get(key) : null;
+    if (storedRound) {
+      e.isEliminated = true;
+      if (!e.eliminationAt) e.eliminationAt = storedRound;
+    }
+    if (e.isEliminated && key) {
+      eliminatedSet.add(key);
+      eliminatedPuuidSet.add(key);
+      rememberOriginal(key, e.puuid);
+      if (e.eliminationAt) eliminatedRoundMap.set(key, e.eliminationAt);
+    }
+  });
+
+  // Normalize round names for consistent comparison
+  const normalizeRoundName = (name) => (name || "").trim().toLowerCase();
+
+  // Pre-sort rounds once for reuse (order by runAt asc, then index)
+  const roundsWithIndex = Array.isArray(boot.rounds)
+    ? boot.rounds
+        .map((r, idx) => ({ r, idx }))
+        .filter(({ r }) => r && r.runAt)
+        .sort((a, b) => {
+          const ta = new Date(a.r.runAt).getTime();
+          const tb = new Date(b.r.runAt).getTime();
+          if (ta !== tb) return ta - tb;
+          return a.idx - b.idx;
+        })
+    : [];
+
+  // Backfill eliminationAt for legacy eliminated entries missing a round tag
+  const fallbackRoundName = roundsWithIndex[0]?.r?.name || "eliminated";
+  mergedEntries.forEach((e) => {
+    const key = e.puuid ? normalizePuuid(e.puuid) : null;
+    const inElimSet = key && eliminatedSet.has(key);
+    if (inElimSet) e.isEliminated = true;
+    if (e.isEliminated && !e.eliminationAt) {
+      const storedRound = key ? eliminatedRoundMap.get(key) : null;
+      e.eliminationAt = storedRound || fallbackRoundName;
+    }
+    if (e.isEliminated && key && e.eliminationAt)
+      eliminatedRoundMap.set(key, e.eliminationAt);
+  });
+
+  // Build elimination round order so eliminated players rank by the round they exited.
+  const roundOrderMap = new Map();
+  roundsWithIndex.forEach(({ r }, orderIdx) => {
+    if (!r) return;
+    const key = normalizeRoundName(r.name) || `round-${orderIdx}`;
+    roundOrderMap.set(key, orderIdx);
+  });
+  const roundOrder = (name) => {
+    const key = normalizeRoundName(name);
+    if (!key) return -1;
+    const val = roundOrderMap.get(key);
+    return typeof val === "number" ? val : -1;
+  };
+
+  const compareRankEntries = (a, b) => {
+    if (a.isEliminated !== b.isEliminated) return a.isEliminated ? 1 : -1;
+
+    const ao = roundOrder(a.eliminationAt);
+    const bo = roundOrder(b.eliminationAt);
+    if (a.isEliminated && b.isEliminated) {
+      if (ao !== bo) return bo - ao; // later round (higher index) ranks above earlier round
+    }
+
+    const ta = tierRankValue(a.tier);
+    const tb = tierRankValue(b.tier);
+    if (ta !== tb) return ta - tb;
+
+    const ra = rankRankValue(a.rank);
+    const rb = rankRankValue(b.rank);
+    if (ra !== rb) return ra - rb;
+
+    const lpA = typeof a.leaguePoints === "number" ? a.leaguePoints : -Infinity;
+    const lpB = typeof b.leaguePoints === "number" ? b.leaguePoints : -Infinity;
+    if (lpA !== lpB) return lpB - lpA;
+
+    const wrA = typeof a.winrate === "number" ? a.winrate : 0;
+    const wrB = typeof b.winrate === "number" ? b.winrate : 0;
+    if (wrA !== wrB) return wrB - wrA;
+
+    if (ao !== bo) return bo - ao;
+
+    return 0;
+  };
+
+  const snapshotOrder = (arr) =>
+    (arr || []).map((e) => ({
+      ign: `${e.gameName || ""}#${e.tagLine || ""}`,
+      tier: e.tier || null,
+      rank: e.rank || null,
+      leaguePoints: typeof e.leaguePoints === "number" ? e.leaguePoints : null,
+    }));
+
+  const hasMisorder = (arr) =>
+    (arr || []).some((entry, idx) => {
+      if (idx === 0) return false;
+      return compareRankEntries(arr[idx - 1], entry) > 0;
+    });
+
+  // Re-sort merged entries: tier priority high→low, rank, non-eliminated first, then elimination round, then LP/winrate
+  mergedEntries.sort(compareRankEntries);
+
+  boot.rank_league = mergedEntries;
+  // Persist with original casing when available
+  boot.eliminated = Array.from(eliminatedSet).map(
+    (norm) => puuidOriginalMap.get(norm) || norm
+  );
+  boot.eliminatedRounds = Object.fromEntries(
+    Array.from(eliminatedRoundMap.entries()).map(([norm, round]) => [
+      puuidOriginalMap.get(norm) || norm,
+      round,
+    ])
+  );
   // record when the rank list was last updated
   boot.rank_last_updated = new Date();
   if (timeEnd && now > timeEnd) boot.isCompleted = true;
   await boot.save();
 
-  return { updated: entries.length, boot };
+  // Return the latest persisted doc to avoid stale in-memory state
+  const freshBoot = await BootcampLeague.findOne({ league_id }).lean();
+
+  const persisted = freshBoot?.rank_league || mergedEntries;
+
+  return { updated: entries.length, boot: freshBoot || boot.toObject(), stats };
 }
 
 router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
@@ -2087,11 +2538,33 @@ router.post("/:game/:league_id/bootcamp/updateRanks", async (req, res) => {
       success: true,
       updated: result.updated,
       boot: result.boot,
+      stats: result.stats,
     });
   } catch (error) {
     return res.status(500).json({ error: error.message || String(error) });
   }
 });
+
+const parseRoundTake = (rawTake, rawIsPercent) => {
+  const explicitPercent = rawIsPercent === true;
+
+  if (typeof rawTake === "string") {
+    const trimmed = rawTake.trim();
+    if (trimmed.endsWith("%")) {
+      const num = Number(trimmed.slice(0, -1));
+      return {
+        take: Number.isFinite(num) ? num : 0,
+        takeIsPercent: true,
+      };
+    }
+  }
+
+  const num = typeof rawTake === "number" ? rawTake : Number(rawTake);
+  return {
+    take: Number.isFinite(num) ? num : 0,
+    takeIsPercent: explicitPercent,
+  };
+};
 
 // Admin: list rounds for a bootcamp
 router.get("/:game/:league_id/bootcamp/rounds", async (req, res) => {
@@ -2131,13 +2604,17 @@ router.post("/:game/:league_id/bootcamp/rounds", async (req, res) => {
       return null;
     };
 
-    const normalized = rounds.map((r) => ({
-      name: r.name || "",
-      runAt: r.runAt ? parseRunAt(r.runAt) : null,
-      take: typeof r.take === "number" ? r.take : Number(r.take) || 0,
-      executed: Boolean(r.executed),
-      executedAt: r.executedAt ? parseRunAt(r.executedAt) : null,
-    }));
+    const normalized = rounds.map((r) => {
+      const { take, takeIsPercent } = parseRoundTake(r.take, r.takeIsPercent);
+      return {
+        name: r.name || "",
+        runAt: r.runAt ? parseRunAt(r.runAt) : null,
+        take,
+        takeIsPercent,
+        executed: Boolean(r.executed),
+        executedAt: r.executedAt ? parseRunAt(r.executedAt) : null,
+      };
+    });
 
     let boot = await BootcampLeague.findOne({ league_id });
     if (!boot) {
@@ -2188,8 +2665,16 @@ router.patch("/:game/:league_id/bootcamp/rounds/:idx", async (req, res) => {
         }
       }
     }
-    if (take !== undefined)
-      round.take = typeof take === "number" ? take : Number(take) || 0;
+    if (take !== undefined || req.body.takeIsPercent !== undefined) {
+      const { take: parsedTake, takeIsPercent } = parseRoundTake(
+        take !== undefined ? take : round.take,
+        req.body.takeIsPercent !== undefined
+          ? req.body.takeIsPercent
+          : round.takeIsPercent
+      );
+      round.take = parsedTake;
+      round.takeIsPercent = takeIsPercent;
+    }
     if (executed !== undefined) {
       round.executed = Boolean(executed);
       if (round.executed && !round.executedAt) round.executedAt = new Date();
@@ -2227,6 +2712,119 @@ router.get("/:game/bootcamp/:league_id/leaderboard", async (req, res) => {
     const { league_id } = req.params;
     const doc = await BootcampLeague.findOne({ league_id }).lean();
     if (!doc) return res.status(404).json({ message: "Not found" });
+
+    // Ensure rank_league is ordered consistently when serving (and optionally fix persisted order)
+    const tierOrderList = [
+      "CHALLENGER",
+      "GRANDMASTER",
+      "MASTER",
+      "DIAMOND",
+      "EMERALD",
+      "PLATINUM",
+      "GOLD",
+      "SILVER",
+      "BRONZE",
+      "IRON",
+      "UNRANKED",
+    ];
+    const rankOrderList = ["I", "II", "III", "IV"];
+    const tierOrder = new Map(tierOrderList.map((t, idx) => [t, idx]));
+    const rankOrder = new Map(rankOrderList.map((r, idx) => [r, idx]));
+    const normalizeTier = (tier) =>
+      (tier || "").toString().trim().toUpperCase();
+    const normalizeRank = (rank) =>
+      (rank || "").toString().trim().toUpperCase();
+    const tierRankValue = (tier) => {
+      const norm = normalizeTier(tier);
+      return tierOrder.has(norm) ? tierOrder.get(norm) : tierOrderList.length;
+    };
+    const rankRankValue = (rank) => {
+      const norm = normalizeRank(rank);
+      return rankOrder.has(norm) ? rankOrder.get(norm) : rankOrderList.length;
+    };
+
+    const normalizeRoundName = (name) => (name || "").trim().toLowerCase();
+    const roundsWithIndex = Array.isArray(doc.rounds)
+      ? doc.rounds
+          .map((r, idx) => ({ r, idx }))
+          .filter(({ r }) => r && r.runAt)
+          .sort((a, b) => {
+            const ta = new Date(a.r.runAt).getTime();
+            const tb = new Date(b.r.runAt).getTime();
+            if (ta !== tb) return ta - tb;
+            return a.idx - b.idx;
+          })
+      : [];
+    const roundOrderMap = new Map();
+    roundsWithIndex.forEach(({ r }, orderIdx) => {
+      if (!r) return;
+      const key = normalizeRoundName(r.name) || `round-${orderIdx}`;
+      roundOrderMap.set(key, orderIdx);
+    });
+    const roundOrder = (name) => {
+      const key = normalizeRoundName(name);
+      if (!key) return -1;
+      const val = roundOrderMap.get(key);
+      return typeof val === "number" ? val : -1;
+    };
+
+    const compareRankEntries = (a, b) => {
+      if (a.isEliminated !== b.isEliminated) return a.isEliminated ? 1 : -1;
+
+      const ta = tierRankValue(a.tier);
+      const tb = tierRankValue(b.tier);
+      if (ta !== tb) return ta - tb;
+
+      const ra = rankRankValue(a.rank);
+      const rb = rankRankValue(b.rank);
+      if (ra !== rb) return ra - rb;
+
+      const lpA =
+        typeof a.leaguePoints === "number" ? a.leaguePoints : -Infinity;
+      const lpB =
+        typeof b.leaguePoints === "number" ? b.leaguePoints : -Infinity;
+      if (lpA !== lpB) return lpB - lpA;
+
+      const wrA = typeof a.winrate === "number" ? a.winrate : 0;
+      const wrB = typeof b.winrate === "number" ? b.winrate : 0;
+      if (wrA !== wrB) return wrB - wrA;
+
+      const ao = roundOrder(a.eliminationAt);
+      const bo = roundOrder(b.eliminationAt);
+      if (ao !== bo) return bo - ao;
+
+      return 0;
+    };
+
+    const snapshotOrder = (arr) =>
+      (arr || []).map((e) => ({
+        ign: `${e.gameName || ""}#${e.tagLine || ""}`,
+        tier: e.tier || null,
+        rank: e.rank || null,
+        leaguePoints:
+          typeof e.leaguePoints === "number" ? e.leaguePoints : null,
+      }));
+
+    const isMisordered = (arr) =>
+      (arr || []).some((entry, idx) => {
+        if (idx === 0) return false;
+        return compareRankEntries(arr[idx - 1], entry) > 0;
+      });
+
+    const currentRankLeague = Array.isArray(doc.rank_league)
+      ? doc.rank_league
+      : [];
+    const needsFix = isMisordered(currentRankLeague);
+    const orderedRankLeague = [...currentRankLeague].sort(compareRankEntries);
+
+    if (needsFix) {
+      await BootcampLeague.updateOne(
+        { league_id },
+        { $set: { rank_league: orderedRankLeague } }
+      );
+    }
+
+    doc.rank_league = orderedRankLeague;
 
     // Fetch DCN league to compute schedule (season.time_start / time_end)
     const dcn = await DCNLeague.findOne({

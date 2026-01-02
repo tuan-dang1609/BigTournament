@@ -72,49 +72,33 @@ export default function Rulebook() {
     }
   }, [league]);
 
+  const bootcampSegment = location.pathname.includes('/bootcamp/') ? '/bootcamp' : '';
   const navigationAll1 = {
     aov: [
-      // Add optional /bootcamp segment when current path includes it
-      (() => {
-        const bootcampSegment = location.pathname.includes('/bootcamp/') ? '/bootcamp' : '';
-        return {
-          name: 'Tổng quan',
-          href: `/${game}${bootcampSegment}/${league_id}`,
-          current: location.pathname === `/${game}${bootcampSegment}/${league_id}`,
-        };
-      })(),
       {
-        name: 'Người chơi',
-        href: `/${game}${
-          location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
-        }/${league_id}/players`,
-        current:
-          location.pathname ===
-          `/${game}${
-            location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
-          }/${league_id}/players`,
+        name: 'Tổng quan',
+        href: `/${game}${bootcampSegment}/${league_id}`,
+        current: location.pathname === `/${game}${bootcampSegment}/${league_id}`,
       },
+      // Ẩn tab người chơi khi là bootcamp
+      ...(!bootcampSegment
+        ? [
+            {
+              name: 'Người chơi',
+              href: `/${game}/${league_id}/players`,
+              current: location.pathname === `/${game}/${league_id}/players`,
+            },
+          ]
+        : []),
       {
         name: 'BXH',
-        href: `/${game}${
-          location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
-        }/${league_id}/leaderboard`,
-        current:
-          location.pathname ===
-          `/${game}${
-            location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
-          }/${league_id}/leaderboard`,
+        href: `/${game}${bootcampSegment}/${league_id}/leaderboard`,
+        current: location.pathname === `/${game}${bootcampSegment}/${league_id}/leaderboard`,
       },
       {
         name: 'Luật',
-        href: `/${game}${
-          location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
-        }/${league_id}/rule`,
-        current:
-          location.pathname ===
-          `/${game}${
-            location.pathname.includes('/bootcamp/') ? '/bootcamp' : ''
-          }/${league_id}/rule`,
+        href: `/${game}${bootcampSegment}/${league_id}/rule`,
+        current: location.pathname === `/${game}${bootcampSegment}/${league_id}/rule`,
       },
     ],
   };

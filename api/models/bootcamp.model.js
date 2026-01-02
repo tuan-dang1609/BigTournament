@@ -28,6 +28,7 @@ const RankEntrySchema = new Schema(
     freshBlood: { type: Boolean, default: false },
     winrate: { type: Number, default: 0 },
     isEliminated: { type: Boolean, default: false },
+    eliminationAt: { type: String, default: null },
     puuid: { type: String },
     lastUpdated: { type: Date, default: Date.now },
   },
@@ -41,21 +42,27 @@ const BootcampLeagueSchema = new Schema(
     isBootcamp: { type: Boolean, default: true },
     isCompleted: { type: Boolean, default: false },
     rank_league: { type: [RankEntrySchema], default: [] },
-      rank_last_updated: { type: Date, default: null },
-      // Rounds define scheduled elimination checkpoints.
-      // Example: { name: 'Đợt 1', runAt: Date, take: 15 }
-      rounds: {
-        type: [
-          {
-            name: { type: String },
-            runAt: { type: Date },
-            take: { type: Number, default: 0 },
-            executed: { type: Boolean, default: false },
-            executedAt: { type: Date, default: null },
-          },
-        ],
-        default: [],
-      },
+    // List of puuid that are eliminated to avoid refetching Riot data
+    eliminated: { type: [String], default: [] },
+    // Map of puuid -> elimination round name
+    eliminatedRounds: { type: Map, of: String, default: {} },
+    rank_last_updated: { type: Date, default: null },
+    // Rounds define scheduled elimination checkpoints.
+    // Example: { name: 'Đợt 1', runAt: Date, take: 15 }
+    rounds: {
+      type: [
+        {
+          name: { type: String },
+          runAt: { type: Date },
+          take: { type: Number, default: 0 },
+          // When true, `take` is treated as a percentage of total players (ceil rounded)
+          takeIsPercent: { type: Boolean, default: false },
+          executed: { type: Boolean, default: false },
+          executedAt: { type: Date, default: null },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );
