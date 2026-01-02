@@ -2194,23 +2194,6 @@ async function updateBootcampRanksInternal(league_id, force = false) {
   // Drop placeholder rows with no puuid and no Riot ID
   entries = entries.filter((e) => e.puuid || e.gameName || e.tagLine);
 
-  // Logging: puuid, ign, in-eliminatedRounds, tier, rank, LP, wins, losses
-  entries.forEach((e) => {
-    const key = e.puuid ? normalizePuuid(e.puuid) : null;
-    const inStored = key
-      ? savedEliminatedRoundMap.has(key) || eliminatedPuuidSet.has(key)
-      : false;
-    console.log(
-      `${e.puuid || "null"}, ${e.gameName || ""}#${
-        e.tagLine || ""
-      }, inEliminatedRounds=${inStored}, tier=${e.tier || "-"}, rank=${
-        e.rank || "-"
-      }, lp=${e.leaguePoints ?? "-"}, wins=${e.wins ?? "-"}, losses=${
-        e.losses ?? "-"
-      }`
-    );
-  });
-
   // Reapply stored elimination rounds immediately to avoid any later overwrite
   entries.forEach((e) => {
     const key = e.puuid ? normalizePuuid(e.puuid) : null;
@@ -2872,7 +2855,7 @@ router.get("/:game/bootcamp/:league_id/leaderboard", async (req, res) => {
 
     let nextRun = null;
     // use env override if provided so scheduler frequency is configurable
-    const intervalMs = SCHEDULER_INTERVAL_MS; // default 1 minute
+    const intervalMs = SCHEDULER_INTERVAL_MS; // clamped safe interval
 
     if (!timeStart) {
       nextRun = null; // schedule unknown
