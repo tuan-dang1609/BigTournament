@@ -49,7 +49,7 @@ function requireApiKey(req, res, next) {
 // Scheduler: run updateBootcampRanksInternal for active bootcamp leagues
 // Interval can be configured via env `BOOTCAMP_SCHEDULE_MS` (milliseconds).
 // Default: 1 minute (60_000 ms)
-const SCHEDULER_INTERVAL_MS = 15 * 60 * 1000;
+const SCHEDULER_INTERVAL_MS = 5 * 60 * 1000;
 const _runningBootcampLeagues = new Set();
 async function scheduledBootcampUpdater() {
   try {
@@ -1935,8 +1935,14 @@ async function updateBootcampRanksInternal(league_id, force = false) {
 
   const allPlayers = Array.isArray(dcn.players) ? dcn.players : [];
 
-  const makeKey = (e) =>
-    (e?.puuid || `${e?.gameName || ""}#${e?.tagLine || ""}`).toLowerCase();
+  const makeKey = (e) => {
+    if (!e) return null;
+    const hasPuuid = e.puuid && e.puuid.toString().trim().length > 0;
+    const gameName = (e.gameName || "").trim();
+    const tagLine = (e.tagLine || "").trim();
+    if (!hasPuuid && !gameName && !tagLine) return null;
+    return (e.puuid || `${gameName}#${tagLine}`).toLowerCase();
+  };
 
   // Cache previous rank entries to preserve eliminated players without refetching Riot data
   const prevMap = new Map();
@@ -2185,6 +2191,9 @@ async function updateBootcampRanksInternal(league_id, force = false) {
     };
   });
 
+  // Drop placeholder rows with no puuid and no Riot ID
+  entries = entries.filter((e) => e.puuid || e.gameName || e.tagLine);
+
   // Logging: puuid, ign, in-eliminatedRounds, tier, rank, LP, wins, losses
   entries.forEach((e) => {
     const key = e.puuid ? normalizePuuid(e.puuid) : null;
@@ -2394,7 +2403,13 @@ async function updateBootcampRanksInternal(league_id, force = false) {
     mergedMap.set(k, { ...(prev || {}), ...cur });
   }
 
-  const mergedEntries = Array.from(mergedMap.values());
+  let mergedEntries = Array.from(mergedMap.values()).filter(
+    (e) =>
+      e &&
+      (e.puuid ||
+        (e.gameName && e.gameName.trim()) ||
+        (e.tagLine && e.tagLine.trim()))
+  );
 
   // Capture eliminated puuid using current computation plus any stored rounds
   eliminatedSet.clear();
