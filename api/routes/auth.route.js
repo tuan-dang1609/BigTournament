@@ -35,7 +35,7 @@ function requireApiKey(req, res, next) {
     process.env.API_KEY_DCN || process.env.API_KEY || process.env.DCN_API_KEY;
   if (!expected) {
     console.error(
-      "API key not configured in environment (checked API_KEY_DCN/API_KEY/DCN_API_KEY)"
+      "API key not configured in environment (checked API_KEY_DCN/API_KEY/DCN_API_KEY)",
     );
     return res
       .status(500)
@@ -152,7 +152,7 @@ function serializeDoubleBracketObjectToFlatArray(obj) {
   if (!obj || typeof obj !== "object" || Array.isArray(obj)) return [];
   const out = [];
   const keyMap = new Map(
-    Object.entries(DOUBLE_PREFIX).map(([k, v]) => [k.toLowerCase(), v])
+    Object.entries(DOUBLE_PREFIX).map(([k, v]) => [k.toLowerCase(), v]),
   );
   for (const [stageRaw, arr] of Object.entries(obj)) {
     const stage = String(stageRaw).toLowerCase();
@@ -347,7 +347,7 @@ router.get("/pickem/:league_id/leaderboard", async (req, res) => {
         logoTeam,
         img,
         Score,
-      })
+      }),
     );
 
     res.json({ league_id, leaderboard: result });
@@ -402,7 +402,7 @@ async function gradePickem(league_id, force = false) {
       ) {
         let matched = 0;
         const hasPrefix = correctAns.some(
-          (x) => typeof x === "string" && x.includes(":")
+          (x) => typeof x === "string" && x.includes(":"),
         );
         if (hasPrefix) {
           // Compare by stage groups via prefixes (order-insensitive within stage)
@@ -438,7 +438,7 @@ async function gradePickem(league_id, force = false) {
           let combinedUserTokens = Array.isArray(userAns) ? [...userAns] : [];
           if (isDouble && Array.isArray(userRes.logs)) {
             const logEntry = userRes.logs.find(
-              (l) => Number(l.questionId) === Number(ans.questionId)
+              (l) => Number(l.questionId) === Number(ans.questionId),
             );
             const stages = logEntry?.stages || logEntry?.selectedStages;
             if (stages && typeof stages === "object") {
@@ -466,10 +466,10 @@ async function gradePickem(league_id, force = false) {
           if (debugEnabled) {
             const mapToObj = (m) =>
               Object.fromEntries(
-                Array.from(m.entries()).map(([k, v]) => [k, Array.from(v)])
+                Array.from(m.entries()).map(([k, v]) => [k, Array.from(v)]),
               );
             console.log(
-              `[PickemGrade] user=${userRes.userId} q=${ans.questionId} type=${ques.type}`
+              `[PickemGrade] user=${userRes.userId} q=${ans.questionId} type=${ques.type}`,
             );
             console.log("[PickemGrade] correctAns(groups):", mapToObj(corrMap));
             console.log("[PickemGrade] userAns(groups):   ", mapToObj(userMap));
@@ -492,7 +492,7 @@ async function gradePickem(league_id, force = false) {
             ) {
               console.log(
                 `[PickemGrade] q=${ans.questionId} pref=${pref} matched=${prefMatches} tokens=`,
-                matchedTokens
+                matchedTokens,
               );
             }
           }
@@ -511,7 +511,7 @@ async function gradePickem(league_id, force = false) {
             ques.type === "double_eli_bracket"
           ) {
             console.log(
-              `[PickemGrade] q=${ans.questionId} matchedTotal=${matched}, ques.score=${ques.score} -> pointsAdded=${add}`
+              `[PickemGrade] q=${ans.questionId} matchedTotal=${matched}, ques.score=${ques.score} -> pointsAdded=${add}`,
             );
           }
           totalScore += add;
@@ -536,7 +536,7 @@ async function gradePickem(league_id, force = false) {
     // Final per-user debug total for focused question ID
     if (Number(process.env.PICKEM_DEBUG_QID || 6)) {
       console.log(
-        `[PickemGrade] user=${userRes.userId} totalScore(after grade)=${totalScore}`
+        `[PickemGrade] user=${userRes.userId} totalScore(after grade)=${totalScore}`,
       );
     }
     userRes.totalScore = totalScore;
@@ -575,7 +575,7 @@ router.post("/:league_id/addquestion", async (req, res) => {
             (p) =>
               p.game === gameShort ||
               p.game === leagueDoc.league.game_name ||
-              p.game === leagueDoc.league.game_short
+              p.game === leagueDoc.league.game_short,
           );
         }
         // Resolve profile pictures per player (by usernameregister)
@@ -585,7 +585,7 @@ router.post("/:league_id/addquestion", async (req, res) => {
           try {
             if (player?.usernameregister) {
               const userDoc = await User.findById(
-                player.usernameregister
+                player.usernameregister,
               ).select("profilePicture");
               const candidate = (userDoc?.profilePicture || "").trim();
               // If no image or legacy default image, fall back to the new DEFAULT_IMG
@@ -617,7 +617,7 @@ router.post("/:league_id/addquestion", async (req, res) => {
             (p) =>
               p.game === gameShort ||
               p.game === leagueDoc.league.game_name ||
-              p.game === leagueDoc.league.game_short
+              p.game === leagueDoc.league.game_short,
           );
         }
         const teamMap = new Map();
@@ -661,7 +661,7 @@ router.post("/:league_id/addquestion", async (req, res) => {
             "pos_2",
             "pos_1",
           ].some((k) =>
-            Object.prototype.hasOwnProperty.call(q.correctAnswer, k)
+            Object.prototype.hasOwnProperty.call(q.correctAnswer, k),
           );
           const hasStageKeys = [
             "qf",
@@ -674,15 +674,15 @@ router.post("/:league_id/addquestion", async (req, res) => {
             "second",
             "first",
           ].some((k) =>
-            Object.prototype.hasOwnProperty.call(q.correctAnswer, k)
+            Object.prototype.hasOwnProperty.call(q.correctAnswer, k),
           );
           if (hasPlacementKeys) {
             correctAnswer = serializeDoubleBracketObjectToFlatArray(
-              q.correctAnswer
+              q.correctAnswer,
             );
           } else if (hasStageKeys) {
             correctAnswer = serializeDoubleStageObjectToFlatArray(
-              q.correctAnswer
+              q.correctAnswer,
             );
           } else {
             correctAnswer = [];
@@ -768,7 +768,7 @@ router.post("/:league_id/addquestion", async (req, res) => {
         await PickemScore.findOneAndUpdate(
           { league_id },
           { league_id, leaderboard },
-          { upsert: true }
+          { upsert: true },
         );
       }
     } catch (err) {
@@ -824,16 +824,16 @@ router.get("/:game_short/:league_id/question/:type", async (req, res) => {
     // Compute totalPoint (filtered set) as sum of (maxChoose * score)
     const totalPoint = sanitized.reduce(
       (sum, q) => sum + (Number(q.maxChoose) || 0) * (Number(q.score) || 0),
-      0
+      0,
     );
 
     // Compute league-wide total across ALL game_short (respecting type filter unless type === 'all')
     const leagueScope = (pickemDoc.questions || []).filter((q) =>
-      includeAllTypes ? true : q.type === type
+      includeAllTypes ? true : q.type === type,
     );
     const totalPointAll = leagueScope.reduce(
       (sum, q) => sum + (Number(q.maxChoose) || 0) * (Number(q.score) || 0),
-      0
+      0,
     );
 
     res.json({
@@ -903,7 +903,7 @@ router.post("/:league_id/submitPrediction", async (req, res) => {
       await pickemDoc.save();
     } else {
       const userIndex = pickemDoc.responses.findIndex(
-        (r) => String(r.userId) === String(userId)
+        (r) => String(r.userId) === String(userId),
       );
       if (userIndex !== -1) {
         // Merge incoming answers into existing answers.
@@ -917,7 +917,7 @@ router.post("/:league_id/submitPrediction", async (req, res) => {
         // For single_eli_bracket & double_eli_bracket: serialize object form to flat [String] with prefixes
         formattedAnswers = formattedAnswers.map((incoming) => {
           const incomingQ = pickemQuestionDoc?.questions?.find(
-            (q) => q.id === incoming.questionId
+            (q) => q.id === incoming.questionId,
           );
           if (
             (incomingQ?.type === "single_eli_bracket" ||
@@ -930,7 +930,7 @@ router.post("/:league_id/submitPrediction", async (req, res) => {
               incomingQ?.type === "single_eli_bracket"
                 ? serializeBracketObjectToFlatArray(incoming.selectedOptions)
                 : serializeDoubleBracketObjectToFlatArray(
-                    incoming.selectedOptions
+                    incoming.selectedOptions,
                   );
             return {
               ...incoming,
@@ -960,7 +960,7 @@ router.post("/:league_id/submitPrediction", async (req, res) => {
         for (const incoming of formattedAnswers) {
           // Determine metadata for the incoming answer's question
           const incomingQ = pickemQuestionDoc?.questions?.find(
-            (q) => q.id === incoming.questionId
+            (q) => q.id === incoming.questionId,
           );
           const incomingGame = incomingQ?.game_short;
           const incomingType = incomingQ?.type;
@@ -968,7 +968,7 @@ router.post("/:league_id/submitPrediction", async (req, res) => {
           const matchIdx = mergedAnswers.findIndex((ea) => {
             if (ea.questionId !== incoming.questionId) return false;
             const existingQ = pickemQuestionDoc?.questions?.find(
-              (q) => q.id === ea.questionId
+              (q) => q.id === ea.questionId,
             );
             const existingGame = existingQ?.game_short;
             const existingType = existingQ?.type;
@@ -1003,7 +1003,7 @@ router.post("/:league_id/submitPrediction", async (req, res) => {
         req.socket?.remoteAddress ||
         req.ip;
       const userIdxForLog = pickemDoc.responses.findIndex(
-        (r) => String(r.userId) === String(userId)
+        (r) => String(r.userId) === String(userId),
       );
       if (userIdxForLog === -1)
         throw new Error("User response not found to append logs");
@@ -1012,7 +1012,7 @@ router.post("/:league_id/submitPrediction", async (req, res) => {
       const stageByQid = new Map();
       for (const ans of answers || []) {
         const ques = pickemQuestionDoc?.questions?.find(
-          (q) => q.id === ans.questionId
+          (q) => q.id === ans.questionId,
         );
         if (ques?.type !== "double_eli_bracket") continue;
         const flat = Array.isArray(ans.selectedOptions)
@@ -1045,7 +1045,7 @@ router.post("/:league_id/submitPrediction", async (req, res) => {
 
       for (const [qid, stages] of stageByQid.entries()) {
         const existingIdx = userLogs.findIndex(
-          (l) => Number(l.questionId) === Number(qid)
+          (l) => Number(l.questionId) === Number(qid),
         );
         const logEntry = {
           userId: String(userId),
@@ -1144,7 +1144,7 @@ router.get("/:league_id/myanswer", async (req, res) => {
       return res.status(404).json({ error: "No responses for league" });
 
     const userRes = pickemResDoc.responses.find(
-      (r) => String(r.userId) === String(userId)
+      (r) => String(r.userId) === String(userId),
     );
     if (!userRes)
       return res.status(404).json({ error: "No answers found for this user" });
@@ -1158,7 +1158,7 @@ router.get("/:league_id/myanswer", async (req, res) => {
           lookupUser = await User.findById(userId).select("-password");
         } else {
           lookupUser = await User.findOne({ username: userId }).select(
-            "-password"
+            "-password",
           );
         }
         if (lookupUser) {
@@ -1241,7 +1241,7 @@ router.get("/:league_id/myanswer", async (req, res) => {
           });
         }
         const latestArr = Array.from(latestByQ.values()).map(
-          ({ _ts, _tokens, ...rest }) => rest
+          ({ _ts, _tokens, ...rest }) => rest,
         );
         return res.json({ ...base, logs: latestArr });
       }
@@ -1266,12 +1266,12 @@ router.get("/:league_id/myanswer", async (req, res) => {
         return {
           ...base,
           selectedBracket: deserializeFlatArrayToBracketObject(
-            ans.selectedOptions || []
+            ans.selectedOptions || [],
           ),
         };
       } else if (ques?.type === "double_eli_bracket") {
         const bracketObj = deserializeFlatArrayToDoubleBracketObject(
-          ans.selectedOptions || []
+          ans.selectedOptions || [],
         );
         const stages = deserializeDoubleStageTokens(ans.selectedOptions || []);
         // Backfill podium stages from final placements when not explicitly present
@@ -1363,7 +1363,7 @@ router.get("/:league_id/myanswer", async (req, res) => {
         responsePayload.logs = entry ? entry.stages : emptyStages;
       } else {
         responsePayload.logs = Array.from(latestByQ.values()).map(
-          ({ _ts, _tokens, ...rest }) => rest
+          ({ _ts, _tokens, ...rest }) => rest,
         );
       }
     }
@@ -1412,7 +1412,7 @@ router.get("/:league_id/pickem/:userid", async (req, res) => {
 
     // userId trong doc có thể lưu là ObjectId string hoặc username string
     const userRes = pickemResDoc.responses.find(
-      (r) => String(r.userId) === String(userid)
+      (r) => String(r.userId) === String(userid),
     );
     if (!userRes)
       return res.status(404).json({ error: "No answers found for this user" });
@@ -1426,7 +1426,7 @@ router.get("/:league_id/pickem/:userid", async (req, res) => {
           lookupUser = await User.findById(userid).select("-password");
         } else {
           lookupUser = await User.findOne({ username: userid }).select(
-            "-password"
+            "-password",
           );
         }
         if (lookupUser) {
@@ -1507,7 +1507,7 @@ router.get("/:league_id/pickem/:userid", async (req, res) => {
           });
         }
         const latestArr = Array.from(latestByQ.values()).map(
-          ({ _ts, _tokens, ...rest }) => rest
+          ({ _ts, _tokens, ...rest }) => rest,
         );
         return res.json({ ...base, logs: latestArr });
       }
@@ -1533,12 +1533,12 @@ router.get("/:league_id/pickem/:userid", async (req, res) => {
         return {
           ...base,
           selectedBracket: deserializeFlatArrayToBracketObject(
-            ans.selectedOptions || []
+            ans.selectedOptions || [],
           ),
         };
       } else if (ques?.type === "double_eli_bracket") {
         const bracketObj = deserializeFlatArrayToDoubleBracketObject(
-          ans.selectedOptions || []
+          ans.selectedOptions || [],
         );
         const stages = deserializeDoubleStageTokens(ans.selectedOptions || []);
         // Backfill podium
@@ -1624,7 +1624,7 @@ router.get("/:league_id/pickem/:userid", async (req, res) => {
         responsePayload.logs = entry ? entry.stages : emptyStages;
       } else {
         responsePayload.logs = Array.from(latestByQ.values()).map(
-          ({ _ts, _tokens, ...rest }) => rest
+          ({ _ts, _tokens, ...rest }) => rest,
         );
       }
     }
@@ -1696,18 +1696,18 @@ const calculatePlayerStats = (player, roundResults) => {
         curr.timeSinceRoundStartMillis < min.timeSinceRoundStartMillis
           ? curr
           : min,
-      allKills[0]
+      allKills[0],
     );
     if (earliestKill?.victim === puuid) firstDeaths += 1;
 
     if (stats) {
       const earliestKillTime = Math.min(
-        ...allKills.map((k) => k.timeSinceRoundStartMillis)
+        ...allKills.map((k) => k.timeSinceRoundStartMillis),
       );
       const firstKill = stats.kills.find(
         (kill) =>
           kill.killer === puuid &&
-          kill.timeSinceRoundStartMillis === earliestKillTime
+          kill.timeSinceRoundStartMillis === earliestKillTime,
       );
       if (firstKill) firstKills += 1;
 
@@ -1756,12 +1756,12 @@ import axios from "axios";
 async function fetchLoLChampions(locale = "en_US") {
   try {
     const versionsResp = await axios.get(
-      "https://ddragon.leagueoflegends.com/api/versions.json"
+      "https://ddragon.leagueoflegends.com/api/versions.json",
     );
     const versions = Array.isArray(versionsResp.data) ? versionsResp.data : [];
     const ver = versions[0] || "15.20.1";
     const champsResp = await axios.get(
-      `https://ddragon.leagueoflegends.com/cdn/${ver}/data/${locale}/champion.json`
+      `https://ddragon.leagueoflegends.com/cdn/${ver}/data/${locale}/champion.json`,
     );
     const dataObj = champsResp?.data?.data || {};
     const champions = Object.values(dataObj)
@@ -1794,24 +1794,24 @@ router.get("/tft/:gameName/:tagLine", async (req, res) => {
   try {
     const accountResp = await axios.get(
       `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(
-        gameName
+        gameName,
       )}/${encodeURIComponent(tagLine)}`,
-      { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+      { headers: { "X-Riot-Token": process.env.TFT_KEY } },
     );
 
     const { puuid } = accountResp.data;
 
     const leagueResp = await axios.get(
       `https://vn2.api.riotgames.com/tft/league/v1/by-puuid/${encodeURIComponent(
-        puuid
+        puuid,
       )}`,
-      { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+      { headers: { "X-Riot-Token": process.env.TFT_KEY } },
     );
 
     // Filter only entries with queueType === 'RANKED_TFT'
     const rawLeague = Array.isArray(leagueResp.data) ? leagueResp.data : [];
     const filtered = rawLeague.filter(
-      (entry) => entry && entry.queueType === "RANKED_TFT"
+      (entry) => entry && entry.queueType === "RANKED_TFT",
     );
 
     // Merge into single response object (include gameName/tagLine and ranked fields)
@@ -1887,6 +1887,7 @@ async function updateBootcampRanksInternal(league_id, force = false) {
     if (!puuidOriginalMap.has(norm)) puuidOriginalMap.set(norm, original);
   };
   const eliminatedSet = new Set();
+  const eliminatedPuuidSet = new Set();
   (Array.isArray(boot.eliminated) ? boot.eliminated : [])
     .filter(Boolean)
     .forEach((orig) => {
@@ -1899,7 +1900,6 @@ async function updateBootcampRanksInternal(league_id, force = false) {
   // Track elimination round label per puuid for sticky eliminationAt
   const eliminatedRoundMap = new Map();
   const savedEliminatedRoundMap = new Map();
-  const eliminatedPuuidSet = new Set();
   const addStoredRound = (k, v) => {
     const key = normalizePuuid(k);
     if (!key) return;
@@ -1914,7 +1914,7 @@ async function updateBootcampRanksInternal(league_id, force = false) {
       boot.eliminatedRounds.forEach((v, k) => addStoredRound(k, v));
     } else if (typeof boot.eliminatedRounds === "object") {
       Object.entries(boot.eliminatedRounds).forEach(([k, v]) =>
-        addStoredRound(k, v)
+        addStoredRound(k, v),
       );
     }
   }
@@ -1940,8 +1940,9 @@ async function updateBootcampRanksInternal(league_id, force = false) {
     const hasPuuid = e.puuid && e.puuid.toString().trim().length > 0;
     const gameName = (e.gameName || "").trim();
     const tagLine = (e.tagLine || "").trim();
-    if (!hasPuuid && !gameName && !tagLine) return null;
-    return (e.puuid || `${gameName}#${tagLine}`).toLowerCase();
+    const userKey = (e.usernameregister || "").toString().trim();
+    if (!hasPuuid && !gameName && !tagLine && !userKey) return null;
+    return (e.puuid || `${gameName}#${tagLine}` || userKey).toLowerCase();
   };
 
   // Cache previous rank entries to preserve eliminated players without refetching Riot data
@@ -2055,9 +2056,9 @@ async function updateBootcampRanksInternal(league_id, force = false) {
       try {
         const accountResp = await axios.get(
           `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(
-            gameName
+            gameName,
           )}/${encodeURIComponent(tagLine)}`,
-          { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+          { headers: { "X-Riot-Token": process.env.TFT_KEY } },
         );
 
         const { puuid } = accountResp.data;
@@ -2082,14 +2083,14 @@ async function updateBootcampRanksInternal(league_id, force = false) {
 
         const leagueResp = await axios.get(
           `https://vn2.api.riotgames.com/tft/league/v1/by-puuid/${encodeURIComponent(
-            puuid
+            puuid,
           )}`,
-          { headers: { "X-Riot-Token": process.env.TFT_KEY } }
+          { headers: { "X-Riot-Token": process.env.TFT_KEY } },
         );
 
         const rawLeague = Array.isArray(leagueResp.data) ? leagueResp.data : [];
         const filtered = rawLeague.filter(
-          (entry) => entry && entry.queueType === "RANKED_TFT"
+          (entry) => entry && entry.queueType === "RANKED_TFT",
         );
         const first = filtered[0] || null;
 
@@ -2191,8 +2192,10 @@ async function updateBootcampRanksInternal(league_id, force = false) {
     };
   });
 
-  // Drop placeholder rows with no puuid and no Riot ID
-  entries = entries.filter((e) => e.puuid || e.gameName || e.tagLine);
+  // Drop only fully empty placeholders; keep entries that at least have usernameregister
+  entries = entries.filter(
+    (e) => e.puuid || e.gameName || e.tagLine || e.usernameregister,
+  );
 
   // Reapply stored elimination rounds immediately to avoid any later overwrite
   entries.forEach((e) => {
@@ -2332,7 +2335,7 @@ async function updateBootcampRanksInternal(league_id, force = false) {
                   rememberOriginal(norm, e.puuid);
                   eliminatedRoundMap.set(
                     norm,
-                    e.eliminationAt || r.name || null
+                    e.eliminationAt || r.name || null,
                   );
                 }
               }
@@ -2350,7 +2353,7 @@ async function updateBootcampRanksInternal(league_id, force = false) {
     // don't fail the whole update if rounds processing errors; log and continue
     console.error(
       "Error applying bootcamp rounds:",
-      err && err.message ? err.message : err
+      err && err.message ? err.message : err,
     );
   }
 
@@ -2391,7 +2394,7 @@ async function updateBootcampRanksInternal(league_id, force = false) {
       e &&
       (e.puuid ||
         (e.gameName && e.gameName.trim()) ||
-        (e.tagLine && e.tagLine.trim()))
+        (e.tagLine && e.tagLine.trim())),
   );
 
   // Capture eliminated puuid using current computation plus any stored rounds
@@ -2506,13 +2509,13 @@ async function updateBootcampRanksInternal(league_id, force = false) {
   boot.rank_league = mergedEntries;
   // Persist with original casing when available
   boot.eliminated = Array.from(eliminatedSet).map(
-    (norm) => puuidOriginalMap.get(norm) || norm
+    (norm) => puuidOriginalMap.get(norm) || norm,
   );
   boot.eliminatedRounds = Object.fromEntries(
     Array.from(eliminatedRoundMap.entries()).map(([norm, round]) => [
       puuidOriginalMap.get(norm) || norm,
       round,
-    ])
+    ]),
   );
   // record when the rank list was last updated
   boot.rank_last_updated = new Date();
@@ -2668,7 +2671,7 @@ router.patch("/:game/:league_id/bootcamp/rounds/:idx", async (req, res) => {
         take !== undefined ? take : round.take,
         req.body.takeIsPercent !== undefined
           ? req.body.takeIsPercent
-          : round.takeIsPercent
+          : round.takeIsPercent,
       );
       round.take = parsedTake;
       round.takeIsPercent = takeIsPercent;
@@ -2818,7 +2821,7 @@ router.get("/:game/bootcamp/:league_id/leaderboard", async (req, res) => {
     if (needsFix) {
       await BootcampLeague.updateOne(
         { league_id },
-        { $set: { rank_league: orderedRankLeague } }
+        { $set: { rank_league: orderedRankLeague } },
       );
     }
 
@@ -2841,15 +2844,15 @@ router.get("/:game/bootcamp/:league_id/leaderboard", async (req, res) => {
       const pad = (n) => String(n).padStart(2, "0");
       if (tzOffsetMinutes == null) {
         return `${pad(dt.getDate())}/${pad(
-          dt.getMonth() + 1
+          dt.getMonth() + 1,
         )}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
       }
       // create a Date shifted by tzOffsetMinutes and use UTC fields to format
       const shifted = new Date(dt.getTime() + tzOffsetMinutes * 60 * 1000);
       return `${pad(shifted.getUTCDate())}/${pad(
-        shifted.getUTCMonth() + 1
+        shifted.getUTCMonth() + 1,
       )}/${shifted.getUTCFullYear()} ${pad(shifted.getUTCHours())}:${pad(
-        shifted.getUTCMinutes()
+        shifted.getUTCMinutes(),
       )}`;
     };
 
@@ -2867,7 +2870,7 @@ router.get("/:game/bootcamp/:league_id/leaderboard", async (req, res) => {
       const diff = now.getTime() - timeStart.getTime();
       const elapsed = Math.floor(diff / intervalMs);
       const candidate = new Date(
-        timeStart.getTime() + (elapsed + 1) * intervalMs
+        timeStart.getTime() + (elapsed + 1) * intervalMs,
       );
       if (timeEnd && candidate > timeEnd) {
         nextRun = null; // no further runs
@@ -2943,7 +2946,7 @@ router.post("/:game_name/:league_id/checkregister", async (req, res) => {
 
     // ✅ Kiểm tra xem player có trong players không
     const player = league.players.find(
-      (p) => String(p.usernameregister) === String(usernameregister)
+      (p) => String(p.usernameregister) === String(usernameregister),
     );
 
     if (player) {
@@ -3012,7 +3015,7 @@ router.post("/registerorz", async (req, res) => {
       const oldNicknames = existingTeam.players.map((p) => p.nickname);
       const newNicknames = gameMembersWithId.map((p) => p.nickname);
       const removedMembers = oldNicknames.filter(
-        (name) => !newNicknames.includes(name)
+        (name) => !newNicknames.includes(name),
       );
       const addedOrKeptMembers = newNicknames;
 
@@ -3029,8 +3032,8 @@ router.post("/registerorz", async (req, res) => {
       // Gỡ team của người bị xóa
       await Promise.all(
         removedMembers.map((name) =>
-          User.findOneAndUpdate({ nickname: name }, { team: "" })
-        )
+          User.findOneAndUpdate({ nickname: name }, { team: "" }),
+        ),
       );
 
       // Cập nhật team mới cho thành viên
@@ -3044,9 +3047,9 @@ router.post("/registerorz", async (req, res) => {
                 logoTeam: logoUrl,
                 shortName: shortName,
               },
-            }
-          )
-        )
+            },
+          ),
+        ),
       );
 
       return res
@@ -3078,9 +3081,9 @@ router.post("/registerorz", async (req, res) => {
               name: teamName,
               logoTeam: logoUrl,
             },
-          }
-        )
-      )
+          },
+        ),
+      ),
     );
 
     res
@@ -3178,7 +3181,7 @@ router.post("/register/:league_id", async (req, res) => {
     }
 
     const existingPlayerIndex = leagueDoc.players.findIndex(
-      (p) => String(p.usernameregister) === String(usernameregister)
+      (p) => String(p.usernameregister) === String(usernameregister),
     );
 
     const selectedGame = games?.[0]; // 👈 lấy game thực sự mà người dùng chọn
@@ -3243,7 +3246,7 @@ router.post("/updatePlayerReady", async (req, res) => {
 
     // Find existing player or add new one
     const existingPlayerIndex = matchData.playersReady[teamKey].findIndex(
-      (p) => p.riotID === riotID
+      (p) => p.riotID === riotID,
     );
 
     // Helper to initialize isReady array
@@ -3261,7 +3264,7 @@ router.post("/updatePlayerReady", async (req, res) => {
       // Ensure isReady is an array of correct length
       let isReadyArr = getIsReadyArray(
         matchData.playersReady[teamKey][existingPlayerIndex].isReady,
-        totalMaps
+        totalMaps,
       );
       isReadyArr[mapIndex] = isReady;
       matchData.playersReady[teamKey][existingPlayerIndex].isReady = isReadyArr;
@@ -3306,7 +3309,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
       const data = { ...matchDoc.data };
       if (data.roundResults) {
         data.roundResults = data.roundResults.map(
-          ({ roundResult, ...rest }) => rest
+          ({ roundResult, ...rest }) => rest,
         );
       }
       // CORS handled by global middleware
@@ -3321,7 +3324,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
         const data = { ...matchDoc.data };
         if (data.roundResults) {
           data.roundResults = data.roundResults.map(
-            ({ roundResult, ...rest }) => rest
+            ({ roundResult, ...rest }) => rest,
           );
         }
         res.setHeader("Access-Control-Allow-Origin", "*");
@@ -3332,7 +3335,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
     try {
       // Lấy dictionary cho character/map
       const dictionaryResponse = await axios.get(
-        "https://bigtournament-1.onrender.com/api/valorant/dictionary"
+        "https://bigtournament-1.onrender.com/api/valorant/dictionary",
       );
       const characterMap = {};
       const mapMap = {};
@@ -3363,7 +3366,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
       const apiKeyValorant = process.env.API_KEY_VALORANT_RIOT;
       const response = await axios.get(
         `https://ap.api.riotgames.com/val/match/v1/matches/${matchId}`,
-        { headers: { "X-Riot-Token": apiKeyValorant } }
+        { headers: { "X-Riot-Token": apiKeyValorant } },
       );
 
       const matchData = response.data;
@@ -3378,7 +3381,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
           "Không tìm thấy mapName cho mapId:",
           rawMapId,
           "mapMap:",
-          Object.keys(mapMap)
+          Object.keys(mapMap),
         );
         mapName = "Unknown";
       }
@@ -3407,7 +3410,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
               "Không tìm thấy characterName cho characterId:",
               cleanId,
               "characterMap:",
-              Object.keys(characterMap)
+              Object.keys(characterMap),
             );
             charName = "Unknown";
           }
@@ -3426,7 +3429,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
             const assists = player.stats.assists || 0;
             const KDA = (kills + deaths) / (assists || 1);
             const acs = parseFloat(
-              (player.stats.score / player.stats.roundsPlayed).toFixed(0)
+              (player.stats.score / player.stats.roundsPlayed).toFixed(0),
             );
             player.stats.KD = `${kills}/${deaths}`;
             player.stats.KDA = parseFloat(KDA.toFixed(1));
@@ -3435,11 +3438,13 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
             // Tính advancedStats dựa trên roundResults gốc (có playerStats)
             const advancedStats = calculatePlayerStats(
               player,
-              roundResultsFull
+              roundResultsFull,
             );
             Object.assign(player.stats, advancedStats);
             player.stats.adr = parseFloat(
-              (advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(1)
+              (advancedStats.totalDamage / player.stats.roundsPlayed).toFixed(
+                1,
+              ),
             );
           }
         });
@@ -3469,7 +3474,7 @@ router.get("/valorant/matchdata/:matchId", async (req, res) => {
       await ValorantMatch.findOneAndUpdate(
         { matchId },
         { matchId, data: finalData },
-        { upsert: true, new: true }
+        { upsert: true, new: true },
       );
 
       // CORS handled by global middleware
@@ -3628,7 +3633,7 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
       for (const mId of match.matchIds) {
         try {
           const response = await fetch(
-            `https://bigtournament-1.onrender.com/api/valorant/match/${mId}`
+            `https://bigtournament-1.onrender.com/api/valorant/match/${mId}`,
           );
           const apiData = await response.json();
           const matchData = apiData.matchData;
@@ -3644,7 +3649,7 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
           for (const p of blueTeam) {
             const ignFull = `${p.gameName}#${p.tagLine}`.toLowerCase();
             const found = playersFromLeague.find((player) =>
-              player.ign.some((ign) => ign.toLowerCase() === ignFull)
+              player.ign.some((ign) => ign.toLowerCase() === ignFull),
             );
             if (found) {
               blueTeamId = found.team.name;
@@ -3655,7 +3660,7 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
           for (const p of redTeam) {
             const ignFull = `${p.gameName}#${p.tagLine}`.toLowerCase();
             const found = playersFromLeague.find((player) =>
-              player.ign.some((ign) => ign.toLowerCase() === ignFull)
+              player.ign.some((ign) => ign.toLowerCase() === ignFull),
             );
             if (found) {
               redTeamId = found.team.name;
@@ -3670,11 +3675,11 @@ router.post("/:game/:league_id/bracket", async (req, res) => {
 
           let blueScore = blueTeam.reduce(
             (acc, p) => acc + (p.stats?.score || 0),
-            0
+            0,
           );
           let redScore = redTeam.reduce(
             (acc, p) => acc + (p.stats?.score || 0),
-            0
+            0,
           );
 
           if (blueScore > redScore) {
@@ -3819,7 +3824,7 @@ router.get("/:game/:league_id/check-registered-valorant", async (req, res) => {
 
     // Filter players by team name (teamA or teamB)
     const players = league.players.filter(
-      (player) => player.team?.name === teamA || player.team?.name === teamB
+      (player) => player.team?.name === teamA || player.team?.name === teamB,
     );
 
     // Return only igns and team info
@@ -3867,7 +3872,7 @@ router.post("/dcn-league", async (req, res) => {
         (existingLeague?.players || []).map((p) => [
           String(p.usernameregister),
           p,
-        ])
+        ]),
       );
 
       finalPlayers = players.map((player) => ({
@@ -3882,7 +3887,7 @@ router.post("/dcn-league", async (req, res) => {
 
     // ✅ Tính current_team_count
     const currentTeamCount = finalPlayers.filter(
-      (p) => p.game === "Teamfight Tactics"
+      (p) => p.game === "Teamfight Tactics",
     ).length;
 
     // ✅ Tính check-in time
@@ -3913,7 +3918,7 @@ router.post("/dcn-league", async (req, res) => {
         players: finalPlayers,
         matches,
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     res.status(200).json({
@@ -3970,7 +3975,7 @@ router.delete("/unregister/:league_id", async (req, res) => {
 
     // Xoá player khỏi danh sách
     leagueDoc.players = leagueDoc.players.filter(
-      (p) => String(p.usernameregister) !== String(usernameregister)
+      (p) => String(p.usernameregister) !== String(usernameregister),
     );
 
     await leagueDoc.save();
@@ -4007,7 +4012,7 @@ router.post("/league/checkin", async (req, res) => {
     console.log("👥 Players usernameregister:", usernames);
 
     const playerIndex = leagueDoc.players.findIndex(
-      (p) => String(p.usernameregister) === String(userId)
+      (p) => String(p.usernameregister) === String(userId),
     );
 
     if (playerIndex === -1) {
@@ -4324,7 +4329,7 @@ async function processSide(match, { map, side }) {
 
   // Kiểm tra đã chọn hết tất cả sides chưa
   const allSidesSelected = match.sides.every(
-    (s) => s.team1 !== null && s.team2 !== null
+    (s) => s.team1 !== null && s.team2 !== null,
   );
 
   if (allSidesSelected) {
